@@ -52,3 +52,19 @@ left untouched by design.
 |---|------|------|-------|-------------------|
 | 12 | research/runs/archive-aaai-bar-eval-dprc-d78e07-20260720T063245Z/scaffold.md | 15 | personal identifier (home path) | `<user-home>` |
 | 13 | research/runs/archive-code-llm-calibration-aaai27-eabf3f-20260719T195636Z/scaffold.md | 15 | personal identifier (home path) | `<user-home>` |
+
+## W2 (2026-11-10)
+
+Operator decision A1: the collaborator's home-directory path, with any drive prefix (`C:`), was
+replaced with the placeholder `<user-home>` in every tracked file outside `src/`, `papers/`,
+`results/` and `data/`. Only `docs/s0/W0_REPORT.md` contained it. Three research notes contain the
+same given name as part of published author names in reference lists; these are not paths and were
+not changed. No occurrence was found inside `src/`, `papers/`, `results/` or `data/`. Git history
+keeps the earlier text (no history rewrite).
+
+| # | File | Line | Class | Replacement token |
+|---|------|------|-------|-------------------|
+| 14 | docs/s0/W0_REPORT.md | 71 | personal identifier (home path) | `<user-home>` |
+| 15 | docs/s0/W0_REPORT.md | 82 | personal identifier (home path) | `<user-home>` |
+| 16 | docs/s0/W0_REPORT.md | 114 | personal identifier (home path) | `<user-home>` |
+| 17 | docs/s0/W0_REPORT.md | 117 | personal identifier (home path, with drive prefix) | `<user-home>` |

@@ -68,7 +68,7 @@ Hit counts by class:
 | Infrastructure identifiers: IPv4 | 5 (one public address, in 4 files) | 0 |
 | Infrastructure identifiers: key filenames | 6 (two distinct .pem names) | 0 |
 | Infrastructure identifiers: hosts (runpod/vast/lambda/compute/aws/gcp) | 0 real (3 false positives) | 0 real |
-| Personal identifiers: absolute home paths | 694 raw (mostly LaTeX logs and tool state) | 39 (37 `/home/ubuntu`, 2 `/Users/arjun`) |
+| Personal identifiers: absolute home paths | 694 raw (mostly LaTeX logs and tool state) | 39 (37 `/home/ubuntu`, 2 `<user-home>`) |
 | Personal identifiers: emails | 427 raw (incl. the SQLite strings dump) | 114, all third-party published author or style-file maintainer addresses, plus the operator's own address in the pre-commit hook |
 | Phone-number pattern | 70 raw | 17, all in fetched research notes (numeric IDs, not phone numbers): false positives |
 | Keyword words (token/secret/password/api_key) | 4,251 | 1,423, all ML vocabulary (`tokenizer`, `max_tokens`, …): false positives |
@@ -79,7 +79,7 @@ Redactions made: 11 tokens on 10 lines in 5 files (5 × `[REDACTED-IP]`, 6 × `[
 
 Home paths left in committed files:
 - `/home/ubuntu/...` appears in REPRODUCE.md (3), src/v1_baseline/* (14 across 9 files), src/v2_comprehensive/* (12 across 5 files), src/v3_multimodel/* (7 across 3 files) and src/v4_dprc/config.py (1).
-- `/Users/arjun/...` appears in `research/runs/archive-aaai-bar-eval-dprc-d78e07-20260720T063245Z/scaffold.md` (1) and `research/runs/archive-code-llm-calibration-aaai27-eabf3f-20260719T195636Z/scaffold.md` (1).
+- `<user-home>/...` appears in `research/runs/archive-aaai-bar-eval-dprc-d78e07-20260720T063245Z/scaffold.md` (1) and `research/runs/archive-code-llm-calibration-aaai27-eabf3f-20260719T195636Z/scaffold.md` (1).
 
 Files withheld from git (`.gitignore`):
 - Key or credential files: none present. `*.pem`, `*.key`, `.env*` and `credentials/` are ignored pre-emptively.
@@ -111,10 +111,10 @@ Guardrail deviations (honest record): during classification, two terminal output
 1. **[OPERATOR] Rotate infrastructure access.** The GPU host's public IP and the names of two SSH key files sat in plaintext in the local bundle. They are not in git, but the pristine backup keeps them. If that instance or key is still live, revoke the key pair and terminate or re-IP the host.
 2. **[OPERATOR] decide on `src/v4_dprc/README.md`.** It is withheld from git because line 6 references a local agent-tool plan file path. Either delete that reference (and the plan pointer) and then track the file, or keep it withheld.
 3. **[OPERATOR] decide on `.hyperresearch/`.** It is withheld: `config.toml` is the vault configuration (its exclude list names the agent instruction file), and `hyperresearch.db` is an 18.7 MB rebuildable index. Track `config.toml` only if later sessions need it in the repository.
-4. **[OPERATOR] review home paths** listed in section 4. `/Users/arjun` in two run scaffolds names a collaborator's account, and `/home/ubuntu` paths are generic cloud-box defaults in code. They were not redacted, by design.
+4. **[OPERATOR] review home paths** listed in section 4. `<user-home>` in two run scaffolds names a collaborator's account, and `/home/ubuntu` paths are generic cloud-box defaults in code. They were not redacted, by design.
 5. **[OPERATOR] confirm `.bbl` handling.** The pre-existing `.gitignore` said that `main.bbl` was intentionally tracked. W0 now ignores `*.bbl` as instructed, so `papers/v*/main.bbl` are untracked locally.
 6. **[OPERATOR] keep the pristine backup private.** `/Users/palaash/Developer/_backups/calib-disconnect-pristine-20261109T201032Z/` holds the unredacted originals, including the IP and key filenames.
-7. **[OPERATOR] fix the project agent-instruction file's CLI path (local only, untracked).** It points the hyperresearch CLI at a Windows path (`C:/Users/arjun/anaconda3/Scripts/hyperresearch.exe`) that does not exist on this Mac. The working CLI is `/opt/homebrew/Caskroom/miniforge/base/bin/hyperresearch`.
+7. **[OPERATOR] fix the project agent-instruction file's CLI path (local only, untracked).** It points the hyperresearch CLI at a Windows path (`<user-home>/anaconda3/Scripts/hyperresearch.exe`) that does not exist on this Mac. The working CLI is `/opt/homebrew/Caskroom/miniforge/base/bin/hyperresearch`.
 
 ## 7. Layout observations
 
