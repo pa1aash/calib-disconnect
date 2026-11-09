@@ -1,0 +1,49 @@
+# CITING: forward-citation screen for arXiv 2512.07404 (Ribeiro et al., ICSE 2026)
+
+Retrieved 2026-11-10. Raw: raw/s2_citations_p0.json (HTTP 200, 14 records, `next` absent so one page is complete), raw/s2_citations_dup_corpus284964822.json (S2 duplicate record "Do LLMs Trust the Code They Write?", 0 citations), raw/oa_cites.json (OpenAlex, `filter=cites:W7113916628`, HTTP 200, 7 results, meta count 7), raw/s2_paper.json, raw/oa_work.json.
+
+## Counts and gaps
+
+- Semantic Scholar paper cf670e59946d1d18663f51aabd1c8b054771d029: `citationCount` 14; 14 citing records returned, covering 12 distinct papers (S2 lists arXiv 2606.14530 twice under two titles/corpus ids, and lists the paper's own v1 record "Do LLMs Trust the Code They Write?" as a citer, which is a duplicate of the target, not a citation).
+- OpenAlex W7113916628: `cited_by_count` 7; 7 results, one (Rethinking Neural Decompilation) not in S2.
+- Merged distinct citing works excluding the self-duplicate: 13.
+- Gaps: S2 429 rate limits at first calls, resolved by the 4 s backoff; DBLP unreachable (HTTP 202 proof-of-work page); OpenAlex indexes only the ACM record, so arXiv-only citers may be undercounted; S2 abstracts missing for three records (Think Less, Code Better; the two duplicate records), tagged from titles only.
+
+## Citing papers (S2 = Semantic Scholar, OA = OpenAlex)
+
+| # | Title | Year | IDs | Source | Tag | One-line relevance |
+|---|---|---|---|---|---|---|
+| 1 | Which Signals of Code Correctness Survive Distribution Shift? Hidden-State and Causal Predictors of Program and Verdict Correctness | 2026 | arXiv 2611.07876 | S2 | CLOSE | Compares six execution-free correctness predictors (output probabilities, sampled solutions, hidden states) on Qwen3-Coder-30B and gpt-oss-20b under benchmark and language shift; uses the Ribeiro LAT stimulus prompt (full text line ~311); probe vs output confidence in AUROC |
+| 2 | On the Robustness of LLMs' Internal Representation of Code Correctness | 2026 | arXiv 2608.08266; DBLP journals/corr/abs-2608-08266; OA W7202165647 | S2 | CLOSE | Same group; varies how the correctness signal is extracted, fault-isolated program pairs; "no single configuration is best, and that isolating the fault does not help" |
+| 3 | Code Correctness Is Linearly Decodable from LLM Hidden States Before Generation (S2 also lists the alternate title "Code Correctness Signals in LLM Hidden States: Pre-Generation Probing and Repair Geometry", DOI 10.48550/arXiv.2606.14530) | 2026 | arXiv 2606.14530; OA W7164804506 | S2, OA | CLOSE | Linear probe on Qwen3-4B-Instruct-2507 final prompt token predicts first-attempt correctness on 444 LiveCodeBench tasks, held-out AUC 0.881 +/- 0.008 (0.842 after prompt-length residualization); whole-solution, no verbalized baseline in the abstract |
+| 4 | Latent Programming Horizons in Coding Agents | 2026 | arXiv 2607.05188; OA W7167570918 | S2, OA | CLOSE | Logistic-regression probes on agent residual streams decode whether code parses, passes tests, reduces failing tests, regresses; AUC up to 0.83 for correctness; no verbalized-confidence comparison in the abstract |
+| 5 | Think Less, Code Better: Probing When Chain-of-Thought Hurts and How to Route Around It | 2026 | ACL SRW DOI 10.18653/v1/2026.acl-srw.13; OA W7166876994 | S2, OA | RELATED | Title only (no abstract returned): probing for when chain-of-thought hurts code generation |
+| 6 | From Brewing to Resolution: Tracing the Internal Lifecycle of Code Reasoning in LLMs | 2026 | arXiv 2606.17648; OA W7164998518 | S2, OA | RELATED | Layer-wise linear probing of code-reasoning answers across 16 models; probes answer recoverability, not correctness confidence |
+| 7 | CL-ICE: A White-Box Framework for Cross-Language Code Translation Evaluation | 2026 | DOI 10.1109/IJCNN69854.2026.11728708; OA W7222916328 | S2, OA | RELATED | Uses LAT correctness signal (Ribeiro-style) to score code translation quality without execution; r = 0.582 with functional correctness |
+| 8 | A Mechanistic Lens on Semantic Conflicts: Using Activation Patching to Understand LLM Behavior | 2026 | arXiv 2607.05587 | S2 | RELATED | Activation patching on code snippet triplets; interpretability for code, not correctness confidence |
+| 9 | When Models Know but Can't Linearly Say: Relational Encoding Limits Linear Vulnerability Classification in Code LLMs | 2026 | arXiv 2610.27257 | S2 | RELATED | Linear probes for vulnerability (not functional correctness) in 8 code models; paired relational signal |
+| 10 | PreMaQ: Predicting Maintainability-Related Quality of LLM-Generated Code Before Generation | 2026 | arXiv 2610.05858 | S2 | RELATED | Pre-generation hidden-state prediction of maintainability scores; cites that functional correctness is predictable in advance |
+| 11 | Lost in the Latent Space: How Code Embeddings Represent Functional Intent and Implementation Fidelity | 2026 | arXiv 2610.39519 | S2 | UNRELATED | Probing code embedding models for functional abstraction, not confidence or correctness of generations |
+| 12 | Faster Code, Deeper Debt? A Multivocal Literature Review on Technical Debt and Its Early Signs in LLM-Assisted Software Development | 2026 | arXiv 2606.14796; DOI 10.1145/3820165; OA W7164057147 | S2, OA | UNRELATED | Technical-debt literature review |
+| 13 | Rethinking Neural Decompilation: Candidate Selection as the Hidden Bottleneck | 2026 | DOI 10.1007/978-981-92-6837-5_38; OA W7223201978 | OA | UNRELATED | Decompilation candidate selection (no abstract fetched; tagged from title) |
+| (dup) | Do LLMs Trust the Code They Write? | 2025 | arXiv 2512.07404 (v1 title); S2 corpus 284964822 | S2 | self-duplicate | The target paper's v1 record, not a citation |
+
+Counts: CLOSE 4; RELATED 6; UNRELATED 3; plus 1 self-duplicate. None of the CLOSE papers' abstracts mention trained or prompted verbalized confidence as a comparison target other than 2608.08266 (which restates Ribeiro's "token-level or stated confidence" claim) and 2611.07876 (output confidence).
+
+## CLOSE paper records (abstracts in raw/close_abstracts.txt; arXiv API raw/close_arxiv.xml)
+
+| arXiv id | Latest version fetched | Published | PDF text |
+|---|---|---|---|
+| 2611.07876 | v1 | 2026-11-05 | raw/2611.07876.txt (pdftotext -layout, two-column interleaving) |
+| 2608.08266 | v1 | 2026-08-08 | raw/2608.08266.txt |
+| 2607.05188 | v1 | 2026-07-06 | raw/2607.05188.txt |
+| 2606.14530 | v3 | 2026-06-12 | raw/2606.14530.txt |
+
+Abstracts (verbatim from arXiv API):
+
+- 2611.07876: "Large language models increasingly judge code, yet without external feedback such judgments are unreliable, and verifying them by executing tests or by extended reasoning is costly. Instead, execution-free correctness predictors use signals from the model's output probabilities, sampled solutions, or hidden states to identify judgments that warrant further verification. However, these predictors may degrade under distribution shifts when generalizing across projects and languages. We compare six execution-free predictors from four families on Qwen3-Coder-30B and gpt-oss-20b under benchmark shift between LiveCodeBench and BigCodeBench and language shift across Python, C++ and Java. We evaluate two targets: whether the model's own verdict on a program can be trusted, and whether the program itself is correct. Besides established approaches, we adapt two novel causal localization methods to code, which have been shown to be more robust out-of-distribution on natural language tasks. For verdict correctness, causal localization improves robustness to language shift. For Qwen3-Coder a probe on the causally localized subspace stays 0.09 AUROC ahead of output confidence under language shift (0.11 in distribution), significantly outperforming the best non-causal predictor by 0.04 AUROC on average. This advantage, however, does not generalize consistently to gpt-oss or to benchmark shift. For program correctness, predictors transfer more successfully between benchmarks, largely by identifying problems on which the model tends to fail. However, their ability to rank candidates within the same problem is limited."
+- 2608.08266: "Code generated by modern language models often reads naturally. Yet, it also often fails to implement what was asked. This should be no surprise, as research shows the models' own confidence signals are poorly calibrated with actual correctness. A promising way to assess correctness looks inside the model: by contrasting the hidden states of correct and incorrect programs, recent work captured an internal signal of code correctness that is able to judge candidate solutions better than the model's token-level or stated confidence, with no test execution. However, this signal was captured under one particular way, leaving open an important question: whether it reflects a robust property of the model or an artifact of that choice. We study this question systematically, varying how the signal is extracted from the model internals. Besides this, we also ask if the signal's quality is limited by the data used to extract it, by constructing program pairs that differ only in the fault that makes them incorrect. Our results show that no single configuration is best, and that isolating the fault does not help."
+- 2607.05188: see raw/close_abstracts.txt (probes decode parse, test pass, failing-test reduction, regression; AUC up to 0.83; "latent programming horizon" up to roughly 25 steps ahead).
+- 2606.14530: see raw/close_abstracts.txt (Qwen3-4B-Instruct-2507; 444 LiveCodeBench tasks; AUC 0.881 +/- 0.008; residualized 0.842 +/- 0.010 vs prompt-length baseline 0.657 +/- 0.014).
+
+Also noted in passing (not citers): 2611.07876 and 2607.05188 cite other pre-generation code-correctness probing work by Bui et al. ("LLMs encode their failures: Predicting success from pre-generation ..." and a Bui et al. 2025 reference) and Vu et al. 2025; not fetched here, not verified.

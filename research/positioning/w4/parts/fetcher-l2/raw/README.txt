@@ -1,0 +1,3 @@
+Retrieval date 2026-11-10. Headless curl, desktop-style user agent, hosts: export.arxiv.org, arxiv.org, api.semanticscholar.org, api.openalex.org, api.crossref.org, dblp.org.
+HTTP status: arxiv_search.xml 200; 2512.07404v1/v2/v3.pdf 200; 2512.07404v3.html 200 (arxiv.org/html); abs.html 200; s2_paper.json 200 (after 429 and 4 s backoff); s2_citations_p0.json 200; s2_citations_dup_corpus284964822.json 200; oa_search.json, oa_work.json, oa_cites.json 200; crossref.json 200; close_arxiv.xml 200; CLOSE PDFs 200; dblp.json is an HTTP 202 Anubis challenge page (not data; DBLP not obtained).
+Text files: 2512.07404v{1,2,3}.txt and 2512.07404.txt (= v3) are plain pdftotext; 2611.07876.txt, 2608.08266.txt, 2607.05188.txt, 2606.14530.txt are pdftotext -layout.
