@@ -29,6 +29,19 @@ paper, and no legacy number is carried into it.
 | `research/` | | Literature-search vault notes and archived runs |
 | `tools/hooks/` | | Tracked git hooks; install with `tools/hooks/install.sh` |
 
+New work goes only into these top-level paths (created in wave 3, each with a README):
+
+| Path | Contents |
+|------|----------|
+| `pipeline/` | New evaluation code |
+| `runs/` | Raw run outputs; large shards git-ignored, with tracked manifests that list hashes |
+| `analysis/` | Derived tables and statistics as JSON, computed only from `runs/` |
+| `paper/` | The new manuscript (`STYLE.md`, `tmlr-template/`) |
+| `paper/figures/` | Figure sources and renders |
+| `research/positioning/` | Literature-positioning outputs; every finding tracked |
+| `docs/style/`, `docs/s3/` | Prose audit prompt; wave 3 records (orientation, positioning brief, lint baseline) |
+| `tools/prose_lint.py` | Prose linter for manuscript source (`tools/prose_lint.toml`, tests in `tests/prose_lint/`) |
+
 The pre-commit hook rejects any staged change (addition, modification, deletion, rename) under a
 frozen path. It has no override; changing the freeze means editing the hook in its own commit. The
 hooks also enforce the commit identity, block attribution strings, and run gitleaks.
