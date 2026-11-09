@@ -1,3 +1,8 @@
+> **Legacy document (banner added in wave 2, 2026-11-10).** This guide describes the legacy v1 to v3
+> bundle, which is now frozen (see `docs/LEGACY.md`). Seven script-to-output attributions in section 2
+> below are incorrect. Corrected attributions are in `docs/s1/BUNDLE_MAP.md`, section 3.6
+> ("Documentation errors in REPRODUCE.md §2"). The body below is unchanged.
+
 # Reproduction Guide
 
 This guide explains how the project is structured and how to reproduce each iteration.
