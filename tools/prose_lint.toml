@@ -1,0 +1,337 @@
+# Configuration for tools/prose_lint.py.
+# Every category id below must appear in [severity]. Values: "HARD", "WARN", or "OFF".
+# The linter exits 1 when any HARD finding exists, else 0.
+
+# ---------------------------------------------------------------------------
+# Severity per category.
+# ---------------------------------------------------------------------------
+[severity]
+negation_not_but = "HARD"
+negation_cascade = "WARN"
+negation_comma_not = "WARN"
+rather_than = "WARN"
+significance_announcer = "HARD"
+significantly = "WARN"
+roadmap = "HARD"
+softening_adverb = "WARN"
+contradictory_pair = "HARD"
+cleft_what = "HARD"
+cleft_it_that = "WARN"
+cleft_there_which = "WARN"
+heading = "HARD"
+caption_length = "HARD"
+short_paragraph_end = "WARN"
+internal_label = "HARD"
+process_word = "HARD"
+file_path = "HARD"
+underscore_identifier = "HARD"
+decimal_in_prose = "HARD"
+pvalue_precision = "HARD"
+mc_precision = "WARN"
+british_spelling = "HARD"
+em_dash = "HARD"
+title = "HARD"
+
+# ---------------------------------------------------------------------------
+# Numeric thresholds.
+# ---------------------------------------------------------------------------
+[thresholds]
+caption_max_sentences = 3        # captions with more sentences are flagged
+caption_max_words = 60           # captions with more words are flagged
+short_paragraph_max_words = 8    # final sentence at or below this many words is flagged
+negation_cascade_min = 3         # consecutive rule-out sentences needed for a cascade
+pvalue_max_sigfigs = 2           # more significant figures than this is flagged
+
+# ---------------------------------------------------------------------------
+# Behavior switches.
+# ---------------------------------------------------------------------------
+[options]
+decimal_skip_tables = true       # skip tabular environments for decimal_in_prose
+short_paragraph_skip_single = true  # one-sentence paragraphs are never flagged
+
+# ---------------------------------------------------------------------------
+# Word and phrase lists.
+# ---------------------------------------------------------------------------
+[lists]
+# Softening adverbs (whole words, case-insensitive). "rather" is skipped when it
+# is part of "rather than" (that has its own rule) and for the word right after
+# "rather than". "real" is deliberately absent: "real data", "real-valued", and
+# "real-world" are legitimate, and an adverb-only "real" cannot be detected
+# reliably without a parser. "really" is always flagged.
+softening_adverbs = [
+  "arguably", "somewhat", "fairly", "rather", "quite", "perhaps", "seemingly",
+  "essentially", "virtually", "largely", "generally", "typically", "usually",
+  "roughly", "comfortably", "clearly", "actually", "exactly", "almost", "nearly",
+  "really", "relatively", "effectively", "particularly",
+]
+
+# Internally contradictory hedge pairs (whole phrases, case-insensitive).
+contradictory_pairs = [
+  "almost exactly", "essentially always", "nearly always", "virtually all",
+  "almost always", "essentially exactly", "roughly exactly", "virtually always",
+  "nearly exactly",
+]
+
+# Phrases that announce their own significance (whole phrases, case-insensitive).
+# "significantly" has its own category.
+significance_phrases = [
+  "it is worth noting", "it is worth pausing", "worth noting", "it is important to",
+  "crucially", "notably", "the key point is", "what matters here is", "importantly",
+  "it should be noted", "it is worth emphasizing", "it is worth stressing",
+  "noteworthy", "particularly striking", "strikingly", "remarkably",
+]
+
+# Announcer phrases that count only at the start of a sentence.
+significance_initial_phrases = ["note that"]
+
+# Words that, right after ", not", mean the comma is not a contrast
+# (", not shown", ", not only"). Used by negation_comma_not.
+negation_comma_not_exclude = [
+  "shown", "reported", "only", "merely", "just", "included", "listed", "applicable",
+  "available", "tested", "evaluated", "used", "yet", "to", "all", "every",
+]
+
+# Roadmap and forward-pointer phrases. Entries are regular expressions matched
+# case-insensitively against one sentence. Use (?-i:...) to force case.
+# In LaTeX, a \ref argument is replaced by the placeholder "N", so
+# "Section~\ref{sec:x} shows" is seen as "Section N shows".
+roadmap_phrases = [
+  'this section',
+  'the rest of this paper',
+  'the remainder of this paper',
+  'this paper is organi[sz]ed',
+  'in the following section',
+  'in the next section',
+  '(?:\b(?:Sections?|Sec\.|Appendix|Appendices)|§)\s*(?-i:[A-Z0-9])[\w.]*\s+(?:shows?|presents?|describes?|discusses|introduces?|outlines?|covers?|develops?|explains?|collects?|summari[sz]es?)\b',
+  '(?:\b(?:Sections?|Sec\.|Appendix|Appendices|Tables?|Figures?|Figs?\.)|§)\s*(?-i:[A-Z0-9])[\w.]*(?:\s+and\s+(?:(?:Sections?|Sec\.|Appendix|Tables?|Figures?|Figs?\.)\s*)?(?-i:[A-Z0-9])[\w.]*)?\s+(?:\w+\s+){0,2}?(?:present|show|summari[sz]|collect|describe|report|list|give|display|detail|compare|illustrate)\w*\b',
+  '\bTables?\s+(?-i:[A-Z0-9])[\w.]*\s+(?:collects?|summari[sz]es?|lists?)\b',
+  '\bwe\s+first\b.{1,120}?\bthen\b',
+  '\bbelow,?\s+we\b',
+]
+
+# Tokens that look like internal codes (regex letter(s)+digit(s)) but are fine.
+# Matching is case-sensitive.
+internal_label_allowlist = ["H100", "A100", "T4", "L4", "V100", "GPT4", "F1"]
+
+# Process-record words (whole words, case-insensitive).
+process_words = ["session", "sessions", "wave", "waves", "gate", "gates"]
+
+# File extensions that mark a token as a filename or path (case-insensitive).
+file_extensions = [
+  "py", "json", "jsonl", "csv", "tsv", "tex", "md", "yaml", "yml", "toml", "sh",
+  "txt", "pdf", "png", "jpg", "jpeg", "svg", "npy", "npz", "pkl", "pt", "log",
+  "bib", "ipynb", "cfg", "ini", "parquet", "h5", "zip",
+]
+
+# Macros whose first braced argument may contain decimals (generated numbers).
+number_macros = ["num", "result", "res", "SI"]
+
+# Macros whose braced argument is a title; each is checked wherever it appears,
+# preamble included. A "\\" line break inside the argument counts as a space.
+title_macros = ["title", "icmltitle", "icmltitlerunning"]
+
+# Macros whose argument is code-like, so underscores are allowed inside.
+code_macros = ["texttt", "path", "code", "lstinline"]
+
+# A decimal directly after one of these words is a cross-reference such as
+# "Section 4.2", not a measured value. Compared case-insensitively.
+decimal_context_exempt = [
+  "section", "sections", "sec.", "appendix", "figure", "fig.", "table", "eq.",
+  "equation", "theorem", "lemma", "proposition", "algorithm", "listing", "§",
+  "version", "python",
+]
+
+# For "It is X that": if the first word of X is listed, the sentence is not
+# flagged (these are plain expletives covered elsewhere or ordinary prose).
+cleft_it_that_exclude = [
+  "clear", "known", "shown", "possible", "likely", "unlikely", "true", "unclear",
+  "evident", "apparent", "natural", "expected", "plausible", "conceivable",
+  "worth", "important", "well", "often", "easy", "hard", "difficult", "impossible",
+  "necessary", "assumed", "argued", "observed", "recognized", "established",
+]
+
+# ---------------------------------------------------------------------------
+# British to American spelling. Whole-word, case-insensitive, explicit inflections.
+# Deliberately absent: dialogue, towards, analyses, precise, advise, and every
+# -ise word that is also American (compromise, exercise, surprise, and so on).
+# ---------------------------------------------------------------------------
+[british_spellings]
+colour = "color"
+colours = "colors"
+coloured = "colored"
+colouring = "coloring"
+behaviour = "behavior"
+behaviours = "behaviors"
+behavioural = "behavioral"
+favour = "favor"
+favours = "favors"
+favoured = "favored"
+favourite = "favorite"
+favourable = "favorable"
+honour = "honor"
+honours = "honors"
+labour = "labor"
+neighbour = "neighbor"
+neighbours = "neighbors"
+neighbouring = "neighboring"
+neighbourhood = "neighborhood"
+neighbourhoods = "neighborhoods"
+harbour = "harbor"
+humour = "humor"
+rumour = "rumor"
+flavour = "flavor"
+analyse = "analyze"
+analysed = "analyzed"
+analysing = "analyzing"
+analyser = "analyzer"
+paralyse = "paralyze"
+paralysed = "paralyzed"
+catalyse = "catalyze"
+catalysed = "catalyzed"
+optimise = "optimize"
+optimised = "optimized"
+optimises = "optimizes"
+optimising = "optimizing"
+optimisation = "optimization"
+optimisations = "optimizations"
+optimiser = "optimizer"
+optimisers = "optimizers"
+normalise = "normalize"
+normalised = "normalized"
+normalises = "normalizes"
+normalising = "normalizing"
+normalisation = "normalization"
+generalise = "generalize"
+generalised = "generalized"
+generalises = "generalizes"
+generalising = "generalizing"
+generalisation = "generalization"
+generalisations = "generalizations"
+characterise = "characterize"
+characterised = "characterized"
+characterises = "characterizes"
+characterising = "characterizing"
+characterisation = "characterization"
+organise = "organize"
+organised = "organized"
+organises = "organizes"
+organising = "organizing"
+organisation = "organization"
+organisations = "organizations"
+recognise = "recognize"
+recognised = "recognized"
+recognises = "recognizes"
+recognising = "recognizing"
+summarise = "summarize"
+summarised = "summarized"
+summarises = "summarizes"
+summarising = "summarizing"
+minimise = "minimize"
+minimised = "minimized"
+minimises = "minimizes"
+minimising = "minimizing"
+maximise = "maximize"
+maximised = "maximized"
+maximises = "maximizes"
+maximising = "maximizing"
+utilise = "utilize"
+utilised = "utilized"
+utilises = "utilizes"
+utilising = "utilizing"
+utilisation = "utilization"
+realise = "realize"
+realised = "realized"
+realises = "realizes"
+realising = "realizing"
+realisation = "realization"
+standardise = "standardize"
+standardised = "standardized"
+standardisation = "standardization"
+parameterise = "parameterize"
+parameterised = "parameterized"
+parameterisation = "parameterization"
+regularise = "regularize"
+regularised = "regularized"
+regularisation = "regularization"
+randomise = "randomize"
+randomised = "randomized"
+randomisation = "randomization"
+tokenise = "tokenize"
+tokenised = "tokenized"
+tokenising = "tokenizing"
+tokenisation = "tokenization"
+tokeniser = "tokenizer"
+tokenisers = "tokenizers"
+visualise = "visualize"
+visualised = "visualized"
+visualising = "visualizing"
+visualisation = "visualization"
+visualisations = "visualizations"
+initialise = "initialize"
+initialised = "initialized"
+initialisation = "initialization"
+synchronise = "synchronize"
+synchronised = "synchronized"
+stabilise = "stabilize"
+stabilised = "stabilized"
+emphasise = "emphasize"
+emphasised = "emphasized"
+hypothesise = "hypothesize"
+hypothesised = "hypothesized"
+prioritise = "prioritize"
+prioritised = "prioritized"
+specialise = "specialize"
+specialised = "specialized"
+penalise = "penalize"
+penalised = "penalized"
+categorise = "categorize"
+categorised = "categorized"
+categorisation = "categorization"
+customise = "customize"
+customised = "customized"
+centre = "center"
+centres = "centers"
+centred = "centered"
+metre = "meter"
+metres = "meters"
+fibre = "fiber"
+fibres = "fibers"
+litre = "liter"
+calibre = "caliber"
+theatre = "theater"
+sceptical = "skeptical"
+sceptic = "skeptic"
+modelling = "modeling"
+modelled = "modeled"
+labelled = "labeled"
+labelling = "labeling"
+travelled = "traveled"
+travelling = "traveling"
+cancelled = "canceled"
+signalling = "signaling"
+signalled = "signaled"
+fulfil = "fulfill"
+fulfils = "fulfills"
+enrol = "enroll"
+enrolment = "enrollment"
+programme = "program"
+programmes = "programs"
+catalogue = "catalog"
+catalogues = "catalogs"
+defence = "defense"
+licence = "license"
+grey = "gray"
+judgement = "judgment"
+ageing = "aging"
+artefact = "artifact"
+artefacts = "artifacts"
+whilst = "while"
+amongst = "among"
+learnt = "learned"
+spelt = "spelled"
+cheque = "check"
+aluminium = "aluminum"
+practise = "practice"
+offence = "offense"
+pretence = "pretense"
+manoeuvre = "maneuver"
