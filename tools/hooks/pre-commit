@@ -39,6 +39,17 @@ if [ "${hits_ci:-0}" -gt 0 ] || [ "${hits_cs:-0}" -gt 0 ]; then
   fail=1
 fi
 
+# 5. Legacy freeze (docs/LEGACY.md): reject any staged addition, modification, deletion, rename
+#    or type change that touches a frozen path. There is deliberately no override switch; a change
+#    to the freeze must edit this pattern in its own commit.
+FROZEN_RE='^(papers/v[123]/|src/(v1_baseline|v2_comprehensive|v3_multimodel|v4_dprc)/|results/|data/|archives/[^/]*\.zip$|REPRODUCE\.md$)'
+frozen_hits="$(git diff --cached --name-only --no-renames | grep -E "$FROZEN_RE" || true)"
+if [ -n "$frozen_hits" ]; then
+  echo "pre-commit: staged changes touch frozen legacy paths (see docs/LEGACY.md):" >&2
+  printf '%s\n' "$frozen_hits" | sed 's/^/  /' >&2
+  fail=1
+fi
+
 # 4. Secret scan of staged changes.
 if ! command -v gitleaks >/dev/null 2>&1; then
   echo "pre-commit: gitleaks not found on PATH; install it (brew install gitleaks)." >&2
