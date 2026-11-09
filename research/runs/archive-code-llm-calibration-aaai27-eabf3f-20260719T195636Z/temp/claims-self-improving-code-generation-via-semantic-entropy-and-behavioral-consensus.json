@@ -1,0 +1,106 @@
+[
+  {
+    "claim": "On CodeLlama-7B, internal confidence metrics (token-level entropy, negative log-likelihood) barely surpass random guessing (AUC near 0.5) at distinguishing solvable from unsolvable problems, and even show undesirable positive correlation with pass rate, whereas code semantic entropy (execution-behavior clustering) reaches AUC up to 0.804.",
+    "stance": "supports",
+    "stance_target": "internal token-level confidence signals (log-likelihood, entropy) are unreliable for code LLMs including models used in the calibration-disconnect paper, while behavioral/execution-based consistency signals are strong -- independent replication of the internal-vs-expressed calibration disconnect at the problem-difficulty level",
+    "evidence_type": "empirical",
+    "scope_conditions": "CodeLlama-7B-instruct, DeepSeek-Coder-6.7B-instruct, Qwen2.5-Coder-7B; problem-level (not solution-level) discrimination of solvable (pass rate>0) vs unsolvable (pass rate=0) problems; ~20,000 evaluation data points",
+    "quoted_support": "While internal metrics barely surpass random guessing (near 0.5) on CodeLlama, code semantic entropy consistently achieves high AUC scores, reaching up to 0.804... In contrast, the internal metrics show weak or even undesirable positive correlation on CodeLlama, confirming their unreliability for lower-capacity models.",
+    "numbers": [
+      "AUC ~0.5 (internal metrics, CodeLlama)",
+      "AUC up to 0.804 (code semantic entropy)",
+      "Pearson r=-0.717 (code sem. entropy, Qwen)",
+      "p<10^-300"
+    ],
+    "entities": [
+      "CodeLlama-7B",
+      "DeepSeek-Coder-6.7B",
+      "Qwen2.5-Coder-7B",
+      "token-level entropy",
+      "negative log-likelihood",
+      "code semantic entropy"
+    ],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "self-improving-code-generation-via-semantic-entropy-and-behavioral-consensus"
+  },
+  {
+    "claim": "Consensus-driven DPO (Con-DPO), which weights each preference pair by behavioral consensus among sampled candidates, combined with a code-semantic-entropy-curated learnable-problem curriculum, improves pass@1 by 2.73-3.95% relative to base models using far less training data than unfiltered Self-SFT/Self-DPO/PFPO baselines, which actively degrade CodeLlama and DeepSeek-Coder.",
+    "stance": "neutral",
+    "stance_target": "prescriptive use of internal consistency/consensus signals for self-improvement training, as an alternative application domain to inference-time confidence communication",
+    "evidence_type": "empirical",
+    "scope_conditions": "HumanEval, MBPP, HumanEval+/MBPP+ (EvalPlus), LiveCodeBench; CodeLlama-7B, DeepSeek-Coder-6.7B, Qwen2.5-Coder-7B backbones",
+    "quoted_support": "We conduct extensive experiments on standard benchmarks, demonstrating 2.73%\u20133.95% relative improvement over base models... Self-SFT and Self-DPO, both trained on the full unfiltered set of self-generated data, consistently degrade performance on CodeLlama and DeepSeek-Coder.",
+    "numbers": [
+      "2.73%-3.95% relative pass@1 improvement",
+      "6,372 training examples (DeepSeek-Coder, ConSelf) vs 46,734 (unfiltered Self-DPO) vs 42,278 (PFPO)"
+    ],
+    "entities": [
+      "ConSelf",
+      "Con-DPO",
+      "Self-SFT",
+      "Self-DPO",
+      "PFPO"
+    ],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "self-improving-code-generation-via-semantic-entropy-and-behavioral-consensus"
+  },
+  {
+    "claim": "Naive (text-embedding-based) semantic entropy shows only moderate negative correlation with pass rate, reflecting limited sensitivity to functional equivalence, distinct from execution-behavior-based code semantic entropy which shows the strongest and most consistent negative correlation across all models.",
+    "stance": "supports",
+    "stance_target": "execution/behavior-grounded consistency signals outperform text-similarity-based proxies for code uncertainty, generalizing the finding across multiple independent papers (FASE, ConSelf, Functional Entropy)",
+    "evidence_type": "empirical",
+    "scope_conditions": "Table 2 correlation analysis across CodeLlama, DeepSeek-Coder, Qwen2.5-Coder",
+    "quoted_support": "Code semantic entropy shows the strongest and most consistent negative correlation with pass rates across all models (e.g., -0.717 Pearson on Qwen)... Naive semantic entropy demonstrates moderate negative correlation, reflecting its limited sensitivity to functional equivalence.",
+    "numbers": [
+      "Pearson -0.717 (code sem. entropy, Qwen)",
+      "Pearson -0.287 (naive sem. entropy, CodeLlama)"
+    ],
+    "entities": [
+      "code semantic entropy",
+      "naive semantic entropy",
+      "Kuhn et al. 2023"
+    ],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "self-improving-code-generation-via-semantic-entropy-and-behavioral-consensus"
+  },
+  {
+    "claim": "Code semantic entropy requires executing multiple candidate programs, adding compute cost, and the method shows limited gains on problems far beyond the model's capability, indicating that behavioral/consistency-based curricula cannot substitute for external supervision on hard problems.",
+    "stance": "neutral",
+    "stance_target": "limits of self-supervised, consistency-based signals as a complete substitute for external verification or supervision",
+    "evidence_type": "empirical",
+    "scope_conditions": "Threats to Validity, Section 4",
+    "quoted_support": "the effectiveness of curriculum filtering depends on the dataset's difficulty and the model's capability. Our method shows limited gains on problems far beyond model capacity, indicating that external supervision (e.g., teacher models or test oracles) remains necessary.",
+    "numbers": [],
+    "entities": [
+      "code semantic entropy",
+      "Con-DPO"
+    ],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "self-improving-code-generation-via-semantic-entropy-and-behavioral-consensus"
+  },
+  {
+    "claim": "This paper never addresses expressed-interface communication of confidence (verbalized confidence, log-prob at inference time, post-hoc calibration) -- it applies the internal consistency signal purely for training-time data curation and DPO weighting, leaving the prescriptive expressed-interface problem entirely unaddressed.",
+    "stance": "neutral",
+    "stance_target": "scope gap: this paper's use of the strong internal signal is confined to training-time curriculum/weighting, not inference-time confidence reporting to a user",
+    "evidence_type": "theoretical",
+    "scope_conditions": "Whole-paper scope assessment",
+    "quoted_support": "The model generates code samples for each problem by observation-guided sampling, estimates code semantic entropy to filter problems, and fine-tunes itself on consensus-driven preference pairs.",
+    "numbers": [],
+    "entities": [
+      "ConSelf",
+      "Con-DPO"
+    ],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "self-improving-code-generation-via-semantic-entropy-and-behavioral-consensus"
+  }
+]

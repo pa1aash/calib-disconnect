@@ -1,0 +1,72 @@
+[
+  {
+    "claim": "AAAI-25 accepted a paper (CRaFT) whose central novelty is a diagnostic taxonomy of two failure modes (static conflict, dynamic conflict) plus a training method that reconciles a certainty signal with a moving ground-truth over the course of fine-tuning.",
+    "stance": "neutral",
+    "stance_target": "what novelty type AAAI rewards in calibration/refusal papers",
+    "evidence_type": "theoretical",
+    "scope_conditions": "refusal-aware instruction tuning (RAIT) for LLMs",
+    "quoted_support": "we explore two primary causes of over-refusal: Static conflict occurs when similar samples within the LLM's feature space receive differing supervision signals ... Dynamic conflict arises as the LLM's evolving knowledge during SFT enables it to answer previously unanswerable questions",
+    "numbers": [],
+    "entities": ["CRaFT", "Runchuan Zhu", "Shanghai AI Lab"],
+    "time_period": "2024-2025",
+    "region": "n/a",
+    "confidence": "high",
+    "source_note_id": "241006913-utilize-the-flow-before-stepping-into-the-same-river-twice-certainty-r"
+  },
+  {
+    "claim": "RAIT models trained naively on correctness-only labels over-refuse: they learn to say 'I don't know' even to questions they could answer correctly, because training data modification is too crude.",
+    "stance": "supports",
+    "stance_target": "that binary correctness alone is an insufficient training signal for confidence/refusal behavior",
+    "evidence_type": "empirical",
+    "scope_conditions": "refusal-aware instruction tuning, open QA and multiple-choice QA",
+    "quoted_support": "this crude approach can cause LLMs to excessively refuse answering questions they could have correctly answered, the problem we call over-refusal",
+    "numbers": [],
+    "entities": ["RAIT", "over-refusal"],
+    "time_period": "2024",
+    "region": "n/a",
+    "confidence": "high",
+    "source_note_id": "241006913-utilize-the-flow-before-stepping-into-the-same-river-twice-certainty-r"
+  },
+  {
+    "claim": "CRaFT incorporates response CERTAINTY (not just correctness) into training-data filtering/relabeling to reduce static conflict.",
+    "stance": "supports",
+    "stance_target": "using certainty (graded confidence) rather than binary correctness as a training signal, analogous to DPRC's approach",
+    "evidence_type": "empirical",
+    "scope_conditions": "RAIT SFT pipeline",
+    "quoted_support": "we additionally incorporate response certainty to selectively filter and modify data, reducing static conflicts",
+    "numbers": [],
+    "entities": ["CRaFT"],
+    "time_period": "2024",
+    "region": "n/a",
+    "confidence": "high",
+    "source_note_id": "241006913-utilize-the-flow-before-stepping-into-the-same-river-twice-certainty-r"
+  },
+  {
+    "claim": "CRaFT uses a preliminary 'rehearsal' training pass to characterize how the model's own knowledge state changes during SFT, addressing the fact that ground-truth answerability is a moving target during fine-tuning.",
+    "stance": "neutral",
+    "stance_target": "handling non-stationary ground truth during confidence-related fine-tuning",
+    "evidence_type": "empirical",
+    "scope_conditions": "RAIT SFT",
+    "quoted_support": "we implement preliminary rehearsal training to characterize changes in the LLM's knowledge state, which helps mitigate dynamic conflicts during the fine-tuning process",
+    "numbers": [],
+    "entities": ["CRaFT", "rehearsal training"],
+    "time_period": "2024",
+    "region": "n/a",
+    "confidence": "high",
+    "source_note_id": "241006913-utilize-the-flow-before-stepping-into-the-same-river-twice-certainty-r"
+  },
+  {
+    "claim": "CRaFT was validated on extensive experiments spanning open-ended QA and multiple-choice QA tasks with released code and data, indicating AAAI expects both breadth of task type and reproducibility artifacts.",
+    "stance": "neutral",
+    "stance_target": "AAAI bar for experimental breadth and reproducibility",
+    "evidence_type": "empirical",
+    "scope_conditions": "RAIT",
+    "quoted_support": "We conducted extensive experiments on open-ended question answering and multiple-choice question task. ... Code and data will be released",
+    "numbers": [],
+    "entities": ["CRaFT"],
+    "time_period": "2024",
+    "region": "n/a",
+    "confidence": "medium",
+    "source_note_id": "241006913-utilize-the-flow-before-stepping-into-the-same-river-twice-certainty-r"
+  }
+]

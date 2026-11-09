@@ -1,0 +1,58 @@
+[
+  {
+    "claim": "Self-consistency across sampled responses is a more reliable measure of model confidence than log-probability-based scores, and this paper builds an abstention method by having the LLM self-evaluate similarity between its own sampled responses.",
+    "stance": "supports",
+    "stance_target": "the target paper's core premise: repeated-sampling confidence outperforms expressed/log-probability confidence",
+    "evidence_type": "empirical",
+    "scope_conditions": "closed-book open-domain generative QA",
+    "quoted_support": "Building on earlier approaches that use self-consistency as a more reliable measure of model confidence, we propose using the LLM itself to self-evaluate the similarity between each of its sampled responses for a given query.",
+    "numbers": [],
+    "entities": ["self-consistency", "conformal abstention"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "240501563-mitigating-llm-hallucinations-via-conformal-abstention"
+  },
+  {
+    "claim": "Conformal prediction techniques applied to a self-consistency-based confidence signal yield an abstention procedure with rigorous theoretical guarantees on the hallucination (error) rate.",
+    "stance": "supports",
+    "stance_target": "feasibility of a formally-guaranteed downstream action built directly on a sampling-based confidence signal",
+    "evidence_type": "theoretical",
+    "scope_conditions": "general-domain QA, requires conformal calibration set",
+    "quoted_support": "We then further leverage conformal prediction techniques to develop an abstention procedure that benefits from rigorous theoretical guarantees on the hallucination rate (error rate).",
+    "numbers": [],
+    "entities": ["conformal prediction", "hallucination rate guarantee"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "240501563-mitigating-llm-hallucinations-via-conformal-abstention"
+  },
+  {
+    "claim": "The conformal abstention method reliably bounds hallucination rate on multiple open-domain QA datasets while maintaining a significantly LESS conservative (higher-coverage) abstention rate than log-probability-based baselines on long-response data (Temporal Sequences), and comparable performance on short-answer data (TriviaQA).",
+    "stance": "supports",
+    "stance_target": "self-consistency/sampling-based confidence, when turned into an abstention policy, beats log-probability confidence on the accuracy-coverage tradeoff, at least for long-form responses",
+    "evidence_type": "empirical",
+    "scope_conditions": "Temporal Sequences (long responses) and TriviaQA (short answers) datasets",
+    "quoted_support": "our resulting conformal abstention method reliably bounds the hallucination rate on various closed-book, open-domain generative question answering datasets, while also maintaining a significantly less conservative abstention rate on a dataset with long responses (Temporal Sequences) compared to baselines using log-probability scores to quantify uncertainty, while achieveing comparable performance on a dataset with short answers (TriviaQA).",
+    "numbers": [],
+    "entities": ["Temporal Sequences", "TriviaQA", "log-probability baseline"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "240501563-mitigating-llm-hallucinations-via-conformal-abstention"
+  },
+  {
+    "claim": "This general-domain conformal abstention method uses LLM-judged similarity to determine response equivalence, whereas a code-generation analogue could substitute an execution-based equivalence check (as in Task Abstention, 2605.17029), which would remove reliance on a second LLM-as-judge call and its own calibration uncertainty.",
+    "stance": "neutral",
+    "stance_target": "methodological template transferable to code with a cleaner ground-truth equivalence check (execution outcomes) than general QA affords",
+    "evidence_type": "theoretical",
+    "scope_conditions": "cross-paper comparison; not stated directly in this abstract",
+    "quoted_support": "we use a thresholded similarity function to determine if two responses match, but also provide a method for calibrating the threshold based on conformal prediction",
+    "numbers": [],
+    "entities": ["response equivalence", "execution-based equivalence", "conformal calibration"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "240501563-mitigating-llm-hallucinations-via-conformal-abstention"
+  }
+]

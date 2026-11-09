@@ -1,0 +1,41 @@
+{
+  "sub_questions": [
+    "What do RECENTLY ACCEPTED AAAI main-track papers (2024-2026) in ML calibration / uncertainty quantification / selective prediction, and in code-LLM / code generation, actually look like — scope, number of experiments, baselines, models/scale, novelty type, and what reviewers reward vs reject?",
+    "Given DPRC's current + projected results (TACO collapse; BigCodeBench per-method oracle 0.931 > scalar 0.875, 32% partial; trained self-expressed AUROC TBD), where does it stand vs that bar — accept / borderline-accept / borderline-reject / reject — and what is the single harshest fair objection?",
+    "What specific ADDITIONAL experiments, baselines, ablations, framing, and headline numbers are needed to move DPRC from its current standing to a clear AAAI-27 main-track accept, prioritized by leverage?",
+    "Is the competitive-vs-functional contrast (per-requirement confidence collapses on competitive code but is real on functional code) a STRENGTH to lead with (principled scope finding) or a WEAKNESS (reads as narrow/single-benchmark)?",
+    "What highest-leverage additions (mechanism/theory result, downstream-utility result, scale/cross-model generalization, human or deployment signal) would most raise acceptance odds — 'cook harder'?",
+    "How does DPRC's residual novelty hold against the closest accepted/under-review work (DCPO scalar-on-code; CURE/Atomic per-claim-NL; FLARE/Gros&Devanbu external probes; the UT-Dallas scoop), specifically at the AAAI reviewing bar?"
+  ],
+  "entities": [
+    {"name": "Accepted AAAI main-track calibration/UQ papers 2024-2026", "type": "literature-cluster", "required_fields": ["scope", "experiments/baselines", "models/scale", "novelty type", "reviewer reward/reject signals"]},
+    {"name": "Accepted AAAI main-track code-LLM / code-generation papers 2024-2026", "type": "literature-cluster", "required_fields": ["scope", "experiments", "novelty type"]},
+    {"name": "DPRC current standing", "type": "assessment", "required_fields": ["verdict", "harshest objection", "what closes the gap"]},
+    {"name": "Prioritized gap-closure to-do", "type": "deliverable", "required_fields": ["experiment/baseline/ablation", "leverage", "effort"]}
+  ],
+  "required_formats": [
+    "concrete list of recently-accepted AAAI papers as the reference bar",
+    "an explicit accept/borderline/reject verdict with the harshest objection",
+    "a prioritized gap-closure to-do (leverage x effort)"
+  ],
+  "required_section_headings": [
+    "## 1. The Real AAAI Main-Track Bar: What Accepted Calibration/UQ + Code-LLM Papers Look Like",
+    "## 2. Honest Verdict: Where DPRC Stands vs That Bar (and the Harshest Objection)",
+    "## 3. The Prioritized Gap-Closure To-Do to Reach a Clear Accept",
+    "## 4. Framing: Is the Competitive-vs-Functional Contrast a Strength or a Weakness?",
+    "## 5. Cooking Harder: Highest-Leverage Additions That Most Raise Acceptance Odds",
+    "## 6. Novelty Defense at the Reviewing Bar vs the Closest Work",
+    "## 7. Bottom Line: Committed Standing + The Path to Accept"
+  ],
+  "time_horizons": ["AAAI-27 cycle (abstracts 2026-07-21, papers 2026-07-28)", "reference papers 2024-2026"],
+  "time_periods": [],
+  "scope_conditions": [
+    "single-GPU 7B-scale compute (A100-80GB, LoRA); both Qwen2.5-Coder-7B + DeepSeek-Coder-6.7B",
+    "BAR-CALIBRATION + GAP-ANALYSIS, not novelty discovery (that is settled)",
+    "must use OUR real emerging results to assess OUR specific standing, not a generic survey",
+    "adversarial area-chair / reviewer-2 mindset; committed verdict, no fence-sitting"
+  ],
+  "pipeline_tier": "full",
+  "response_format": "argumentative",
+  "citation_style": "inline"
+}

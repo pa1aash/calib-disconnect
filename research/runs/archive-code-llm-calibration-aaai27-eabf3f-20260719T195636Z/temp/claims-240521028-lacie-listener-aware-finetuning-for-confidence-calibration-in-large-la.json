@@ -1,0 +1,58 @@
+[
+  {
+    "claim": "LACIE frames confidence calibration as preference optimization (DPO) rather than reward-shaped RL, generating training data via a two-agent speaker-listener game where a simulated listener judges whether the speaker's answer plus confidence should be accepted.",
+    "stance": "supports",
+    "stance_target": "DPO/preference optimization is a viable alternative to RL reward-shaping for training expressed confidence",
+    "evidence_type": "theoretical",
+    "scope_conditions": "TriviaQA-based training",
+    "quoted_support": "We cast calibration as preference optimization, creating data via a two-agent game, where a speaker model's outputs are judged by a simulated listener.",
+    "numbers": [],
+    "entities": ["LACIE", "DPO", "Mistral-7B", "Llama3-8B", "Llama3-70B"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "240521028-lacie-listener-aware-finetuning-for-confidence-calibration-in-large-la"
+  },
+  {
+    "claim": "In human evaluation, LACIE-trained models led to 47% fewer incorrect answers being accepted by human listeners while maintaining the same acceptance rate for correct answers -- a discrimination-relevant, decision-theoretic result beyond standard ECE/AUROC.",
+    "stance": "supports",
+    "stance_target": "training-time calibration can be validated by downstream human decision quality, not just statistical metrics",
+    "evidence_type": "empirical",
+    "scope_conditions": "human annotators evaluating LLM answers post LACIE fine-tuning",
+    "quoted_support": "Training with LACIE results in 47% fewer incorrect answers being accepted while maintaining the same level of acceptance for correct answers.",
+    "numbers": ["47% fewer incorrect answers accepted"],
+    "entities": ["human evaluation"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "240521028-lacie-listener-aware-finetuning-for-confidence-calibration-in-large-la"
+  },
+  {
+    "claim": "LACIE calibrates both explicit confidence markers (numeric scores) and implicit markers (authoritative tone, hedging, elaboration), and analysis shows LACIE-trained models hedge more and signal certainty through tone/detail when correct, plus emergent increased abstention on likely-wrong answers.",
+    "stance": "supports",
+    "stance_target": "an expressed confidence interface can include implicit linguistic markers, not just a single numeric token",
+    "evidence_type": "empirical",
+    "scope_conditions": "qualitative analysis of LACIE-trained model outputs",
+    "quoted_support": "A LACIE-trained model hedges more and implicitly signals certainty when it is correct by using an authoritative tone or including details... LACIE finetuning leads to an emergent increase in model abstention.",
+    "numbers": [],
+    "entities": ["implicit confidence markers", "abstention"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "240521028-lacie-listener-aware-finetuning-for-confidence-calibration-in-large-la"
+  },
+  {
+    "claim": "LACIE generalizes from TriviaQA training to a large increase in truthfulness on TruthfulQA, and its analysis indicates it produces better confidence separation between correct and incorrect examples (a discrimination-type claim).",
+    "stance": "supports",
+    "stance_target": "DPO-trained verbalized confidence can generalize out-of-domain and be discriminative",
+    "evidence_type": "empirical",
+    "scope_conditions": "TriviaQA-trained model evaluated zero-shot on TruthfulQA",
+    "quoted_support": "LACIE generalizes to another dataset, resulting in a large increase in truthfulness on TruthfulQA when trained on TriviaQA. Our analysis indicates that LACIE leads to a better confidence separation between correct and incorrect examples.",
+    "numbers": [],
+    "entities": ["TruthfulQA"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "240521028-lacie-listener-aware-finetuning-for-confidence-calibration-in-large-la"
+  }
+]

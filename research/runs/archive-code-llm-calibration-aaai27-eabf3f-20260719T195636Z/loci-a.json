@@ -1,0 +1,140 @@
+{
+  "analyst_id": "a",
+  "loci": [
+    {
+      "name": "collapse-proof-training-objective",
+      "flavor": "dialectical",
+      "one_line": "Which exact train-time objective for expressed confidence provably avoids the 'calibration without discrimination' bucket-collapse the disconnect paper's own naive SFT run produced, when ported to code with execution-verified labels?",
+      "rationale": "The disconnect paper's own 274-example LoRA SFT intervention cut verbal ECE 64% but collapsed to a single default confidence bin (mean 0.900 on both easy and hard problems) -- this is the single biggest threat to Direction B's headline landing (P2). The corpus contains a genuine, load-bearing disagreement about WHY naive fine-tuning collapses and what fixes it. 260113284 (Yaldiz et al.) finds RLVR-for-accuracy-only makes decision-token overconfidence WORSE while plain SFT calibrates better (opposite mechanism at the logit level) -- but this is decision-token calibration, not verbalized-confidence RL. Separately, DCPO (260309117) proves a THEORETICAL gradient conflict when a calibration term is folded into the same RLVR objective as accuracy. Meanwhile ConfTuner (proper-scoring tokenized Brier SFT loss, no RL needed), Rewarding Doubt (RL log-scoring reward, single A40 LoRA), Beyond Binary Rewards/RLCR (RL Brier-style proper scoring reward), and ORCE (rank-aware DPO) all independently report AUROC 0.69-0.86 verbal discrimination WITHOUT collapse -- but every one of these is on QA/math, never code, and it is unresolved which specific structural feature (proper-scoring-rule loss vs. RL-vs-SFT vs. decoupled confidence head) is the actual active ingredient that would prevent the exact collapse mode the disconnect paper already observed on code. Getting this wrong is the most likely single failure mode of the whole proposal.",
+      "corpus_evidence": [
+        "conftuner-training-large-language-models-to-express-their-confidence-verbally",
+        "rewarding-doubt-a-reinforcement-learning-approach-to-calibrated-confidence-expre",
+        "beyond-binary-rewards-training-lms-to-reason-about-their-uncertainty",
+        "orce-order-aware-alignment-of-verbalized-confidence-in-large-language-models",
+        "260113284-balancing-classification-and-calibration-performance-in-decision-makin",
+        "260309117-decoupling-reasoning-and-confidence-resurrecting-calibration-in-reinfo",
+        "verbalized-confidence-triggers-self-verification-emergent-behavior-without-expli"
+      ],
+      "opposing_positions": [
+        {"position": "A proper-scoring-rule loss (tokenized Brier, log-scoring, or Brier-style RL reward) is the active ingredient; SFT-vs-RL is a secondary implementation detail, and code's execution-verified ground truth makes this transfer MORE reliable than the QA settings these methods were validated on.", "sources": ["conftuner-training-large-language-models-to-express-their-confidence-verbally", "rewarding-doubt-a-reinforcement-learning-approach-to-calibrated-confidence-expre", "beyond-binary-rewards-training-lms-to-reason-about-their-uncertainty", "orce-order-aware-alignment-of-verbalized-confidence-in-large-language-models"]},
+        {"position": "Naive fine-tuning to a fixed/scalar confidence target collapses (disconnect paper's own SFT run; Jang's plain CSFT uses a similar discretized scalar target and is the closest analog), and jointly optimizing accuracy + calibration in one RLVR objective creates a proven gradient conflict (DCPO) or logit-level overconfidence (260113284) -- so the fix must specifically avoid both failure patterns, not just add 'more training'.", "sources": ["260309117-decoupling-reasoning-and-confidence-resurrecting-calibration-in-reinfo", "260113284-balancing-classification-and-calibration-performance-in-decision-makin", "verbalized-confidence-triggers-self-verification-emergent-behavior-without-expli"]}
+      ],
+      "suggested_starting_urls": [
+        "https://arxiv.org/abs/2508.18847",
+        "https://arxiv.org/abs/2503.02623",
+        "https://arxiv.org/abs/2507.16806",
+        "https://arxiv.org/abs/2605.12446"
+      ],
+      "suggested_searches": [
+        "tokenized Brier score proper scoring rule verbalized confidence code generation",
+        "why does SFT to scalar confidence target collapse discrimination",
+        "RLVR overconfidence decision token calibration mechanism",
+        "gradient conflict accuracy calibration joint objective proof"
+      ]
+    },
+    {
+      "name": "self-report-vs-external-judge-vs-probe-reversal",
+      "flavor": "dialectical",
+      "one_line": "Does AutoProbe's validated reversal (self-assessment fails everywhere; external LLM-judge wins on simple/independent-unit code; internal probes win on repo-level code) mean Direction B should train a DECOUPLED confidence estimator instead of the coding model's own self-report, and does Direction D's routing story require repo-level complexity variance the current corpus lacks?",
+      "rationale": "I read the AutoProbe full text directly (not just its summary) and confirmed the contradiction-graph's 'self-vs-external-verbal' cluster is a REAL, validated three-way split, not a scope mismatch: AutoProbe's own Table 5 shows In-house LLM-AJ (the SAME model self-assessing its own code -- structurally identical to the disconnect paper's failing verbal self-assessment, AUROC 0.52-0.56) underperforms External LLM-AJ (a fresh judge model, 0.94 avg accuracy on independent-unit code, beating other approaches by 32-121%), while AutoProbe's internal hidden-state probe wins on repo-level code (0.82, comparable to oracle, beating others by up to 111%) as LLM-AJ performance degrades moving to repo-level. This is decisive design evidence: it says self-report is not just under-trained but may have a distinct failure mode from a decoupled judge/probe, which bears directly on whether Direction B's headline experiment should train the CODER model itself to emit confidence (following the disconnect paper's own diagnostic setup) or a separate confidence estimator (ORCE-style decoupled confidence LLM) -- and it independently validates that Direction D's premise (routing between interfaces) is real but complexity-graded, which the disconnect paper's HumanEval-only, function-level-only scope does not yet test.",
+      "corpus_evidence": [
+        "model-agnostic-correctness-assessment-for-llm-generated-code-via-dynamic-interna",
+        "correctness-assessment-of-code-generated-by-large-language-models-using-internal",
+        "orce-order-aware-alignment-of-verbalized-confidence-in-large-language-models"
+      ],
+      "opposing_positions": [
+        {"position": "Self-report (in-context, same-model verbal confidence) is close to fundamentally weak on code -- AutoProbe's In-house LLM-AJ underperforms both External-Judge and internal probes even on the easiest (independent-unit) setting, matching the disconnect paper's own near-random verbal AUROC -- so a defensible headline should decouple the confidence estimator from the generating model.", "sources": ["model-agnostic-correctness-assessment-for-llm-generated-code-via-dynamic-interna", "orce-order-aware-alignment-of-verbalized-confidence-in-large-language-models"]},
+        {"position": "The failure is specifically about UNTRAINED self-report; trained self-report integrated into generation (Rewarding Doubt, RLCR, ConfTuner) is not decoupled and still reaches AUROC 0.79-0.86 on QA, so training the coder model itself is viable and more novel/parsimonious (single model, no extra judge inference cost) if the training signal is execution-grounded.", "sources": ["rewarding-doubt-a-reinforcement-learning-approach-to-calibrated-confidence-expre", "beyond-binary-rewards-training-lms-to-reason-about-their-uncertainty"]}
+      ],
+      "suggested_starting_urls": [
+        "https://arxiv.org/abs/2510.02934",
+        "https://arxiv.org/abs/2605.12446"
+      ],
+      "suggested_searches": [
+        "AutoProbe LLM-as-judge repo-level independent-unit code correctness reversal",
+        "decoupled confidence model versus self-reported confidence LLM code",
+        "complexity-conditional uncertainty estimation code generation repo-level function-level"
+      ]
+    },
+    {
+      "name": "repo-level-feasibility-single-gpu",
+      "flavor": "convergent",
+      "one_line": "Is there a single-GPU-7B-feasible, 7-page-scope code benchmark with real complexity/repo-level variance beyond the disconnect paper's function-level-only HumanEval, sufficient to actually demonstrate a complexity-conditional interface-selection effect (Direction D) within the AAAI-27 time and compute budget?",
+      "rationale": "The AutoProbe reversal (external-judge/self-report wins simple, internal-probe wins repo-level) is Direction D's entire empirical hook, but AutoProbe itself evaluates on DyPyBench/Defects4J-style repo-level data with substantial engineering overhead, and the disconnect paper's grounding is HumanEval-only, function-level, self-contained problems -- a scope explicitly flagged as a limitation in the query grounding doc. LiveCodeBench (used by ConSelf, Sharma&David, RisCoSet) and MultiPL-E/McEval (used by Campos) offer difficulty gradation but are still largely function-level, not repo-level/multi-file. Without confirming a feasible complexity-graded or repo-level benchmark exists that fits single-GPU 7B inference and a 7-page methodological story, Direction D risks needing a benchmarking effort outside scope, directly threatening P2 (confidence the headline lands) more than Direction B does.",
+      "corpus_evidence": [
+        "model-agnostic-correctness-assessment-for-llm-generated-code-via-dynamic-interna",
+        "assessing-correctness-in-llm-based-code-generation-via-uncertainty-estimation",
+        "multicalibration-for-llm-based-code-generation",
+        "260517029-task-abstention-for-large-language-models-in-code-generation"
+      ],
+      "suggested_starting_urls": [
+        "https://arxiv.org/abs/2502.11620",
+        "https://arxiv.org/abs/2605.17029"
+      ],
+      "suggested_searches": [
+        "LiveCodeBench difficulty levels calibration uncertainty code LLM",
+        "repo-level code generation benchmark single GPU feasible evaluation",
+        "complexity-graded code correctness benchmark function-level vs multi-file"
+      ]
+    },
+    {
+      "name": "multicalibration-closest-competitor-check",
+      "flavor": "convergent",
+      "one_line": "Does Campos et al.'s post-hoc multicalibration for code (skill-score gains of +1.03/+0.37 on Qwen3-Coder-30B/GPT-OSS/DeepSeek-R1-Distill-32B) already improve DISCRIMINATION on code confidence -- not just calibration -- and if so, does that foreclose any residual post-hoc angle and sharpen why train-time expressed-confidence (Direction B) is the defensible novelty claim?",
+      "rationale": "Multicalibration for LLM-based Code Generation (Campos, Kuschnereit, Ulges; AI-SQE 2026 workshop) is the single closest existing paper to a 'positive/prescriptive calibration for code' contribution in the corpus: it operates on TOKEN LIKELIHOODS (the same weak log-prob signal the disconnect paper measured at AUROC 0.668) and reports skill-score improvements, but the note excerpt available does not establish whether Brier Skill Score gains reflect improved discrimination (unlike the disconnect paper's own finding that isotonic/Platt post-hoc calibration IMPROVES ECE but DEGRADES AUROC). If Campos's multicalibration genuinely recovers discrimination post-hoc on log-probs, that both threatens and clarifies Direction B's novelty defense (the paper must show train-time methods do something post-hoc group-conditional recalibration cannot); if it does not (skill-score gain driven mostly by calibration, not refinement), that is a stronger, more precise novelty-defense argument than currently drafted.",
+      "corpus_evidence": [
+        "multicalibration-for-llm-based-code-generation",
+        "multicalibration-for-confidence-scoring-in-llms",
+        "calibration-and-correctness-of-language-models-for-code"
+      ],
+      "suggested_starting_urls": [
+        "https://arxiv.org/abs/2512.08810",
+        "https://arxiv.org/abs/2404.04689"
+      ],
+      "suggested_searches": [
+        "multicalibration code LLM skill score discrimination refinement decomposition",
+        "Brier skill score refinement reliability decomposition post-hoc calibration AUROC",
+        "Campos Kuschnereit Ulges multicalibration code generation ablation results"
+      ]
+    },
+    {
+      "name": "fallback-utility-of-collapsed-confidence",
+      "flavor": "convergent",
+      "one_line": "If a train-time execution-grounded intervention for code still partially collapses discrimination (repeating the disconnect paper's SFT failure mode), does a well-calibrated-on-average but low-discrimination confidence signal retain ANY real downstream decision-theoretic utility (population-level abstention threshold, cascade/routing), giving the proposal a credible pre-registered fallback?",
+      "rationale": "The query explicitly requires 'the most likely failure mode and a pre-registered fallback' -- and the single most likely failure mode is a repeat of the disconnect paper's own collapse (calibration WITHOUT discrimination). The corpus contains directly relevant but not fully resolved evidence: CIC (260704430) claims to convert ANY arbitrary, possibly-poorly-calibrated score into a risk-controlled selective-answering rule via conformal calibration on a held-out set, which would suggest even a collapsed/low-AUROC signal could still support a distribution-free abstention guarantee; but the in-IDE calibration study (251022614, 24M+ real interactions) found a general population-level post-hoc calibrator does NOT align with actual developer acceptance behavior at scale, and Task Abstention (260517029) builds its distribution-free guarantee on repeated EXECUTION consistency directly, not on a learned expressed-confidence score at all -- raising the question of whether a collapsed confidence signal is fallback-usable or a genuine dead end requiring the paper to fall back to an execution-based (not expressed-confidence-based) abstention story instead.",
+      "corpus_evidence": [
+        "260704430-uncertainty-aware-abstention-in-large-language-models-with-provable-al",
+        "251022614-does-in-ide-calibration-of-large-language-models-work-at-scale",
+        "260517029-task-abstention-for-large-language-models-in-code-generation",
+        "260512201-uncertainty-quantification-for-llm-based-code-generation"
+      ],
+      "suggested_starting_urls": [
+        "https://arxiv.org/abs/2607.04430",
+        "https://arxiv.org/abs/2510.22614"
+      ],
+      "suggested_searches": [
+        "conformal abstention arbitrary uncertainty score risk control low discrimination",
+        "does calibration without discrimination have downstream decision utility",
+        "population-level confidence calibrator developer acceptance in-IDE deployment failure"
+      ]
+    }
+  ],
+  "skip_loci": [
+    {
+      "slug": "better-internal-signal-for-code",
+      "reason": "Functional Entropy, FASE, ConSelf, and Sharma&David all crowd the 'improve the internal/sampling-based signal itself' space, and the disconnect paper's own internal signal is ALREADY near-perfect (AUROC 0.987) -- per the task brief and consensus-claims.json, this is now 2026 consensus, not a novel headline, so I did not open a locus here. Analyst B may cover this differently but I judged it low-value given the explicit novelty priority."
+    },
+    {
+      "slug": "ece-metric-validity-artifact",
+      "reason": "The 'ece-validity' contradiction cluster (Roelofs, Kim&Kang, TRACER, Spiess bucket-collapse) is real but already has a clean, corpus-stated reconciliation ('use AUROC-primary + a contamination-free benchmark like LiveCodeBench') that does not require further depth investigation to change the paper's design -- it's a methodological safeguard to state in the write-up, not an open question that changes which direction to pick."
+    },
+    {
+      "slug": "human-developer-user-study",
+      "reason": "In-IDE deployment and Copilot/Zoominfo field studies are informative motivation but a real developer user study is explicitly out of scope for a single-GPU, 7-page, compute-only methodological paper; investigating it further would not change feasibility of the headline experiment."
+    },
+    {
+      "slug": "joint-objective-gradient-conflict-standalone",
+      "reason": "The DCPO vs CAPO/Beyond-Binary-Rewards joint-objective-conflict cluster (decision_relevance: medium in the contradiction graph) is real but I folded it into the 'collapse-proof-training-objective' locus rather than treating it as a standalone locus, since it is one input to that single design decision rather than a separate question with its own headline implications."
+    }
+  ]
+}

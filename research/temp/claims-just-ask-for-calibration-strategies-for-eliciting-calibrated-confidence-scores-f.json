@@ -1,0 +1,44 @@
+[
+  {
+    "claim": "For RLHF-tuned LLMs (ChatGPT, GPT-4, Claude), verbalized confidences emitted as output tokens are typically better-calibrated than the model's own conditional token probabilities on TriviaQA, SciQ, and TruthfulQA, often reducing expected calibration error by a relative 50%.",
+    "stance": "refutes",
+    "stance_target": "a universal claim that internal signals always beat verbalized self-report",
+    "evidence_type": "empirical",
+    "scope_conditions": "RLHF-tuned closed models (ChatGPT/GPT-4/Claude), general factual QA (TriviaQA, SciQ, TruthfulQA), whole-answer granularity",
+    "quoted_support": "For RLHF-LMs such as ChatGPT, GPT-4, and Claude, we find that verbalized confidences emitted as output tokens are typically better-calibrated than the model's conditional probabilities on the TriviaQA, SciQ, and TruthfulQA benchmarks, often reducing the expected calibration error by a relative 50%.",
+    "numbers": ["50% relative ECE reduction"],
+    "entities": ["Tian", "Mitchell", "Manning", "ChatGPT", "GPT-4", "Claude"],
+    "time_period": "2023",
+    "region": "N/A",
+    "confidence": "high",
+    "source_note_id": "just-ask-for-calibration-strategies-for-eliciting-calibrated-confidence-scores-f"
+  },
+  {
+    "claim": "RLHF fine-tuning degrades token-probability calibration relative to unsupervised pretraining, motivating the search for confidence signals other than raw logits in RLHF-tuned models.",
+    "stance": "neutral",
+    "stance_target": "why verbalized confidence was compared against logits specifically (not against a trained hidden-state probe) in this paper",
+    "evidence_type": "empirical",
+    "scope_conditions": "RLHF-tuned models vs. base pretrained models, general QA",
+    "quoted_support": "Recent studies have shown that unsupervised pre-training produces large language models (LMs) whose conditional probabilities are remarkably well-calibrated. However, the most widely-used LMs are fine-tuned with reinforcement learning from human feedback (RLHF-LMs), and some studies have suggested that RLHF-LMs produce conditional probabilities that are very poorly calibrated.",
+    "numbers": [],
+    "entities": ["Tian", "RLHF"],
+    "time_period": "2023",
+    "region": "N/A",
+    "confidence": "high",
+    "source_note_id": "just-ask-for-calibration-strategies-for-eliciting-calibrated-confidence-scores-f"
+  },
+  {
+    "claim": "This paper's comparator for verbalized confidence is raw RLHF-corrupted logit probability, not a purpose-trained linear probe on hidden states -- the AAAI-27 pivot must specify this distinction precisely, since a reviewer could otherwise cite this paper as counter-evidence to 'internal beats verbalized.'",
+    "stance": "refutes",
+    "stance_target": "a blanket claim that internal signals always beat verbalized self-report",
+    "evidence_type": "theoretical",
+    "scope_conditions": "Comparison is verbalized-confidence vs. raw next-token logit probability specifically, not vs. a trained hidden-state probe",
+    "quoted_support": "we conduct a broad evaluation of methods for extracting confidence scores from RLHF-LMs",
+    "numbers": [],
+    "entities": ["Tian", "logit probability", "verbalized confidence"],
+    "time_period": "2023",
+    "region": "N/A",
+    "confidence": "high",
+    "source_note_id": "just-ask-for-calibration-strategies-for-eliciting-calibrated-confidence-scores-f"
+  }
+]

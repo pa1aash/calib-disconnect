@@ -1,0 +1,30 @@
+[
+  {
+    "claim": "Even if the SFT/RL train-time intervention only partially breaks confidence collapse, the RAW internal sampling-confidence signal (measured pre-intervention at ECE 0.059, AUROC 0.987 on HumanEval) can be wrapped in a risk-controlled selective-generation scheme (CIC-style conformal abstention) targeting ~70-90% coverage at <=2-5% error at alpha=0.10, providing a defensible secondary/fallback headline distinct from the verbal-discrimination result.",
+    "stance": "neutral",
+    "stance_target": "pre-registered fallback plan if DPRC's trained per-requirement expressed confidence underperforms",
+    "evidence_type": "theoretical",
+    "scope_conditions": "HumanEval + MBPP calibration pool, single-GPU LoRA setup",
+    "quoted_support": "Pre-registered fallback: CIC-style risk-controlled selective generation wrapped on the RAW internal sampling-confidence signal (never the SFT-collapsed verbal output) targets ~70-90% coverage at <=2-5% error at alpha=0.10",
+    "numbers": ["ECE 0.059", "AUROC 0.987", "70-90% coverage", "2-5% error", "alpha=0.10"],
+    "entities": ["CIC", "HumanEval", "MBPP", "DPRC"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "interim-report-fallback-utility-of-collapsed-confidence"
+  },
+  {
+    "claim": "The base paper's SFT intervention (274 examples, LoRA r=16) reduced verbal ECE by 64% but collapsed discrimination entirely -- the SFT model assigned mean confidence 0.900 to both easy and hard HumanEval problems, i.e. the expressed distribution degenerated to a single default bin.",
+    "stance": "refutes",
+    "stance_target": "naive SFT-only approaches to training expressed confidence in code LLMs",
+    "evidence_type": "empirical",
+    "scope_conditions": "HumanEval (164 problems), Qwen2.5-Coder-family model, LoRA r=16, 274 SFT examples",
+    "quoted_support": "the SFT intervention (274 examples, LoRA r=16) reduces verbal ECE by 64% but collapses discrimination -- the SFT model assigns mean confidence 0.900 to both easy and hard problems, i.e., the expressed distribution degenerates to a single default bin.",
+    "numbers": ["274 examples", "LoRA r=16", "64% ECE reduction", "mean confidence 0.900"],
+    "entities": ["HumanEval", "Qwen2.5-Coder"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "interim-report-fallback-utility-of-collapsed-confidence"
+  }
+]

@@ -1,0 +1,44 @@
+[
+  {
+    "claim": "Rigid 100%-pass binary verification during synthetic training-data generation filters out valuable diverse-but-imperfect solutions; relaxing pass thresholds or using LLM-based soft verification recovers this data and improves downstream pass@1 by 2-4 points.",
+    "stance": "supports",
+    "stance_target": "binary correctness labels (as used to train probes/calibration methods) are a coarse, noisy proxy for true code quality, analogous to the base paper's critique of expressed-interface signals",
+    "evidence_type": "empirical",
+    "scope_conditions": "synthetic training data generation for code LLMs, LLM-generated problems and tests",
+    "quoted_support": "rigid 100% pass criteria can be overly restrictive. By allowing for relaxed thresholds or incorporating LLM-based soft verification, we can recover valuable training data, leading to a 2-4 point improvement in pass@1 performance.",
+    "numbers": ["2-4 point pass@1 improvement from relaxed/soft verification", "+3 pass@1 average from richer test suites"],
+    "entities": ["verification ceiling", "LLM-based soft verification"],
+    "time_period": "Sep 2025",
+    "region": "n/a",
+    "confidence": "high",
+    "source_note_id": "250920837-verification-limits-code-llm-training"
+  },
+  {
+    "claim": "Training-data quality and downstream code-generation capability are fundamentally bottlenecked by the capability of the synthetic verifier used to generate/check tests -- a 'verification ceiling' -- meaning that generation quality cannot exceed what the verification pipeline can distinguish.",
+    "stance": "neutral",
+    "stance_target": "background on how correctness signals used for training are themselves capability-limited, relevant to considering training-signal quality for a new calibration method",
+    "evidence_type": "empirical",
+    "scope_conditions": "synthetic code-LLM training pipelines where both solutions and tests are model-generated",
+    "quoted_support": "it introduces a previously unexplored bottleneck: the verification ceiling, in which the quality and diversity of training data are fundamentally constrained by the capabilities of synthetic verifiers.",
+    "numbers": [],
+    "entities": ["verification ceiling", "Cohere Labs"],
+    "time_period": "Sep 2025",
+    "region": "n/a",
+    "confidence": "medium",
+    "source_note_id": "250920837-verification-limits-code-llm-training"
+  },
+  {
+    "claim": "Retaining multiple diverse correct solutions per problem in training data (rather than a single canonical solution) yields consistent generalization gains, established via controlled comparison of formally correct vs incorrect solutions plus human evaluation.",
+    "stance": "neutral",
+    "stance_target": "supports diversity-preserving training-data curation, tangential context for training-signal design rather than the interface question",
+    "evidence_type": "empirical",
+    "scope_conditions": "controlled solution-diversity experiments with human evaluation",
+    "quoted_support": "retaining diverse correct solutions per problem yields consistent generalization gains.",
+    "numbers": [],
+    "entities": ["formally correct vs incorrect solutions", "human evaluation"],
+    "time_period": "Sep 2025",
+    "region": "n/a",
+    "confidence": "medium",
+    "source_note_id": "250920837-verification-limits-code-llm-training"
+  }
+]

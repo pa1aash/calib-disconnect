@@ -1,0 +1,44 @@
+[
+  {
+    "claim": "PonderTTT gates test-time-training updates per input using the TTT layer's self-supervised reconstruction loss as a training-free confidence signal, rather than applying uniform compute to all inputs.",
+    "stance": "neutral",
+    "stance_target": "candidate (b): per-requirement test-time compute allocation",
+    "evidence_type": "empirical",
+    "scope_conditions": "GPT-2 models 124M-1.5B, code language modeling on The Stack v2, teacher-forced perplexity, not discrete coding-problem solving",
+    "quoted_support": "Our Reconstruction Gating achieves 82-89% Oracle Recovery while being fully training-free, significantly outperforming Random Skip baselines (up to 16% lower loss on OOD languages).",
+    "numbers": ["82-89% Oracle Recovery", "up to 16% lower loss on OOD languages", "GPT-2 124M to 1.5B"],
+    "entities": ["PonderTTT", "GPT-2", "The Stack v2", "Test-Time Training"],
+    "time_period": "submitted Dec 31 2025",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260100894-when-to-ponder-adaptive-compute-allocation-for-code-generation-via-tes"
+  },
+  {
+    "claim": "The adaptive-compute-allocation signal used by PonderTTT is inference-compatible and requires no ground-truth labels, only a self-calibrated scalar threshold adapted via EMA.",
+    "stance": "neutral",
+    "stance_target": "candidate (b): per-requirement test-time compute allocation",
+    "evidence_type": "empirical",
+    "scope_conditions": "code language modeling, GPT-2 scale",
+    "quoted_support": "The gating decision itself is training-free--requiring no learned classifier or auxiliary networks; only a single scalar threshold is initially calibrated on unlabeled data and continuously adapted via EMA to maintain target update rates.",
+    "numbers": ["14 pages", "14 tables"],
+    "entities": ["PonderTTT", "EMA"],
+    "time_period": null,
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260100894-when-to-ponder-adaptive-compute-allocation-for-code-generation-via-tes"
+  },
+  {
+    "claim": "Existing adaptive test-time-compute work for code applies at the granularity of the whole input sequence (per-token or per-document reconstruction loss), not at the granularity of individual behavioral requirements within a single coding problem.",
+    "stance": "supports",
+    "stance_target": "novelty of per-requirement test-time compute allocation (candidate b)",
+    "evidence_type": "theoretical",
+    "scope_conditions": "code language modeling literature as of July 2026",
+    "quoted_support": "Large language models apply uniform computation to all inputs, regardless of difficulty.",
+    "numbers": [],
+    "entities": ["PonderTTT"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "260100894-when-to-ponder-adaptive-compute-allocation-for-code-generation-via-tes"
+  }
+]

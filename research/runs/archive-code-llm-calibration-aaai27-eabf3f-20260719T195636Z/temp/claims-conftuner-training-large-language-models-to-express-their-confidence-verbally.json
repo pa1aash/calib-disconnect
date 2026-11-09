@@ -1,0 +1,72 @@
+[
+  {
+    "claim": "ConfTuner's tokenized Brier score loss is a theoretically proven proper scoring rule for verbalized confidence, meaning the loss-minimizing LLM provably places its probability mass on the confidence token closest to the true conditional probability of correctness, without needing ground-truth confidence scores or proxy targets.",
+    "stance": "supports",
+    "stance_target": "existence of a label-free, theoretically-grounded fine-tuning objective for eliciting calibrated verbalized confidence",
+    "evidence_type": "theoretical",
+    "scope_conditions": "classification-theoretic proof adapting the classical Brier score to token-level LLM outputs",
+    "quoted_support": "the tokenized Brier score is a proper scoring rule, i.e., an LLM fine-tuned on this score will place all its probability mass on the token whose confidence value is closest to the true conditional correctness probability.",
+    "numbers": [],
+    "entities": ["ConfTuner", "Brier score", "National University of Singapore"],
+    "time_period": "2025",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "conftuner-training-large-language-models-to-express-their-confidence-verbally"
+  },
+  {
+    "claim": "ConfTuner achieves up to 54.7% relative improvement in ECE and 14.4% relative improvement in AUROC over the best baseline (SaySelf or LACIE), across Llama-3.1-8B-Instruct, Qwen2.5-7B-Instruct, and Ministral-8B-Instruct on in-distribution (HotpotQA) and out-of-distribution (TriviaQA, StrategyQA, GSM8K, TruthfulQA) evaluation.",
+    "stance": "supports",
+    "stance_target": "single-model SFT-based verbal confidence elicitation can substantially outperform sampling-based (SaySelf) and preference-optimization-based (LACIE) prior methods",
+    "evidence_type": "empirical",
+    "scope_conditions": "7-8B parameter models, single-GPU feasible; HotpotQA, TriviaQA, StrategyQA, GSM8K, TruthfulQA",
+    "quoted_support": "ConfTuner provides more accurate confidence scores than the best baseline (up to 54.7% improvement in ECE and 14.4% in AUROC), and generalizes better across unseen datasets with diverse reasoning tasks, different formats of confidence expression, and even implicit confidence expressions.",
+    "numbers": ["54.7% ECE improvement", "14.4% AUROC improvement"],
+    "entities": ["Llama-3.1-8B-Instruct", "Qwen2.5-7B-Instruct", "Ministral-8B-Instruct-2410", "HotpotQA", "TriviaQA", "StrategyQA", "GSM8K", "TruthfulQA"],
+    "time_period": "2025",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "conftuner-training-large-language-models-to-express-their-confidence-verbally"
+  },
+  {
+    "claim": "ConfTuner generalizes to linguistic (high/medium/low) confidence expressions despite being trained only on numeric 0-100% confidence, and to fully implicit natural-language hedging expressions evaluated via GPT-4o as judge.",
+    "stance": "supports",
+    "stance_target": "a distillation-trained confidence signal can transfer across output formats (numeric to categorical/implicit), relevant to whether a code-LLM method trained on one confidence representation generalizes to Likert-scale outputs",
+    "evidence_type": "empirical",
+    "scope_conditions": "five datasets, LLaMA-based ConfTuner model",
+    "quoted_support": "ConfTuner consistently achieves superior AUROC scores, indicating that ConfTuner can also adapt to other formats of confidence levels... ConfTuner also produces implicit confidence expressions, such as \"I'm fairly certain, but there's a chance I could be mistaken\"",
+    "numbers": [],
+    "entities": ["GPT-4o"],
+    "time_period": "2025",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "conftuner-training-large-language-models-to-express-their-confidence-verbally"
+  },
+  {
+    "claim": "ConfTuner requires no ground-truth confidence scores, no group-level proxy scores, and no repeated sampling at training or inference time, in contrast to prior training-based methods (SaySelf uses sampled-response consistency, LACIE uses model/listener judgment) that rely on heuristic proxy targets.",
+    "stance": "neutral",
+    "stance_target": "landscape positioning: a taxonomy of proxy-score sources used by prior verbal-confidence training methods (group accuracy, sampling consistency, listener judgment, vs. ConfTuner's label-free proper-scoring-rule approach)",
+    "evidence_type": "theoretical",
+    "scope_conditions": "related work synthesis",
+    "quoted_support": "current methods typically rely on heuristically generated proxy scores as targets, such as the model's average accuracy over a group of similar questions, consistency across multiple responses, or model judgment... using group-level statistics as a proxy for single-instance confidence relies on the strong assumption that the questions within each group are equivalent, sampling-based methods increase both computational costs and random noise, and model judgment introduces model bias.",
+    "numbers": [],
+    "entities": ["SaySelf", "LACIE"],
+    "time_period": "2025",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "conftuner-training-large-language-models-to-express-their-confidence-verbally"
+  },
+  {
+    "claim": "ConfTuner is not evaluated on any code-generation benchmark; all training and evaluation datasets are short-form QA or grade-school math (HotpotQA, TriviaQA, StrategyQA, GSM8K, TruthfulQA).",
+    "stance": "neutral",
+    "stance_target": "domain gap: proper-scoring-rule-based verbal confidence tuning has not been validated on code LLMs",
+    "evidence_type": "empirical",
+    "scope_conditions": "entire experimental section",
+    "quoted_support": "we use HotpotQA for training... For evaluation, besides the evaluation set of HotpotQA, we also adopt: 1) TriviaQA... 2) StrategyQA... 3) GSM8K... 4) TruthfulQA",
+    "numbers": [],
+    "entities": ["HotpotQA", "TriviaQA", "StrategyQA", "GSM8K", "TruthfulQA"],
+    "time_period": "2025",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "conftuner-training-large-language-models-to-express-their-confidence-verbally"
+  }
+]

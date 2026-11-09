@@ -1,0 +1,44 @@
+[
+  {
+    "claim": "DCPO proves theoretically that directly incorporating a calibration objective into the same RLVR optimization target used for accuracy creates a fundamental gradient conflict: the gradients for maximizing policy accuracy and minimizing calibration error can point in opposing directions.",
+    "stance": "refutes",
+    "stance_target": "a single joint reward summing correctness and a calibration term (as in RLCR/Rewarding Doubt-style designs) is free of optimization trade-offs",
+    "evidence_type": "theoretical",
+    "scope_conditions": "RLVR training with a combined accuracy+calibration reward",
+    "quoted_support": "Our theoretical analysis demonstrates that there exists a fundamental gradient conflict between the optimization for maximizing policy accuracy and minimizing calibration error.",
+    "numbers": [],
+    "entities": ["DCPO", "RLVR", "gradient conflict"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260309117-decoupling-reasoning-and-confidence-resurrecting-calibration-in-reinfo"
+  },
+  {
+    "claim": "DCPO's proposed fix is to systematically decouple the reasoning (accuracy) and calibration objectives into separate optimization components rather than a single summed reward, preserving GRPO-level accuracy while achieving the best calibration performance and substantially mitigating over-confidence.",
+    "stance": "supports",
+    "stance_target": "decoupled (not jointly-summed) accuracy/calibration objectives are needed to avoid the gradient-conflict failure mode",
+    "evidence_type": "empirical",
+    "scope_conditions": "extensive RLVR reasoning experiments, accepted at ICML 2026",
+    "quoted_support": "We propose DCPO, a simple yet effective framework that systematically decouples reasoning and calibration objectives. Extensive experiments demonstrate that our DCPO not only preserves accuracy on par with GRPO but also achieves the best calibration performance and substantially mitigates the over-confidence issue.",
+    "numbers": [],
+    "entities": ["DCPO", "GRPO"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260309117-decoupling-reasoning-and-confidence-resurrecting-calibration-in-reinfo"
+  },
+  {
+    "claim": "RLVR reasoning training severely suffers from calibration degeneration where models become excessively over-confident specifically in incorrect answers, framed as the central failure mode this line of work addresses.",
+    "stance": "supports",
+    "stance_target": "RLVR-induced overconfidence on incorrect answers is a well-established, repeatedly-observed failure mode across multiple independent papers",
+    "evidence_type": "empirical",
+    "scope_conditions": "RLVR-trained reasoning LLMs",
+    "quoted_support": "Reinforcement Learning from Verifiable Rewards (RLVR) significantly enhances large language models (LLMs) reasoning but severely suffers from calibration degeneration, where models become excessively over-confident in incorrect answers.",
+    "numbers": [],
+    "entities": ["RLVR"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260309117-decoupling-reasoning-and-confidence-resurrecting-calibration-in-reinfo"
+  }
+]

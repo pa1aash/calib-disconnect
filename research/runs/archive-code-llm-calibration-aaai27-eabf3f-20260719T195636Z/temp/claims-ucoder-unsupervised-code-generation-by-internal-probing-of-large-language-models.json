@@ -1,0 +1,58 @@
+[
+  {
+    "claim": "UCoder uses execution-signature consensus clustering over n=128 densely sampled candidate solutions -- an expensive many-sample self-consistency signal, not a cheap single-pass probe -- as its primary correctness proxy for unsupervised self-training.",
+    "stance": "supports",
+    "stance_target": "expensive repeated-sampling remains the most reliable internal correctness signal in current practice, reinforcing the base paper's premise that a cheap equivalent does not yet exist",
+    "evidence_type": "empirical",
+    "scope_conditions": "self-generated programming problems, Qwen2.5-Coder base models 7B/14B/32B",
+    "quoted_support": "we probe the solution space via dense sampling, where execution-driven consensus clustering reveals that correct implementations form tight clusters while incorrect ones are dispersed.",
+    "numbers": ["n=128 candidates sampled per problem", "2.6M generated samples / 212M AST nodes analyzed"],
+    "entities": ["UCoder", "IPC", "Qwen2.5-Coder"],
+    "time_period": "Dec 2025",
+    "region": "n/a",
+    "confidence": "high",
+    "source_note_id": "ucoder-unsupervised-code-generation-by-internal-probing-of-large-language-models"
+  },
+  {
+    "claim": "Consensus Convergence theorem formally guarantees that the largest execution-signature cluster among n sampled candidates is entirely correct with probability >= 1-delta-n^2*p^|T|, given sufficient test-set size |T| >= log(n/k)/(-log p), providing theoretical grounding for sampling-based correctness estimation.",
+    "stance": "supports",
+    "stance_target": "sampling-based correctness signals have formal statistical guarantees that single-pass probes currently lack",
+    "evidence_type": "theoretical",
+    "scope_conditions": "candidates independently sampled from a model; incorrect implementations assumed to disagree with probability >= 1-p per test",
+    "quoted_support": "If the test set size satisfies |T| >= log(n/k)/(-log p), then the largest consensus cluster C_max contains only correct implementations with probability at least P(C_max is correct) >= 1-delta-n^2 p^|T|.",
+    "numbers": ["bound: 1-delta-n^2 p^|T|"],
+    "entities": ["Theorem 2.4", "Consensus Convergence"],
+    "time_period": "Dec 2025",
+    "region": "n/a",
+    "confidence": "medium",
+    "source_note_id": "ucoder-unsupervised-code-generation-by-internal-probing-of-large-language-models"
+  },
+  {
+    "claim": "Perplexity (fluency), a free log-prob-derived signal computed from the already-generated token probabilities, correlates with execution success but only weakly/coarsely: solutions with execution success rate above 80% cluster below perplexity 1.05, with rapid degradation beyond that threshold, over 9,700 sampled candidates.",
+    "stance": "neutral",
+    "stance_target": "log-prob-based signals (a form of expressed/interpretable confidence) carry some correctness information but are used only as a secondary tie-breaker, not a primary correctness detector",
+    "evidence_type": "empirical",
+    "scope_conditions": "9,700 sampled candidate solutions, self-generated problems",
+    "quoted_support": "solutions with execution success rates above 80% cluster predominantly below perplexity 1.05, with rapid performance degradation beyond this range.",
+    "numbers": ["perplexity distribution mean 1.03, std 0.03", "threshold ~1.05", "n=9700 candidates"],
+    "entities": ["perplexity", "fluency score f(r)"],
+    "time_period": "Dec 2025",
+    "region": "n/a",
+    "confidence": "medium",
+    "source_note_id": "ucoder-unsupervised-code-generation-by-internal-probing-of-large-language-models"
+  },
+  {
+    "claim": "UCoder-7B trained with zero external labeled data matches or beats the fully supervised Qwen2.5-Coder-7B-Instruct on several benchmarks (BigCodeBench-Complete, BigCodeBench-Instruct, FullStackBench) despite using no human-annotated instructions.",
+    "stance": "neutral",
+    "stance_target": "background context on unsupervised code-LLM training using self-consistency signals -- tangential to the interface/calibration question but confirms the value of sampling-derived training signal",
+    "evidence_type": "empirical",
+    "scope_conditions": "HumanEval(+), MBPP(+), BigCodeBench, LiveCodeBench, FullStackBench, single 7B-32B model scales",
+    "quoted_support": "Despite using no external data, UCoder achieves comparable performance to the supervised baseline across multiple benchmarks.",
+    "numbers": ["UCoder-7B: HumanEval 83.5, MBPP 85.2, FullStackBench 51.27", "Qwen2.5-Coder-7B-Instruct: HumanEval 88.4, MBPP 83.5, FullStackBench 47.95"],
+    "entities": ["UCoder-7B", "Qwen2.5-Coder-7B-Instruct"],
+    "time_period": "Dec 2025",
+    "region": "n/a",
+    "confidence": "high",
+    "source_note_id": "ucoder-unsupervised-code-generation-by-internal-probing-of-large-language-models"
+  }
+]

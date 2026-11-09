@@ -1,0 +1,58 @@
+[
+  {
+    "claim": "Detrimental semantic collapse -- where repeated samples for an underspecified prompt converge on a single confidently-wrong interpretation -- affects a non-trivial share of tasks even on benchmarks assumed well-specified.",
+    "stance": "neutral",
+    "stance_target": "reliability of sampling-based (self-consistency/semantic-entropy) correctness prediction for code",
+    "evidence_type": "empirical",
+    "scope_conditions": "MBPP, HumanEval, LiveCodeBench v6, 3 SOTA coding models, Python",
+    "quoted_support": "detrimental semantic collapse is prevalent even on benchmarks widely regarded as well-specified, affecting over 3% of HumanEval, 11% of MBPP, and 32% of LiveCodeBench tasks.",
+    "numbers": ["3% HumanEval", "10-16% MBPP", "18-32% LiveCodeBench"],
+    "entities": ["MBPP", "HumanEval", "LiveCodeBench v6"],
+    "time_period": "tasks published after Jan 1 2025 (LiveCodeBench v6)",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "underspecification-does-not-imply-incoherence-the-risks-of-semantic-collapse-in"
+  },
+  {
+    "claim": "Deliberately injecting underspecification into benchmark prompts increases detrimental collapse rates by up to 5.5x, and Pass@k gaps of up to 66.8% persist even at high sampling budgets (up to Pass@25) on MBPP.",
+    "stance": "supports",
+    "stance_target": "limits of repeated sampling as a fix for underspecification-driven miscalibration",
+    "evidence_type": "empirical",
+    "scope_conditions": "systematically underspecified MBPP/HumanEval/LiveCodeBench variants",
+    "quoted_support": "we observe a significant gap in Pass@k of up to 66.8% compared to the original benchmark. For MBPP, this gap persists at higher sampling budgets (e.g. up to Pass@25), suggesting that repeated sampling alone is insufficient for LLMs to reliably produce the correct interpretation of underspecified tasks.",
+    "numbers": ["up to 5.5x increase in collapse rate", "Pass@k gap up to 66.8%", "Pass@25"],
+    "entities": ["MBPP", "HumanEval", "LiveCodeBench"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "underspecification-does-not-imply-incoherence-the-risks-of-semantic-collapse-in"
+  },
+  {
+    "claim": "Clustering-based semantic-entropy-style uncertainty methods fail silently under detrimental collapse because the incorrect implementation is produced consistently across generations, so entropy/disagreement reads as confident even though the model is wrong.",
+    "stance": "refutes",
+    "stance_target": "robustness of internal sampling-consistency signals (e.g. semantic entropy, functional entropy) as a universal correctness proxy for code",
+    "evidence_type": "theoretical",
+    "scope_conditions": "code generation with underspecified or ambiguous prompts",
+    "quoted_support": "Under detrimental semantic collapse, clustering-based approaches fail silently, failures evade detection, as the incorrect implementation is consistent across generations, leaving users unaware of the underlying misalignment.",
+    "numbers": [],
+    "entities": [],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "underspecification-does-not-imply-incoherence-the-risks-of-semantic-collapse-in"
+  },
+  {
+    "claim": "The paper is a diagnostic study of a sampling-based-UQ failure mode; it does not evaluate verbalized confidence, ECE, AUROC, or any calibration training method.",
+    "stance": "neutral",
+    "stance_target": "coverage of the code-verbal-calibration locus",
+    "evidence_type": "empirical",
+    "scope_conditions": "n/a",
+    "quoted_support": "competitive programming tasks have inherently low pass rate, yet LLMs still confidently produce semantically indistinguishable programs, frequently converging on an incorrect interpretation with no indication of uncertainty.",
+    "numbers": [],
+    "entities": [],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "underspecification-does-not-imply-incoherence-the-risks-of-semantic-collapse-in"
+  }
+]

@@ -1,0 +1,44 @@
+[
+  {
+    "claim": "BigCodeBench-Hard's 148-task subset was constructed by embedding 10.4M Stack Overflow queries and BigCodeBench task prompts and retrieving tasks with cosine similarity > 0.7 to real user queries, not by any per-requirement or statistical difficulty model.",
+    "stance": "neutral",
+    "stance_target": "existing hard-subset-mining methodology for BigCodeBench",
+    "evidence_type": "empirical",
+    "scope_conditions": "BigCodeBench (1,140 Python tasks), constructed July 2024",
+    "quoted_support": "we leverage all-mpnet-base-v2... We use the model to retrieve the most similar tasks for each query... a similarity score above 0.7 is a good threshold for task selection.",
+    "numbers": ["10.4 million Q&A", "cosine similarity threshold 0.7", "6,895 queries", "626 tasks after dedup", "148 final tasks"],
+    "entities": ["BigCodeBench", "BigCodeBench-Hard", "Terry Yue Zhuo", "Stack Overflow archive", "all-mpnet-base-v2"],
+    "time_period": "July 2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "announcing-bigcodebench-hard-and-more"
+  },
+  {
+    "claim": "BigCodeBench-Hard applies three explainable filtering criteria on top of query-retrieval: requiring more than 2 libraries, solution length above 426 tokens (the corpus average), and per-task solve rate below 50% aggregated across all leaderboard models.",
+    "stance": "neutral",
+    "stance_target": "granularity and mechanism of existing hard-subset construction",
+    "evidence_type": "empirical",
+    "scope_conditions": "BigCodeBench leaderboard, ~96 models as of the 2024 update",
+    "quoted_support": "we deem tasks with a solve rate below 50% as hard tasks... we keep only the tasks that require more than two libraries... We set the threshold at 426 tokens, which is the average solution length of the tasks in BigCodeBench.",
+    "numbers": ["426 token threshold", "50% solve rate threshold", "2 library minimum"],
+    "entities": ["BigCodeBench-Hard", "MixEval"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "announcing-bigcodebench-hard-and-more"
+  },
+  {
+    "claim": "The hardness signal used to build BigCodeBench-Hard is whole-task solve rate aggregated across dozens of models, not a per-requirement (sub-test) statistic and not a model-fit/statistical parameter such as item discrimination.",
+    "stance": "supports",
+    "stance_target": "novelty of a per-requirement, statistically-principled (IRT-based) hard-subset mining approach",
+    "evidence_type": "empirical",
+    "scope_conditions": "BigCodeBench-Hard construction methodology",
+    "quoted_support": "We compute the solve rate per task based on all the evaluated models on the leaderboard.",
+    "numbers": ["148 tasks", "5.6 tests per task average across BigCodeBench"],
+    "entities": ["BigCodeBench-Hard", "SEAL-Coding leaderboard"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "announcing-bigcodebench-hard-and-more"
+  }
+]

@@ -1,0 +1,58 @@
+[
+  {
+    "claim": "For RLHF-tuned LLMs (ChatGPT, GPT-4, Claude), verbalized confidence emitted as output tokens is typically better-calibrated than the model's own token-level conditional probabilities.",
+    "stance": "supports",
+    "stance_target": "verbalized confidence can carry meaningful calibration signal for chat models, contrary to the target paper's finding that verbal 1-5 confidence fails",
+    "evidence_type": "empirical",
+    "scope_conditions": "RLHF-tuned closed models (ChatGPT, GPT-4, Claude); TriviaQA, SciQ, TruthfulQA short-form QA benchmarks",
+    "quoted_support": "For RLHF-LMs such as ChatGPT, GPT-4, and Claude, we find that verbalized confidences emitted as output tokens are typically better-calibrated than the model's conditional probabilities on the TriviaQA, SciQ, and TruthfulQA benchmarks, often reducing the expected calibration error by a relative 50%.",
+    "numbers": ["relative 50% ECE reduction"],
+    "entities": ["ChatGPT", "GPT-4", "Claude", "TriviaQA", "SciQ", "TruthfulQA"],
+    "time_period": "2023",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "230514975-just-ask-for-calibration-strategies-for-eliciting-calibrated-confidenc"
+  },
+  {
+    "claim": "Unsupervised pre-trained (non-RLHF) language models produce remarkably well-calibrated conditional token probabilities, but RLHF fine-tuning is believed to degrade this calibration.",
+    "stance": "neutral",
+    "stance_target": "motivation for why verbalized confidence elicitation is needed for RLHF models specifically",
+    "evidence_type": "theoretical",
+    "scope_conditions": "pretrained vs RLHF-tuned LLM comparison, prior literature synthesis",
+    "quoted_support": "Recent studies have shown that unsupervised pre-training produces large language models (LMs) whose conditional probabilities are remarkably well-calibrated. However, ... RLHF-LMs produce conditional probabilities that are very poorly calibrated.",
+    "numbers": [],
+    "entities": ["RLHF", "pretrained LLMs"],
+    "time_period": "2023",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "230514975-just-ask-for-calibration-strategies-for-eliciting-calibrated-confidenc"
+  },
+  {
+    "claim": "This paper evaluates confidence elicitation purely via prompting strategies (no fine-tuning or distillation), establishing the prompting-only baseline that later distillation methods (ConfTuner, ORCE, Uncertainty Distillation) are benchmarked against.",
+    "stance": "neutral",
+    "stance_target": "landscape of verbalized-confidence elicitation methods",
+    "evidence_type": "theoretical",
+    "scope_conditions": "EMNLP 2023 camera-ready methodology",
+    "quoted_support": "we conduct a broad evaluation of methods for extracting confidence scores from RLHF-LMs.",
+    "numbers": [],
+    "entities": ["Katherine Tian", "Chelsea Finn", "Christopher Manning"],
+    "time_period": "2023",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "230514975-just-ask-for-calibration-strategies-for-eliciting-calibrated-confidenc"
+  },
+  {
+    "claim": "No code-generation benchmark was tested in this paper; all evaluation is on short-form factual QA.",
+    "stance": "neutral",
+    "stance_target": "domain gap: verbalized confidence elicitation literature has not addressed code generation",
+    "evidence_type": "empirical",
+    "scope_conditions": "TriviaQA, SciQ, TruthfulQA only",
+    "quoted_support": "on the TriviaQA, SciQ, and TruthfulQA benchmarks",
+    "numbers": [],
+    "entities": ["TriviaQA", "SciQ", "TruthfulQA"],
+    "time_period": "2023",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "230514975-just-ask-for-calibration-strategies-for-eliciting-calibrated-confidenc"
+  }
+]

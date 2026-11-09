@@ -1,0 +1,44 @@
+[
+  {
+    "claim": "Multicalibration requires 'groups' of prompt/completion pairs correlated with correctness probability, and since QA lacks explicit demographic-style features, the paper introduces two group-formation strategies: clustering prompt embeddings, and LLM self-annotation via yes/no questions about the prompt.",
+    "stance": "neutral",
+    "stance_target": "methodological options for defining multicalibration groups beyond simple syntactic/structural features",
+    "evidence_type": "theoretical",
+    "scope_conditions": "Question-answering domain (MMLU, OpenBookQA, etc.), various LLMs",
+    "quoted_support": "we show how to form groupings for prompt/completion pairs that are correlated with the probability of correctness via two techniques: clustering within an embedding space, and self-annotation — querying the LLM by asking it various yes-or-no questions about the prompt.",
+    "numbers": [],
+    "entities": ["embedding clustering", "self-annotation", "multicalibration"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "multicalibration-for-confidence-scoring-in-llms"
+  },
+  {
+    "claim": "Novel overfitting-remedied multicalibration algorithms (Iterative Grouped Linear Binning, IGLB) using larger overlapping bins and early stopping via held-out validation MSE outperform the naive disjoint-bin iterative algorithm (IGHB) and standard marginal calibration baselines (Histogram Binning, logistic/Platt scaling) across multiple LLMs and QA datasets.",
+    "stance": "supports",
+    "stance_target": "group-conditional post-hoc calibration algorithms can be engineered to avoid the overfitting failure mode of naive multicalibration, a methodological result directly reused by the code-LLM multicalibration paper",
+    "evidence_type": "empirical",
+    "scope_conditions": "Multiple LLMs (e.g. StableBeluga-13B) and QA datasets (MMLU, OpenBookQA)",
+    "quoted_support": "Our findings highlight the superiority of multicalibration methods, specifically IGLB and GCULR, over alternative approaches across all datasets. In particular, IGLB demonstrates a significant performance advantage over IGHB, emphasizing the effectiveness of the overfitting remedies.",
+    "numbers": [],
+    "entities": ["IGLB", "GCULR", "IGHB", "Histogram Binning", "Platt scaling"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "multicalibration-for-confidence-scoring-in-llms"
+  },
+  {
+    "claim": "This paper's evaluation uses group average squared calibration error (gASCE), MSE, and accuracy but not AUROC, mirroring the same calibration-vs-discrimination measurement gap later inherited by the code-domain multicalibration follow-up paper.",
+    "stance": "neutral",
+    "stance_target": "methodological gap shared across the multicalibration literature: discrimination (AUROC) is not evaluated alongside calibration-error improvements",
+    "evidence_type": "theoretical",
+    "scope_conditions": "Whole-paper evaluation methodology",
+    "quoted_support": "MSE and accuracy metrics are presented for all methods across various datasets, with results displayed as the mean and standard deviation (in brackets) derived from the values produced by four LLMs.",
+    "numbers": [],
+    "entities": ["gASCE", "MSE", "accuracy"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "multicalibration-for-confidence-scoring-in-llms"
+  }
+]

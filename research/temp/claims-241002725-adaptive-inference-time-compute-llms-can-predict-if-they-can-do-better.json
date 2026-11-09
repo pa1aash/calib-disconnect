@@ -1,0 +1,58 @@
+[
+  {
+    "claim": "An LLM can predict mid-generation, via a single extra token, the probability that restarting generation will yield a better response, enabling adaptive best-of-n without an external reward model.",
+    "stance": "neutral",
+    "stance_target": "candidate (b): per-requirement test-time compute allocation",
+    "evidence_type": "empirical",
+    "scope_conditions": "Llama 3.1 8B, AlpacaEval and GSM8K, general instruction-following and math, not code generation",
+    "quoted_support": "We use a generative reward model formulation, allowing the LLM to predict mid-generation the probability that restarting the generation will yield a better response.",
+    "numbers": ["win rate 21% to 34% with 16 samples on AlpacaEval", "GSM8K 84% to 91%"],
+    "entities": ["Llama 3.1 8B", "GPT-4", "AlpacaEval", "GSM8K"],
+    "time_period": "Oct 2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "241002725-adaptive-inference-time-compute-llms-can-predict-if-they-can-do-better"
+  },
+  {
+    "claim": "Adaptive stopping based on self-predicted confidence recovers most of the benefit of fixed best-of-16 sampling while using far fewer samples on average.",
+    "stance": "supports",
+    "stance_target": "feasibility of confidence-triggered adaptive compute allocation",
+    "evidence_type": "empirical",
+    "scope_conditions": "Llama 3.1 8B, AlpacaEval",
+    "quoted_support": "74% of the improvement from using 16 samples can be achieved with only 1.2 samples on average.",
+    "numbers": ["74% of improvement", "1.2 samples on average", "16 samples baseline"],
+    "entities": ["Llama 3.1 8B"],
+    "time_period": "Oct 2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "241002725-adaptive-inference-time-compute-llms-can-predict-if-they-can-do-better"
+  },
+  {
+    "claim": "Early pruning of unpromising samples based on self-predicted confidence can eliminate the majority of samples with minimal performance degradation.",
+    "stance": "supports",
+    "stance_target": "feasibility of confidence-triggered adaptive compute allocation",
+    "evidence_type": "empirical",
+    "scope_conditions": "general instruction-following tasks, whole-response granularity",
+    "quoted_support": "50-75% of samples can be pruned early in generation with minimal degradation in performance.",
+    "numbers": ["50-75% samples pruned"],
+    "entities": ["Llama 3.1 8B"],
+    "time_period": "Oct 2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "241002725-adaptive-inference-time-compute-llms-can-predict-if-they-can-do-better"
+  },
+  {
+    "claim": "This adaptive best-of-n approach operates at whole-response granularity (one confidence prediction per candidate) with no application to code generation or sub-task/requirement-level compute allocation.",
+    "stance": "supports",
+    "stance_target": "novelty of per-requirement test-time compute allocation (candidate b)",
+    "evidence_type": "theoretical",
+    "scope_conditions": "as published Oct 2024",
+    "quoted_support": "Best-of-N sampling being a widely used technique. However, this method is computationally expensive, requiring both (1) an external reward model and (2) the generation of multiple samples.",
+    "numbers": [],
+    "entities": ["Best-of-N"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "241002725-adaptive-inference-time-compute-llms-can-predict-if-they-can-do-better"
+  }
+]

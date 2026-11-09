@@ -1,0 +1,44 @@
+[
+  {
+    "claim": "FLARE's line-level suspiciousness diagnostic model, used to guide iterative code refinement, beats NL-Debugging by 1.72-7.42 percentage points absolute Pass@1 in 9 of 10 (base LLM x benchmark) settings on LiveCodeBench and BigCodeBench; searching the top-10 suspicious lines (k=10) adds another +8.50pp average over k=1.",
+    "stance": "supports",
+    "stance_target": "downstream utility of fine-grained/localized code-error signals for improving generation quality via targeted repair",
+    "evidence_type": "empirical",
+    "scope_conditions": "LiveCodeBench and BigCodeBench, 5 base LLMs, iterative code refinement setting",
+    "quoted_support": "FLARE(k=1) beats NL-Debugging by 1.72-7.42 pp absolute Pass@1 in 9/10 settings; FLARE(k=10) adds another +8.50pp average.",
+    "numbers": ["1.72-7.42 pp", "+8.50pp", "k=1", "k=10"],
+    "entities": ["FLARE", "LiveCodeBench", "BigCodeBench", "Collu-Bench"],
+    "time_period": "June 2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "flare-fine-grained-diagnostic-feedback-for-llm-code-refinement"
+  },
+  {
+    "claim": "FLARE's diagnostic model is a separate lightweight bidirectional transformer trained from scratch on Collu-Bench, not the code-generating LLM's own self-reported confidence -- the coder LLM plays no role in producing the suspiciousness signal.",
+    "stance": "neutral",
+    "stance_target": "differentiation of FLARE's mechanism from DPRC's native self-expressed confidence",
+    "evidence_type": "theoretical",
+    "scope_conditions": "FLARE architecture",
+    "quoted_support": "This is a SEPARATE diagnostic model, not the code-generating LLM's own self-reported confidence -- the coder LLM plays no role in producing the suspiciousness signal itself.",
+    "numbers": [],
+    "entities": ["FLARE", "Collu-Bench"],
+    "time_period": "June 2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "flare-fine-grained-diagnostic-feedback-for-llm-code-refinement"
+  },
+  {
+    "claim": "FLARE's localization granularity is spatial (which lines/AST lexical units are buggy), not per-test-case (which hidden unit test will fail) -- its standalone diagnostic model reaches 67% Top-1 / 89% Top-10 line-localization accuracy, beating FlexFL, LLMAO, and BAP fault-localization baselines, but the paper reports no AUROC for confidence discrimination.",
+    "stance": "supports",
+    "stance_target": "DPRC's differentiation on localization axis (per-requirement/per-test vs per-line)",
+    "evidence_type": "empirical",
+    "scope_conditions": "line-level fault localization on Collu-Bench-derived buggy solutions",
+    "quoted_support": "the localization axis is SPATIAL/TEXTUAL (which code lines/spans will be edited), not PER-TEST-CASE... The diagnostic model alone reaches 67% Top-1 / 89% Top-10 localization accuracy, beating FlexFL, LLMAO, and BAP fault-localization baselines",
+    "numbers": ["67% Top-1", "89% Top-10"],
+    "entities": ["FLARE", "FlexFL", "LLMAO", "BAP"],
+    "time_period": "June 2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "flare-fine-grained-diagnostic-feedback-for-llm-code-refinement"
+  }
+]

@@ -1,0 +1,120 @@
+{
+  "analyst_id": "b",
+  "loci": [
+    {
+      "name": "code-verbal-calibration-occupied-or-open",
+      "flavor": "dialectical",
+      "one_line": "Is 'execution-grounded train-time calibration of expressed confidence for code' genuinely unoccupied, or does RLCM's OOD math-to-LiveCodeBench transfer + CSR's mechanistic 'verbalized is unstable' objection already preempt the leading direction?",
+      "rationale": "This is the single fact that most determines whether the headline is novel at all. Note process-supervision-of-confidence-margin-for-calibrated-llm-reasoning (RLCM, COLM 2026, DeepSeek-R1-Distill-Qwen-7B, single-GPU-class) trains ONLY on math via a margin-enhanced process reward read out by a linear probe, yet achieves best accuracy AND best calibration on LiveCodeBench (code) via zero-shot OOD transfer -- 'one of the only calibration papers in this set with an actual code-domain result.' It also directly shows RLCR (a verbalized-confidence RL baseline) and C2GSPG (logit-based) UNDERPERFORM its hidden-state probe on calibration, i.e. a verbalized interface trained via RL was WORSE than an internal probe in someone else's baseline comparison -- the exact internal/expressed gap our target paper is built on, appearing as a side finding. Separately, calibrating-llms-with-semantic-level-reward (CSR) shows verbalized confidence under RLCR-style training is unstable at the semantic level (high entropy across resamples of the SAME answer) even when RL-trained, arguing prior verbalized-RL methods 'calibrate a reporting interface rather than the model's underlying uncertainty.' Against this, rewarding-doubt (log-scoring RL reward, single A40, AUROC 0.859 on TriviaQA, explicitly argued as MORE discriminative than a trained probe), conftuner (tokenized Brier proper-scoring loss, no sampling/labels needed), uncertainty-distillation (MC-sample+isotonic+SFT, AUROC 0.69-0.79), and orce (DPO to Spearman-rank a sampling surrogate) all show verbalized confidence training CAN reach 0.79-0.86 discrimination on QA/math. None of these five is tested on code (consensus-claims.json confirms this as the load-bearing gap: '10+ independent methods, zero code'). The corpus gestures at but does not resolve: does RLCM's probe-based code success mean a user-FACING verbalized token is the wrong target (chase a probe instead, killing the paper's premise), or does it mean the mechanism (process-margin reward, discrimination-first design) is exactly what should be ported to a verbalized code interface (validating the premise)? A depth investigator must pull RLCM's actual LiveCodeBench AUROC/ECE numbers and code availability, and determine whether RLCM's probe could be trivially decoded into text (making our verbalized framing derivative) or whether the verbalization step itself is the nontrivial, unclaimed contribution.",
+      "corpus_evidence": [
+        "process-supervision-of-confidence-margin-for-calibrated-llm-reasoning",
+        "calibrating-llms-with-semantic-level-reward",
+        "rewarding-doubt-a-reinforcement-learning-approach-to-calibrated-confidence-expre",
+        "conftuner-training-large-language-models-to-express-their-confidence-verbally",
+        "uncertainty-distillation-teaching-language-models-to-express-semantic-confidence",
+        "orce-order-aware-alignment-of-verbalized-confidence-in-large-language-models",
+        "250923129-c2gspg-confidence-calibrated-group-sequence-policy-gradient-towards-se"
+      ],
+      "opposing_positions": [
+        {
+          "position": "The verbalized-confidence-for-code direction is preemptable/hopeless: RLCM already shows an internal probe trained on math alone beats verbalized RL baselines on code (LiveCodeBench) by transfer, and CSR shows verbalized RL training doesn't fix the underlying semantic instability -- any code-specific paper chasing a verbalized token is chasing the wrong representation.",
+          "sources": ["process-supervision-of-confidence-margin-for-calibrated-llm-reasoning", "calibrating-llms-with-semantic-level-reward", "250923129-c2gspg-confidence-calibrated-group-sequence-policy-gradient-towards-se"]
+        },
+        {
+          "position": "The direction is genuinely open and low-risk: five independent QA/math mechanisms (log-score RL, proper-scoring Brier, MC-distillation, rank-order DPO) each independently push verbalized AUROC to 0.79-0.86, none has touched code, and code offers a CRISPER binary correctness signal (unit tests) than QA's fuzzy answer-equivalence -- porting any one of these mechanisms with execution-grounded labels is very likely to land a code-specific verbalized headline that is unclaimed.",
+          "sources": ["rewarding-doubt-a-reinforcement-learning-approach-to-calibrated-confidence-expre", "conftuner-training-large-language-models-to-express-their-confidence-verbally", "uncertainty-distillation-teaching-language-models-to-express-semantic-confidence", "orce-order-aware-alignment-of-verbalized-confidence-in-large-language-models"]
+        }
+      ],
+      "suggested_starting_urls": [
+        "https://arxiv.org/abs/2604.23333",
+        "https://arxiv.org/abs/2605.15588"
+      ],
+      "suggested_searches": [
+        "RLCM process supervision confidence margin LiveCodeBench exact AUROC ECE numbers code availability",
+        "verbalized confidence probe decoding text generation from hidden state",
+        "CSR semantic-level reward code generation applicability",
+        "does a code-specific verbalized confidence paper exist post RLCM 2026"
+      ]
+    },
+    {
+      "name": "safe-training-objective-avoiding-collapse-and-conflict",
+      "flavor": "convergent",
+      "one_line": "Which specific training objective (decoupled proper-scoring vs. joint RL log-score reward vs. discrimination-first surrogate) is most likely to avoid BOTH the DCPO-proven accuracy/calibration gradient conflict AND the current paper's own SFT 'calibration without discrimination' collapse when adapted to code?",
+      "rationale": "The current paper's own SFT intervention (274 examples, LoRA r=16) is the single most relevant negative result: it cut verbal ECE 64% but collapsed confidence to a single default bin (mean 0.900 on both easy and hard problems) -- calibration WITHOUT discrimination. 260309117-decoupling-reasoning-and-confidence (DCPO) proves a THEORETICAL gradient conflict when jointly optimizing accuracy and a calibration term in one objective, which is a plausible mechanistic explanation for why naive SFT/RL-toward-ECE produces exactly this collapse. Against this, three corpus items show specific fixes that avoid the conflict: 260412632-calibration-aware-policy-optimization-for-reasoning-llms (CAPO, discrimination-first/AUC surrogate preserves accuracy), 250716806-beyond-binary-rewards (bounded proper scoring rule yields accurate+calibrated policy jointly), and orce-order-aware-alignment (explicitly DECOUPLES the confidence model from the answer model, citing ConfTuner's own Appendix F.6 showing joint training causes accuracy-degrading interference). rewarding-doubt also explicitly argues its log-scoring reward avoids the ECE-hides-collapse failure mode by measuring AUROC alongside ECE. The corpus gestures at 'use a proper scoring rule and/or decouple the confidence head' as the fix but never validates this specifically against a collapse-to-one-bin failure mode on code, nor specifies which of these three fixes is cheapest/safest for a single-GPU 7B LoRA run. A depth investigator should determine: (a) the mechanistic reason our own SFT collapsed (was it the small 274-example count, the objective, or both?), (b) which of CAPO / Beyond-Binary-Rewards / ORCE's decoupling most directly targets that same failure mode, and (c) what LoRA config + rollout budget replicates it on Qwen2.5-Coder-7B within compute limits.",
+      "corpus_evidence": [
+        "260309117-decoupling-reasoning-and-confidence-resurrecting-calibration-in-reinfo",
+        "260412632-calibration-aware-policy-optimization-for-reasoning-llms",
+        "250716806-beyond-binary-rewards-training-lms-to-reason-about-their-uncertainty",
+        "orce-order-aware-alignment-of-verbalized-confidence-in-large-language-models",
+        "rewarding-doubt-a-reinforcement-learning-approach-to-calibrated-confidence-expre"
+      ],
+      "suggested_starting_urls": [
+        "https://arxiv.org/abs/2603.09117",
+        "https://arxiv.org/abs/2604.12632"
+      ],
+      "suggested_searches": [
+        "DCPO gradient conflict accuracy calibration proof conditions",
+        "ORCE decoupled confidence model ConfTuner Appendix F.6 accuracy interference",
+        "proper scoring rule discrimination collapse fix LoRA small dataset",
+        "confidence SFT collapse to single bin mean confidence 274 examples fix"
+      ]
+    },
+    {
+      "name": "label-generation-compute-cost-tradeoff",
+      "flavor": "convergent",
+      "one_line": "Given the tight single-GPU/tight-timeline budget, which training-label mechanism is cheapest and most reliable to generate execution-grounded confidence targets for code: ConfTuner's zero-sampling binary-correctness Brier loss, Uncertainty Distillation's N=100-sample MC estimate, or ORCE's K-sample DPO surrogate -- and does the current paper's own (n+1)-sample labeling cost predict which is actually feasible in the AAAI-27 timeline?",
+      "rationale": "The target paper's own diagnostic used an expensive independent (n+1)-sample labeling protocol to get its AUROC 0.987 sampling-oracle number -- that cost is real and the corpus shows train-time methods vary hugely in how much of that cost they require at TRAINING time. conftuner-training-large-language-models-to-express-their-confidence-verbally needs 'NO ground-truth confidence labels, NO proxy scores..., and NO repeated sampling at train or inference time' -- a fundamentally cheaper mechanism since code offers free binary pass/fail labels per generation via unit tests. By contrast uncertainty-distillation-teaching-language-models-to-express-semantic-confidence Monte Carlo samples N=100 completions PER QUESTION to estimate its distillation target, and orce-order-aware-alignment uses K sampled completions per prompt to build its DPO Spearman-rank surrogate -- both requiring substantial extra generation compute per training example, which is exactly the kind of budget-eating step the user's 'don't want a dead paper' concern is about. The corpus does not resolve which of these three mechanisms, when adapted to code's crisp execution-based (not fuzzy semantic-equivalence) correctness signal, would actually produce a comparable-or-better AUROC than the N=100-sample QA precedents (0.69-0.86) at a FRACTION of the compute, nor whether code's smaller benchmark pools (HumanEval 164, LiveCodeBench ~400-1000) make N=100-per-problem sampling prohibitively slow within an A100-40GB/GH200 budget on a tight AAAI-27 timeline (abstracts due July 21 2026, full papers July 28 2026 per aaai-27-areas-and-topics-aaai).",
+      "corpus_evidence": [
+        "conftuner-training-large-language-models-to-express-their-confidence-verbally",
+        "uncertainty-distillation-teaching-language-models-to-express-semantic-confidence",
+        "orce-order-aware-alignment-of-verbalized-confidence-in-large-language-models",
+        "functional-entropy-predicting-functional-correctness-in-llm-generated-code-with"
+      ],
+      "suggested_starting_urls": [
+        "https://arxiv.org/abs/2508.18847",
+        "https://arxiv.org/abs/2503.14749"
+      ],
+      "suggested_searches": [
+        "ConfTuner tokenized Brier score no sampling training cost GPU hours",
+        "uncertainty distillation N=100 Monte Carlo sample compute cost training set size",
+        "cheapest way to generate calibration training labels for code LLM confidence",
+        "AAAI 2027 deadline compute budget feasibility 7B single GPU calibration training"
+      ]
+    },
+    {
+      "name": "training-data-scale-and-source-feasibility",
+      "flavor": "convergent",
+      "one_line": "Does execution-grounded verbal-confidence training for code need MORE than the ~164-1000 problems in existing benchmarks to avoid the 274-example collapse failure, and if so, is synthetic problem+test generation a reliable source given the proven 'verification ceiling' in LLM-generated test suites?",
+      "rationale": "The target paper's SFT used only 274 examples and collapsed to a single default confidence bin -- a strong prior that data scale (not just objective design) may be a binding constraint. Existing code benchmarks are small: HumanEval has 164 problems, LiveCodeBench (per fase-fast-adaptive-semantic-entropy-for-code-quality and self-improving-code-generation-via-semantic-entropy-and-behavioral-consensus, both of which already use it alongside HumanEval/MBPP+/BigCodeBench) offers more but still a few hundred to ~1000 problems, and each confidence-training example may need MULTIPLE generations per problem (per-problem sampling) to derive a target, multiplying the effective example count needed. If the depth investigator concludes benchmark pooling (LiveCodeBench + MBPP+ + BigCodeBench + EvalPlus, several of which appear together in ConSelf's own experimental design on the SAME model family as our paper -- DeepSeek-Coder-6.7B, Qwen2.5-Coder) is insufficient, the fallback is synthetic problem+test generation, but 250920837-verification-limits-code-llm-training (Cohere Labs) proves training-data QUALITY is bottlenecked by the LLM-generated verifier's own capability: rigid 100%-pass filtering is overly restrictive, and richer/more diverse test suites (not just more tests) are needed to see downstream gains -- a real risk if the fallback plan for scaling training data relies on synthetically generated coding problems and their tests. The corpus does not resolve the minimum viable dataset size or whether pooled real benchmarks suffice without synthetic augmentation.",
+      "corpus_evidence": [
+        "self-improving-code-generation-via-semantic-entropy-and-behavioral-consensus",
+        "fase-fast-adaptive-semantic-entropy-for-code-quality",
+        "250920837-verification-limits-code-llm-training"
+      ],
+      "suggested_starting_urls": [
+        "https://arxiv.org/abs/2509.20837",
+        "https://arxiv.org/abs/2603.29292"
+      ],
+      "suggested_searches": [
+        "minimum training set size for verbalized confidence SFT to avoid collapse",
+        "LiveCodeBench MBPP+ BigCodeBench pooled problem count for confidence training",
+        "verification ceiling synthetic test generation quality bottleneck code LLM training data",
+        "ConSelf training data size DeepSeek-Coder Qwen2.5-Coder confidence curriculum"
+      ]
+    }
+  ],
+  "skip_loci": [
+    {
+      "slug": "in-ide-deployment-and-developer-trust",
+      "reason": "251022614-does-in-ide-calibration-of-large-language-models-work-at-scale (24M interactions, developer preference for categorical over numeric confidence) is a real and interesting risk to whether an AUROC headline matters in deployment, but it is a framing/motivation concern, not a feasibility gate on whether the headline NUMBER will materialize on single-GPU compute within the AAAI-27 timeline -- outside my feasibility-and-risk mandate; better suited to analyst A's framing-focused loci or to the report's motivation section directly, since the corpus evidence here is already unambiguous (post-hoc calibration fails to help; no depth investigation needed to resolve a further open question)."
+    },
+    {
+      "slug": "multicalibration-for-code-as-closest-prior-work",
+      "reason": "multicalibration-for-llm-based-code-generation (Campos et al., AI-SQE 2026 WORKSHOP) is a real code+calibration methodological precedent, but it operates on post-hoc grouped calibration of log-prob-derived confidence (not train-time verbalized, not execution-grounded distillation) -- the novelty defense against it is a positioning question for the 'closest prior work' section, not a feasibility uncertainty; the corpus already fully characterizes its method and scope (avg_prob confidence, IGHB/IGLB grouping, MultiPL-E/McEval/LiveCodeBench), so no further depth investigation would change the outcome of the paper's core headline experiment."
+    },
+    {
+      "slug": "aaai-27-primary-topic-selection",
+      "reason": "Already resolved with high confidence by the width sweep: aaai-27-areas-and-topics-aaai confirms 'ML: Bayesian Learning & Uncertainty Quantification' as the primary-keyword candidate (no separate 'ML: Calibration' keyword exists) with clear AAAI selection-rule guidance (methodological contribution demonstrated on code -> file under ML, not NLP/APP, unless the contribution is fundamentally about code-specific structure). This is a decision to be made in synthesis, not a gap requiring more sources."
+    }
+  ]
+}

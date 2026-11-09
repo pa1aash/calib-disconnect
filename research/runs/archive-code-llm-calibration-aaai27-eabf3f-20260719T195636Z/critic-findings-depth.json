@@ -1,0 +1,71 @@
+{
+  "critic_type": "depth",
+  "draft_path": "research/notes/final_report_code-llm-calibration-aaai27-eabf3f.md",
+  "vault_tag": "code-llm-calibration-aaai27-eabf3f",
+  "summary": "The draft uses all five interim notes at the paragraph level, but flattens the single most load-bearing technical content: the DCPO training mechanism (reward formula, hybrid target, and the Theorem 5.1 consistency guarantee that is the actual anti-collapse result), and the code-native P(True) evidence that the self-report failure is an elicitation-format artifact. These are exactly the substance the parent's adversarial questions (Q1 how confidence is emitted / masked-gradient applied, Q4 collapse-avoidance depth) probe. No interim note is fully ignored, but the executable recipe is stated at a distance from the notes that specify it.",
+  "findings": [
+    {
+      "severity": "major",
+      "location": "Section 5 'The mechanism, committed' (the DPRC paragraph, ~lines 80-82) and Section 6B 'Free labels' / 'Train DPRC' (~lines 97-98)",
+      "issue": "The draft commits to 'a bounded Brier proper scoring rule ... against the continuous per-group pass rate' and a 'hybrid instance-plus-group execution-pass-rate target' but never states the actual objective. This is the executable core of the method (parent Q1: exactly how the decoupled masked-gradient is applied), and the interim note gives the full formula. Without it, DPRC is described from a distance the depth investigation already closed.",
+      "evidence": "interim-report-collapse-proof-training-objective.md: DCPO's confidence reward is R_c(o_c) = -|confidence(o_c) - R_IG|, a bounded absolute-error/Brier-like term against a hybrid instance+group target R_IG = lambda*R_tilde_G + (1-lambda)*R(o_r); separate group-relative GRPO advantages A_r (binary correctness) and A_c (confidence reward) are computed, then a masked gradient makes each advantage touch only its own token subset.",
+      "recommendation": "In Section 5, write the confidence reward explicitly as a bounded Brier/absolute-error term against a lambda-interpolated instance+group pass-rate target R_IG, and state that the per-group confidence-token advantage A_c is masked so it never enters the generation tokens' gradient (the reasoning tokens carry A_r from binary pass/fail). This is the per-requirement-vector generalization of DCPO's scalar <conf> block and should be stated as such."
+    },
+    {
+      "severity": "major",
+      "location": "Section 1C (~line 33) and Section 5 'Why this exact design' (~line 82), wherever the anti-collapse guarantee is asserted",
+      "issue": "The draft repeatedly claims decoupling 'mechanically prevents' the Proposition 4.2 gradient conflict, but cites only Prop 4.2 (which names the *problem*). It never cites the interim note's Theorem 5.1, which is the *positive* result: the decoupled estimator is statistically consistent precisely because it is optimized independently of the reasoning policy. Parent Q4 asks whether collapse-avoidance is explained at the depth the notes support; the draft cites the disease and omits the proof of the cure.",
+      "evidence": "interim-report-collapse-proof-training-objective.md: 'Theorem 5.1 proves this decoupled estimator is statistically consistent (E[c|q] = E_y[R(y)]) because it is optimized independently of the reasoning policy.'",
+      "recommendation": "Add Theorem 5.1 alongside Prop 4.2: decoupling is not merely 'safer', it has a consistency guarantee (E[c|q] converges to the true conditional pass probability) that a joint objective cannot offer. This converts the anti-collapse claim from an assertion into a cited theorem and directly answers the collapse-avoidance-depth question."
+    },
+    {
+      "severity": "major",
+      "location": "Section 7A 'The mechanism is proven three times over' (~lines 108-110) and Section 9 Axis-1 (self-expressed) (~line 160)",
+      "issue": "The draft argues self-report fails 'only when untrained or naively joint-SFT'd' but omits the single strongest code-domain data point supporting that claim, which the interim note calls the load-bearing mechanistic clue. This is the only piece of *code-native* evidence that a constrained self-report already discriminates well, and it directly de-risks Priority 2 (the whole method bets that a structured, non-free-text confidence readout discriminates on code). Leaving it out means the 'why the headline lands' argument rests entirely on QA precedents plus CURE, when a code-domain precedent exists.",
+      "evidence": "interim-report-self-report-vs-external-judge-vs-probe-reversal.md: Functional Entropy shows constrained P(True) self-report reaches AUROC 0.82-0.87 on Python/SQL vs free-text VC 0.54-0.80 (same model, same self-referential structure), so 'the failure mode is tied to the free-text/Likert elicitation format, not to the self-referential act of judging one's own output per se.'",
+      "recommendation": "Add the P(True) 0.82-0.87-vs-free-text-VC-0.54-0.80 code-domain result to Section 7A as a fourth positive precedent (it is code, not QA), and reference it in Axis-1 of Section 9 to argue the disconnect paper's verbal collapse is an elicitation-format artifact that a tokenized/structured confidence readout is designed to escape."
+    },
+    {
+      "severity": "major",
+      "location": "Section 5 'Everything is LoRA rank 16 ... following the decoupled-LoRA precedent of Yaldiz et al. [19]' (~line 80)",
+      "issue": "The draft cites Yaldiz et al. as the 'decoupled-LoRA precedent' for DPRC's masked-gradient block decoupling, but the interim note is explicit that Yaldiz's decoupling is a structurally *different* mechanism (single final-decision-token position decoupling inside an otherwise joint loss), not DCPO-style advantage-masking of a confidence block. The note flags that NO source tests block-masked-gradient decoupling under LoRA on code -- that is the paper's single largest evidence gap and its central feasibility risk. Presenting Yaldiz as a matching precedent overstates the derisking.",
+      "evidence": "interim-report-collapse-proof-training-objective.md: Yaldiz's loss is 'applied only to the final decision token ... a token-position decoupling within an otherwise joint loss, distinct from DCPO's advantage-masking'; and 'No source in this batch evaluates a decoupled objective under LoRA on code -- that is the single largest evidence gap.' Confirmed in label-and-data note as well.",
+      "recommendation": "Reframe the Yaldiz cite in Section 5 as a feasibility floor for LoRA-scale decoupling *in general* (single-token variant) while stating plainly that block-masked-gradient decoupling under LoRA on code is untested -- exactly what the Day-2/3 pilot resolves. This aligns Section 5 with the honest risk statement already in Section 7C and removes the overclaim."
+    },
+    {
+      "severity": "major",
+      "location": "Section 5 'The mechanism, committed' -- 'After generating a solution, the model emits a structured confidence block' (~line 80)",
+      "issue": "How the per-test confidence is physically emitted (parent Q1) is underspecified and slightly self-contradictory: the draft says the model 'emits a structured confidence block' in its own generation (in-line, DCPO-style), yet also that the confidence advantage 'never backpropagates into the generation policy'. The self-report interim note commits to a concrete, cleaner architecture that resolves this -- a frozen generation forward pass followed by a second confidence-only LoRA turn conditioned on the fixed generated code -- which is what makes the gradient isolation actually hold under LoRA.",
+      "evidence": "interim-report-self-report-vs-external-judge-vs-probe-reversal.md committed position: 'keep the coder's own weights and prompt-visible identity ... but decouple the training/inference stage the way ORCE does: freeze the generation forward pass, then run a second confidence-only turn (LoRA-adapted, conditioned on the fixed generated code) trained with a proper scoring rule (ConfTuner-style tokenized Brier against execution-pass-rate labels).'",
+      "recommendation": "Specify the emission mechanism concretely: solution generated first (frozen forward pass), then a second confidence-only turn where the LoRA-adapted model reads the fixed code and emits a structured per-group confidence block (one token c_g per requirement group). State this is same-model self-report (preserving the 'expressed interface' novelty) but stage-decoupled, which is what makes the masked-gradient isolation coherent."
+    },
+    {
+      "severity": "minor",
+      "location": "Section 8A supporting result (3) 'Decoupling ablation (DPRC vs bounded joint reward)' (~line 124)",
+      "issue": "The draft lists the decoupling ablation as an experiment to run but does not cite the prior evidence that it will favor decoupling. The interim note has DCPO's own decoupling ablation numbers, which materially raise Priority-2 confidence that this ablation lands the intended way.",
+      "evidence": "interim-report-collapse-proof-training-objective.md: DCPO ablation (Table 3) 'removing decoupled optimization drops accuracy 60.8->57.3 and roughly doubles ECE (0.128->0.258); removing instance-level labels degrades ECE 0.128->0.209 and PCE 0.126->0.229.'",
+      "recommendation": "Cite the decoupling-ablation numbers (accuracy 60.8->57.3, ECE roughly doubling 0.128->0.258) as prior evidence in Section 8A and/or Section 7A, so the planned ablation is backed by an existing result, not just a hypothesis. The draft already uses the 0.081-ECE instance-label figure; add the decoupling half of the same table."
+    },
+    {
+      "severity": "minor",
+      "location": "Section 1B 'RLCR proves any bounded proper scoring rule ... boundedness is mandatory' (~line 27) and Section 5 bounded-Brier justification (~line 80)",
+      "issue": "The 'boundedness is mandatory' claim is stated qualitatively; the interim note supplies the concrete Toy-Arm contrast that makes it quantitative and hard to wave away, which matters because DPRC's hard/rare code problems are exactly the low-signal regime where unbounded rewards collapse.",
+      "evidence": "interim-report-collapse-proof-training-objective.md: RLCR Toy-Arm -- unbounded log-score collapses to outputting an invalid answer with confidence 0 on nearly every instance (near-perfect 'calibration', 0% accuracy); the bounded Brier variant does not (34.4% accuracy, ECE 0.02) because Brier is strictly increasing in true correctness probability so abstention-gaming is suboptimal.",
+      "recommendation": "Add the bounded-vs-unbounded Toy-Arm numbers (bounded Brier: 34.4% accuracy at ECE 0.02 without abstention collapse) to the boundedness justification, and note the low-signal regime (LiveCodeBench hardest tier) is where this matters for DPRC."
+    },
+    {
+      "severity": "minor",
+      "location": "Section 1B 'CAPO proves GRPO's implicit advantage is an AUC-inconsistent surrogate and supplies a consistent replacement' (~line 27)",
+      "issue": "The CAPO claim is stated at conclusion-level; the interim note has the specific surrogate-theory content that makes it a genuine formal wedge rather than a slogan, and it converges almost verbatim on the disconnect paper's own collapse.",
+      "evidence": "interim-report-collapse-proof-training-objective.md: CAPO shows GRPO's implicit advantage is an AUC surrogate with phi(t) = -t, which by Gao & Zhou's (2012) consistency theorem is AUC-inconsistent (needs convex, non-increasing phi with phi'(0)<0); CAPO's fix phi_tau(t)=log(1+exp(-t/tau)) is AUC-consistent with a regret bound. Its motivating line -- 'assigning identical confidence to both correct and incorrect responses perfectly satisfies absolute calibration criteria yet fails to distinguish them' -- is a formal description of the base study's mean-0.900 collapse.",
+      "recommendation": "Add the linear-phi-fails / logistic-phi-consistent detail and, if space allows, the near-verbatim CAPO quote that mirrors the base study's collapse, to strengthen the 'report AUROC not ECE' positioning wedge in Section 1B and Section 2B."
+    },
+    {
+      "severity": "minor",
+      "location": "Section 8C / 8D pre-registered fallback -- alpha=0.05 infeasibility trigger and calibration-pool-expansion fallback-to-fallback (~lines 132, 140)",
+      "issue": "The draft references 'CIC's own documented failure mode' for alpha=0.05 infeasibility but gives no number, so the pre-registered numeric gate reads softer than the interim note supports. The specific split-infeasibility statistic makes the fallback-to-the-fallback a concrete, reviewer-proof pre-registration.",
+      "evidence": "interim-report-fallback-utility-of-collapsed-confidence.md: CIC at alpha=0.05 'is frequently infeasible -- the calibration procedure returns no valid threshold on 34-100 of 100 calibration splits for the weaker models (Vicuna-7B/13B, Qwen2.5-3B)'; at alpha=0.10 coverage 0.52-1.00 (TriviaQA) / 0.61-0.87 (CommonsenseQA) with realized error ~0.086-0.092.",
+      "recommendation": "Cite the '34-100 of 100 calibration splits infeasible at alpha=0.05' figure as the documented precedent that justifies the pre-registered pool-expansion trigger, and the alpha=0.10 feasibility/error numbers to anchor why alpha=0.10 is the safe primary target."
+    }
+  ]
+}

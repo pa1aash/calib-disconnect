@@ -1,0 +1,120 @@
+{
+  "verdict": "PARTIALLY-OVERLAPPING",
+  "verdict_explanation": "No paper occupies the EXACT conjunction (code-generation LLM expresses its OWN calibrated, discriminative confidence at per-test-case/per-requirement granularity, execution-verified, evaluated by localization/discrimination AUROC). That precise cell is confirmed empty by both the vault's full-text locus investigation and fresh adversarial arXiv/Semantic Scholar search (DCPO's own citation graph, 4 papers, contains no structured-code-confidence follow-up). HOWEVER, three adjacent literatures are dense enough that the novelty claim is fragile if the draft frames it as 'nobody has decomposed code confidence into fine-grained units': (1) code fault-localization / line-level diagnostic-uncertainty papers for REPAIR (FLARE, faulty-token-localization work) already predict WHICH region of code will fail and use execution outcomes to validate/select, just via a separate diagnostic model and refinement-accuracy metrics, not expressed self-confidence + calibration/AUROC; (2) general-LLM claim-level/atomic confidence decomposition + RL calibration (Atomic Calibration of LLMs, CURE/'Think Through Uncertainty') already establishes 'decompose the response into verifiable sub-units and calibrate each with RL' as a 2024-2026 paradigm outside code -- a reviewer can construct 'CURE/Atomic-Calibration but for code, where test cases replace atomic claims' as an obvious-combination critique; (3) VeRPO already exploits per-test-case partial-success as free dense supervision for RL in code generation (for the correctness reward, not confidence), undercutting the claim that per-test labels are an unexploited resource. The draft's central task is not to prove non-existence in the abstract, but to make the execution-verifiability + expressed-interface + discrimination-metric conjunction explicitly load-bearing against all three adjacent literatures, not just against DCPO.",
+  "closest_papers": [
+    {
+      "title": "FLARE: Fine-Grained Diagnostic Feedback for LLM Code Refinement",
+      "arxiv_id": "2606.03852",
+      "date": "2026-06-02",
+      "what_it_does": "A lightweight diagnostic model predicts LINE-LEVEL suspiciousness signals for bug localization; Flare searches top-k suspicious regions and selects the best candidate by execution outcome, improving iterative code refinement on LiveCodeBench/BigCodeBench across 5 base LLMs (1.7-8.5pp absolute gains).",
+      "occupancy": "PARTIALLY-OVERLAPPING",
+      "why": "Closest hit found in the entire search: it does localize WHICH part of code is likely wrong using execution feedback. But (a) the diagnostic signal comes from a SEPARATE lightweight model, not the code-generating LLM's own expressed output -- same category problem RLCM's probe has; (b) granularity is per-LINE (bug suspicion for repair), not per-TEST-CASE/per-requirement; (c) primary metric is downstream refinement pass-rate improvement, not calibration/discrimination (ECE/AUROC) of the localization signal itself -- abstract gives no AUROC/ECE number. Full text unread; MUST be fetched and explicitly distinguished in related work before the headline locks."
+    },
+    {
+      "title": "Think Through Uncertainty: Improving Long-Form Generation Factuality via Reasoning Calibration (CURE)",
+      "arxiv_id": "2604.12046",
+      "date": "2026-04-13",
+      "what_it_does": "General-LLM long-form generation: explicitly critiques 'existing approaches remain limited to a single scalar confidence for the entire response, which is insufficient... where uncertainty varies across individual claims,' and proposes an RL framework (CURE) that estimates confidence per-claim, incorporating calibration into the RL objective for long-form factuality.",
+      "occupancy": "PARTIALLY-OVERLAPPING",
+      "why": "This is the closest METHODOLOGICAL analog outside code: decompose a response into verifiable sub-units and RL-train per-unit calibrated confidence, using exactly the 'single scalar is insufficient' argument the target paper's headline relies on. Domain-distinct (QA/factuality claims, not code) and label source differs (LLM-judged claim veracity, not free execution-verified per-test outcomes) -- the code-execution-verifiability of ground truth is the genuine structural difference and must be made explicit and load-bearing, not left implicit. Full text unread; fetch to extract exact RL/loss design so the draft's method section can cite and differentiate precisely."
+    },
+    {
+      "title": "Atomic Calibration of LLMs in Long-Form Generations",
+      "arxiv_id": "2410.13246",
+      "date": "2024-10-17",
+      "what_it_does": "Decomposes long-form LLM responses into atomic claims and studies fine-grained (atomic) factuality calibration per claim, vs. prior single response-level (macro) calibration; proposes confidence-fusion strategies.",
+      "occupancy": "PARTIALLY-OVERLAPPING",
+      "why": "Establishes that 'decompose into fine-grained verifiable units + calibrate each unit' is an existing (2024) general-LLM paradigm, not a novel idea in the abstract. Pre-empts the paper claiming general novelty for the DECOMPOSITION IDEA itself; the paper's novelty must rest specifically on code's execution-verifiable, hallucination-free per-test ground truth as the differentiator from claim-level (LLM-judged) decomposition, and on training the GENERATING model's own expressed output (not a separate scorer)."
+    },
+    {
+      "title": "Fine-grained Approaches for Confidence Calibration of LLMs in Automated Code Revision",
+      "arxiv_id": "2604.06723",
+      "date": "2026-04-08",
+      "what_it_does": "Already fully read in-vault (locus code-verbal-calibration-occupied-or-open). Fine-grained (non-sequence-level) confidence scores for code REVISION across 14 models; internal/logit-derived signals only (min-token-prob, lowest-K, attention-weighted), post-hoc Platt scaling, discrimination via Kendall tau_b/Wasserstein-1, not AUROC.",
+      "occupancy": "PARTIALLY-OVERLAPPING",
+      "why": "Confirmed DISTINCT on three axes (code revision not generation; internal/logit not verbalized/expressed; tau_b/W1 not AUROC) but it is the nearest-neighbor CODE-domain paper using the word 'fine-grained' for calibration, and its own text explicitly flags the discrimination-collapse risk this proposal is designed around ('this type of degenerate confidence score...cannot support decision-making or thresholding'). Must be cited as the field's closest existing attempt and distinguished point-by-point in the draft; no new fetch needed, already at full-text depth."
+    },
+    {
+      "title": "Beyond Binary: Turning Partial Success into Dense Verifiable Rewards for RL in Code Generation (VeRPO)",
+      "arxiv_id": "2601.03525",
+      "date": "2026-01-07",
+      "what_it_does": "Uses per-TEST-CASE partial success (passing a subset of tests) as an intrinsic, verifiable dense reward signal for RL training of code-generation CORRECTNESS; identifies and corrects a cardinality bias where policy updates over-favor easy-test gains.",
+      "occupancy": "DISTINCT-FROM (but load-bearing precedent)",
+      "why": "Different target entirely (accuracy/correctness reward, not confidence/calibration) so it does not occupy the headline cell. But it independently confirms that per-test-case outcomes are a recognized, already-exploited free signal in code RL -- weakening (not killing) the framing that these labels are an unexploited resource, and its cardinality-bias finding (easy vs. hard test imbalance corrupting the reward) is a direct methodological risk transfer candidate for a per-test CONFIDENCE objective, which will also see imbalanced per-test difficulty. Should be cited as adjacent precedent and its bias analysis checked against the proposed training recipe."
+    }
+  ],
+  "gaps": [
+    {
+      "type": "overturning",
+      "target_position": "Distilled resolution (comparisons.md line 49): per-test/per-requirement structured code confidence is the residual, unoccupied novelty after DCPO.",
+      "search_queries": [
+        "FLARE fine-grained diagnostic feedback LLM code refinement arXiv 2606.03852 full text",
+        "line-level suspiciousness code bug localization confidence calibration AUROC",
+        "faulty token localization quality-aware patch refinement arXiv 2511.18001"
+      ],
+      "source_type": "academic",
+      "priority": "critical",
+      "rationale": "FLARE (arXiv 2606.03852, June 2026) is the single closest hit in the entire adversarial search: it predicts which region of generated code will fail and validates against execution outcomes -- the same underlying capability the headline claims. Only distinguishing facts found so far (separate diagnostic model, line- not test-case-granularity, refinement-accuracy metric not AUROC/calibration) come from the abstract alone; full text is unread. If full text reveals it trains the SAME generating model (not a separate diagnostic model) or reports a calibration/discrimination metric, the headline is directly occupied and must pivot again before drafting."
+    },
+    {
+      "type": "overturning",
+      "target_position": "Distilled resolution: per-test-case structured confidence is code-unique because code's execution gives a VECTOR of per-test outcomes unavailable in QA/math.",
+      "search_queries": [
+        "CURE Think Through Uncertainty reasoning calibration long-form generation arXiv 2604.12046 full text",
+        "Atomic Calibration of LLMs in Long-Form Generations claim-level fusion arXiv 2410.13246",
+        "per-claim confidence RL calibration long-form factuality decomposition"
+      ],
+      "source_type": "academic",
+      "priority": "critical",
+      "rationale": "CURE and Atomic Calibration already establish 'decompose response into verifiable sub-units + RL/train calibration per unit' as a general-LLM paradigm (2024-2026), just with LLM-judged claims instead of execution-verified test cases. A reviewer can construct the obvious-combination critique 'CURE/Atomic-Calibration but for code.' The draft needs the exact method details from these papers to make the execution-verifiability + same-model-expressed-interface distinction explicit and load-bearing rather than an implicit hand-wave, and to preempt this specific reviewer objection in related work."
+    },
+    {
+      "type": "overturning",
+      "target_position": "Novelty-occupancy verdict depends on no competing group finishing a code-native structured-confidence result before the AAAI-27 submission window (2026-07-28).",
+      "search_queries": [
+        "Rathnasuriya Yang UT Dallas reward-aware training code confidence 2026",
+        "site:arxiv.org when to defer code prediction token-level uncertainty update",
+        "DCPO code generation follow-up per-test structured confidence 2026"
+      ],
+      "source_type": "academic",
+      "priority": "high",
+      "rationale": "The 'when-to-answer-and-when-to-defer' UT Dallas roadmap paper explicitly lists token-level granularity and reward-aware generative training as its next 12-month milestones (started ~May 2026), and its ICSE-2026 venue plus overlapping model family (DeepSeek-Coder-7B) make it the single most concrete scoop risk identified in the corpus. DCPO's own citation graph (checked via Semantic Scholar, 4 citing papers as of this search) contains no structured-code-confidence follow-up yet, but this should be rechecked close to the fetch wave and again near submission."
+    },
+    {
+      "type": "strengthening",
+      "target_position": "Tension 3/label-and-data-feasibility: per-test structured labels are 'free' from existing n=10 sampling runs, but current target benchmarks (HumanEval/MBPP/LiveCodeBench) have few tests per problem, limiting statistical resolution for a per-test AUROC.",
+      "search_queries": [
+        "TACO benchmark test cases per problem code generation LLM",
+        "CodeContests APPS benchmark number of hidden test cases per problem statistics",
+        "code generation benchmark test case density fine-grained evaluation 2026"
+      ],
+      "source_type": "academic",
+      "priority": "high",
+      "rationale": "HumanEval averages ~7-8 tests/problem and MBPP ~3; a per-test-case AUROC needs many tests per problem to be statistically meaningful and to demonstrate 'localization' rather than a handful of binary splits. APPS/CodeContests/TACO are known (from general SE literature) to have far denser hidden test suites per problem (tens to hundreds), which would make the primary metric far more convincing. This benchmark choice was never investigated by any of the five depth loci and is not in the vault -- a genuine, actionable strengthening gap."
+    },
+    {
+      "type": "overturning",
+      "target_position": "Free per-test labels are an unexploited resource unique to this proposal's framing.",
+      "search_queries": [
+        "VeRPO Verifiable Dense Reward Policy Optimization partial success code generation arXiv 2601.03525",
+        "per-test-case dense reward reinforcement learning code generation cardinality bias",
+        "partial credit test case reward code generation RL 2026"
+      ],
+      "source_type": "academic",
+      "priority": "high",
+      "rationale": "VeRPO already turns per-test-case partial success into dense RL reward for code-generation CORRECTNESS (not confidence), and identifies a cardinality bias (easy-test successes dominate) directly analogous to a risk the proposed per-test confidence objective would also face (imbalanced test difficulty skewing the calibration target). Needs to be cited as precedent/method risk-transfer, and the draft's framing of 'free, unexploited per-test signal' needs qualifying language distinguishing confidence-calibration use from VeRPO's reward-shaping use."
+    },
+    {
+      "type": "overturning",
+      "target_position": "No adjacent 2026 paper on structured/component-level uncertainty for code that could pre-empt the per-test/per-requirement framing from a different angle (multi-agent/pipeline-stage rather than test-case).",
+      "search_queries": [
+        "UA-ChatDev uncertainty-aware multi-agent software development arXiv 2607.02186 full text",
+        "requirement-level confidence code generation multi-agent uncertainty propagation 2026",
+        "per-requirement calibration structured confidence software engineering LLM 2026"
+      ],
+      "source_type": "academic",
+      "priority": "high",
+      "rationale": "UA-ChatDev (arXiv 2607.02186, July 2026 -- extremely fresh, unread) propagates uncertainty across multi-agent software-development phases (requirements analysis, coding, testing, refinement), which is a different granularity axis (pipeline-stage, not per-test-case within one generation) but uses the word 'requirement' in a way that could overlap with the proposed 'per-requirement' framing. Given its recency it was not caught by the width sweep or any depth locus; must be fetched in full to rule out overlap before the draft commits to 'per-requirement' terminology."
+    }
+  ]
+}

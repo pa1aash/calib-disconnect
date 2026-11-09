@@ -1,0 +1,72 @@
+[
+  {
+    "claim": "Many code generation errors stem from token-ranking mistakes at high-uncertainty decoding steps, where the correct token is present in the distribution but not top-ranked.",
+    "stance": "supports",
+    "stance_target": "token-level uncertainty is diagnostic of error-prone decoding steps, even if not well-calibrated as an expressed confidence signal",
+    "evidence_type": "empirical",
+    "scope_conditions": "LLM-based code generation, greedy decoding baseline",
+    "quoted_support": "This paper presents an empirical study revealing that many generation errors stem from token ranking mistakes at high-uncertainty steps, where the correct token is present but not top-ranked.",
+    "numbers": [],
+    "entities": ["token ranking", "high-uncertainty decoding steps"],
+    "time_period": "2025-2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "250608980-adadec-a-uncertainty-guided-lookahead-decoding-framework-for-llm-based"
+  },
+  {
+    "claim": "AdaDec, a lookahead-based uncertainty-guided decoding framework that pauses and reranks tokens at high-uncertainty steps, improves Pass@1 accuracy by up to 20.9 absolute percentage points over greedy decoding on code generation benchmarks.",
+    "stance": "supports",
+    "stance_target": "uncertainty signals can be turned into a downstream decoding ACTION with a measured accuracy payoff",
+    "evidence_type": "empirical",
+    "scope_conditions": "HumanEval+, MBPP+, DevEval benchmarks",
+    "quoted_support": "Experiments on HumanEval+, MBPP+, and DevEval benchmarks show that AdaDec improves Pass@1 accuracy by up to 20.9% in absolute terms over greedy decoding.",
+    "numbers": ["up to 20.9% absolute Pass@1 improvement"],
+    "entities": ["AdaDec", "HumanEval+", "MBPP+", "DevEval", "Pass@1"],
+    "time_period": "2025-2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "250608980-adadec-a-uncertainty-guided-lookahead-decoding-framework-for-llm-based"
+  },
+  {
+    "claim": "AdaDec consistently outperforms both Beam Search and the adaptive-decoding baseline AdapT, while maintaining efficiency through selective, uncertainty-triggered pausing rather than exhaustive search.",
+    "stance": "supports",
+    "stance_target": "selective/triggered use of uncertainty is more efficient than blanket search-based decoding strategies",
+    "evidence_type": "empirical",
+    "scope_conditions": "same three code benchmarks; comparison against Beam Search and AdapT baselines",
+    "quoted_support": "it consistently outperforms both competitive baselines like Beam Search and state-of-the-art adaptive decoding methods such as AdapT, while maintaining high efficiency through selective, uncertainty-triggered pausing.",
+    "numbers": [],
+    "entities": ["Beam Search", "AdapT", "selective triggering"],
+    "time_period": "2025-2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "250608980-adadec-a-uncertainty-guided-lookahead-decoding-framework-for-llm-based"
+  },
+  {
+    "claim": "AdaDec learns model-specific uncertainty thresholds rather than using a fixed universal threshold, implying that raw uncertainty scales differ across code LLMs and require per-model calibration for use as a decision trigger.",
+    "stance": "neutral",
+    "stance_target": "uncertainty signal scale is model-dependent, a practical caveat for any prescriptive method built on it",
+    "evidence_type": "empirical",
+    "scope_conditions": "multiple code LLMs, per-model threshold learning",
+    "quoted_support": "AdaDec learns model-specific uncertainty thresholds and applies a lookahead-based reranking strategy when uncertainty is high.",
+    "numbers": [],
+    "entities": ["model-specific thresholds", "lookahead reranking"],
+    "time_period": "2025-2026",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "250608980-adadec-a-uncertainty-guided-lookahead-decoding-framework-for-llm-based"
+  },
+  {
+    "claim": "AdaDec never reports the calibration quality (e.g., AUROC, ECE, Brier score) of the token-level uncertainty signal it uses as a trigger, treating uncertainty purely as a heuristic rather than a validated probability of correctness.",
+    "stance": "neutral",
+    "stance_target": "gap: no calibration audit of the signal used for a real downstream action, leaving open whether a better-calibrated signal (e.g., sampling-based) would yield larger gains",
+    "evidence_type": "theoretical",
+    "scope_conditions": "inferred from abstract; full paper not accessed",
+    "quoted_support": "Motivated by these findings, we propose AdaDec, a lookahead-based uncertainty-guided adaptive decoding framework that integrates a token-level pause-then-rerank mechanism driven by token uncertainty.",
+    "numbers": [],
+    "entities": ["token-level uncertainty", "calibration audit gap"],
+    "time_period": "2025-2026",
+    "region": null,
+    "confidence": "low",
+    "source_note_id": "250608980-adadec-a-uncertainty-guided-lookahead-decoding-framework-for-llm-based"
+  }
+]

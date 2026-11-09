@@ -1,0 +1,44 @@
+[
+  {
+    "claim": "UnCert-CoT uses entropy-based and probability-differential-based confidence measures computed from the LLM's own next-token output distribution to decide whether to activate multi-path CoT reasoning during code generation, treating this expressed uncertainty as a compute-routing signal rather than a user-facing confidence report.",
+    "stance": "neutral",
+    "stance_target": "expressed/log-prob-based uncertainty is usable and useful for internal routing decisions even without being validated as a calibrated correctness estimate",
+    "evidence_type": "empirical",
+    "scope_conditions": "code generation with LLM-based CoT reasoning, MHPP benchmark",
+    "quoted_support": "We propose two confidence-based uncertainty measures: Entropy-based and Probability Differential-based methods. When uncertainty is high, UnCert-CoT activates CoT-decoding to generate multiple reasoning paths and selects the final code that exhibits the highest likelihood of correctness.",
+    "numbers": ["up to 6.1% improvement in PassRate accuracy on MHPP"],
+    "entities": ["UnCert-CoT", "MHPP", "CoT-decoding"],
+    "time_period": "Mar 2025",
+    "region": "n/a",
+    "confidence": "medium",
+    "source_note_id": "250315341-uncertainty-guided-chain-of-thought-for-code-generation-with-llms"
+  },
+  {
+    "claim": "Standard CoT reasoning applied uniformly to all code-generation tasks exhibits 'overthinking', wasting tokens on easy problems and sometimes leading to incorrect reasoning paths, motivating uncertainty-gated selective reasoning.",
+    "stance": "neutral",
+    "stance_target": "motivation for the paper's gating mechanism -- background on inefficiency of undifferentiated CoT",
+    "evidence_type": "empirical",
+    "scope_conditions": "code generation with LLMs applying CoT uniformly",
+    "quoted_support": "existing CoT methods often exhibit a tendency toward \"overthinking\", where the LLM consistently applies reasoning strategies without adequately considering the task's underlying complexity.",
+    "numbers": [],
+    "entities": ["Chain-of-Thought", "UnCert-CoT"],
+    "time_period": "Mar 2025",
+    "region": "n/a",
+    "confidence": "medium",
+    "source_note_id": "250315341-uncertainty-guided-chain-of-thought-for-code-generation-with-llms"
+  },
+  {
+    "claim": "The paper does not report AUROC or calibration metrics of its entropy/probability-differential uncertainty measures against ground-truth functional correctness -- efficacy is validated only via downstream pass-rate improvement, not via direct correctness-prediction accuracy.",
+    "stance": "refutes",
+    "stance_target": "the assumption that existing 'expressed uncertainty' methods have already been calibration-tested against internal sampling-based correctness signals",
+    "evidence_type": "empirical",
+    "scope_conditions": "based on abstract framing of UnCert-CoT's evaluation methodology",
+    "quoted_support": "Our experimental results demonstrate that UnCert-CoT significantly enhances code generation accuracy on challenging benchmark MHPP... it achieves improvements up to 6.1% on PassRate accuracy.",
+    "numbers": [],
+    "entities": ["UnCert-CoT", "MHPP"],
+    "time_period": "Mar 2025",
+    "region": "n/a",
+    "confidence": "low",
+    "source_note_id": "250315341-uncertainty-guided-chain-of-thought-for-code-generation-with-llms"
+  }
+]

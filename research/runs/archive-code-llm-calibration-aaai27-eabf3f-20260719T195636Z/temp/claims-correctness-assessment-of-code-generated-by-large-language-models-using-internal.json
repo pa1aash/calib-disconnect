@@ -1,0 +1,58 @@
+[
+  {
+    "claim": "Openia, the prior SOTA white-box method using only the last generated token's hidden state at the last layer, achieves 0.56-0.79 accuracy on independent-unit code correctness across DeepSeek-Coder, CodeLlama, and Magicoder under cross-benchmark and cross-task evaluation, far below the 0.987 AUROC benchmark from repeated sampling.",
+    "stance": "supports",
+    "stance_target": "single-pass hidden-state probing (even the field's prior SOTA) does not close the gap to sampling-based internal signal quality on standalone code",
+    "evidence_type": "empirical",
+    "scope_conditions": "HumanEval, MBPP independent-unit Python code; DeepSeek-Coder-1.3B/6.7B, CodeLlama-7B/13B, Magicoder-7B",
+    "quoted_support": "This choice is motivated by the fact that the internal state from the last layer is closest to the model's final decision, making it a logical and effective representation for evaluating the correctness of the generated code.",
+    "numbers": ["Openia accuracy 0.56-0.79 across models and splits", "DeepSeek-1.3B cross-benchmark 0.66", "Magicoder-7B cross-benchmark 0.56"],
+    "entities": ["Openia", "DeepSeek Coder", "Code Llama", "Magicoder"],
+    "time_period": "Jan 2025 (rev. Aug 2025)",
+    "region": "n/a",
+    "confidence": "high",
+    "source_note_id": "correctness-assessment-of-code-generated-by-large-language-models-using-internal"
+  },
+  {
+    "claim": "Middle transformer layers (layers 16-28 of 32) offer performance comparable to the last layer for code-correctness probing, and early-layer representations are highly sensitive to which token position is chosen while last-layer representations are robust to token choice -- motivating dynamic layer/token selection over Openia's fixed last-token/last-layer heuristic.",
+    "stance": "supports",
+    "stance_target": "the location of correctness-relevant internal signal within the network is not fixed and requires adaptive/dynamic selection strategies",
+    "evidence_type": "empirical",
+    "scope_conditions": "layer-wise ablation across DeepSeek-Coder, CodeLlama, Magicoder",
+    "quoted_support": "peak performance is achieved with the representations from the last layer (layer 32), the middle layers (layers 16-28) still offer consistently strong results... representations from the last layer are more robust and less dependent on the specific token chosen.",
+    "numbers": ["last layer = layer 32", "middle layers 16-28 competitive"],
+    "entities": ["Openia", "middle layers"],
+    "time_period": "Jan 2025",
+    "region": "n/a",
+    "confidence": "medium",
+    "source_note_id": "correctness-assessment-of-code-generated-by-large-language-models-using-internal"
+  },
+  {
+    "claim": "External LLM-as-Judge substantially outperforms both Openia's internal probing and black-box classifiers on independent-unit code correctness in most settings, reaching 0.75-0.97 accuracy, while In-house (self-judging) LLM-AJ performs poorly (0.27-0.68), indicating self-assessment overconfidence.",
+    "stance": "refutes",
+    "stance_target": "the framing that no expressed interface communicates code correctness well -- an external verbalized judge is often the strongest single-pass signal for simple standalone code",
+    "evidence_type": "empirical",
+    "scope_conditions": "independent-unit HumanEval/MBPP code, cross-benchmark and cross-task splits",
+    "quoted_support": "In practice, LLM-AJ requires no additional training but exhibits variable performance across settings, as shown by the drop in LLM-AJ's accuracy between the independent-unit and repo-level code generation scenarios.",
+    "numbers": ["External LLM-AJ accuracy 0.75-0.97", "In-house LLM-AJ accuracy 0.27-0.68"],
+    "entities": ["External LLM-AJ", "In-house LLM-AJ"],
+    "time_period": "Jan 2025",
+    "region": "n/a",
+    "confidence": "high",
+    "source_note_id": "correctness-assessment-of-code-generated-by-large-language-models-using-internal"
+  },
+  {
+    "claim": "Training-set size shows diminishing returns for probe accuracy: accuracy/F1-Score climb from 0.71/0.67 with one training fold to 0.77/0.77 with three folds, then plateau with marginal gains beyond three folds.",
+    "stance": "neutral",
+    "stance_target": "characterizes data efficiency of hidden-state probing classifiers, relevant to designing a single-GPU-feasible training pipeline",
+    "evidence_type": "empirical",
+    "scope_conditions": "probing classifier trained on MBPP internal representations",
+    "quoted_support": "both accuracy and F1-Score rise as the training set increases from one to three folds, climbing from 0.71 (accuracy) and 0.67 (F1-score) at one fold to 0.77 for both metrics at three folds. Beyond three folds, performance gains plateau.",
+    "numbers": ["accuracy 0.71->0.77 (1 to 3 folds)", "F1 0.67->0.77 (1 to 3 folds)"],
+    "entities": ["Openia", "MBPP"],
+    "time_period": "Jan 2025",
+    "region": "n/a",
+    "confidence": "medium",
+    "source_note_id": "correctness-assessment-of-code-generated-by-large-language-models-using-internal"
+  }
+]

@@ -1,0 +1,57 @@
+{
+  "critic_type": "width",
+  "vault_tag": "code-llm-calibration-aaai27-eabf3f",
+  "draft_path": "research/notes/final_report_code-llm-calibration-aaai27-eabf3f.md",
+  "summary": "Report is strong and dense (47KB, within the healthy band). Six corpus clusters that the query implies (mechanistic 'why', single-pass UQ, human-AI trust, single-pass ceiling, label noise, per-line localization) are absent or under-used. One minor bloat item (duplicated timeline/thesis).",
+  "findings": [
+    {
+      "severity": "major",
+      "location": "Section 1B / Section 7A (why the headline lands) or Section 9 (novelty defense)",
+      "issue": "The mechanistic-interpretability account of WHY verbalized confidence is detached from accuracy is entirely absent, though the corpus contains a full-text note on it (Miao & Ungar 2026, 'Closing the Confidence-Faithfulness Gap', note 260325052). The draft repeatedly asserts as premise that self-report 'fails only when untrained or naively joint-SFT'd' and that decoupling is necessary, but never grounds this in a mechanism. Miao & Ungar show, via linear probes and contrastive activation addition across 3 models and 4 datasets, that the internal 'calibration' direction (tracking true correctness) and the 'verbalized confidence' direction are encoded LINEARLY but ORTHOGONALLY -- the model holds an accurate internal accuracy estimate that its verbal output does not read out -- and that CoT reasoning rotates/disrupts the verbalized-confidence direction (the 'Reasoning Contamination Effect').",
+      "evidence": "Note 260325052 summary. This is independent corroboration (different team, different method) of exactly the mechanism DCPO's Proposition 4.2 names, and it directly explains (a) why the base study's untrained 1-5 verbal signal collapses to AUROC 0.52, and (b) why decoupling the confidence optimization from the generation/reasoning policy is the right fix. It is load-bearing for both the feasibility argument (Priority 2) and the novelty/mechanism defense (Priority 1).",
+      "recommendation": "Add 1-2 sentences citing Miao & Ungar in Section 1B or Section 7A: the internal accuracy signal and the verbalized-confidence direction are orthogonally encoded (so an untrained model literally cannot read its own calibrated estimate out through its voice), and CoT reasoning contaminates the verbal direction -- an independent mechanistic reason the proposed decoupled objective should work, not merely an empirical hope."
+    },
+    {
+      "severity": "major",
+      "location": "Section 7 (feasibility / expected ceiling) or Section 9 (novelty defense, near-neighbors)",
+      "issue": "The single-pass distilled-uncertainty cluster -- Semantic Entropy Probes (SEP, note 240615927, present in FOUR copies, i.e. heavily weighted by the width sweep) and Dist2ill (note 250511731) -- is not cited anywhere. These works attack the same problem the paper attacks (get sampling-quality uncertainty from a SINGLE generation, at near-zero extra compute) but from the internal/probe side. Dist2ill's own note flags it as 'the second-closest prior-art precedent to the AAAI-27 angle'. Omitting this cluster leaves the novelty wedge and the feasibility ceiling under-defended: a reviewer will ask why a trained expressed signal is preferable to simply distilling the sampling signal into a one-pass probe.",
+      "evidence": "Notes 240615927 (SEP: linear probes on single-generation hidden states approximate semantic entropy, reducing sampling overhead 'to almost zero') and 250511731 (Dist2ill: one-pass distillation of sampling-based confidence, SOTA ECE/NLL, self-described as second-closest precedent). Neither appears in the draft's reference list [1]-[38].",
+      "recommendation": "Add a short passage (Section 7 or Section 9) distinguishing DPRC from the single-pass-distillation line: SEP/Dist2ill produce a cheap SCALAR internal probe signal but neither is self-expressed, per-requirement, nor execution-grounded on code -- reinforcing the four-axis wedge -- and note that their near-zero-overhead single-pass framing is additional evidence a cheap expressed signal is attainable."
+    },
+    {
+      "severity": "major",
+      "location": "Section 8C / Section 8E (deployment framing, strategic outlook) and Section 1 motivation",
+      "issue": "Human-AI trust calibration for coding is an explicitly REQUIRED entity in the prompt decomposition ('evidence; whether real user study needed'), yet the draft leans on it only once (in-IDE study [26], 'developers prefer categorical/color-coded cues'). Two directly relevant corpus notes are unused: Copilot-at-ZoomInfo (note 250113282: 400+ developer field study, 33% acceptance, and critically NO confidence/abstention/graded signal is exposed in the deployed loop at all) and Critical-or-Compliant (note 251112001: a confident delivery TONE suppresses users' ability to detect reasoning errors while sustaining reliance). Both sharpen the paper's deployment motivation for a localized, actionable confidence interface.",
+      "evidence": "Notes 250113282 and 251112001; decomposition entities list 'Human-AI trust calibration for coding' as required. The draft's strategic claim ('a scalar I'm-80%-sure is unusable but I'm-unsure-about-the-empty-input-case is actionable') is asserted without this deployment evidence.",
+      "recommendation": "In Section 8C or 8E, add one sentence grounding the deployment motivation: today's shipped assistants (Copilot) expose no confidence signal at all [Copilot-ZoomInfo], and human-trust work shows a confident tone can mask errors [Critical-or-Compliant] -- so a per-requirement, categorical, failure-localizing signal is precisely the trust-calibrating interface deployment lacks, strengthening the methodological-not-application framing."
+    },
+    {
+      "severity": "major",
+      "location": "Section 7C (the expected number, calibrated honestly)",
+      "issue": "The feasibility section brackets the per-requirement headline (0.75-0.85) between DCPO's scalar band (0.80-0.91) and the sampling oracle (0.987), and against CURE's 0.667, but it never engages the single-pass INFORMATIONAL CEILING that the corpus establishes as a distinct, tighter bound. AutoProbe's internal single-pass probe reaches only ~0.63-0.71 on independent-unit code functionality (up to ~0.77/0.87 only at repo level with richer structure); the coverage-check logged this (contradiction #3) as the ceiling on any cheap single-pass interface versus the 0.987 sampling oracle. Because the proposed expressed signal reads off a SINGLE generation, this ceiling puts the headline band at or above the plausible single-pass limit -- an honest feasibility treatment should confront it, not omit it.",
+      "evidence": "Note 251002934 (AutoProbe: internal probe 0.63-0.71 on independent-unit functionality); interim-report-self-report-vs-external-judge-vs-probe-reversal; temp/coverage-gaps.md contradiction #3 ('AutoProbe informational ceiling single-pass ~0.77 vs sampling oracle 0.987').",
+      "recommendation": "Add a sentence in Section 7C acknowledging the single-pass ceiling: cheap single-generation code-correctness signals (AutoProbe internal probe ~0.63-0.77) sit well below the 0.987 sampling oracle, so 0.75-0.85 is an optimistic-but-defensible target that assumes training + execution-grounded per-group labels push the expressed signal toward the upper end of that single-pass regime -- and note the pilot resolves exactly this."
+    },
+    {
+      "severity": "minor",
+      "location": "Section 8B (most likely failure mode) or Section 6B (free labels)",
+      "issue": "The entire headline rests on 'free per-test execution-pass-rate labels', but the draft never treats label noise from weak/incomplete test suites as a threat. Verification Limits Code LLM Training (note 250920837) shows test-suite STRENGTH, not quantity, determines label quality and that rigid pass/fail filtering is brittle -- a test group can 'pass' without actually verifying its requirement, injecting label noise directly into the per-group confidence targets. The failure-mode section discusses per-test correlation but not label validity. Flaky/under-specified tests are a real threat to a per-requirement labeling scheme.",
+      "evidence": "Note 250920837 (verification ceiling: richer tests +3 pass@1; weak tests give noisy verification). CodeContests+ [21] is cited only for density, not as a label-noise mitigation.",
+      "recommendation": "Add a qualifier in Section 8B or 6B: per-group labels inherit the test suite's own coverage limits (a passing group may not fully exercise its requirement), so density-filtered, noise-repaired suites (TACO/CodeContests+ [20][21]) are used specifically to bound label noise -- naming the verification-ceiling risk explicitly rather than assuming perfect labels."
+    },
+    {
+      "severity": "minor",
+      "location": "Section 9, Axis 2 (per-test-case, not per-line)",
+      "issue": "The Axis-2 distinction (functional per-test vs spatial per-line) cites FLARE [10] but omits Collu-Bench (note 241009997), the per-line code-hallucination localization benchmark FLARE trains on. Collu-Bench is worth one clause: it establishes that spatial per-line localization is both OCCUPIED (13,234 labeled instances) and HARD (baseline localization accuracy only 22-33%), which both sharpens the 'per-line is a different, taken axis' argument and cautions on difficulty.",
+      "evidence": "Note 241009997 (Collu-Bench: 13,234 hallucination-location-labeled instances; baselines 22-33% accuracy).",
+      "recommendation": "In Axis 2, add a clause noting Collu-Bench provides per-line localization labels and that even with rich features per-line localization is hard (22-33%), which is distinct from the per-test FUNCTIONAL granularity the paper targets -- reinforcing that the functional axis is unoccupied, not merely un-benchmarked."
+    },
+    {
+      "severity": "minor",
+      "location": "Executive Summary (line 13) and Section 8E (TIMELINE blockquote, line 146)",
+      "issue": "The 10-day AAAI-27 timeline (abstracts 21 July / full 28 July / code 31 July, ~10-day window, ICLR-27 venue pivot, 'convert a coin-flip into a safe bet') is stated near-verbatim in both the Executive Summary and the Section 8E blockquote, and the 'the paper cannot come out dead' / 'novelty and survival in different tiers' refrain recurs at least four times (lines 5, 72, 142, plus Section 5). This is mild length inflation without added content; the report is otherwise within the healthy size band (47KB).",
+      "evidence": "Lines 5, 13, 72, 142, 146 all repeat the tier-separation and/or timeline thesis with overlapping phrasing.",
+      "recommendation": "Keep the full timeline + venue-pivot in Section 8E only; in the Executive Summary compress to a single clause ('a ~10-day AAAI-27 window, with a venue-agnostic ICLR-27 fallback -- see Section 8E'). Trim one of the redundant 'cannot come out dead' restatements so the thesis lands once in the summary and once at the tier ladder."
+    }
+  ]
+}

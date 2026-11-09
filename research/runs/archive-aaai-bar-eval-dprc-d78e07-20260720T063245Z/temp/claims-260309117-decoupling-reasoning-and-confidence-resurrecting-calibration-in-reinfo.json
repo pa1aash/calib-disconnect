@@ -1,0 +1,44 @@
+[
+  {
+    "claim": "Directly incorporating a calibration objective (e.g., Brier/log-score term) into the same RLVR optimization target as accuracy creates a fundamental gradient conflict: the accuracy gradient and calibration gradient can point in opposing directions.",
+    "stance": "neutral",
+    "stance_target": "feasibility of joint accuracy+calibration RL objectives (relevant to any DPRC RL/SFT training design)",
+    "evidence_type": "theoretical",
+    "scope_conditions": "RLVR (reinforcement learning from verifiable rewards) training of reasoning LLMs",
+    "quoted_support": "DCPO's fix is to systematically DECOUPLE the reasoning (accuracy) and calibration objectives (e.g., separate optimization steps/heads rather than a single summed reward).",
+    "numbers": [],
+    "entities": ["DCPO", "RLVR", "GRPO"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260309117-decoupling-reasoning-and-confidence-resurrecting-calibration-in-reinfo"
+  },
+  {
+    "claim": "DCPO uses block-wise verbalized confidence rollout and decoupled advantage estimation, integrating instance-level and group-level signals, to preserve GRPO-level accuracy while achieving the best calibration performance among compared methods.",
+    "stance": "neutral",
+    "stance_target": "closest scalar-confidence-on-reasoning competitor to DPRC",
+    "evidence_type": "empirical",
+    "scope_conditions": "reasoning LLMs trained with RLVR; general reasoning tasks, scalar per-response confidence",
+    "quoted_support": "Extensive experiments demonstrate that DCPO not only preserves accuracy on par with GRPO but also achieves the best calibration performance and substantially mitigates the over-confidence issue.",
+    "numbers": [],
+    "entities": ["DCPO", "Ma", "Wen", "Cao", "Lu", "Lin", "Yang", "He", "Han", "Sun"],
+    "time_period": "March 2026",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "260309117-decoupling-reasoning-and-confidence-resurrecting-calibration-in-reinfo"
+  },
+  {
+    "claim": "DCPO's calibration granularity is a single scalar confidence per full response/rollout, not per-requirement or per-test-case, and its evaluated domain is general RLVR reasoning rather than code generation with unit-test structure.",
+    "stance": "supports",
+    "stance_target": "DPRC's differentiation from DCPO on granularity and domain axes",
+    "evidence_type": "theoretical",
+    "scope_conditions": "comparison of DCPO scope vs DPRC per-requirement code confidence",
+    "quoted_support": "DCPO. THEORETICAL result directly relevant to design of any train-time calibration objective: proves that directly incorporating a calibration objective... into the same RLVR optimization target as accuracy creates a FUNDAMENTAL GRADIENT CONFLICT",
+    "numbers": [],
+    "entities": ["DCPO", "DPRC"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "260309117-decoupling-reasoning-and-confidence-resurrecting-calibration-in-reinfo"
+  }
+]

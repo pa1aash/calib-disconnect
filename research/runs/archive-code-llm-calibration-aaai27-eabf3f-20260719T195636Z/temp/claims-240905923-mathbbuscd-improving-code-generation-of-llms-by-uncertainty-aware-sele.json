@@ -1,0 +1,58 @@
+[
+  {
+    "claim": "USCD's uncertainty-aware selective contrastive decoding improves average pass@1 code generation accuracy by 16.59% across HumanEval, MBPP, and MultiPL-E on five open-source code LLMs, using token-level uncertainty purely as an internal decoding-time gate.",
+    "stance": "supports",
+    "stance_target": "uncertainty signals can drive a downstream decoding ACTION with a measured accuracy payoff, even without being validated as a calibrated/communicable confidence score",
+    "evidence_type": "empirical",
+    "scope_conditions": "HumanEval, MBPP, MultiPL-E benchmarks; InCoder-6B, CodeLlama-7B, WizardCoder-15B, StarCoder, Llama2-7B",
+    "quoted_support": "demonstrate that our proposed USCD significantly improves one-pass code generation, with an average pass@1 scores increase of 16.59%.",
+    "numbers": ["16.59% average pass@1 increase", "5 code LLMs"],
+    "entities": ["USCD", "HumanEval", "MBPP", "MultiPL-E", "InCoder-6B", "CodeLlama-7B", "WizardCoder-15B", "StarCoder", "Llama2-7B"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "240905923-mathbbuscd-improving-code-generation-of-llms-by-uncertainty-aware-sele"
+  },
+  {
+    "claim": "The Jensen-Shannon divergence between token-distribution uncertainty (under a standard prompt) and output noise (elicited by a stripped-down 'lame prompt') is relatively low (~0.25), indicating the two are meaningfully correlated and justifying uncertainty as a gating signal for noise removal.",
+    "stance": "supports",
+    "stance_target": "token-level uncertainty correlates with hallucination/noise even if not a perfectly calibrated correctness probability",
+    "evidence_type": "empirical",
+    "scope_conditions": "preliminary study preceding the main USCD method",
+    "quoted_support": "Our preliminary study shows that the Jensen-Shannon divergence (JS divergence) between token distribution uncertainty and the output noise is relatively low (approximately 0.25), indicating their high relevance.",
+    "numbers": ["JS divergence approximately 0.25"],
+    "entities": ["Jensen-Shannon divergence", "lame prompt", "output noise"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "240905923-mathbbuscd-improving-code-generation-of-llms-by-uncertainty-aware-sele"
+  },
+  {
+    "claim": "USCD is an inference-only, plug-and-play mechanism requiring no retraining or oracle test cases, only a modified negative prompt and standard token-level uncertainty at each decoding step.",
+    "stance": "supports",
+    "stance_target": "feasibility of single-GPU, inference-only uncertainty-driven interventions for code generation",
+    "evidence_type": "empirical",
+    "scope_conditions": "applies to any autoregressive code LLM at inference time",
+    "quoted_support": "Notably, our proposed plug-and-play mechanism is an inference-only method, enjoying appealing flexibility.",
+    "numbers": [],
+    "entities": ["inference-only method", "plug-and-play"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "240905923-mathbbuscd-improving-code-generation-of-llms-by-uncertainty-aware-sele"
+  },
+  {
+    "claim": "USCD never reports the calibration quality (AUROC, ECE) of the token-level uncertainty signal it exploits, and never exposes that uncertainty to a human end-user; it is used solely as an internal correction-strength gate.",
+    "stance": "neutral",
+    "stance_target": "gap: internal utility of an uncertainty signal does not establish that the same signal would be trustworthy if communicated to a human",
+    "evidence_type": "theoretical",
+    "scope_conditions": "inferred from abstract framing; full paper not accessed",
+    "quoted_support": "we selectively eliminate output noise induced by lame prompts based on the uncertainty of the prediction distribution from the standard prompt.",
+    "numbers": [],
+    "entities": ["internal gating signal", "human-facing confidence gap"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "240905923-mathbbuscd-improving-code-generation-of-llms-by-uncertainty-aware-sele"
+  }
+]

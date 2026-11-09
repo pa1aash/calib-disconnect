@@ -1,0 +1,58 @@
+[
+  {
+    "claim": "Fine-grained, internal token-probability confidence scores (minimum token probability, lowest-K token probability, attention-weighted uncertainty) separate correct from incorrect code revisions far better than sequence-level scores (normalised sequence likelihood, average token probability).",
+    "stance": "supports",
+    "stance_target": "internal/logit signals as the load-bearing correctness signal for code, contra verbalized confidence",
+    "evidence_type": "empirical",
+    "scope_conditions": "automated code revision (program repair, vulnerability repair, code refinement), 14 models",
+    "quoted_support": "minimum token probability yields the widest separation (EM-W1: 0.13-0.26, EP-W1: 0.13-0.20), whilst sequence-level confidence scores have a separation of 0.01-0.03 for the majority of models against both correctness metrics.",
+    "numbers": ["W1 0.13-0.26 (EM)", "W1 0.13-0.20 (EP)", "sequence-level 0.01-0.03", "tau_b 0.26-0.45 (EM)", "tau_b 0.24-0.37 (EP)"],
+    "entities": ["CodeLlama-70B", "DeepSeek-Coder"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "fine-grained-approaches-for-confidence-calibration-of-llms-in-automated-code-rev"
+  },
+  {
+    "claim": "Global Platt-scaling, a post-hoc recalibration standard for code generation tasks, is known to be ineffective specifically for program repair.",
+    "stance": "supports",
+    "stance_target": "limits of post-hoc calibration for code, motivating alternative (e.g. train-time) approaches",
+    "evidence_type": "empirical",
+    "scope_conditions": "program repair (automated code revision)",
+    "quoted_support": "existing post-hoc calibration approaches such as Platt-scaling ... have been found to be ineffective for program repair and have not yet been evaluated on core tasks like vulnerability repair and automated code refinement.",
+    "numbers": [],
+    "entities": ["Platt-scaling"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "fine-grained-approaches-for-confidence-calibration-of-llms-in-automated-code-rev"
+  },
+  {
+    "claim": "Token-level softmax probabilities for LLM-generated code revisions exhibit strong negative skewness across all models and tasks studied, meaning low-probability outlier tokens (not the bulk of high-probability tokens) carry the correctness signal.",
+    "stance": "neutral",
+    "stance_target": "mechanism explaining why sequence-level averaging destroys discriminative signal for code",
+    "evidence_type": "empirical",
+    "scope_conditions": "automated code revision, all 14 models tested",
+    "quoted_support": "the distributions of softmax probabilities consistently exhibit strong negative skewness for all models and tasks. This indicates that low softmax probabilities are consistently centred around a few outlier tokens in the generated code revisions.",
+    "numbers": ["skewness -7.2 to -4.1 (DCF-Bug)", "-5.7 to -3.1 (DCF-Vul)", "-7.7 to -4.1 (CR-Trans)"],
+    "entities": [],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "fine-grained-approaches-for-confidence-calibration-of-llms-in-automated-code-rev"
+  },
+  {
+    "claim": "This paper's confidence signal is exclusively internal/logit-derived and post-hoc calibrated; it never elicits or trains a verbalized/natural-language confidence expression from the model.",
+    "stance": "refutes",
+    "stance_target": "claim that verbalized/train-time code confidence calibration is already covered by this paper",
+    "evidence_type": "empirical",
+    "scope_conditions": "automated code revision",
+    "quoted_support": "we propose three fine-grained confidence scores: minimum token probability, lowest-K token probability, and attention-weighted uncertainty, and compare them with two traditional sequence-level confidence scores: normalised sequence likelihood and average token probability.",
+    "numbers": [],
+    "entities": [],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "fine-grained-approaches-for-confidence-calibration-of-llms-in-automated-code-rev"
+  }
+]

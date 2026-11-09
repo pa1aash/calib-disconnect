@@ -1,0 +1,72 @@
+[
+  {
+    "claim": "Uncalibrated token-likelihood confidence for code LLMs is near-random at distinguishing correct from incorrect code (accuracy approx 0.5 at a 50% threshold), replicating prior findings that vanilla code LLMs are poorly calibrated.",
+    "stance": "supports",
+    "stance_target": "raw expressed confidence (token log-probability) fails to communicate code correctness likelihood without intervention",
+    "evidence_type": "empirical",
+    "scope_conditions": "Qwen3-Coder-30B-A3B-Instruct, GPT-OSS-20B, DeepSeek-R1-Distill-Qwen-32B; LiveCodeBench, MultiPL-E, McEval; avg token likelihood as initial score",
+    "quoted_support": "While uncalibrated scores were often near-random (ACC ≈ 0.5) for distinguishing correct from incorrect code, all post-hoc methods yielded substantial gains.",
+    "numbers": ["ACC ~0.5 uncalibrated", "Brier Skill Score negative uncalibrated (e.g. -2.073 R1-distill MultiPL-E)"],
+    "entities": ["Qwen3-Coder", "GPT-OSS-20B", "DeepSeek-R1-Distill-Qwen-32B"],
+    "time_period": "2025-2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "multicalibration-for-llm-based-code-generation"
+  },
+  {
+    "claim": "Multicalibration (grouping by complexity, code length, and programming language) improves Brier Skill Score by +1.03 over uncalibrated token likelihoods and +0.37 over group-agnostic baseline calibration (Platt/Histogram Binning).",
+    "stance": "supports",
+    "stance_target": "prescriptive/positive methodological improvements to code-LLM calibration are feasible via group-conditional post-hoc calibration",
+    "evidence_type": "empirical",
+    "scope_conditions": "Iterative Grouped Linear Binning (IGLB) and Group-Conditional Unbiased Regression (LINR/LOGR) methods, 3 models, 3 benchmarks",
+    "quoted_support": "Our results demonstrate that multicalibration can yield distinct improvements over both uncalibrated token likelihoods (+1.03 in skill score) and baseline calibrations (+0.37 in skill score).",
+    "numbers": ["+1.03 BSS vs uncalibrated", "+0.37 BSS vs baseline calibration", "ACC 72.5%-95.5% post-calibration", "up to +58.4% ACC improvement (DeepSeek R1 distill on McEval)"],
+    "entities": ["IGLB", "LINR", "LOGR", "Platt scaling", "Histogram Binning"],
+    "time_period": "2025-2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "multicalibration-for-llm-based-code-generation"
+  },
+  {
+    "claim": "This multicalibration study evaluates calibration quality exclusively via Brier Skill Score, ECE, and thresholded accuracy, and never reports AUROC, so it cannot establish whether calibration gains reflect genuine discrimination improvement or only better threshold placement / bin-wise error reduction.",
+    "stance": "neutral",
+    "stance_target": "methodological gap: calibration-improvement claims without discrimination (AUROC) evaluation are insufficient to prove the confidence signal became more useful for ranking/decision-making",
+    "evidence_type": "theoretical",
+    "scope_conditions": "Entire paper's evaluation methodology (Sections 4-6)",
+    "quoted_support": "Table 1 reports the Brier Skill Score (BSS) and binary classification accuracy (ACC) – thresholding at p̂≥50% – across all methods, benchmarks and LLMs.",
+    "numbers": [],
+    "entities": ["Brier Skill Score", "Expected Calibration Error", "AUROC (absent)"],
+    "time_period": "2025-2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "multicalibration-for-llm-based-code-generation"
+  },
+  {
+    "claim": "Among grouping factors for multicalibration, programming language provides the largest calibration performance gain while code complexity contributes the least, and complexity/length groups are partly redundant.",
+    "stance": "neutral",
+    "stance_target": "which auxiliary features are most useful for prescriptive code-LLM calibration",
+    "evidence_type": "empirical",
+    "scope_conditions": "Ablation on McEval, averaged over 3 LLMs",
+    "quoted_support": "language provides the largest performance gain while complexity contributes the least... complexity & length yield the lowest results, suggesting that these categories contain redundant information.",
+    "numbers": [],
+    "entities": ["language groups", "complexity groups", "length groups", "McEval"],
+    "time_period": "2025-2026",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "multicalibration-for-llm-based-code-generation"
+  },
+  {
+    "claim": "The initial confidence score used for calibration is the average token likelihood (inverse perplexity) over the full generation, not a repeated-sampling empirical pass-rate signal, meaning the paper never engages the near-perfect internal (sampling-based) signal at all -- only the weaker expressed log-prob channel.",
+    "stance": "neutral",
+    "stance_target": "internal-vs-expressed disconnect: this paper's calibration target is the expressed/log-prob channel, leaving the internal sampling-confidence channel unexplored",
+    "evidence_type": "theoretical",
+    "scope_conditions": "Section 4.2, Equation 14",
+    "quoted_support": "we adopt this strategy and define our initial confidence score as the average token likelihood, or inverse perplexity, of the generation.",
+    "numbers": [],
+    "entities": ["avg_prob", "code_prob", "tail_prob"],
+    "time_period": "2025-2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "multicalibration-for-llm-based-code-generation"
+  }
+]

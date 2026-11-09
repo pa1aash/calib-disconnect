@@ -1,0 +1,72 @@
+[
+  {
+    "claim": "LACIE calibrates verbalized confidence by casting it as preference optimization over a simulated speaker-listener game, where the reward is whether a listener model (not ground-truth correctness alone) accepts or rejects an answer based on how confident it sounds.",
+    "stance": "neutral",
+    "stance_target": "an alternative, non-sampling-signal-based elicitation mechanism (pragmatics/listener-judgment rather than distilling the model's own sampling distribution)",
+    "evidence_type": "theoretical",
+    "scope_conditions": "TriviaQA, two-agent speaker-listener preference optimization",
+    "quoted_support": "we cast calibration as a preference optimization problem, creating data via a two-agent speaker-listener game, where a speaker model's outputs are judged by a simulated listener.",
+    "numbers": [],
+    "entities": ["LACIE", "UNC Chapel Hill"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "lacie-listener-aware-finetuning-for-confidence-calibration-in-large-language-mod"
+  },
+  {
+    "claim": "LACIE produces an average 20.7-point AUROC gain and 7.8-point calibration-error decrease in induced listener calibration across three speaker models (Mistral-7B, Llama3-8B, Llama3-70B), plus an 18% absolute precision improvement.",
+    "stance": "supports",
+    "stance_target": "preference-optimization-based verbal confidence calibration achieves large discrimination gains at 7-70B scale",
+    "evidence_type": "empirical",
+    "scope_conditions": "TriviaQA, Mistral-7B/Llama3-8B/Llama3-70B",
+    "quoted_support": "Using LACIE on three different speaker models (Mistral-7B, Llama3-8B, and Llama3-70B), we obtain substantial gains in induced listener calibration, with an average 20.7 point gain in AUROC over the base model and a 7.8 point decrease in calibration error.",
+    "numbers": ["20.7-point AUROC gain", "7.8-point calibration error decrease", "18% absolute precision improvement"],
+    "entities": ["Mistral-7B", "Llama3-8B", "Llama3-70B", "TriviaQA"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "lacie-listener-aware-finetuning-for-confidence-calibration-in-large-language-mod"
+  },
+  {
+    "claim": "LACIE-trained models transfer benefits to human listeners: a 47% decrease in the rate at which humans accept incorrect answers, without significantly increasing rejection of correct answers.",
+    "stance": "supports",
+    "stance_target": "confidence-calibration gains measured against a simulated listener transfer to real human judgment",
+    "evidence_type": "empirical",
+    "scope_conditions": "human evaluation study on TriviaQA-trained LACIE model",
+    "quoted_support": "a model trained with LACIE results in a 47% decrease in the rate of false answers being accepted without significantly increasing the rate of rejection for correct answers.",
+    "numbers": ["47% decrease in false-answer acceptance"],
+    "entities": ["LACIE", "human listeners"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "lacie-listener-aware-finetuning-for-confidence-calibration-in-large-language-mod"
+  },
+  {
+    "claim": "LACIE calibration transfers across datasets: a model trained on TriviaQA and evaluated zero-shot on TruthfulQA shows a 28% absolute improvement in truthfulness metrics, and LACIE induces emergent abstention behavior ('I don't know') for likely-wrong answers without being explicitly trained to abstain.",
+    "stance": "supports",
+    "stance_target": "cross-dataset generalization and emergent secondary behavior from confidence-calibration training, paralleling the emergent self-verification finding in CSFT (2506.03723)",
+    "evidence_type": "empirical",
+    "scope_conditions": "TriviaQA-trained, TruthfulQA-evaluated transfer",
+    "quoted_support": "training leads to more hedging and abstention, as well as more detailed outputs and more authoritative tone when the model is actually correct... we train our models on TriviaQA and evaluate them on TruthfulQA... LACIE results in a 28% absolute improvement to truthfulness",
+    "numbers": ["28% absolute truthfulness improvement"],
+    "entities": ["TriviaQA", "TruthfulQA"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "lacie-listener-aware-finetuning-for-confidence-calibration-in-large-language-mod"
+  },
+  {
+    "claim": "LACIE is not evaluated on any code-generation task; its evaluation is limited to TriviaQA (training) and TruthfulQA (transfer), both open-domain factual QA.",
+    "stance": "neutral",
+    "stance_target": "domain gap: pragmatics/listener-based confidence calibration has not been validated on code LLMs",
+    "evidence_type": "empirical",
+    "scope_conditions": "entire experimental section",
+    "quoted_support": "We use two datasets in this paper. First, for our finetuning experiments and human study, we use TriviaQA... The second dataset we use is TruthfulQA",
+    "numbers": [],
+    "entities": ["TriviaQA", "TruthfulQA"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "lacie-listener-aware-finetuning-for-confidence-calibration-in-large-language-mod"
+  }
+]

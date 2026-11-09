@@ -1,0 +1,44 @@
+[
+  {
+    "claim": "Averaged across 30 task x model combinations, semantic entropy achieves AUROC 0.790 for hallucination detection, beating naive predictive entropy (0.691), a 'P(True)' self-check baseline (0.698), and an embedding-regression baseline (0.687).",
+    "stance": "supports",
+    "stance_target": "sampling/internal-derived uncertainty signals outperforming self-report-style baselines (P(True)) for correctness/hallucination prediction",
+    "evidence_type": "statistical",
+    "scope_conditions": "TriviaQA, SQuAD 1.1, BioASQ, SVAMP, NQ-Open -- general QA and math, NOT code; whole-answer granularity; LLaMA/Falcon/Mistral 7B-70B",
+    "quoted_support": "Averaged across 30 task x model combinations, semantic entropy achieves AUROC 0.790, beating naive predictive entropy (0.691), a 'P(True)' self-check baseline (0.698), and an embedding-regression baseline (0.687).",
+    "numbers": ["AUROC 0.790", "AUROC 0.691", "AUROC 0.698", "AUROC 0.687"],
+    "entities": ["Farquhar", "Kuhn", "Nature", "semantic entropy", "P(True)"],
+    "time_period": "2024",
+    "region": "N/A",
+    "confidence": "high",
+    "source_note_id": "detecting-hallucinations-in-large-language-models-using-semantic-entropy-nature"
+  },
+  {
+    "claim": "The canonical semantic entropy method has never been validated on code generation, and neither have its cheap single-pass approximations (Semantic Entropy Probes) -- a clean domain gap for a code-LLM confidence/probe paper.",
+    "stance": "supports",
+    "stance_target": "novelty of extending internal-signal-vs-verbalization comparisons to the code domain",
+    "evidence_type": "theoretical",
+    "scope_conditions": "Domain gap claim; evaluation datasets are TriviaQA/SQuAD/BioASQ/SVAMP/NQ-Open, none of which are code benchmarks",
+    "quoted_support": "Evaluation datasets: TriviaQA, SQuAD 1.1, BioASQ (2023 Task B), SVAMP (math word problems), NQ-Open -- general QA and elementary math, NOT code generation.",
+    "numbers": [],
+    "entities": ["Farquhar", "Kuhn", "semantic entropy", "code generation"],
+    "time_period": "2024",
+    "region": "N/A",
+    "confidence": "high",
+    "source_note_id": "detecting-hallucinations-in-large-language-models-using-semantic-entropy-nature"
+  },
+  {
+    "claim": "On a second experiment (GPT-4 paragraph-length biographies, 150 manually labeled factual claims), P(True) briefly edges ahead of discrete semantic entropy once more than 80% of questions are rejected, showing self-report baselines are not uniformly worse across all operating regimes.",
+    "stance": "refutes",
+    "stance_target": "the claim that internal/sampling signals always strictly dominate self-report baselines",
+    "evidence_type": "empirical",
+    "scope_conditions": "GPT-4 biography generation, high-rejection-rate operating regime, whole-claim granularity",
+    "quoted_support": "discrete SE beats self-check and P(True) baselines on both AUROC and AURAC (area under rejection-accuracy curve), with the caveat that P(True) briefly edges ahead once >80% of questions are rejected.",
+    "numbers": ["80%"],
+    "entities": ["Farquhar", "GPT-4", "P(True)"],
+    "time_period": "2024",
+    "region": "N/A",
+    "confidence": "medium",
+    "source_note_id": "detecting-hallucinations-in-large-language-models-using-semantic-entropy-nature"
+  }
+]

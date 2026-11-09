@@ -1,0 +1,72 @@
+[
+  {
+    "claim": "vLLM v0.6.0 achieves 2.7x higher throughput and 5x faster time-per-output-token than v0.5.3 for Llama 3 8B, and 1.8x higher throughput / 2x lower TPOT for Llama 3 70B.",
+    "stance": "neutral",
+    "stance_target": "vLLM inference throughput for ~7-8B-scale models",
+    "evidence_type": "empirical",
+    "scope_conditions": "Measured on 1xH100 (8B) and 4xH100 (70B) using ShareGPT dataset, 500 prompts, TPOT measured at 32 QPS; comparison is version-to-version (v0.5.3 vs v0.6.0), not an absolute tokens/sec figure",
+    "quoted_support": "vLLM achieves 2.7x higher throughput and 5x faster TPOT (time per output token) on Llama 8B model, and 1.8x higher throughput and 2x less TPOT on Llama 70B model.",
+    "numbers": ["2.7x", "5x", "1.8x", "2x", "500 prompts", "32 QPS"],
+    "entities": ["vLLM", "Llama 3 8B", "Llama 3 70B", "H100"],
+    "time_period": "September 2024 (v0.6.0 release)",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "vllm-v060-27x-throughput-improvement-and-5x-latency-reduction-vllm-blog"
+  },
+  {
+    "claim": "Under light load, Llama 3 8B generates one output token roughly every 13ms, implying a single-stream decode rate near 77 tokens/sec.",
+    "stance": "supports",
+    "stance_target": "concrete per-token latency baseline for ~7-8B models under vLLM",
+    "evidence_type": "empirical",
+    "scope_conditions": "Single request, light load (not batched), H100 GPU, used to motivate API-server streaming-object-rate discussion, not a batched-generation figure",
+    "quoted_support": "Llama3 8B can generate 1 token every 13 ms under light load. This translates to the frontend needing to stream back 76 objects per second",
+    "numbers": ["13 ms/token", "76 objects/second"],
+    "entities": ["Llama 3 8B", "vLLM", "H100"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "vllm-v060-27x-throughput-improvement-and-5x-latency-reduction-vllm-blog"
+  },
+  {
+    "claim": "vLLM's official Llama-3-8B-on-1xA100 benchmark appendix exists but the concrete tokens/sec throughput values are only presented as chart images, not as extractable text, in this blog post.",
+    "stance": "neutral",
+    "stance_target": "availability of concrete A100 batched-throughput numbers for 7-8B models",
+    "evidence_type": "empirical",
+    "scope_conditions": "Applies specifically to the 'Llama 3 8B on 1xA100' and 'Llama 3 70B on 4xA100' appendix sections of this post",
+    "quoted_support": "On Llama 3 8B, vLLM achieves comparable TTFT and TPOT on ShareGPT and decode-heavy dataset as TensorRT-LLM and SGLang. ... Throughput-wise, TensorRT-LLM has the highest throughput among all engines, and vLLM has the second highest throughput on ShareGPT and decode-heavy dataset.",
+    "numbers": [],
+    "entities": ["vLLM", "TensorRT-LLM", "SGLang", "lmdeploy", "A100", "Llama 3 8B"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "vllm-v060-27x-throughput-improvement-and-5x-latency-reduction-vllm-blog"
+  },
+  {
+    "claim": "The benchmark workloads used to characterize vLLM throughput have short-to-moderate sequence lengths: ShareGPT averages 202 input/179 output tokens; a prefill-heavy synthetic set averages 462 input/16 output tokens; a decode-heavy synthetic set averages 462 input/256 output tokens.",
+    "stance": "neutral",
+    "stance_target": "sequence-length dependence of throughput benchmarks",
+    "evidence_type": "empirical",
+    "scope_conditions": "500 prompts per dataset, fixed random seed, applies to vLLM v0.6.0 benchmark methodology",
+    "quoted_support": "Prefill-heavy dataset: 500 prompts synthetically generated from sonnet dataset with roughly 462 input tokens and 16 output tokens on average. Decode-heavy dataset: ... roughly the same amount of 462 input tokens and 256 output tokens on average.",
+    "numbers": ["202 input tokens", "179 output tokens", "462 input tokens", "16 output tokens", "256 output tokens", "500 prompts"],
+    "entities": ["ShareGPT", "vLLM"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "vllm-v060-27x-throughput-improvement-and-5x-latency-reduction-vllm-blog"
+  },
+  {
+    "claim": "Multi-step scheduling (batching multiple decode steps before returning to the CPU scheduler) improved Llama 70B throughput on 4xH100 by 28%, and asynchronous output processing improved TPOT by 8.7% for the same setup.",
+    "stance": "neutral",
+    "stance_target": "sources of vLLM throughput gains, relevant to whether A100 throughput would benefit similarly",
+    "evidence_type": "empirical",
+    "scope_conditions": "Llama 70B on 4xH100, --num-scheduler-steps 10",
+    "quoted_support": "This improves the throughput of running Llama 70B models on 4xH100 by 28%. ... This improves the time-per-output-token of running Llama 70B models on 4xH100 by 8.7%.",
+    "numbers": ["28%", "8.7%"],
+    "entities": ["vLLM", "Llama 70B", "H100"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "vllm-v060-27x-throughput-improvement-and-5x-latency-reduction-vllm-blog"
+  }
+]

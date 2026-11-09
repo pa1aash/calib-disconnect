@@ -1,0 +1,76 @@
+{
+  "loci": [
+    {
+      "name": "code-verbal-calibration-occupied-or-open",
+      "one_line": "Is 'execution-grounded train-time calibration of EXPRESSED confidence for code' genuinely unoccupied, or does RLCM's OOD LiveCodeBench result / Functional Entropy / Rewarding Doubt already collapse it to 'X but for code'?",
+      "flavor": "dialectical",
+      "importance": 10,
+      "uncertainty": 8,
+      "disagreement": 8,
+      "decision_impact": 10,
+      "composite_score": 36,
+      "source_budget": 13,
+      "rationale": "THE novelty gate (P1). If RLCM's math-trained hidden-state probe already achieves best accuracy+calibration on LiveCodeBench and is trivially decodable to text, a code-verbalization paper is derivative. Investigator must pull RLCM's exact LiveCodeBench numbers, determine whether its probe is distinct from a trained self-report, and fold in the Campos multicalibration-for-code competitor check (does its skill-score gain reflect discrimination or just calibration/threshold relocation — it never reports AUROC). Output: a crisp novelty-defense or a pivot.",
+      "key_sources": ["process-supervision-of-confidence-margin-for-calibrated-llm-reasoning", "functional-entropy-predicting-functional-correctness", "rewarding-doubt", "multicalibration-for-llm-based-code-generation", "calibrating-llms-with-semantic-level-reward"]
+    },
+    {
+      "name": "collapse-proof-training-objective",
+      "one_line": "Which exact train-time objective for expressed code-confidence provably avoids the disconnect paper's 'calibration without discrimination' collapse AND the DCPO gradient-conflict?",
+      "flavor": "dialectical",
+      "importance": 10,
+      "uncertainty": 8,
+      "disagreement": 7,
+      "decision_impact": 10,
+      "composite_score": 35,
+      "source_budget": 11,
+      "rationale": "THE confidence gate (P2). The paper's own SFT collapsed (274 ex, coarse tiers, joint objective). Fight: 260113284 says RLVR worsens overconfidence / SFT calibrates better; DCPO proves a gradient conflict jointly optimizing accuracy+calibration; against this, CAPO (discrimination-first surrogate), Beyond-Binary-Rewards (proper scoring rule), ORCE (decoupled confidence head), Rewarding Doubt (log-score RL, single-GPU) all show clean AUROC 0.79-0.86 — but all QA. Investigator picks the objective+architecture most likely to make code self-report DISCRIMINATE, with the mechanism for why it beats collapse.",
+      "key_sources": ["capo", "beyond-binary-rewards", "orce-order-aware-alignment", "rewarding-doubt", "260309117-dcpo", "260113284-balancing-classification-and-calibration"]
+    },
+    {
+      "name": "self-report-vs-external-judge-vs-probe-reversal",
+      "one_line": "Given AutoProbe's validated three-way reversal (self-report fails everywhere; external LLM-judge wins on simple code 0.94; internal probe wins on repo-level 0.82), should the method train the coder's own self-report, a decoupled estimator, or route by complexity?",
+      "flavor": "dialectical",
+      "importance": 8,
+      "uncertainty": 6,
+      "disagreement": 7,
+      "decision_impact": 8,
+      "composite_score": 29,
+      "source_budget": 7,
+      "rationale": "Decides the METHOD's architecture and whether the alternative Direction D (complexity-conditional routing) is worth a section or is the headline. Reconciles our paper's 'verbal fails 0.52' (self-assessment) with AutoProbe's 'judge 0.94' (external, simple code). Determines if training the coder's OWN token-level self-report can beat the external-judge ceiling — the crux of an expressed-interface contribution.",
+      "key_sources": ["model-agnostic-correctness-assessment-via-dynamic-internal", "functional-entropy-predicting-functional-correctness", "disconnect-paper-grounding"]
+    },
+    {
+      "name": "label-and-data-feasibility",
+      "one_line": "On single-GPU 7B compute and a tight timeline, which label mechanism (zero-sample proper-scoring vs N=100 MC-sample vs K-sample DPO) and how many code problems are needed to train discriminative confidence without repeating the 274-example collapse?",
+      "flavor": "technical",
+      "importance": 7,
+      "uncertainty": 6,
+      "disagreement": 4,
+      "decision_impact": 7,
+      "composite_score": 24,
+      "source_budget": 5,
+      "rationale": "Pure feasibility gate (P2 / 'don't waste time & money'). ConfTuner needs 0 sampling for labels; Uncertainty Distillation needs ~100 samples/question; ORCE needs K/prompt. The execution-pass-rate label our paper already computes (n=10) is a natural cheap-ish target. Investigator estimates GPU-hours to build labels + train on HumanEval+MBPP+LiveCodeBench (+ synthetic problems if needed), flags the Cohere 'verification ceiling' risk for LLM-generated tests, and confirms the plan fits single-GPU.",
+      "key_sources": ["conftuner", "uncertainty-distillation", "orce-order-aware-alignment", "self-improving-code-generation-via-semantic-entropy", "verification-limits-code-llm-training"]
+    },
+    {
+      "name": "fallback-utility-of-collapsed-confidence",
+      "one_line": "If the train-time intervention only partially breaks the collapse, does the (still-calibrated) signal retain downstream utility via risk-controlled selective generation, giving a defensible secondary headline?",
+      "flavor": "technical",
+      "importance": 6,
+      "uncertainty": 5,
+      "disagreement": 3,
+      "decision_impact": 6,
+      "composite_score": 20,
+      "source_budget": 4,
+      "rationale": "Serves the query's MANDATORY 'failure mode + pre-registered fallback.' Establishes a floor: even if verbal discrimination lands short of the 0.85 target, a risk-coverage / selective-generation headline (CIC conformal abstention wrapper on the trained signal, or pivot to execution-based Task Abstention) keeps the paper alive. This is the anti-dead-paper insurance.",
+      "key_sources": ["260704430-uncertainty-aware-abstention-cic", "260517029-task-abstention-for-code", "240501563-conformal-abstention-deepmind", "251022614-does-in-ide-calibration-at-scale"]
+    }
+  ],
+  "skip_loci": [
+    {"name": "better-internal-signal-for-code", "reason": "Crowded/non-novel per consensus-claims.json (Functional Entropy, FASE, ConSelf, Sharma&David all 2026). Sampling/execution signal for code is settled — cannot be the headline."},
+    {"name": "ECE-artifact-validity", "reason": "Resolvable by design (AUROC-primary + LiveCodeBench), not an open research question. Handled as a robustness requirement, not a locus."},
+    {"name": "human-developer-user-study", "reason": "Out of single-GPU/7-page/timeline scope; the trust literature provides sufficient motivation. Not a methodological contribution."},
+    {"name": "aaai-primary-topic-selection", "reason": "Already resolved unambiguously by width sweep: ML: Bayesian Learning & Uncertainty Quantification (primary). No investigation needed."},
+    {"name": "in-ide-deployment-framing", "reason": "A framing/motivation question, not a feasibility gate or research gap; folded into motivation."}
+  ]
+}

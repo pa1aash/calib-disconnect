@@ -1,0 +1,58 @@
+[
+  {
+    "claim": "Code differs from natural language for uncertainty estimation purposes in three ways: token fragility (one wrong token breaks the whole program), the intent-code gap (algorithmic intent and implementation can diverge independently), and executability.",
+    "stance": "supports",
+    "stance_target": "motivates code-native (not NL-ported) uncertainty/confidence methods -- same motivating premise as the proposed AAAI headline",
+    "evidence_type": "theoretical",
+    "scope_conditions": "code generation with LLMs",
+    "quoted_support": "We argue that code differs from NL in three ways: a single wrong token can break an entire program (token fragility); algorithmic intent and concrete implementation can disagree independently (intent-code gap); and programs can be executed (executability).",
+    "numbers": [],
+    "entities": ["token fragility", "intent-code gap", "executability"],
+    "time_period": "submitted 8 Jun 2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260609577-code-is-more-than-text-uncertainty-estimation-for-code-generation"
+  },
+  {
+    "claim": "An ensemble of three orthogonal uncertainty axes (lexical token entropy, algorithmic pseudo-code consistency, functional behavioral consistency) improves average AUROC from 0.696 for the strongest NL-derived baseline to 0.776 across five code LLMs.",
+    "stance": "neutral",
+    "stance_target": "state-of-the-art code UE discrimination performance as of mid-2026",
+    "evidence_type": "empirical",
+    "scope_conditions": "five code LLMs, inference-time ensemble UE",
+    "quoted_support": "our three-axis ensemble improves average AUROC from 0.696 for the strongest NL-derived baseline to 0.776 (+8.1 points).",
+    "numbers": ["AUROC 0.696 baseline", "AUROC 0.776 ensemble", "+8.1 points"],
+    "entities": ["Top-K token entropy", "pseudo-code consistency", "behavioral consistency"],
+    "time_period": null,
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260609577-code-is-more-than-text-uncertainty-estimation-for-code-generation"
+  },
+  {
+    "claim": "Single-pass Top-K token entropy on Qwen3-14B matches the strongest multi-pass sampling-based UE baseline while being over 3x cheaper computationally.",
+    "stance": "neutral",
+    "stance_target": "cost-efficiency of lexical UE signals vs sampling-based confidence",
+    "evidence_type": "empirical",
+    "scope_conditions": "Qwen3-14B",
+    "quoted_support": "on Qwen3-14B, our single-pass Top-K token entropy matches the strongest multi-pass baseline while being over 3x cheaper.",
+    "numbers": ["3x cheaper"],
+    "entities": ["Qwen3-14B", "Top-K token entropy"],
+    "time_period": null,
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "260609577-code-is-more-than-text-uncertainty-estimation-for-code-generation"
+  },
+  {
+    "claim": "This method produces a single scalar per-problem/per-generation uncertainty score via an inference-time ensemble, not a per-test-case dense confidence output, and involves no training of the code LLM to self-express confidence.",
+    "stance": "supports",
+    "stance_target": "PARTIAL occupancy: shares code-native UE motivation but distinct mechanism (inference-time ensemble vs trained per-test dense expressed confidence)",
+    "evidence_type": "theoretical",
+    "scope_conditions": "code UE evaluated via AUROC discrimination",
+    "quoted_support": "These results suggest that code UE deserves code-specific design rather than direct NL ports.",
+    "numbers": [],
+    "entities": ["uncertainty estimation (UE)"],
+    "time_period": null,
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "260609577-code-is-more-than-text-uncertainty-estimation-for-code-generation"
+  }
+]

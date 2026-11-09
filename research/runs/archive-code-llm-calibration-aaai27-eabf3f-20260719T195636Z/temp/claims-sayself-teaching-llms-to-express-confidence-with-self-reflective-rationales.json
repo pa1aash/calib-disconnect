@@ -1,0 +1,72 @@
+[
+  {
+    "claim": "SaySelf converts inconsistency across multiple sampled reasoning chains into a natural-language self-reflective rationale plus confidence estimate via an off-the-shelf LLM summarizer, then supervised-fine-tunes the target model on this distilled data, followed by an RL stage with a hand-crafted quadratic reward to sharpen confidence differentiation.",
+    "stance": "supports",
+    "stance_target": "prior art for distilling a sampling-derived signal into a single-pass verbal confidence output, directly analogous to the target paper's proposed distillation angle",
+    "evidence_type": "theoretical",
+    "scope_conditions": "two-stage SFT+RL framework",
+    "quoted_support": "This is achieved by using an LLM to automatically summarize the uncertainties in specific knowledge via natural language. The summarization is based on the analysis of the inconsistency in multiple sampled reasoning chains, and the resulting data is utilized for supervised fine-tuning.",
+    "numbers": [],
+    "entities": ["SaySelf"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "sayself-teaching-llms-to-express-confidence-with-self-reflective-rationales"
+  },
+  {
+    "claim": "Supervised fine-tuning alone on sampling-derived confidence data tends to collapse onto homogeneous/coarse confidence values, motivating SaySelf's added reinforcement-learning stage with a quadratic reward to force differentiated, fine-grained confidence.",
+    "stance": "neutral",
+    "stance_target": "a known failure mode of pure-SFT distillation of sampling signals that a code-LLM method would need to guard against",
+    "evidence_type": "empirical",
+    "scope_conditions": "SaySelf ablation discussion",
+    "quoted_support": "Due to the nature of supervised fine-tuning, the model tends to produce homogeneous confidence levels, such as relatively lower confidence levels for correct responses and higher levels for incorrect responses. To address this issue, we use reinforcement learning to further calibrate LLMs' fine-grained confidence estimates and guide the model to produce more accurate and differentiated values.",
+    "numbers": [],
+    "entities": [],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "sayself-teaching-llms-to-express-confidence-with-self-reflective-rationales"
+  },
+  {
+    "claim": "SaySelf significantly outperforms all baseline approaches on both ECE and AUROC, in-distribution (HotpotQA) and out-of-distribution (TruthfulQA, StrategyQA, FEVER, HaluEval), with differences mostly statistically significant at p<0.05, while preserving task accuracy comparable to baselines other than self-consistency (which requires costly multi-sampling).",
+    "stance": "supports",
+    "stance_target": "single-pass distillation of a sampling-derived confidence signal can match or exceed the discrimination of expensive multi-sample baselines without extra inference cost",
+    "evidence_type": "empirical",
+    "scope_conditions": "HotpotQA, TruthfulQA, StrategyQA, FEVER, HaluEval",
+    "quoted_support": "SaySelf significantly outperforms all baseline approaches in reducing the calibration error (ECE) and improving the distinction of confidence in correct and incorrect responses (AUROC)... the difference of SaySelf from other baselines is mostly statistically significant (p<0.05)",
+    "numbers": ["p<0.05"],
+    "entities": ["HotpotQA", "TruthfulQA", "StrategyQA", "FEVER", "HaluEval"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "sayself-teaching-llms-to-express-confidence-with-self-reflective-rationales"
+  },
+  {
+    "claim": "SaySelf is not evaluated on code-generation tasks; all six evaluation datasets are factual QA, fact verification, or hallucination-detection benchmarks (HotpotQA, TruthfulQA, StrategyQA, FEVER, HaluEval, a paraphrased-relational-facts dataset).",
+    "stance": "neutral",
+    "stance_target": "domain gap: self-reflective-rationale-based confidence distillation has not been validated on code LLMs",
+    "evidence_type": "empirical",
+    "scope_conditions": "entire evaluation section",
+    "quoted_support": "We include the following datasets: [HotpotQA] a dataset of multi-hop reasoning question-answer pairs; [TruthfulQA] a dataset that tests whether models generate truthful answers...; [StrategyQA] a dataset of true/false questions requiring multi-hop reasoning; [FEVER]...; [HaluEval], a dataset that evaluates the hallucination of models",
+    "numbers": [],
+    "entities": ["HotpotQA", "TruthfulQA", "StrategyQA", "FEVER", "HaluEval"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "sayself-teaching-llms-to-express-confidence-with-self-reflective-rationales"
+  },
+  {
+    "claim": "Prior training-based confidence-elicitation methods (as characterized by SaySelf's own related-work framing) are limited to binary or inaccurate group-level confidence estimates, motivating fine-grained per-instance confidence output as a distinguishing contribution.",
+    "stance": "neutral",
+    "stance_target": "identifies coarse binning/group-level proxies as a known limitation in the literature that a code-LLM method should avoid or explicitly address",
+    "evidence_type": "theoretical",
+    "scope_conditions": "related work synthesis",
+    "quoted_support": "Previous work has elicited confidence from LLMs by direct or self-consistency prompting, or constructing specific datasets for supervised finetuning. The prompting-based approaches have inferior performance, and the training-based approaches are limited to binary or inaccurate group-level confidence estimates.",
+    "numbers": [],
+    "entities": [],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "sayself-teaching-llms-to-express-confidence-with-self-reflective-rationales"
+  }
+]

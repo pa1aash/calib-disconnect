@@ -1,0 +1,68 @@
+{
+  "critic_type": "dialectic",
+  "findings": [
+    {
+      "severity": "critical",
+      "location": "Section 8C 'The pre-registered fallback (the guaranteed floor)' and Executive Summary 'A guaranteed floor ... makes the paper complete even if the novel tier only partially lands' / '8C: the 0.987 signal is a stronger discriminator ... this floor should land at or above the Sharma & David ceiling'",
+      "issue": "The report repeatedly calls the L3 floor 'guaranteed' because it rests on the AUROC-0.987 internal sampling signal, but the vault holds direct evidence that this exact signal-family silently fails on a large fraction of items, so the floor is not unconditionally guaranteed.",
+      "evidence": "underspecification-does-not-imply-incoherence-the-risks-of-semantic-collapse-in (arXiv:2607.01953): self-consistency/clustering-based UQ silently converges confidently-but-wrong on 3% of HumanEval, 10-16% of MBPP, 18-32% of LiveCodeBench items (up to 5.5x under injected ambiguity). Flagged as a robustness caveat for the internal-signal baseline in interim-report-code-verbal-calibration-occupied-or-open.",
+      "recommendation": "Add a sentence in 8C (and soften the Executive Summary 'guaranteed floor' language) acknowledging that the internal sampling signal underlying the floor is not immune: on ambiguous/underspecified problems it can collapse to confident-but-wrong on up to ~18-32% of LiveCodeBench items, so the floor's coverage/error guarantee is conditional on filtering or flagging such items. Cite the semantic-collapse note."
+    },
+    {
+      "severity": "major",
+      "location": "Section 6A headline blockquote 'per-requirement AUROC 0.75-0.85' and Executive Summary 'in the 0.75-0.85 band, a number for which no incumbent exists' / Section 7A 'a deterministic execution oracle should beat 0.667, not fall below it'",
+      "issue": "The headline band 0.75-0.85 is asserted with executive-summary confidence, yet the report's own closest structured analog (CURE) hit only AUROC 0.667 -- BELOW the claimed floor -- and the argument that execution 'should' beat it is an untested assumption the interim rates only medium (60-70%) confidence.",
+      "evidence": "think-through-uncertainty note: CURE's best/highest AUROC is 0.667 (typical rows 0.60-0.67; improvement e.g. 0.563->0.648). comparisons.md Tension 5 and interim-report-code-verbal-calibration-occupied-or-open both rate the per-test result 'medium confidence' and call whether discrimination survives the decode step 'the central untested bet.' Section 8B itself names 0.65-0.72 as the single largest risk -- a range that lies BELOW the advertised headline band.",
+      "recommendation": "Where the 0.75-0.85 band is first stated (Executive Summary and 6A), add an adjacent qualifier that the closest structured precedent (CURE) landed at 0.667 and that the 'execution is a cleaner oracle' argument is a hypothesis the Day-2/3 pilot must confirm, not established evidence. Foreground that 0.65-0.72 is a genuinely plausible landing near the headline, not only in the buried failure-mode section."
+    },
+    {
+      "severity": "major",
+      "location": "Executive Summary 'the paper cannot come out dead' and Section 8D 'This is the structural reason the paper cannot come out dead' / de-scope ladder L3 row",
+      "issue": "The 'cannot come out dead' guarantee conflates 'complete' with 'AAAI-main-track-acceptable': the L3 floor is a result the report itself flags as already occupied by CIC, CODEREFUSER, Sharma & David, and a UT-Dallas under-review paper, so demotion to L3 could still yield rejection -- the exact 'dead paper' outcome the user forbids.",
+      "evidence": "Draft Section 4 table scores Direction 3 novelty 2.5 and calls it 'occupied by CIC [12], CODEREFUSER [13], Sharma & David [11]'; Section 4 also notes a UT-Dallas paper 'under review on this cell [29].' Draft 8C: 'its own novelty is modest.' interim-report-fallback-utility-of-collapsed-confidence: the fallback is 'publishable as a secondary headline, not a substitute for a real verbal-discrimination result.'",
+      "recommendation": "Qualify the 'cannot come out dead' claim to 'cannot come out incomplete' and add one sentence acknowledging that if the paper demotes all the way to L3, its contribution overlaps occupied work and may not clear the AAAI main-track novelty bar -- which is precisely why the ICLR-27 pivot, not L3, is the real insurance against a dead paper."
+    },
+    {
+      "severity": "major",
+      "location": "Section 5 'the model emits a structured confidence block: for each requirement/test-group g, a verbalized confidence token c_g in [0,100]' and Section 8E strategic outlook 'a scalar \"I'm 80% sure\" is unusable but \"I'm unsure about the empty-input case\" is actionable'",
+      "issue": "The report's own cited deployment study found (a) post-hoc calibration of code-model confidence does NOT on average improve reliability at scale and (b) developers prefer NON-numerical color-coded signals over numeric confidence -- directly undercutting the headline's numeric per-requirement [0,100] interface -- yet the report deploys this citation only to bolster the L3 floor and never confronts it against the headline.",
+      "evidence": "251022614-does-in-ide-calibration-of-large-language-models-work-at-scale (Koohestani, Gros, Spiess, Devanbu et al.; 24M+ interactions): Platt-scaling 'does not, on average, improve the reliability of model confidence signals,' and a 153-developer design study reveals 'a clear preference for presenting reliability signals via non-numerical, color-coded indicators.'",
+      "recommendation": "Add a sentence near the method definition (Section 5) or in the novelty/utility discussion acknowledging that the strongest deployment evidence questions whether a numeric per-requirement confidence is what practitioners want, and state how the headline survives it (e.g., the numeric c_g is an internal training target that can be surfaced as a categorical/color-coded per-requirement flag) -- rather than citing [26] only to justify the floor."
+    },
+    {
+      "severity": "major",
+      "location": "Executive Summary 'the single-GPU adaptation of DCPO's decoupled recipe [3], extended from one scalar to a per-requirement vector' and Section 9 Axis 2",
+      "issue": "The committed method is explicitly 'DCPO extended from scalar to a per-requirement vector,' which invites the sharpest novelty objection -- that emitting N confidence tokens against N targets is a modest, possibly one-line extension of an already-published recipe that DCPO's own authors could produce -- and the report rebuts only by asserting the novelty is the capability, never engaging the 'incremental extension of a published method' framing head-on.",
+      "evidence": "comparisons.md Tension 1: DCPO 'already demonstrates the naive headline ... same decoded interface, same execution-pass-rate target, same benchmarks'; the method (DCPO-style masked-gradient decoupling) is imported wholesale. Draft 8E even concedes 'the per-test question is likely to be closed within the next two [cycles]' -- implying low barrier to a competitor extending DCPO.",
+      "recommendation": "Add explicit engagement with the 'this is just DCPO with a vector output' objection: argue why the per-test extension is non-trivial (label-grouping design, correlated-target learning, avoiding smeared near-constant per-test confidence) rather than a free architectural change, or concede it is an extension and rest the novelty defense on the capability + the empirical difficulty of preserving per-test discrimination."
+    },
+    {
+      "severity": "major",
+      "location": "Section 5 'keep the coder's own voice but decouple the optimization' and Section 9 Axis 1 'DPRC is the model's own decoded output'",
+      "issue": "The report commits to self-report purely on novelty grounds while the vault's own evidence suggests a hidden-state probe is the more reliable route to high AUROC; the report never acknowledges that choosing self-expression trades away Priority-2 confidence, i.e., it picks the riskier interface for the novelty wedge.",
+      "evidence": "interim-report-self-report-vs-external-judge-vs-probe-reversal: AutoProbe In-house LLM-AJ (same-model self-judgment) is 'catastrophic' at 0.27-0.73; Gros & Devanbu and RLCM achieve their localized/calibrated results with EXTERNAL probes; CSR (260515588) argues verbalized-token confidence is unstable and the field should abandon it. occupied-or-open interim rates the self-report decode step 'the headline bet' at only medium (60-70%) confidence.",
+      "recommendation": "Add a sentence acknowledging that a probe-based per-test estimator is the lower-risk, likely-higher-AUROC alternative, and that self-report is a deliberate Priority-1 (novelty) choice accepted at a real Priority-2 cost -- with the probe as a pre-registered fallback interface if the decoded self-report under-discriminates, not only ORCE-style separate weights."
+    },
+    {
+      "severity": "major",
+      "location": "Section 9 'The honest scoop caveat' -- 'lean on AAAI's contemporaneous-work policy -- anything posted fewer than two months before 28 July need not be addressed'",
+      "issue": "The scoop mitigation over-relies on the contemporaneous-work policy, which does not protect against a paper already under review whose title ('Beyond Execution: Uncertainty Estimation and Abstention in LLM-Based Code Generation') suggests it could occupy an adjacent execution-grounded abstention/uncertainty cell; the report treats content as merely 'unknown' rather than weighting the plausible overlap.",
+      "evidence": "comparisons.md 'LIVE SCOOP RISK': two UT-Dallas under-review papers with on-topic titles; occupied-or-open interim open question: 'the UT Dallas group publishing their reward-aware training results with a discrimination metric before the AAAI-27 deadline -- a live competitive-timing risk.' when-to-answer-and-when-to-defer note confirms the group works on the same model family (DeepSeek-Coder-7b/CodeLlama-7b) and independently reproduces the post-hoc ranking-failure finding.",
+      "recommendation": "Strengthen the caveat: note that 'Beyond Execution' by title targets execution-based uncertainty/abstention for code generation and could occupy an adjacent cell, that the contemporaneous-work policy gives no protection if it surfaces publicly before submission, and that this is a substantive (not merely timing) risk the four-axis wedge must be framed against -- reinforcing the ICLR-27 pivot as the real hedge."
+    },
+    {
+      "severity": "major",
+      "location": "Section 8B 'per-test correctness within one solution is correlated (a broken function fails many tests together)' and Section 6B 'Free labels ... record the per-test pass matrix'",
+      "issue": "The report treats per-test label correlation only as an under-discrimination risk, but never addresses per-test label VALIDITY -- flaky/nondeterministic tests injecting noise into the per-group pass-rate targets, and the verification-ceiling risk for the APPS/TACO/synthetic-heavy pools -- which threatens the training signal itself, not just the achievable AUROC.",
+      "evidence": "interim-report-label-and-data-feasibility cites 250920837-verification-limits-code-llm-training (Cohere): when tests are LLM-generated, 'training data quality is bottlenecked by the verifier's own capability,' and recommends >=3-test-case filtering / soft verification. CodeContests+ [21] is included specifically because it 'repairs test-suite noise' -- implicit admission that raw per-test labels are noisy.",
+      "recommendation": "Add a sentence in the label/experiment section acknowledging flaky-test and verifier-ceiling noise in the per-group pass-rate targets, and state the mitigation (deterministic-execution sandboxing, >=3-test filtering, discarding nondeterministic tests, using test-suite-repaired sources like CodeContests+) as a validity control, not just a density choice."
+    },
+    {
+      "severity": "minor",
+      "location": "Section 8E '10-day calendar' Days 4-8 'Full-pool warm-start SFT ... bootstrap CIs across >=3 seeds' + Days 9-10 'write + reproducibility checklist + code freeze'",
+      "issue": "Even in the green-pilot case, the report under-weights how aggressive it is to complete the full run, five ablations, three seeds with bootstrap CIs, the fallback curve, AND a written 7-page AAAI submission with submitted code in the residual ~5-7 days; the single most schedule-fragile item (standing up a harness for 40k-800k sandboxed executions) is flagged but its binary make-or-break nature is soft-pedaled.",
+      "evidence": "interim-report-label-and-data-feasibility 'what would change this position': if sandboxed test-execution 'needs more than 1-2 days of wall-clock ... even with reasonable parallelization, the 10-day timeline verdict flips from YES' to a further-de-scoped version. GPU-hour estimates (15-25 clean, 45-75 buffered) exclude writing/figure/checklist wall-clock.",
+      "recommendation": "Add a qualifier to the timeline noting that the full ablation-plus-writing program in the residual window is optimistic even when green, that the execution-harness wall-clock is a hard gate (YES flips to de-scope if >1-2 days), and that a reduced ablation set is the pre-registered contingency if the harness or full run overruns -- reinforcing that ICLR-27 is the default if any Day-1 gate slips."
+    }
+  ]
+}

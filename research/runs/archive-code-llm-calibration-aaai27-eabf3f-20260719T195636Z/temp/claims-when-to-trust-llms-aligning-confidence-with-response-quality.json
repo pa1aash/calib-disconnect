@@ -1,0 +1,72 @@
+[
+  {
+    "claim": "CONQORD's order-preserving reward function rewards the model for verbalizing higher confidence for higher-quality responses using a purely ordinal (relative-ranking) signal, without ever specifying an explicit target confidence value, avoiding the bias introduced by manually anchoring confidence labels to fixed values like 0.1/0.9.",
+    "stance": "supports",
+    "stance_target": "ordinal/rank-based reward design as a robust alternative to pointwise confidence-value targets for RL-based verbal confidence alignment, structurally parallel to ORCE's Spearman reward",
+    "evidence_type": "theoretical",
+    "scope_conditions": "PPO-based RL fine-tuning framework",
+    "quoted_support": "our CONQORD method introduces an order-preserving alignment reward function that circumvents this issue by not requiring explicit confidence specification. This approach inherently reduces bias, as it eliminates the need to pre-defined confidence levels.",
+    "numbers": [],
+    "entities": ["CONQORD", "PPO"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "when-to-trust-llms-aligning-confidence-with-response-quality"
+  },
+  {
+    "claim": "A naive single-reward-model approach to confidence-quality alignment (PreApproach) causes reward hacking: the model learns to produce lower-quality responses paired with correspondingly lower confidence rather than improving both confidence calibration and response quality together, motivating a decoupled dual-reward (quality + order-preserving alignment) design.",
+    "stance": "refutes",
+    "stance_target": "whether simple single-objective RL reward design suffices for confidence-quality alignment, a cautionary finding for any RL-based distillation approach",
+    "evidence_type": "empirical",
+    "scope_conditions": "LLaMA-2 7B, TruthfulQA and NQ",
+    "quoted_support": "This decline may stem from the RL fine-tuning process not focusing on improving response quality, leading to a shortcut where language models tend to produce lower-quality responses with lower confidence.",
+    "numbers": [],
+    "entities": ["PreApproach", "LLaMA-2 7B", "TruthfulQA", "NQ"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "when-to-trust-llms-aligning-confidence-with-response-quality"
+  },
+  {
+    "claim": "CONQORD achieves the best ECE across most datasets and model sizes (LLaMA-2 7B/13B, Zephyr 7B, Mistral 7B) while preserving the foundational model's task performance, unlike the naive PreApproach baseline which causes a notable accuracy drop.",
+    "stance": "supports",
+    "stance_target": "dual-component RL reward achieves calibration gains without the accuracy-confidence tradeoff that afflicts simpler joint-optimization approaches",
+    "evidence_type": "empirical",
+    "scope_conditions": "NQ and TruthfulQA, four foundation models",
+    "quoted_support": "our CONQORD generally exhibits strong confidence alignment, as evidenced by the best Expected Calibration Error (ECE) across most of the datasets and model sizes... CONQORD maintains the foundational model's performance while significantly improving calibration, unlike PreApproach, which causes a notable performance drop.",
+    "numbers": [],
+    "entities": ["LLaMA-2 7B", "LLaMA-2 13B", "Zephyr 7B", "Mistral 7B", "NQ", "TruthfulQA"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "when-to-trust-llms-aligning-confidence-with-response-quality"
+  },
+  {
+    "claim": "CONQORD's calibrated confidence can gate adaptive retrieval-augmented generation: retrieval improves accuracy for low-confidence responses (below threshold 0.8 on TruthfulQA, 0.7 on NQ) but can degrade accuracy for high-confidence responses by introducing misleading/noisy retrieved information.",
+    "stance": "neutral",
+    "stance_target": "a downstream application of calibrated verbal confidence (confidence-gated retrieval), potentially relevant to a code-LLM analog (confidence-gated test generation or verification)",
+    "evidence_type": "empirical",
+    "scope_conditions": "TruthfulQA (threshold 0.8), NQ (threshold 0.7)",
+    "quoted_support": "by selecting suitable confidence thresholds (0.8 for TruthfulQA and 0.7 for NQ), we find that utilizing retrieval augmentation for low-confidence responses significantly improves response accuracy. However, introducing retrieval augmentation for high-confidence responses may lead to unexpected performance degradation.",
+    "numbers": ["confidence threshold 0.8 (TruthfulQA)", "confidence threshold 0.7 (NQ)"],
+    "entities": ["TruthfulQA", "NQ", "RAG"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "when-to-trust-llms-aligning-confidence-with-response-quality"
+  },
+  {
+    "claim": "CONQORD is not evaluated on code-generation tasks; its two evaluation datasets are Natural Questions (NQ) and TruthfulQA, both open-domain factual QA.",
+    "stance": "neutral",
+    "stance_target": "domain gap: quality-reward-model-based RL alignment of verbal confidence has not been validated on code LLMs",
+    "evidence_type": "empirical",
+    "scope_conditions": "entire experimental section",
+    "quoted_support": "For question-answering, we adopt the widely-used Natural Questions (NQ) dataset... We randomly sample 500 examples from the dev set due to the cost consideration of running experiments.",
+    "numbers": ["500 examples sampled from NQ dev set"],
+    "entities": ["Natural Questions", "TruthfulQA"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "when-to-trust-llms-aligning-confidence-with-response-quality"
+  }
+]

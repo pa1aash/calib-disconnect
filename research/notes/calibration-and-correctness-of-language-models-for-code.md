@@ -1,0 +1,4939 @@
+---
+title: Calibration and Correctness of Language Models for Code
+id: calibration-and-correctness-of-language-models-for-code
+tags:
+- code-llm-calibration-aaai27-eabf3f
+- spiess-anchor
+- code-llm-calibration
+- ece-bucket-collapse
+- aaai-bar-eval-dprc-d78e07
+created: '2026-07-17T18:33:10.228125Z'
+updated: '2026-07-19T20:04:19.679021Z'
+source: https://arxiv.org/html/2402.02047
+source_domain: arxiv.org
+fetched_at: '2026-07-17T18:33:10.227385Z'
+fetch_provider: builtin
+status: draft
+type: note
+tier: institutional
+content_type: paper
+deprecated: false
+summary: 'PRIMARY ANCHOR (Spiess et al., ICSE 2025, arXiv:2402.02047, full text).
+  Develops an evaluation framework for calibration of generative code-LLMs across
+  three tasks -- line-level code completion, function synthesis, and automated program
+  repair -- five datasets (SStubs, DyPyBench, Defects4J, HumanEval, MBPP), and three
+  models (OpenAI GPT-3.5-turbo-instruct, OpenAI Codex, CodeGen2-16B), sampled at temperature
+  0. Headline finding: intrinsic LLM confidence measures are poorly aligned with actual
+  code correctness out of the box, with ECE ranging 0.09-0.73 across settings; a motivating
+  example shows GPT-3.5 completions with >90% average per-token confidence pass tests
+  only 52% of the time. Platt scaling (logistic-regression rescaling) improves calibration
+  but the paper identifies a ''bucket collapse'' failure mode: when a confidence measure
+  is poorly aligned with correctness, Platt scaling can squash all values into a single
+  bucket matching the baseline correctness rate, producing deceptively low ECE near
+  0 while Skill Score (relative to a Brier-score baseline) reveals the measure has
+  no real predictive utility -- so ECE alone is an insufficient/misleading calibration
+  metric, and Skill Score must be reported alongside it. Cross-task generalization
+  of rescaling is inconsistent: fitting on one function-synthesis task and applying
+  to another (GPT-3.5, same domain) only mildly degrades performance (SS 0.14->0.12,
+  ECE 0.07->0.05), but fitting on DyPyBench (program repair) and applying to function
+  synthesis catastrophically fails (SS 0.12->-1.28, ECE 0.08->0.54). Reflective/verbalized
+  confidence measures (self-ask, logit-based p_B/p_NB) are generally uncorrelated
+  with intrinsic measures and do not reliably improve calibration except when combined
+  with retrieval-augmented few-shotting on GPT-3.5 code completion, which reaches
+  Skill Score 0.15. Explicitly flagged as future work / left open: (1) whether findings
+  generalize to models with substantially different architectures/training beyond
+  the three tested (GPT-3.5, Codex, CodeGen2-16B) -- author-stated threat to validity;
+  (2) larger/more natural datasets for function synthesis & repair beyond HumanEval
+  (164 samples) and Defects4J (120 samples); (3) more robust statistical comparison
+  (bootstrapped p-values/effect sizes) of confidence-summarization methods; (4) calibrated
+  uncertainty for localized/token-level regions rather than whole-sequence confidence;
+  (5) whether geometric-mean token-probability summarization (vs. arithmetic mean/product
+  used here) generalizes -- marginal improvement noted but untested at scale. This
+  is the exact anchor the target AAAI-27 paper must extend/disconnect from: Spiess
+  establishes that code-LLM confidence is uncalibrated and that ECE can be gamed via
+  bucket collapse, but does not test newer instruction-tuned/RLHF-trained model families,
+  does not examine the calibration-vs-classification-accuracy tradeoff during fine-tuning
+  (cf. arXiv:2601.13284), and leaves cross-model/cross-architecture generalizability
+  of both the miscalibration finding and the bucket-collapse critique explicitly open.'
+---
+
+*Suggested by [[240202047-calibration-and-correctness-of-language-models-for-code]] — full HTML text of the primary anchor paper for exact benchmarks/models/ECE numbers*
+
+Calibration and Correctness of Language Models for Code
+\addbibresource
+main.bib
+\WarningFilter
+*captionUnknown document class
+\WarningFilter
+*subcaptionUnknown document class
+\UseTblrLibrary
+booktabs
+Calibration and Correctness of
+Language Models for Code
+Claudio Spiess
+∗
+UC Davis
+USA
+cvspiess@ucdavis.edu
+David Gros
+∗
+UC Davis
+USA
+dgros@ucdavis.edu
+Kunal Suresh Pai
+UC Davis
+USA
+kunpai@ucdavis.edu
+Michael Pradel
+Univ. of Stuttgart
+Germany
+michael@binaervarianz.de
+Md Rafiqul Islam Rabin
+Univ. of Houston
+USA
+mrabin@central.uh.edu
+{@IEEEauthorhalign}
+Amin Alipour
+Univ. of Houston
+USA
+maalipou@central.uh.edu
+Susmit Jha
+SRI
+USA
+susmit.jha@sri.com
+Prem Devanbu
+UC Davis
+USA
+ptdevanbu@ucdavis.edu
+Toufique Ahmed
+UC Davis
+USA
+tfahmed@ucdavis.edu
+Abstract
+Machine learning models are widely used, but can also often be wrong. Users would benefit from a reliable indication of whether a given output from a given model should be trusted, so a rational decision can be made whether to use the output or not. For example, outputs can be associated with a
+confidence measure
+; if this confidence measure is strongly associated with
+likelihood of correctness
+, then the model is said to be
+well-calibrated
+.
+A well-calibrated confidence measure can serve as a basis for rational, graduated decision-making on how much review and care is needed when using generated code.
+Calibration
+has so far been studied in mostly non-generative (
+e.g.
+, classification) settings, especially in software engineering. However, generated code can quite often be wrong: Given generated code, developers must decide whether to use directly, use after varying intensity of careful review, or discard model-generated code. Thus, calibration is vital in generative settings.
+We make several contributions. We develop a framework for evaluating the calibration of code-generating models. We consider several tasks, correctness criteria, datasets, and approaches, and find that, by and large, generative code models we test are
+not
+well-calibrated out of the box. We then show how calibration can be improved using standard methods, such as Platt scaling. Since Platt scaling relies on the prior availability of correctness data, we evaluate the applicability and generalizability of Platt scaling in software engineering, discuss settings where it has good potential for practical use, and settings where it does not. Our contributions will lead to better-calibrated decision-making in the current use of code generated by language models, and offers a framework for future research to further improve calibration methods for generative models in software engineering.
+Index Terms:
+LLMs, Calibration, Confidence Measure
+*
+*
+footnotetext:
+Equal contribution. Order determined by random coin flip.
+I
+Introduction
+Generative large language models (LLMs) are now widely-used for code completion in IDEs.
+However, LLMs make mistakes:
+they can generate known buggy code
+[
+jesseLargeLanguageModels2023b
+]
+,
+or code with risky vulnerabilities
+[
+asareGitHubCopilotBad2023b
+,
+schusterYouAutocompleteMe2021b
+]
+.
+Despite these risks,
+LLM “copilots”
+[
+loTrustworthySynergisticArtificial2023a
+]
+are growing in popularity—thus there is a growing concern that bad LLM-generated code could be integrated
+into widely-used software.
+Given that LLMs might generate
+buggy code,
+how should a developer decide
+whether generated code is correct or not?
+One possibility is to use the
+confidence
+, or probability assigned to the generated code by the LLM itself.
+Consider a developer who asks
+Gpt-3.5
+to complete some unfinished code. For example, given the prefix
+def clear(self, tag: Optional[Hashable] = None) -> None:
+the model generates the completion
+self.jobs[:] = [job for job in self.jobs if job.tag != tag]
+with an average per-token confidence of
+91%
+, suggesting high confidence (based on its training) that the code is a likely completion for the given prefix. However, this code is known to be buggy! In fact, when we test thousands of line completions, in cases where the average probability was greater than
+90%
+, only
+52%
+actually passed test cases. One can also find reverse examples, where the LLM has very little confidence, but the generated code is actually correct.
+We make two observations. First, since LLMs can make mistakes,
+users would benefit from a reliable indication of confidence that the generated code is actually correct
+. Second,
+such indications of confidence, when well-aligned with actual correctness, can support well-justified software quality control measures, and thus improve the reliability of the AI4SE ecosystem
+.
+When an LLM-offered code suggestion is accompanied by a numerical “confidence” signal
+e.g.
+, a probability measure, then this signal
+should be
+well-aligned
+with the likelihood that the code
+is actually correct. Such a measure
+is said to be well
+-calibrated
+.
+Calibration has been studied in other settings
+e.g.
+, classically in weather prediction and recently
+for software-related
+classification
+tasks
+[
+zhouCalibrationPretrainedCode2024
+]
+.
+In this paper, we
+study the calibration of
+generative
+1
+1
+1
+We note that the notion
+of
+correctness
+for generative tasks is quite different than for classification tasks, where the output is a label, rather than a sequence of tokens.
+large language models, when used in practical software engineering
+settings, such as line-level code completion, function synthesis, and code-repair.
+A well-calibrated confidence measure would support rational risk-management in the development process, and help quality-improvement processes.
+For example, a development team might reasonably adopt a policy that: a) generated code associated with high confidence
+could be reviewed lightly and quickly accepted; b) suggestions with a medium confidence value should be reviewed more carefully before acceptance; and c) suggestions with a low confidence value should be simply rejected or the prompt should be adjusted.
+Despite its importance and widespread use of LLMs in software engineering, the correctness and calibration of code-generating models currently is not well understood.
+In particular, it is currently unknown whether confidence measures provided by the LLMs themselves align well with actual code correctness.
+This paper does an empirical study of the
+calibration of code-generating models using several prior techniques and explores approaches for improving calibration further.
+To this end, we describe an evaluation framework for the calibration of code-generating language models.
+We instantiate the framework for different tasks,
+e.g.
+, code synthesis, code completion, and program repair, using different correctness criteria (exact-match w.r.t. a reference solution and correctness-modulo-testing), and by applying the framework to different models.
+Based on this framework, we evaluate well-established techniques for estimating how a model’s confidence align with actual correctness; then, based on our findings, we present improvements over existing techniques.
+Our work yields several findings:
+•
+The alignment of
+confidence measures
+provided
+by LLMs with standard
+notions of
+code correctness
+is poor,
+when evaluated on realistic
+datasets across different
+tasks, including completion,
+synthesis, and automated program repair. We observe generally high
+𝐸𝐶𝐸
+𝐸𝐶𝐸
+\mathit{ECE}
+italic_ECE
+(Expected Calibration Error, described in
+Section
+III-C
+) across all settings, ranging from
+0.09
+0.09
+0.09
+0.09
+to
+0.73
+0.73
+0.73
+0.73
+, suggesting intrinsic LLM confidences are poor predictors of code correctness.
+•
+We evaluate several
+reflective
+approaches
+to improve this alignment,
+and also
+confidence rescaling
+using known correctness labels. While rescaling generally improves calibration,
+reflective methods are rather inconsistent, working better in some settings than others.
+•
+Finally, we focus on the most widely-used SE task for LLMs,
+viz.
+code completion, and use the instructable
+Gpt-3.5
+model,
+and few-shotting, in a reflective setting, and
+show that calibration improves substantially
+from the skill score
+2
+2
+2
+Brier Skill score, which we explain below in §
+III-C
+.
+of
+0
+0
+to a much higher level of
+0.15
+0.15
+0.15
+0.15
+.
+Our work considers the important problem of providing developers with a reliable indication of whether generated code is correct, and (especially
+for the widely-used task of code completion) offers an approach, using BM25-aided
+[
+bm25fewshot
+]
+few-shotting, that has potential practical value.
+I-A
+Research Agenda
+Code LLMs are perhaps mostly widely-used for
+code suggestion/completion
+; other tasks include
+code synthesis
+and
+program repair
+.
+RQ 1
+. How well is the confidence of language models in their output aligned with the
+empirical correctness of the output, specifically for common generative tasks,
+viz.
+function synthesis, line-level code completion, and program repair?
+We evaluate the output for two different notions of correctness,
+viz.
+, exact-match with known correct code, and second, passing all given tests.
+In general, the levels of alignment between the
+intrinsic
+confidence (
+viz.,
+directly provided by the LLM) and correctness is poor. This indicates need for better approaches to calibration. We then explore
+several engineering responses to the problem, listed in the following research questions.
+First, we consider the standard approach of confidence
+rescaling
+, using Platt scaling.
+RQ 2
+. Can alignment between LLM confidence in generated code, and its correctness, be improved by confidence rescaling?
+While confidence rescaling can help remedy over- and under-confidence, it does require some data to determine the parameters of the scaling function. We also analyze and discuss some
+considerations in obtaining this data, specifically for code-generation tasks.
+Next, we investigate the possibility that the model is able to better calibrate
+upon
+reflection
+. We ask the model (using a separate reflective prompt) to consider its own generated code and judge its confidence in the quality.
+RQ 3
+. Is confidence obtained by reflection better aligned with correctness?
+Finally we investigate few-shotting, to see whether it helps calibration for the widely used task of code completion.
+RQ 4
+. Can we use few-shot techniques to achieve better calibrated confidence for code completion, using an instruction-tuned model with in-context learning?
+II
+Background
+II-A
+Calibration
+This concept
+originates in prediction problems like
+weather forecasting. Consider a weather model predicting a 70% confidence (probability) of rain the next day.
+If we ran this model for a while, and observed rain in 70% of the days where
+a forecast with 70% confidence was made, then we call it a well-calibrated model.
+A well-calibrated
+model’s confidence
+in a given output, is quite close to the empirical relative frequency (likelihood) with which the output is actually correct.
+With well-calibrated rain-forecasting,
+a user has options for a
+rational response
+:
+at 20% confidence of rain, one might take a hat; at higher confidences, one might take an umbrella; if even higher, one might take the bus rather than walk,
+etc.
+From an earlier work by
+\textcite
+jiangHowCanWe2021a:
+given a model
+M
+𝑀
+M
+italic_M
+, an input
+X
+𝑋
+X
+italic_X
+and true, expected correct output
+Y
+𝑌
+Y
+italic_Y
+,
+a model output
+M
+⁢
+(
+X
+)
+=
+Y
+^
+𝑀
+𝑋
+^
+𝑌
+M(X)=\hat{Y}
+italic_M ( italic_X ) = over^ start_ARG italic_Y end_ARG
+, (note that we won’t always have
+Y
+=
+Y
+^
+𝑌
+^
+𝑌
+Y=\hat{Y}
+italic_Y = over^ start_ARG italic_Y end_ARG
+) and a output probability
+P
+M
+⁢
+(
+Y
+^
+|
+X
+)
+subscript
+𝑃
+𝑀
+conditional
+^
+𝑌
+𝑋
+P_{M}(\hat{Y}\,|\,X)
+italic_P start_POSTSUBSCRIPT italic_M end_POSTSUBSCRIPT ( over^ start_ARG italic_Y end_ARG | italic_X )
+provided by the model, a perfectly calibrated model satisfies the following condition
+\useshortskip
+P
+(
+Y
+^
+=
+Y
+|
+P
+M
+(
+Y
+^
+|
+X
+)
+=
+p
+)
+=
+p
+,
+∀
+p
+∈
+[
+0
+,
+1
+]
+.
+P(\hat{Y}=Y\,|\,P_{M}(\hat{Y}\,|\,X)=\hbox{\pagecolor{pink}${p}$})=\hbox{%
+\pagecolor{yellow}p},\quad\forall\,{\mathrm{p}}\in[0,1].
+italic_P ( over^ start_ARG italic_Y end_ARG = italic_Y | italic_P start_POSTSUBSCRIPT italic_M end_POSTSUBSCRIPT ( over^ start_ARG italic_Y end_ARG | italic_X ) = italic_p ) = p , ∀ roman_p ∈ [ 0 , 1 ] .
+(1)
+In other words, if we have perfectly-calibrated
+confidence
+p
+𝑝
+{p}
+italic_p
+(the model’s calculated probability of its prediction that the output is
+Y
+^
+^
+𝑌
+\hat{Y}
+over^ start_ARG italic_Y end_ARG
+), then this value equals the
+empirical fraction
+p
+of the cases where the actual output
+Y
+𝑌
+Y
+italic_Y
+correctly
+matches the prediction
+Y
+^
+^
+𝑌
+\hat{Y}
+over^ start_ARG italic_Y end_ARG
+.
+Usually these probabilities don’t perfectly match; there are various measures of the deviation, including
+Brier Score
+[
+brierVerificationForecastsExpressed1950a
+]
+and
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+(Expected
+Calibration Error)
+[
+naeiniObtainingWellCalibrated2015a
+]
+II-B
+Why Calibration Matters for Code
+Even powerful
+LLMs can make mistakes
+[
+jesseLargeLanguageModels2023b
+]
+,
+potentially leading users to accept incorrect code.
+A well-calibrated confidence signal could help developers manage
+[
+loTrustworthySynergisticArtificial2023a
+,
+grosAISafetySubproblems2023b
+]
+this risk. Consider the confidence
+p
+𝑝
+{p}
+italic_p
+associated with generated code. A well-calibrated high-value of
+p
+𝑝
+{p}
+italic_p
+would indicate a high empirical probabilty
+p
+that the code is correct, and so it could be simply accepted;
+a low value would indicate
+higher risk that the code
+is incorrect, and so should be rejected.
+A poorly calibrated model may lead to either unnecessary rejection of likely correct code, or ill-advised acceptance of likely incorrect code.
+We note that good calibration allows more nuanced, effective quality-control (Q-C) decisions, beyond simple binary decisions
+e.g.
+, carefully review each token of generated code,
+perhaps by several people,
+vs.
+just use it.
+Such a well-calibrated
+quality-control process has been used in medicine
+e.g.
+, for elder-care
+[
+niermanOutcomePredictionModel2001a
+]
+, and for decision-making
+in cancer-care
+[
+schwarzGUESSProjectingMachine2019a
+]
+.
+Given the cost & consequences
+of properly addressing software quality, and
+the potential benefits of LLM-generated code, a well-calibrated confidence signal is highly desirable.
+III
+Research Methodology
+We consider three generative tasks
+i.e.
+, function synthesis, line-level code completion, and program repair, where generative LLMs are directly applicable and widely-used (
+e.g.
+, completion in Copilot). In this section, we will discuss the tasks, datasets, models, and methodology of our approach.
+III-A
+Code Correctness
+When evaluating calibration, we need a notion of correctness. For (non-generative) models outputting labels, classes, True/False,
+etc.
+correctness is simply an exact-match with ground-truth correct label. Exact-match
+could
+also be viewed as a notion of correctness for code,
+e.g.
+, with defect repair, where there is a known, incorrect “buggy” version, and a known “fixed” version. Generated code is correct only if it matches exactly the fixed version, given an appropriate prompt. However, this approach is
+overly strict
+; the generated code might match exactly, but still pass all tests.
+Other notions of correctness exist: code-review, formal verification,
+etc.
+We use test cases provided with the code as our preferred indication of correctness, as tests are widely used, and are easily automated.
+While test-passing correctness offers the advantage of admitting different semantically identical forms, test cases maybe insufficient or incorrect
+3
+3
+3
+e.g.
+,
+\textcite
+liuYourCodeGenerated2023a report gaps in the test sets of HumanEval.
+; tests can also be “flaky”
+[
+luoEmpiricalAnalysisFlaky2014a
+]
+: the same test, on the same code, might pass, or fail.
+III-B
+Confidence Measures
+We usually calculate a confidence measure (or probability)
+p
+𝑝
+p
+italic_p
+, associated with generated output code
+C
+𝐶
+C
+italic_C
+.
+We consider two categories of measures:
+intrinsic probability
+, which is calculated by the generative LLM
+per se
+,
+and
+reflective probability
+, obtained by
+re-
+invoking the model, instructing
+it to estimate its confidence in the correctness of the code just generated (see
+Figure
+A1
+for prompts).
+Our measures include:
+Average Token Probability
+(Intrinsic,
+p
+a
+⁢
+v
+⁢
+g
+subscript
+𝑝
+𝑎
+𝑣
+𝑔
+p_{avg}
+italic_p start_POSTSUBSCRIPT italic_a italic_v italic_g end_POSTSUBSCRIPT
+)
+For an output sequence
+T
+T
+\mathrm{T}
+roman_T
+of tokens
+τ
+i
+,
+i
+=
+1
+⁢
+…
+⁢
+n
+subscript
+𝜏
+𝑖
+𝑖
+1
+…
+𝑛
+\tau_{i},i=1\ldots n
+italic_τ start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT , italic_i = 1 … italic_n
+, we collect the associated model probabilities
+p
+⁢
+(
+τ
+i
+)
+𝑝
+subscript
+𝜏
+𝑖
+p(\tau_{i})
+italic_p ( italic_τ start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT )
+, and then compute the mean
+p
+avg
+⁢
+(
+T
+)
+=
+1
+n
+⁢
+∑
+i
+=
+1
+n
+p
+⁢
+(
+τ
+i
+)
+subscript
+𝑝
+avg
+T
+1
+𝑛
+superscript
+subscript
+𝑖
+1
+𝑛
+𝑝
+subscript
+𝜏
+𝑖
+p_{\text{avg}}(\mathrm{T})=\frac{1}{n}\displaystyle\sum_{i=1}^{n}p(\tau_{i})
+italic_p start_POSTSUBSCRIPT avg end_POSTSUBSCRIPT ( roman_T ) = divide start_ARG 1 end_ARG start_ARG italic_n end_ARG ∑ start_POSTSUBSCRIPT italic_i = 1 end_POSTSUBSCRIPT start_POSTSUPERSCRIPT italic_n end_POSTSUPERSCRIPT italic_p ( italic_τ start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT )
+.
+Generated Sequence Probability
+(Intrinsic,
+p
+t
+⁢
+o
+⁢
+t
+subscript
+𝑝
+𝑡
+𝑜
+𝑡
+p_{tot}
+italic_p start_POSTSUBSCRIPT italic_t italic_o italic_t end_POSTSUBSCRIPT
+)
+The full generated sequence confidence is calculated as the product of probabilities,
+p
+t
+⁢
+o
+⁢
+t
+⁢
+(
+T
+)
+=
+∏
+i
+=
+1
+n
+p
+⁢
+(
+τ
+i
+)
+subscript
+𝑝
+𝑡
+𝑜
+𝑡
+T
+superscript
+subscript
+product
+𝑖
+1
+𝑛
+𝑝
+subscript
+𝜏
+𝑖
+p_{tot}({\mathrm{T}})=\displaystyle\prod_{i=1}^{n}p(\tau_{i})
+italic_p start_POSTSUBSCRIPT italic_t italic_o italic_t end_POSTSUBSCRIPT ( roman_T ) = ∏ start_POSTSUBSCRIPT italic_i = 1 end_POSTSUBSCRIPT start_POSTSUPERSCRIPT italic_n end_POSTSUPERSCRIPT italic_p ( italic_τ start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT )
+.
+Verbalized Self-Ask
+[
+linTeachingModelsExpress2022b
+,
+zhouNavigatingGreyArea2023b
+,
+tianJustAskCalibration2023
+]
+(Reflective,
+p
+v
+subscript
+𝑝
+𝑣
+p_{v}
+italic_p start_POSTSUBSCRIPT italic_v end_POSTSUBSCRIPT
+)
+We instruct the model to reflect jointly on the prompt,
+and
+the model-generated code, and then output a numeric value of its confidence in the generated code.
+Extra logic is implemented for when the model fails to output a probability (discussed further in
+Section
+IX
+).
+Question Answering Logit
+[
+kadavathLanguageModelsMostly2022c
+]
+(Reflective,
+p
+B
+subscript
+𝑝
+𝐵
+p_{B}
+italic_p start_POSTSUBSCRIPT italic_B end_POSTSUBSCRIPT
+and
+p
+N
+⁢
+B
+subscript
+𝑝
+𝑁
+𝐵
+p_{NB}
+italic_p start_POSTSUBSCRIPT italic_N italic_B end_POSTSUBSCRIPT
+)
+In this case, rather than prompting for a numerical score (as above), we ask for a
+TRUE
+or
+FALSE
+answer. The probability associated with the
+TRUE
+token is taken to be the confidence measure. Additionally, we extend this approach using
+normalization
+: the model can assign probability mass to multiple possible expressions of
+TRUE
+or
+FALSE
+or even other variations (e.g, “ True”, “ true”, “ ”, ). Thus when extending to the normalized form (Ask T/F N), we take the fraction of probability mass “True” assigned between only “True” and “False”.
+Our experiments consider the four above:
+average token probability
+,
+generated sequence probability
+,
+verbalized self-evaluation
+,
+and
+question answering logit
+. In addition, as a baseline, we also used the
+length
+of the generated
+sequence. The length baseline is calculated based on the number of characters in the generated sequence, scaled such that
+0
+0
+is the shortest value in the dataset, and
+1
+1
+1
+1
+is the longest.
+For reflective measures, we
+expected that a code generation model should perform well (and provide well-calibrated confidence scores for correctness): first,
+for synthesis
+, given just a good natural language description (without tests), of the desired function; second,
+for completion & bug-fixing
+, given the surrounding context. In both settings, we measure correctness using available hidden test cases. We also note that including hidden or failing tests in an LLM prompt is not common experimental practice for the tasks we analyze.
+[
+chenEvaluatingLargeLanguage2021b
+,
+austinProgramSynthesisLarge2021b
+,
+jiangImpactCodeLanguage2023b
+]
+.
+III-C
+Measures of Calibration
+Using model’s
+confidence
+in its generated output, and a way of determining
+correctness
+, one can compute measures of calibration.
+Calibration measures conceptually arise from the
+Reliability Plot
+,
+which plots correctness
+vs.
+confidence
+Two reliability plots illustrating this method are shown in
+Figure 1
+.
+1(a)
+is for token-level code completions from
+Codex
+; it shows the observed proportion of exact-match correct tokens (y-axis)
+vs.
+the predicted probability
+i.e.
+, confidence
+as per
+the language model, based on bucketing observations
+into subsets
+S
+1
+,
+S
+2
+,
+…
+⁢
+S
+n
+subscript
+𝑆
+1
+subscript
+𝑆
+2
+…
+subscript
+𝑆
+𝑛
+S_{1},S_{2},\ldots S_{n}
+italic_S start_POSTSUBSCRIPT 1 end_POSTSUBSCRIPT , italic_S start_POSTSUBSCRIPT 2 end_POSTSUBSCRIPT , … italic_S start_POSTSUBSCRIPT italic_n end_POSTSUBSCRIPT
+. Here, there are
+n
+=
+10
+𝑛
+10
+n=10
+italic_n = 10
+buckets, equally spaced by confidence measure. Each bucket has an associated bar whose height
+indicates the proportion (value
+∈
+[
+0
+,
+1
+]
+absent
+0
+1
+\in[0,1]
+∈ [ 0 , 1 ]
+) of correct samples in the bucket. The closer the bars in each
+S
+i
+subscript
+𝑆
+𝑖
+S_{i}
+italic_S start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT
+are to the diagonal line, the better the calibration.
+(a)
+Well Calibrated
+(b)
+Poorly Calibrated
+Figure 1
+:
+Sample calibration plots demonstrating well-
+vs.
+poorly- calibrated.
+We note here that
+Codex
+is a large model, well-trained on the task of token-level completion; thus, it is both well-calibrated and generally correct on the simple token-level completion task. However, for notions of correctness farther from the training objective, such as line-level code completion and test-passing,
+Codex
+’s
+intrinsic
+probability may not be as well-calibrated. An example (
+1(b)
+) where the confidence is not well-calibrated is
+Gpt-3.5
+for line completion using verbalized confidence (
+i.e.
+, asking it to write its confidence; see
+Section
+III-B
+).
+We study two measures of calibration: Brier Score
+[
+brierVerificationForecastsExpressed1950a
+]
+and
+𝐸𝐶𝐸
+𝐸𝐶𝐸
+\mathit{ECE}
+italic_ECE
+[
+naeiniObtainingWellCalibrated2015a
+]
+. Both measure the deviation from
+perfect calibration.
+As before (following
+[
+guoCalibrationModernNeural2017b
+]
+), we assume a model
+M
+𝑀
+M
+italic_M
+, input
+X
+𝑋
+X
+italic_X
+, actual desired output
+Y
+𝑌
+Y
+italic_Y
+, and model prediction
+M
+⁢
+(
+X
+)
+=
+Y
+^
+𝑀
+𝑋
+^
+𝑌
+M(X)=\hat{Y}
+italic_M ( italic_X ) = over^ start_ARG italic_Y end_ARG
+.
+In our case, both
+Y
+𝑌
+Y
+italic_Y
+and
+Y
+^
+^
+𝑌
+\hat{Y}
+over^ start_ARG italic_Y end_ARG
+are code, rather than a single label.
+Calibration measures indicate the extent to which the deviations of
+Y
+^
+^
+𝑌
+\hat{Y}
+over^ start_ARG italic_Y end_ARG
+from
+the desired
+Y
+𝑌
+Y
+italic_Y
+are actually aligned with the model’s confidence in its
+output,
+Y
+^
+^
+𝑌
+\hat{Y}
+over^ start_ARG italic_Y end_ARG
+.
+\useshortskip
+From the calibration plot, with the evaluation
+set
+T
+𝑇
+T
+italic_T
+bucketed into subsets
+S
+i
+,
+i
+=
+1
+⁢
+…
+⁢
+m
+s.t.
+formulae-sequence
+subscript
+𝑆
+𝑖
+𝑖
+1
+…
+𝑚
+s.t.
+S_{i},i=1\ldots m\quad\text{s.t.}
+italic_S start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT , italic_i = 1 … italic_m s.t.
+⋃
+i
+S
+i
+=
+T
+,
+∀
+i
+∈
+1
+⁢
+…
+⁢
+m
+formulae-sequence
+subscript
+𝑖
+subscript
+𝑆
+𝑖
+𝑇
+for-all
+𝑖
+1
+…
+𝑚
+\quad\bigcup_{i}S_{i}=T,\quad\forall i\in 1\ldots m
+⋃ start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT italic_S start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT = italic_T , ∀ italic_i ∈ 1 … italic_m
+.
+We estimate correctness in each bucket as the fraction of predictions in that bucket which are “correct” (as discussed in §
+III-A
+); confidence is the average estimated probability from the model in that bucket:
+\useshortskip
+corr
+⁢
+(
+S
+i
+)
+corr
+subscript
+𝑆
+𝑖
+\displaystyle\text{corr}(S_{i})
+corr ( italic_S start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT )
+=
+1
+∣
+S
+i
+∣
+⁢
+∑
+x
+i
+∈
+S
+i
+𝟙
+⁢
+(
+✓
+⁢
+M
+⁢
+(
+x
+i
+)
+)
+absent
+1
+delimited-∣∣
+subscript
+𝑆
+𝑖
+subscript
+subscript
+𝑥
+𝑖
+subscript
+𝑆
+𝑖
+1
+✓
+𝑀
+subscript
+𝑥
+𝑖
+\displaystyle=\frac{1}{\mid S_{i}\mid}\sum_{x_{i}\in S_{i}}\mathds{1}(%
+\checkmark M(x_{i}))
+= divide start_ARG 1 end_ARG start_ARG ∣ italic_S start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT ∣ end_ARG ∑ start_POSTSUBSCRIPT italic_x start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT ∈ italic_S start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT end_POSTSUBSCRIPT blackboard_1 ( ✓ italic_M ( italic_x start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT ) )
+(2)
+conf
+⁢
+(
+S
+i
+)
+conf
+subscript
+𝑆
+𝑖
+\displaystyle\text{conf}(S_{i})
+conf ( italic_S start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT )
+=
+1
+∣
+S
+i
+∣
+⁢
+∑
+x
+i
+∈
+S
+i
+p
+^
+i
+absent
+1
+delimited-∣∣
+subscript
+𝑆
+𝑖
+subscript
+subscript
+𝑥
+𝑖
+subscript
+𝑆
+𝑖
+subscript
+^
+𝑝
+𝑖
+\displaystyle=\frac{1}{\mid S_{i}\mid}\sum_{x_{i}\in S_{i}}\hat{p}_{i}
+= divide start_ARG 1 end_ARG start_ARG ∣ italic_S start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT ∣ end_ARG ∑ start_POSTSUBSCRIPT italic_x start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT ∈ italic_S start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT end_POSTSUBSCRIPT over^ start_ARG italic_p end_ARG start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT
+(3)
+where the model generates the code
+M
+⁢
+(
+x
+i
+)
+𝑀
+subscript
+𝑥
+𝑖
+M(x_{i})
+italic_M ( italic_x start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT )
+with confidence (probability)
+p
+^
+i
+subscript
+^
+𝑝
+𝑖
+\hat{p}_{i}
+over^ start_ARG italic_p end_ARG start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT
+, and
+✓
+⁢
+M
+⁢
+(
+x
+i
+)
+✓
+𝑀
+subscript
+𝑥
+𝑖
+\checkmark M(x_{i})
+✓ italic_M ( italic_x start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT )
+indicates
+that the generated code is correct,
+as per the operative experimental definition.
+For a perfectly calibrated
+M
+𝑀
+M
+italic_M
+, we would have
+corr
+⁢
+(
+S
+i
+)
+=
+conf
+⁢
+(
+S
+i
+)
+∀
+i
+∈
+1
+⁢
+…
+⁢
+m
+formulae-sequence
+corr
+subscript
+𝑆
+𝑖
+conf
+subscript
+𝑆
+𝑖
+for-all
+𝑖
+1
+…
+𝑚
+\text{corr}(S_{i})=\text{conf}(S_{i})\quad\forall i\in 1\ldots m
+corr ( italic_S start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT ) = conf ( italic_S start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT ) ∀ italic_i ∈ 1 … italic_m
+. In practice,
+we observe deviations from this ideal.
+Expected Calibration Error (
+𝐸𝐶𝐸
+𝐸𝐶𝐸
+\mathit{ECE}
+italic_ECE
+)
+[
+naeiniObtainingWellCalibrated2015a
+]
+is a typical measure of calibration, calculated as the weighted average of these deviations.
+\useshortskip
+𝐸𝐶𝐸
+=
+∑
+i
+=
+1
+m
+∣
+S
+i
+∣
+∣
+T
+∣
+⁢
+|
+corr
+⁢
+(
+S
+i
+)
+−
+conf
+⁢
+(
+S
+i
+)
+|
+𝐸𝐶𝐸
+superscript
+subscript
+𝑖
+1
+𝑚
+delimited-∣∣
+subscript
+𝑆
+𝑖
+delimited-∣∣
+𝑇
+corr
+subscript
+𝑆
+𝑖
+conf
+subscript
+𝑆
+𝑖
+\mathit{ECE}=\displaystyle\sum_{i=1}^{m}\frac{\mid S_{i}\mid}{\mid T\mid}%
+\lvert\text{corr}(S_{i})-\text{conf}(S_{i})\rvert
+italic_ECE = ∑ start_POSTSUBSCRIPT italic_i = 1 end_POSTSUBSCRIPT start_POSTSUPERSCRIPT italic_m end_POSTSUPERSCRIPT divide start_ARG ∣ italic_S start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT ∣ end_ARG start_ARG ∣ italic_T ∣ end_ARG | corr ( italic_S start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT ) - conf ( italic_S start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT ) |
+(4)
+𝐸𝐶𝐸
+𝐸𝐶𝐸
+\mathit{ECE}
+italic_ECE
+is intuitive, but can mislead; as seen below, a naïve predictor whose confidence is always the base rate would yield a deceptively low
+𝐸𝐶𝐸
+𝐸𝐶𝐸
+\mathit{ECE}
+italic_ECE
+value.
+An alternative measure, the Brier score,
+ℬ
+ℬ
+{\mathcal{B}}
+caligraphic_B
+[
+brierVerificationForecastsExpressed1950a
+]
+avoids this issue; it
+is calculated as follows:
+\useshortskip
+ℬ
+=
+1
+∣
+T
+∣
+⁢
+∑
+i
+=
+1
+∣
+T
+∣
+(
+p
+^
+i
+−
+𝟙
+⁢
+(
+✓
+⁢
+M
+⁢
+(
+x
+i
+)
+)
+)
+2
+ℬ
+1
+delimited-∣∣
+𝑇
+superscript
+subscript
+𝑖
+1
+delimited-∣∣
+𝑇
+superscript
+subscript
+^
+𝑝
+𝑖
+1
+✓
+𝑀
+subscript
+𝑥
+𝑖
+2
+\mathcal{B}=\frac{1}{\mid T\mid}\displaystyle\sum_{i=1}^{\mid T\mid}(\hat{p}_{%
+i}-\mathds{1}(\checkmark M(x_{i})))^{2}
+caligraphic_B = divide start_ARG 1 end_ARG start_ARG ∣ italic_T ∣ end_ARG ∑ start_POSTSUBSCRIPT italic_i = 1 end_POSTSUBSCRIPT start_POSTSUPERSCRIPT ∣ italic_T ∣ end_POSTSUPERSCRIPT ( over^ start_ARG italic_p end_ARG start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT - blackboard_1 ( ✓ italic_M ( italic_x start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT ) ) ) start_POSTSUPERSCRIPT 2 end_POSTSUPERSCRIPT
+(5)
+One can achieve an optimal Brier of
+ℬ
+≈
+0
+ℬ
+0
+\mathcal{B}\approx 0
+caligraphic_B ≈ 0
+when confidently estimating
+p
+^
+i
+≈
+1
+subscript
+^
+𝑝
+𝑖
+1
+\hat{p}_{i}\approx 1
+over^ start_ARG italic_p end_ARG start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT ≈ 1
+when the code is correct, and estimating
+p
+^
+i
+≈
+0
+subscript
+^
+𝑝
+𝑖
+0
+\hat{p}_{i}\approx 0
+over^ start_ARG italic_p end_ARG start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT ≈ 0
+when the code is incorrect for each sample.
+For comparison, consider using the
+Unskilled Reference Brier Score,
+ℬ
+r
+⁢
+e
+⁢
+f
+subscript
+ℬ
+𝑟
+𝑒
+𝑓
+\mathcal{B}_{ref}
+caligraphic_B start_POSTSUBSCRIPT italic_r italic_e italic_f end_POSTSUBSCRIPT
+, attainable by a naïve, “unskilled” model, which simply assigns the base-rate
+p
+r
+subscript
+𝑝
+𝑟
+p_{r}
+italic_p start_POSTSUBSCRIPT italic_r end_POSTSUBSCRIPT
+as its confidence for every prediction. Here, all prediction confidence values are in one bin, the value
+p
+r
+subscript
+𝑝
+𝑟
+p_{r}
+italic_p start_POSTSUBSCRIPT italic_r end_POSTSUBSCRIPT
+; and the empirical correctness in this single bin
+is
+the base rate
+p
+r
+subscript
+𝑝
+𝑟
+p_{r}
+italic_p start_POSTSUBSCRIPT italic_r end_POSTSUBSCRIPT
+; so
+𝐸𝐶𝐸
+≈
+0
+𝐸𝐶𝐸
+0
+\mathit{ECE}\approx 0
+italic_ECE ≈ 0
+which is misleading (thus exemplifying one of the weaknesses of
+𝐸𝐶𝐸
+𝐸𝐶𝐸
+\mathit{ECE}
+italic_ECE
+). The closed-form Brier Score for this unskilled predictor is:
+\useshortskip
+ℬ
+r
+⁢
+e
+⁢
+f
+=
+p
+r
+⁢
+(
+1
+−
+p
+r
+)
+subscript
+ℬ
+𝑟
+𝑒
+𝑓
+subscript
+𝑝
+𝑟
+1
+subscript
+𝑝
+𝑟
+\mathcal{B}_{ref}=p_{r}(1-p_{r})
+caligraphic_B start_POSTSUBSCRIPT italic_r italic_e italic_f end_POSTSUBSCRIPT = italic_p start_POSTSUBSCRIPT italic_r end_POSTSUBSCRIPT ( 1 - italic_p start_POSTSUBSCRIPT italic_r end_POSTSUBSCRIPT )
+(6)
+In a 50-50 coinflip scenario (assuming
+heads
+is
+correct
+), a naïve predictor that randomly guesses
+correct
+with 50% confidence receives
+ℬ
+r
+⁢
+e
+⁢
+f
+=
+0.5
+∗
+(
+1
+−
+0.5
+)
+≈
+0.25
+subscript
+ℬ
+𝑟
+𝑒
+𝑓
+0.5
+1
+0.5
+0.25
+\mathcal{B}_{ref}=0.5*(1-0.5)\approx 0.25
+caligraphic_B start_POSTSUBSCRIPT italic_r italic_e italic_f end_POSTSUBSCRIPT = 0.5 ∗ ( 1 - 0.5 ) ≈ 0.25
+. Higher base rates yield lower
+ℬ
+r
+⁢
+e
+⁢
+f
+subscript
+ℬ
+𝑟
+𝑒
+𝑓
+\mathcal{B}_{ref}
+caligraphic_B start_POSTSUBSCRIPT italic_r italic_e italic_f end_POSTSUBSCRIPT
+;
+e.g.
+, for the
+MBPP
+dataset
+[
+austinProgramSynthesisLarge2021b
+]
+,
+Gpt-3.5
+generates test-passing solutions for about 72% of the programming problems; here always guessing
+correct
+with 72% confidence results in
+ℬ
+r
+⁢
+e
+⁢
+f
+=
+0.72
+∗
+0.28
+≈
+0.20
+subscript
+ℬ
+𝑟
+𝑒
+𝑓
+0.72
+0.28
+0.20
+\mathcal{B}_{ref}=0.72*0.28\approx 0.20
+caligraphic_B start_POSTSUBSCRIPT italic_r italic_e italic_f end_POSTSUBSCRIPT = 0.72 ∗ 0.28 ≈ 0.20
+. With well-calibrated confidence scores, a “skilled” model can achieve
+Brier Scores lower than this unskilled
+ℬ
+r
+⁢
+e
+⁢
+f
+subscript
+ℬ
+𝑟
+𝑒
+𝑓
+\mathcal{B}_{ref}
+caligraphic_B start_POSTSUBSCRIPT italic_r italic_e italic_f end_POSTSUBSCRIPT
+value; if a model does worse, it is indicative of poor calibration.
+Thus, one commonly reports a
+Skill Score
+(
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+), calculated thus:
+\useshortskip
+S
+⁢
+S
+=
+ℬ
+r
+⁢
+e
+⁢
+f
+−
+ℬ
+a
+⁢
+c
+⁢
+t
+⁢
+u
+⁢
+a
+⁢
+l
+ℬ
+r
+⁢
+e
+⁢
+f
+𝑆
+𝑆
+subscript
+ℬ
+𝑟
+𝑒
+𝑓
+subscript
+ℬ
+𝑎
+𝑐
+𝑡
+𝑢
+𝑎
+𝑙
+subscript
+ℬ
+𝑟
+𝑒
+𝑓
+SS=\frac{\mathcal{B}_{ref}-\mathcal{B}_{actual}}{\mathcal{B}_{ref}}
+italic_S italic_S = divide start_ARG caligraphic_B start_POSTSUBSCRIPT italic_r italic_e italic_f end_POSTSUBSCRIPT - caligraphic_B start_POSTSUBSCRIPT italic_a italic_c italic_t italic_u italic_a italic_l end_POSTSUBSCRIPT end_ARG start_ARG caligraphic_B start_POSTSUBSCRIPT italic_r italic_e italic_f end_POSTSUBSCRIPT end_ARG
+(7)
+Positive
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+(perfect score = 1.0) indicates improvement over baseline
+ℬ
+r
+⁢
+e
+⁢
+f
+subscript
+ℬ
+𝑟
+𝑒
+𝑓
+\mathcal{B}_{ref}
+caligraphic_B start_POSTSUBSCRIPT italic_r italic_e italic_f end_POSTSUBSCRIPT
+;
+negative indicates worse calibration than the baseline. Small positive values of
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+can sometimes indicate good skill. For example, the
+Deutsche Wetterdienst
+(German weather forecasting service) considers 0.05 Skill Score to be a minimum threshold for a good forecast
+quality
+4
+4
+4
+www.dwd.de/EN/ourservices/seasonals_forecasts/forecast_reliability.htm
+. As another data point, the American data journalism site
+538
+reports a skill of around 0.13 in forecasting World Cup games
+5
+5
+5
+projects.fivethirtyeight.com/checking-our-work/
+, which is in the range of what we observe
+in our experiments for best case code generation by LLMs; but these LLM performance numbers are just a starting point, and can be expected to improve in the future.
+𝐸𝐶𝐸
+𝐸𝐶𝐸
+\mathit{ECE}
+italic_ECE
+(
+Equation 4
+) and Brier Score (
+Equation 5
+) serve slightly different purposes: the Brier Score is calculated for each sample, and measures
+both
+the ability to correctly discriminate output categories,
+and
+calibration of the output probability. The
+𝐸𝐶𝐸
+𝐸𝐶𝐸
+\mathit{ECE}
+italic_ECE
+measures just calibration; but it can be misleadingly low, as noted above for the unskilled predictor. Additionally binning must be done carefully, since it can affect
+𝐸𝐶𝐸
+𝐸𝐶𝐸
+\mathit{ECE}
+italic_ECE
+scores
+[
+nixonMeasuringCalibrationDeep2019a
+]
+.
+III-D
+Rescaling Approaches
+Machine learning models are not always calibrated.
+\textcite
+guoCalibrationModernNeural2017b discuss ways of rescaling probability estimates to better match observations. A common approach is Platt scaling
+[
+plattProbabilisticOutputsSupport1999b
+]
+, where a logistic regression is fit to the logit values of the prediction
+i.e.
+, the
+ln
+\ln
+roman_ln
+of the measured confidence probability. This optimizes two parameters, a linear scaling multiplier and a bias
+i.e.
+, intercept, that shifts the value.
+To reduce the likelihood that the scaling overfits
+& skews our results, we rescale over five folds;
+i.e.
+, we fit a logistic regression on a random
+4
+/
+5
+4
+5
+\nicefrac{{4}}{{5}}
+/ start_ARG 4 end_ARG start_ARG 5 end_ARG
+of data and apply it to
+1
+/
+5
+1
+5
+\nicefrac{{1}}{{5}}
+/ start_ARG 1 end_ARG start_ARG 5 end_ARG
+of data, before sliding over and doing each combination of
+4
+/
+5
+4
+5
+\nicefrac{{4}}{{5}}
+/ start_ARG 4 end_ARG start_ARG 5 end_ARG
+.
+Besides Platt scaling,
+temperature rescaling has also been used
+[
+desaiCalibrationPretrainedTransformers2020b
+,
+kadavathLanguageModelsMostly2022c
+,
+guoCalibrationModernNeural2017b
+]
+: this approach applies a scalar multiplier on the logits representing each class
+e.g.
+, a multiclass image classifier. In our binary confidence case, this has similar expressivity to Platt scaling without an intercept. Other approaches include histogram binning
+[
+zadroznyObtainingCalibratedProbability2001
+]
+, isotonic regression
+[
+zadroznyTransformingClassifierScores2002
+]
+,
+inter alia
+[
+guoCalibrationModernNeural2017b
+,
+kullTemperatureScalingObtaining2019
+]
+. These approaches are more parameterized; given the data limitations in our experimental setup
+e.g.
+, a few hundred examples in function synthesis, they pose higher risk of overfitting.
+As we discuss in
+Section IV
+, Platt scaling does improve calibration, with some caveats.
+III-E
+Tasks & Dataset
+Task
+Dataset
+Dataset Size
+Correctness
+Measure
+Confidence Measure
+Calibration
+Metric
+Function synthesis
+HumanEval
+164
+Test-passing
+Correctness
+Average Token
+Probability, Generated
+Sequence Probability,
+Verbalized Self-Evaluation,
+Question Answering Logit
+Brier Score,
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+MBBP Func
+880
+Line-level Completion
+DyPyBench
+1,988
+Test-passing
+Correctness, EM
+Program Repair
+Defects4J 1-line
+120
+ManySStubs4j
+3,000
+Exact-Match (EM)
+TABLE I
+:
+List of tasks with associated datasets and measures.
+III-E
+1
+Function Synthesis
+This task aims to generate Python functions from “Docstrings”.
+6
+6
+6
+Docstrings are code comments that explain the code’s purpose and usage. Further discussed in §
+III-E
+2
+.
+Correctness is determined by functional testing.
+We use
+HumanEval
+[
+chenEvaluatingLargeLanguage2021b
+]
+and
+MBPP
+[
+austinProgramSynthesisLarge2021b
+]
+datasets (see
+Figure
+A2
+for sample prompts and model output).
+One caveat: the samples in these datasets largely
+constitute artificial problems, specifically assembled to test the code-synthesis capacity of LLMs;
+measurements (both accuracy and calibration) over these datasets
+may not generalize to real-world software development. Even so, these datasets provide a valuable datapoint for assessing model calibration.
+We restructure all
+MBPP
+problems into a function synthesis task by placing the prompt inside the tested method as a Docstring,
+making it comparable to
+HumanEval
+.
+Additionally we exclude approximately 75 problems where the reference solution fails to pass the provided test cases
+7
+7
+7
+Due to either buggy reference code/tests, or possibly missing environment/networking/compute-time requirements.
+.
+III-E
+2
+Line-level Code Completion
+Code completion is
+currently the most important and widely-deployed generative
+task, with tools like GitHub Copilot
+[
+chenEvaluatingLargeLanguage2021b
+]
+.
+Completion performance has been studied
+at both the token and line levels
+[
+izadiCodeFillMultitokenCode2022a
+,
+kimCodePredictionFeeding2021b
+,
+luCodeXGLUEMachineLearning2021b
+,
+zieglerProductivityAssessmentNeural2022b
+]
+. However,
+calibration
+for this vital, widely-deployed task
+has so far not been evaluated in detail
+The current decoder-only GPT models
+[
+brownLanguageModelsAre2020b
+,
+chenEvaluatingLargeLanguage2021b
+]
+are
+already trained
+to generate the next token at low average cross-entropy
+given all the prior tokens, following the condition
+p
+⁢
+(
+t
+⁢
+o
+⁢
+k
+⁢
+e
+⁢
+n
+|
+p
+⁢
+r
+⁢
+i
+⁢
+o
+⁢
+r
+⁢
+t
+⁢
+o
+⁢
+k
+⁢
+e
+⁢
+n
+⁢
+s
+)
+𝑝
+conditional
+𝑡
+𝑜
+𝑘
+𝑒
+𝑛
+𝑝
+𝑟
+𝑖
+𝑜
+𝑟
+𝑡
+𝑜
+𝑘
+𝑒
+𝑛
+𝑠
+p(token\ |\ prior\ tokens)
+italic_p ( italic_t italic_o italic_k italic_e italic_n | italic_p italic_r italic_i italic_o italic_r italic_t italic_o italic_k italic_e italic_n italic_s )
+.
+Unsurprisingly, we found such autoregressively-trained models are
+per se
+well-calibrated at the token level. In this work, we will primarily focus on line-level completion. While several datasets exist for this problem
+[
+allamanisMiningSourceCode2013a
+,
+raychevProbabilisticModelCode2016b
+]
+, we use
+DyPyBench
+[
+islembouzeniaDyPyBenchBenchmarkExecutable2024
+]
+, a new dataset consisting of 50 popular open-source Python projects, including test suites for these projects. The test suites allow a test-correctness measure, in addition to the highly restrictive exact-match (
+viz.
+, the original line).
+DyPyBench
+consists of complex real-world projects, each with hundreds of thousands of lines of Python code, and totaling over 2.2 million lines of Python code.
+We ran all test suites for each project with coverage reporting enabled, extracted all functions from the projects, following
+[
+husainCodeSearchNetChallengeEvaluating2020a
+]
+, and selected 1,988 functions with at least 3 lines in the body,
+100
+%
+percent
+100
+100\%
+100 %
+test coverage, and at least one line in the “Docstring”.
+III-E
+3
+Program Repair
+Program repair is a well-studied problem in software engineering
+[
+gouesAutomatedProgramRepair2019a
+]
+. Several studies report that LLMs are effective at this task
+[
+fanAutomatedRepairPrograms2023b
+,
+jiangImpactCodeLanguage2023b
+,
+ahmedBetterPatchingUsing2023b
+]
+. However, LLM
+calibration
+for program repair is not well-understood.
+This paper focuses on small, pre-localized single-line bugs. We leverage the widely-used Defects4J dataset
+[
+justDefects4JDatabaseExisting2014a
+]
+, which includes real-world examples of buggy programs, with fixes and test-sets. We extract 120 single-line bugs from
+Defects4J
+dataset. However, with only 120 samples, we may not obtain a comprehensive view of calibration. Therefore, we included another dataset, ManySStubs4J
+[
+karampatsisHowOftenSingleStatement2020a
+]
+(abbr.
+SStubs
+), which consists of single-line repairs. Following the setup of the
+SStubs
+dataset, the bug might be localized to a sub-expression of the line
+8
+8
+8
+Note, due to data processing errors, 3 Defects4J examples have slightly mis-localized bugs. We leave these as-is, reasoning that model confidence should be robustly well-calibrated even with slight localization noise, ideally giving a lower confidence of a fix if the location is noisy.
+. We sample (uniformly at random) 3,000 examples from this dataset.
+SStubs
+does not provide test-sets; so the only evaluation metric available is the exact-matching of the generated text to the ground truth bug-free text.
+III-F
+The Models
+We explore confidence calibration for three code generation models. These include OpenAI
+Gpt-3.5
+9
+9
+9
+The gpt-3.5-turbo-instruct model,
+https://platform.openai.com/docs/models/gpt-3-5-turbo
+, OpenAI
+Codex
+[
+chenEvaluatingLargeLanguage2021b
+]
+, and
+CodeGen2-16B
+[
+nijkampCodeGen2LessonsTraining2023b
+]
+. We sample from the models with temperature of 0, consistent with the reality that busy developers typically look at just the first suggestion in the completion
+[
+barkeGroundedCopilotHow2023a
+]
+. For function synthesis task, temperature zero is most accurate and is fairly standard practice when doing pass@1 with only one solution to generate and present
+[
+chenEvaluatingLargeLanguage2021b
+,
+liuYourCodeGenerated2023a
+]
+.
+IV
+Results
+We begin with a brief overview of the findings on the correctness- & confidence- measures of LLMs on the various tasks, and then provide detailed results on the calibration-related research questions.
+{tblr}
+colspec = lcccc,
+vline5 = 3-7gray!75,dotted,
+columns = font=,
+&
+\SetCell
+[c=3]c All Pass@1
+\SetCell
+[c=3]c Exact-Match
+\cmidrule
+[lr,gray!75]2-4  CodeGen2  Codex
+\cmidrule
+[lr,gray!75]5-7 GPT-3.5  CodeGen2  Codex  GPT-3.5
+\midrule
+SStubs  -  -  -  0.73%
+27.77%
+20.27%
+DyPyBench  28.84%  32.96%
+33.22%
+19.68%  23.60%
+23.96%
+Defects4J  0.00%
+23.33%
+19.17%  0.00%
+19.17%
+15.00%
+HumanEval  23.17%  47.24%
+64.60%
+-  -  -
+MBPP  29.08%  61.79%
+72.04%
+-  -  -
+\bottomrule
+TABLE II
+:
+Performance comparison of models on tasks. Metrics are All Pass at Rank 1 (
+All Pass@1
+), meaning all project test cases passed with the line completion on first and only sample (at
+t
+=
+0
+𝑡
+0
+t=0
+italic_t = 0
+), and Exact-Match, meaning the line completion was an exact string match with the original project line. Exact-Match is not commonly used for function synthesis tasks, since the generated output is longer and less likely to match. SStubs dataset does not have test cases. Boldface signifies high performing model for task and metric.
+IV-A
+RQ 1: How well are language models’ confidence in their output aligned with the
+empirical correctness of their output, specifically for common generative tasks,
+viz.
+function synthesis, line-level code completion, and program repair?
+IV-A
+1
+Overall Correctness
+Correctness performance rate of the various models on the various tasks and datasets, are presented in
+Table II
+. Specifically, we report the fraction of samples passing all test cases for a given model and dataset, and the percentage of exact-matches. We found that
+Gpt-3.5
+worked well for both function synthesis (
+HumanEval
+and
+MBPP
+),
+and line-level code completion,
+whilst
+Codex
+generally performed well on program repair.
+The
+DyPyBench
+benchmark reflects the most popular use of LLMs,
+viz.
+, for code completion.
+IV-A
+2
+Correctness: Test-passing
+vs.
+Exact-match
+As per §
+III-A
+, we evaluate correctness both on test-passing and exact-match.
+Our experiment included two datasets (
+Defects4J
+and
+DyPyBench
+), where both methods of measuring correctness were available. Since
+Defects4J
+consists of only 120 samples,
+we present the results for
+DyPyBench
+; in this case, as per
+Table II
+,
+Gpt-3.5
+performed best, with approximately 33% of generated code passing all available tests, and approximately 24% matching exactly.
+In this setting (
+DyPyBench
+/
+Gpt-3.5
+), we cross-tabulate performance across the two correctness-measuring methods. We note that approximately
+half
+the test-passing generations
+did
+not
+match the original code exactly; furthermore 6.89% of the cases where the code matched exactly, did not pass
+all the test cases. Upon careful study we found that these tests were “flaky”, depending on network conditions, execution order, and other variable execution environment conditions. This aligns with
+[
+islembouzeniaDyPyBenchBenchmarkExecutable2024
+]
+, the author of this dataset, who observed an overall
+7
+%
+percent
+7
+7\%
+7 %
+failure rate, but noted that 31 out of 50 projects had zero failed tests.
+This illustrates the relative merits/demerits of each correctness-evaluating approach, in practical SE settings.
+Since the correctness performance is different with these two notions of correctness, the
+calibration
+is also different, as we see below.
+IV-A
+3
+Confidence Measures
+As might be expected, the two intrinsic measures
+p
+a
+⁢
+v
+⁢
+g
+subscript
+𝑝
+𝑎
+𝑣
+𝑔
+p_{avg}
+italic_p start_POSTSUBSCRIPT italic_a italic_v italic_g end_POSTSUBSCRIPT
+&
+p
+t
+⁢
+o
+⁢
+t
+subscript
+𝑝
+𝑡
+𝑜
+𝑡
+p_{tot}
+italic_p start_POSTSUBSCRIPT italic_t italic_o italic_t end_POSTSUBSCRIPT
+are usually somewhat, and sometimes strongly, positively correlated with each other within the same model, dataset, and task.
+{tblr}
+colspec = llccccccccccccccc,
+vline3,6,9,12,15 = 4-24gray!75, dotted,
+columns = font=,
+
+&
+\SetCell
+[c=3]c
+Line Completion
+\SetCell
+[c=6]c
+Function Synthesis
+\SetCell
+[c=6]c
+Program Repair
+\cmidrule
+[gray!75]3-6
+\cmidrule
+[lr,gray!75]6-11
+\cmidrule
+[l,gray!75]12-17
+\SetCell
+[c=3]c DyPyBench
+\SetCell
+[c=3]c HumanEval
+\SetCell
+[c=3]c MBPP
+\SetCell
+[c=3]c Defects4J
+\SetCell
+[c=3]c SStubs
+\cmidrule
+[lr]3-5
+\cmidrule
+[lr]6-8
+\cmidrule
+[lr]9-11
+\cmidrule
+[lr]12-14
+\cmidrule
+[l]15-17
+Model  Metric
+ℬ
+ℬ
+{\mathcal{B}}
+caligraphic_B
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+ℬ
+ℬ
+{\mathcal{B}}
+caligraphic_B
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+ℬ
+ℬ
+{\mathcal{B}}
+caligraphic_B
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+ℬ
+ℬ
+{\mathcal{B}}
+caligraphic_B
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+ℬ
+ℬ
+{\mathcal{B}}
+caligraphic_B
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+\cmidrule
+[l]1-17
+GPT-3.5
+ Total Prob
+0.23
+-0.03
+0.15
+ 0.62  -1.70  0.63
+ 0.71  -2.50  0.71
+ 0.25  -0.63  0.28
+ 0.24  -0.50  0.25
+Avg Prob
+ 0.41  -0.87  0.46
+ 0.27  -0.18  0.23
+0.22
+-0.09
+0.14
+0.68  -3.39  0.73
+ 0.64  -2.94  0.69
+Ask T/F
+ 0.25  -0.13  0.16
+ 0.34  -0.47  0.37
+ 0.33  -0.64  0.38
+0.15
++0.05
+0.04
+0.16
+-0.01
+0.04
+Ask T/F N
+ 0.25  -0.15
+0.15
+0.23
++0.01
+0.19
+ 0.22  -0.11  0.16
+ 0.20  -0.30  0.24
+ 0.22  -0.34  0.23
+Verbalize
+ 0.43  -0.92  0.42
+ 0.28  -0.24  0.22
+ 0.24  -0.17  0.17
+ 0.58  -2.72  0.60
+ 0.50  -2.09  0.53
+Length
+ 0.44  -0.99  0.46
+ 0.23  -0.03
+0.15
+0.22  -0.10  0.16
+ 0.53  -2.43  0.60
+ 0.53  -2.26  0.60
+Unskilled
+ 0.22  0.00  0.00
+ 0.23  0.00  0.00
+ 0.20  0.00  0.00
+ 0.15  0.00  0.00
+ 0.16  0.00  0.00
+[dashed]
+Codex
+ Total Prob
+0.23
+-0.02
+0.16
+ 0.44  -0.77  0.45
+ 0.60  -1.52  0.60
+ 0.25  -0.39  0.24
+ 0.20  0.00  0.09
+Avg Prob
+ 0.46  -1.07  0.50
+ 0.34  -0.38  0.35
+0.24
+-0.03
+0.19
+0.66  -2.68  0.69
+ 0.58  -1.90  0.62
+Ask T/F
+ 0.24  -0.09  0.12
+ 0.37  -0.47  0.36
+ 0.49  -1.06  0.50
+0.18
++0.01
+0.07
+0.19
++0.03
+0.02
+Ask T/F N
+ 0.23  -0.06
+0.07
+0.32
+-0.29
+0.30
+0.42  -0.79  0.43
+ 0.25  -0.41  0.27
+ 0.23  -0.14  0.18
+Verbalize
+ 0.38  -0.74  0.35
+ 0.42  -0.67  0.40
+ 0.38  -0.61  0.33
+ 0.47  -1.65  0.50
+ 0.43  -1.14  0.42
+Length
+ 0.43  -0.95  0.45
+ 0.44  -0.77  0.44
+ 0.56  -1.35  0.56
+ 0.50  -1.79  0.55
+ 0.56  -1.78  0.59
+Unskilled
+ 0.22  0.00  0.00
+ 0.25  0.00  0.00
+ 0.24  0.00  0.00
+ 0.18  0.00  0.00
+ 0.20  0.00  0.00
+[dashed]
+CodeGen2
+ Total Prob
+0.21
+-0.02
+0.15
+0.23
+-0.30
+0.23
+0.29  -0.41  0.29
+ -  -  -
+ -  -  -
+Avg Prob
+ 0.44  -1.16  0.50
+ 0.60  -2.39  0.66
+ 0.58  -1.80  0.61
+ -  -  -
+ -  -  -
+Ask T/F
+ 0.23  -0.10
+0.14
+0.25  -0.38  0.24
+0.25
+-0.19
+0.21
+-  -  -
+ -  -  -
+Ask T/F N
+ 0.33  -0.59  0.35
+ 0.39  -1.19  0.45
+ 0.39  -0.88  0.43
+ -  -  -
+ -  -  -
+Verbalize
+ 0.42  -1.04  0.41
+ 0.43  -1.39  0.42
+ 0.40  -0.94  0.38
+ -  -  -
+ -  -  -
+Length
+ 0.47  -1.28  0.51
+ 0.38  -1.14  0.42
+ 0.33  -0.58  0.28
+ -  -  -
+ -  -  -
+Unskilled
+ 0.21  0.00  0.00
+ 0.18  0.00  0.00
+ 0.21  0.00  0.00
+ -  -  -
+ -  -  -
+\bottomrule
+TABLE III
+:
+Calibration measured as raw, non-scaled Brier Score (
+ℬ
+ℬ
+{\mathcal{B}}
+caligraphic_B
+,
+↓
+↓
+\downarrow
+↓
+lower better), Skill Score (
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+,
+↑
+↑
+\uparrow
+↑
+higher better), and Expected Calibration Error (
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+,
+↓
+↓
+\downarrow
+↓
+lower better), with respect to “all passed” notion of correctness, except SStubs which is “exact-match”. CodeGen2 repair values are omitted as it does not perform the task with greater than 1% accuracy. The “Unskilled” row corresponds to a naive approach where the confidence is always returned as the base correctness rate, with Skill Score (
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+) always zero by definition.
+IV-A
+4
+Calibration without Rescaling
+Section
+IV-A
+3
+presents the results for Line Completion, Function Synthesis, and Program Repair for each model and the raw confidence measure, without any rescaling method. We find raw confidence measures are poorly calibrated, with inconsistent exceptions.
+In fact, the raw baseline rate (using the average fraction correct without considering the individual generation) is hard to beat; the best skill-score is around
+0.05
+0.05
+0.05
+0.05
+.
+For line completion, the
+p
+t
+⁢
+o
+⁢
+t
+subscript
+𝑝
+𝑡
+𝑜
+𝑡
+p_{tot}
+italic_p start_POSTSUBSCRIPT italic_t italic_o italic_t end_POSTSUBSCRIPT
+confidence measure is slightly worse than the baseline rate; calibration error is modest (
+E
+⁢
+C
+⁢
+E
+∼
+0.15
+similar-to
+𝐸
+𝐶
+𝐸
+0.15
+ECE\sim 0.15
+italic_E italic_C italic_E ∼ 0.15
+).
+The total probability improves on
+the average probability, which is overconfident: the average token probability exceeds the
+∼
+30
+%
+similar-to
+absent
+percent
+30
+\sim 30\%
+∼ 30 %
+overall success rate.
+For function synthesis with raw measures,
+p
+t
+⁢
+o
+⁢
+t
+subscript
+𝑝
+𝑡
+𝑜
+𝑡
+p_{tot}
+italic_p start_POSTSUBSCRIPT italic_t italic_o italic_t end_POSTSUBSCRIPT
+exhibits very poor calibration for
+Gpt-3.5
+and
+Codex
+, but not for
+CodeGen2
+on
+HumanEval
+,
+while the best intrinsic measure for MBPP is
+p
+a
+⁢
+v
+⁢
+g
+subscript
+𝑝
+𝑎
+𝑣
+𝑔
+p_{avg}
+italic_p start_POSTSUBSCRIPT italic_a italic_v italic_g end_POSTSUBSCRIPT
+for
+Gpt-3.5
+and
+Codex
+. The intrinsic measures are inconsistent; with average probability showing indicators of better calibration for
+Gpt-3.5
+and
+Codex
+, but not for
+CodeGen2
+.
+For program repair, intrinsic measures are consistently below the base rate for both models and are as such, poorly calibrated. There are several caveats here. First,
+Defects4J
+is a small dataset, so findings may not generalize.
+Second,
+CodeGen2
+performs poorly on
+Defects4J
+. Since
+CodeGen2
+is a smaller model without instruction tuning and relatively more limited reasoning capabilities
+it gets “distracted” by the buggy version shown in the prompt: it often just repeats the buggy lines. With very few correct outputs, the estimation of the confidence measure becomes unreliable. Therefore, we have removed the
+CodeGen2
+results from
+Section
+IV-A
+3
+. A final caveat is that
+SStubs
+uses only exact-match as a correctness measure, which is quite different from a test passing measure.
+In general, non-scaled confidence measures are only well calibrated for exact match on code completion; for test-passing correctness, they are poorly calibrated.
+{tblr}
+colspec = llccccccccccccccc,
+vline3,6,9,12,15 = 4-24gray!75, dotted,
+columns = font=,
+\SetCell
+[c=3]c
+Line Completion
+\SetCell
+[c=6]c
+Function Synthesis
+\SetCell
+[c=6]c
+Program Repair
+\cmidrule
+[gray!75]3-6
+\cmidrule
+[lr,gray!75]6-11
+\cmidrule
+[l,gray!75]12-17
+\SetCell
+[c=3]c DyPyBench
+\SetCell
+[c=3]c HumanEval
+\SetCell
+[c=3]c MBPP
+\SetCell
+[c=3]c Defects4J
+\SetCell
+[c=3]c SStubs
+\cmidrule
+[lr]3-5
+\cmidrule
+[lr]6-8
+\cmidrule
+[lr]9-11
+\cmidrule
+[lr]12-14
+\cmidrule
+[l]15-17
+Model  Metric
+ℬ
+ℬ
+{\mathcal{B}}
+caligraphic_B
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+ℬ
+ℬ
+{\mathcal{B}}
+caligraphic_B
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+ℬ
+ℬ
+{\mathcal{B}}
+caligraphic_B
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+ℬ
+ℬ
+{\mathcal{B}}
+caligraphic_B
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+ℬ
+ℬ
+{\mathcal{B}}
+caligraphic_B
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+\cmidrule
+[l]1-17
+GPT-3.5
+ Total Prob
+ 0.21  +0.07  0.03
+0.20
++0.15
+0.09
+ 0.19  +0.07  0.05
+ 0.16  -0.05
+0.16
++0.03
+Avg Prob
+0.20
++0.08
+0.04
+ 0.23  -0.02 
+ 0.20  0.00 
+ 0.16  -0.03 
+ 0.16  +0.02
+Ask T/F
+ 0.22  0.00 
+ 0.20  +0.12  0.11
+ 0.18  +0.09  0.06
+0.15
++0.05
+0.16  0.00
+Ask T/F N
+ 0.22  0.00 
+ 0.20  +0.14  0.07
+0.18
++0.11
+0.04
+ 0.15  +0.04 
+ 0.16  +0.01
+Verbalize
+ 0.22  0.00 
+ 0.24  -0.05 
+ 0.20  +0.02 
+ 0.17  -0.09 
+ 0.16  0.00
+Length
+ 0.22  0.00 
+ 0.24  -0.03 
+ 0.20  +0.01 
+ 0.16  -0.06 
+ 0.16  0.00
+Unskilled
+ 0.22  0.00 
+ 0.23  0.00 
+ 0.20  0.00 
+ 0.16  0.00 
+ 0.16  0.00
+[dashed]
+Codex
+ Total Prob
+0.20
++0.09
+0.03
+ 0.22  +0.11  0.08
+ 0.22  +0.06  0.04
+ 0.18  -0.01
+0.19
++0.05
+0.02
+Avg Prob
+ 0.20  +0.09  0.04
+0.22
++0.14
+0.07
+0.21
++0.12
+0.06
+ 0.18  -0.02 
+ 0.19  +0.05  0.02
+Ask T/F
+ 0.22  0.00 
+ 0.24  +0.03 
+ 0.24  0.00 
+ 0.18  0.00 
+ 0.19  +0.04
+Ask T/F N
+ 0.22  0.00 
+ 0.24  +0.03 
+ 0.24  0.00 
+ 0.18  -0.01 
+ 0.20  +0.02
+Verbalize
+ 0.22  0.00 
+ 0.26  -0.02 
+ 0.24  -0.01
+0.18
+0.00
+0.20  0.00
+Length
+ 0.22  +0.01 
+ 0.26  -0.03 
+ 0.24  -0.01 
+ 0.20  -0.10 
+ 0.20  0.00
+Unskilled
+ 0.22  0.00 
+ 0.25  0.00 
+ 0.24  0.00 
+ 0.18  0.00 
+ 0.20  0.00
+[dashed]
+CodeGen2
+ Total Prob
+0.19
++0.08
+0.04
+ 0.18  0.00 
+ 0.21  0.00 
+ -  - 
+ -  -
+Avg Prob
+ 0.19  +0.07  0.02
+ 0.17  +0.03 
+ 0.21  0.00 
+ -  - 
+ -  -
+Ask T/F
+ 0.21  0.00 
+ 0.18  -0.01
+0.20
++0.01
+-  - 
+ -  -
+Ask T/F N
+ 0.21  0.00
+0.17
++0.04
+0.21  0.00 
+ -  - 
+ -  -
+Verbalize
+ 0.21  0.00 
+ 0.18  -0.01 
+ 0.21  0.00 
+ -  - 
+ -  -
+Length
+ 0.21  0.00 
+ 0.18  -0.02 
+ 0.21  0.00 
+ -  - 
+ -  -
+Unskilled
+ 0.21  0.00 
+ 0.18  0.00 
+ 0.21  0.00 
+ -  - 
+ -  -
+\bottomrule
+TABLE IV
+:
+Calibration measured as Platt-scaled Brier Score (
+ℬ
+ℬ
+{\mathcal{B}}
+caligraphic_B
+,
+↓
+↓
+\downarrow
+↓
+lower better), Skill Score (
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+,
+↑
+↑
+\uparrow
+↑
+higher better), and Expected Calibration Error (
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+,
+↓
+↓
+\downarrow
+↓
+lower better), with respect to “all passed” notion of correctness, except SStubs which is “exact-match”. In cases where the
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+is less than 0.05, the
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+is omitted. This is because an estimate without any signal will become Platt-scaled to approximately the base rate. This will
+appear
+as one well calibrated bin, resulting in an
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+near zero, but does not provide information. CodeGen2 repair values are omitted as it does not perform the task with greater than 1% accuracy.
+IV-B
+RQ 2: Can alignment between LLM confidence in generated code, and its correctness, be improved by confidence rescaling?
+Section
+IV-A
+4
+shows the results after applying Platt scaling to all measures (See §
+III-D
+).
+2(a)
+shows a reliability plot before rescaling, and its equivalent after rescaling in
+2(b)
+.
+Rescaling can improve calibration. Considering all values,
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+improves from an average of 0.32 to 0.03. For just those measures with a post-scaling
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+of at least 0.05,
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+improves from 0.38 to 0.05.
+(a)
+DyPyBench, nonscaled reliability plot
+(b)
+DyPyBench, Platt scaled reliability plot
+Figure 2
+:
+Reliability plots for
+DyPyBench
+line-level code completion tasks, with respect to All Pass @1 correctness measure and Average Token Probability confidence measure.
+Gpt-3.5
+was used for both experiments. Bottom histogram represents number of samples in each bin.
+ℬ
+r
+⁢
+e
+⁢
+f
+subscript
+ℬ
+𝑟
+𝑒
+𝑓
+\mathcal{B}_{ref}
+caligraphic_B start_POSTSUBSCRIPT italic_r italic_e italic_f end_POSTSUBSCRIPT
+refers to the unskilled predictor Brier,
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+to Expected Calibration Error,
+ℬ
+ℬ
+\mathcal{B}
+caligraphic_B
+to Brier Score, and
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+to Skill Score. Red & purple lines represent scaled & non-scaled quantile bins rather than evenly spaced bins with 1/5 of the data at each point. The left nonscaled plot shows over-confidence, as the confidence estimate is high, but the actual correctness is low. The scaled plot (right) improves calibration.
+Understanding “Bucket Collapse”
+Platt scaling can lead to deceptively low
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+.
+If a confidence measure is poorly aligned with correctness, Platt-scaling
+can rescale (squash) all the confidence values to the baseline rate;
+this places all samples
+in a single confidence value bucket where probability exactly matches the baseline rate of correctness, resulting in an
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+near 0. This indicates the problem of only considering
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+.
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+and Brier, on the other hand, would reveal
+the poor utility of the confidence measure.
+Thus when applying rescaling, it is important to consider Skill Score, rather than only Brier and
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+.
+Results
+After rescaling, only the intrinsic measures show skill improvement over the baseline rate for line completion.
+p
+a
+⁢
+v
+⁢
+g
+subscript
+𝑝
+𝑎
+𝑣
+𝑔
+p_{avg}
+italic_p start_POSTSUBSCRIPT italic_a italic_v italic_g end_POSTSUBSCRIPT
+and
+p
+t
+⁢
+o
+⁢
+t
+subscript
+𝑝
+𝑡
+𝑜
+𝑡
+p_{tot}
+italic_p start_POSTSUBSCRIPT italic_t italic_o italic_t end_POSTSUBSCRIPT
+are similarly calibrated. The calibration and skill appears roughly consistent between all three models in this case.
+Rescaling improves calibration results for function synthesis. The
+p
+t
+⁢
+o
+⁢
+t
+subscript
+𝑝
+𝑡
+𝑜
+𝑡
+p_{tot}
+italic_p start_POSTSUBSCRIPT italic_t italic_o italic_t end_POSTSUBSCRIPT
+measure reaches a
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+of 0.15 for
+HumanEval
+.
+Rescaling useful improvement for reflective prompts as well bringing
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+and
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+to similar values (discussed further in
+Section
+IV-C
+).
+For program repair, rescaling doesn’t improve skill score, for any measure.
+Is Rescaling a Panacea for Calibration?
+Rescaling typically improves calibration; it has been used in settings other than generative models of code, with other notions of correctness
+[
+guoCalibrationModernNeural2017b
+,
+mindererRevisitingCalibrationModern2021a
+,
+desaiCalibrationPretrainedTransformers2020b
+,
+parkCalibrationPretrainedLanguage2022a
+,
+chenCloseLookCalibration2023b
+,
+bommasaniHolisticEvaluationLanguage2023
+,
+liOperationalCalibrationDebugging2020a
+]
+. However, there are disadvantages. First, “bucket collapse” (see  §
+IV-B
+) can mislead with deceptively low
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+. Second, some
+correctness data is needed to fit rescaling parameters. When sweeping through various sized bootstrapped subsets of the data, we find that it can take over 64 data points for the rescaling to result in positive skill and lower
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+, with improvements continuing into 100s of data points (see
+Figure
+A8
+for bootstrapping analysis).
+When using the full data, the rescaling between tasks can vary dramatically.
+10
+10
+10
+As seen in
+Figure
+A6
+, which shows the curves learned between measure-task pairs.
+Ideally, we want confidence measures which are reliable and allow trustworthy auditing even when applying language models to new software engineering tasks. To study how close we are to this, we fit rescaling parameters to one task, and then apply it to the other tasks (see
+Figure
+A7
+).
+We find it is viable to use rescaling between tasks of the same domain with similar base rates, such as within the program synthesis tasks. For example, for
+Gpt-3.5
+when fitting
+p
+N
+⁢
+B
+subscript
+𝑝
+𝑁
+𝐵
+p_{NB}
+italic_p start_POSTSUBSCRIPT italic_N italic_B end_POSTSUBSCRIPT
+(results in next section) rescaling to each of two function synthesis tasks, and then applying it to the other, we observe an average drop of
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+from 0.14
+→
+→
+\rightarrow
+→
+0.12, and average drop of
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+from 0.07
+→
+→
+\rightarrow
+→
+0.05. However, applying the
+p
+t
+⁢
+o
+⁢
+t
+⁢
+a
+⁢
+l
+subscript
+𝑝
+𝑡
+𝑜
+𝑡
+𝑎
+𝑙
+p_{total}
+italic_p start_POSTSUBSCRIPT italic_t italic_o italic_t italic_a italic_l end_POSTSUBSCRIPT
+rescaling fit on
+DyPyBench
+to the function synthesis tasks, results in an average
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+change of 0.12
+→
+→
+\rightarrow
+→
+-1.28 and
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+change of 0.08
+→
+→
+\rightarrow
+→
+0.54, indicating a lack of robustness.
+These reasons suggest one must be careful when analyzing and reporting calibration results based on rescaling, and highlights the need for further work on confidence measures that might be more directly calibrated.
+Without rescaling, total probability
+p
+total
+subscript
+𝑝
+total
+p_{\text{total}}
+italic_p start_POSTSUBSCRIPT total end_POSTSUBSCRIPT
+shows hints of calibration. With rescaling, there is a possible 10-20% improvement over baseline rates and good calibration, but it is inconsistent as skill is poor for
+CodeGen2
+on Function Synthesis.
+Rescaling is an effective technique for improving calibration, but metric improvements (
+ℬ
+ℬ
+{\mathcal{B}}
+caligraphic_B
+and
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+) may be misleading by matching the base rate in a “bucket collapse” scenario or can lack generalization.
+IV-C
+RQ 3: Is confidence obtained by reflection better aligned with correctness?
+The two logit-based reflective measures
+p
+B
+subscript
+𝑝
+𝐵
+p_{B}
+italic_p start_POSTSUBSCRIPT italic_B end_POSTSUBSCRIPT
+&
+p
+N
+⁢
+B
+subscript
+𝑝
+𝑁
+𝐵
+p_{NB}
+italic_p start_POSTSUBSCRIPT italic_N italic_B end_POSTSUBSCRIPT
+are usually strongly positively correlated with one another, since they are calculated from similar numbers. The reflective verbalized self-ask confidence measure
+p
+v
+subscript
+𝑝
+𝑣
+p_{v}
+italic_p start_POSTSUBSCRIPT italic_v end_POSTSUBSCRIPT
+, and the two logit-based reflective confidence measures have no consistent relationships.
+For function synthesis with raw measures,
+p
+N
+⁢
+B
+subscript
+𝑝
+𝑁
+𝐵
+p_{NB}
+italic_p start_POSTSUBSCRIPT italic_N italic_B end_POSTSUBSCRIPT
+shows best calibration for
+Gpt-3.5
+, slightly better than Unskilled, for
+HumanEval
+. For program repair, we observe the strongest best-case performance with regards to the metrics. Both
+Gpt-3.5
+and
+Codex
+show positive
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+and low
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+for
+p
+B
+subscript
+𝑝
+𝐵
+p_{B}
+italic_p start_POSTSUBSCRIPT italic_B end_POSTSUBSCRIPT
+, but they are inconsistent after normalization (
+p
+N
+⁢
+B
+subscript
+𝑝
+𝑁
+𝐵
+p_{NB}
+italic_p start_POSTSUBSCRIPT italic_N italic_B end_POSTSUBSCRIPT
+). These metrics suggest with reflection, these models’ confidence is calibrated regarding repair correctness; however,
+further analysis (see
+Figure
+A3
+)
+does not indicate good calibration on this task, from any confidence measure. We find that in general, the intrinsic
+vs.
+reflective measure values have no consistent relationship, even for a given model, dataset and task.
+This lack of relationship may not necessarily be negative:
+e.g.
+, perhaps the model’s reflective, prompted confidence may be better calibrated, as suggested by prior work
+[
+baiConstitutionalAIHarmlessness2022b
+,
+austinProgramSynthesisLarge2021b
+]
+.
+Without rescaling or few-shot prompting, reflective results are inconsistent. In some cases, such as
+Gpt-3.5
+HumanEval
+and
+Defects4J
+, there are signs of calibration with slightly positive
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+values and
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+values less than 0.2. Normalizing the T/F values induces some difference; but there are inconsistencies
+vis-à-vis
+tasks and models.
+For nonscaled
+Gpt-3.5
+results,
+p
+N
+⁢
+B
+subscript
+𝑝
+𝑁
+𝐵
+p_{NB}
+italic_p start_POSTSUBSCRIPT italic_N italic_B end_POSTSUBSCRIPT
+improves calibration in line completion and function synthesis by an average of -0.34
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+and 0.19
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+, but not for program repair or for
+CodeGen2
+. Rescaling generally removes any sign of a normalization trend. For the alternative reflective approach of verbalization, the probability is not well calibrated for these models on the studied SE tasks.
+In some cases, the reflective approaches are best calibrated without rescaling (see
+Section
+IV-A
+3
+), and show signs of being more robust when reusing learned rescaling parameters on unseen tasks (see
+Figure
+A7
+).
+Reflective approaches may be best calibrated “out-of-the-box” and in some settings when rescaled. However, in the tested settings, they do not improve significantly over intrinsic measures.
+IV-D
+RQ 4: Can we use few-shot techniques to achieve better calibrated confidence for code completion, using an instruction-tuned model with in-context learning?
+We investigated the impact of few-shotting
+viz.
+providing a model completion and correctness as part of the
+p
+N
+⁢
+B
+subscript
+𝑝
+𝑁
+𝐵
+p_{NB}
+italic_p start_POSTSUBSCRIPT italic_N italic_B end_POSTSUBSCRIPT
+prompt, on calibration
+[
+kadavathLanguageModelsMostly2022c
+]
+. To effectively perform few-shotting, we need a model that is instruction tuned and sufficiently large, which is best matched by
+Gpt-3.5
+.
+We explore few-shotting for the widely-used line completion task.
+We perform the experiment with 5-shots consisting of prior completions from the same experiments presented in
+Section
+IV-A
+4
+, the reflective question, and the ground truth True/False. We try two variants of this experiment, one where the examples are randomly selected, and one where they are chosen based on the similarity to the unanswered prompt. In both cases, we exclude the ground truth result for the unanswered prompt. We focus on Line Completion for this experiment as it represents widespread use and has a large number of examples available.
+{tblr}
+colspec = lccc,
+columns = font=,
+Confidence Measure
+ℬ
+↓
+↓
+ℬ
+absent
+{\mathcal{B}}\downarrow
+caligraphic_B ↓
+S
+⁢
+S
+↑
+↑
+𝑆
+𝑆
+absent
+SS\uparrow
+italic_S italic_S ↑
+E
+⁢
+C
+⁢
+E
+↓
+↓
+𝐸
+𝐶
+𝐸
+absent
+ECE\downarrow
+italic_E italic_C italic_E ↓
+\cmidrule
+[l]1-11 0-Shot Reflect  0.25  -0.15  0.15
+0-Shot Reflect (Rescaled)
+ 0.22  0.00
+\cmidrule
+[l]1-11
+FS Random  0.29  -0.29  0.21
+FS Random (Rescaled)  0.22  0.0
+FS BM25  0.20  0.08  0.10
+FS BM25 (Rescaled)  0.19  0.15  0.02
+\bottomrule
+TABLE V
+:
+Few-shot reflective prompting using
+Gpt-3.5
+for line completion. ‘FS Random’ refers to selecting random few-shot examples. ‘FS BM25’ retrieves more relevant known completions. ECE values when rescaled values SS are close to zero are omitted (to avoid confusion with “bucket collapse”,
+Section
+IV-B
+)
+For line completion, the non-scaled results using random examples did not result in improved calibration over the baseline
+p
+N
+⁢
+B
+subscript
+𝑝
+𝑁
+𝐵
+p_{NB}
+italic_p start_POSTSUBSCRIPT italic_N italic_B end_POSTSUBSCRIPT
+, however using BM25
+[
+bm25fewshot
+]
+to select similar examples yielded a positive
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+of 0.08, which could be improved further by rescaling, up to 0.15. This result notably exceeds any other measure for
+DyPyBench
+, and significantly improves over the baseline
+p
+N
+⁢
+B
+subscript
+𝑝
+𝑁
+𝐵
+p_{NB}
+italic_p start_POSTSUBSCRIPT italic_N italic_B end_POSTSUBSCRIPT
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+of 0.
+While random few-shotting requires limited extra data, BM25 is more similar to rescaling, in that it is dependent on a larger set of ground truths. This could be actualized by logging user completions, and building up ground truths (on if the completion was correct) based off the test case runs or acceptance of completions.
+Providing a few examples selected via BM25 when asking
+Gpt-3.5
+to reflect on its own completion output significantly improves reflective calibration.
+Alternative and improved ways of prompting (
+e.g.
+, different verbalization formats
+[
+linTeachingModelsExpress2022b
+,
+tianJustAskCalibration2023
+]
+, fine-tuning
+[
+kadavathLanguageModelsMostly2022c
+,
+linTeachingModelsExpress2022b
+]
+, chain-of-thought
+[
+weiChainofThoughtPromptingElicits2022
+,
+tianJustAskCalibration2023
+]
+,
+etc.
+) may alter these findings and are areas for future work.
+V
+Discussion
+Language models are now widely-integrated into Software Engineering
+practice, via tools like Copilot
+[
+zieglerProductivityAssessmentNeural2022b
+]
+and Didact
+11
+11
+11
+blog.research.google/2023/05/large-sequence-models-for-software.html
+.
+We raise here the importance of calibration when integrating
+generative
+LLMs in coding practice. We evaluate the calibration of generative LLM use (especially code completion) with large samples of
+realistic
+data (
+DyPyBench
+,
+SStubs
+), using widely adopted models, as well as some more academic datasets (
+HumanEval
+,
+MBPP
+).
+Using a well-calibrated model–beyond simple defect prediction
+To clarify how a well-calibrated model enables
+more well-grounded decision-making concerning generated outputs,
+as compared to as compared to a traditional process choosing a binary decision point—we
+consider
+Gpt-3.5
+working on
+code completion, where
+correctness is determined by test-passing, and confidence is assigned by few-shotting, average token probability. The base correctness (test-passing) rate of completions is about 33%.
+With few-shotting, we get a very high skill score
+of 0.15 (
+Section
+IV-D
+,
+Table V
+).
+Figure 3
+:
+Few-shot reflective reliability plot, based on “FS BM25” row of
+Table V
+If we didn’t have a well-calibrated model,
+we might very cautiously accept only those
+completions that are generated at a very high-confidence threshold; here, the FP rate could be low
+(of course TP rate would be low as well). While this may lower the risk of bad code, it also regrettably reduces the available help from the LLM. However, a well-calibrated confidence measure allows a more rational, graduated set of decisions. Such a well-calibrated measure is visualized in
+Figure 3
+. In this setting, for much of the confidence scale, a user could look at the confidence level, and get a very good idea of how likely the code is to be correct, and make a well-reasoned, situation-specific set of decisions
+to manage risk, and allocate reviewing resources,
+based on the model’s confidence.
+This provides an illustration of the greater benefit provided a well-calibrated measure (high Skill level, low ECE) over one that is just providing good precision-recall trade-off (or, ROC curve);
+the latter does not
+allow such graduated deployment of quality-control effort.
+However, developers would need to learn to use calibrated probabilities in decision-making.
+Beyond simple “correctness”
+In addition to the above uses, which considered a single notion of “correctness”, one could consider a multi-class correctness prediction task, where the model could indicate the confidence in correctness (the absence of defects) from multiple perspectives: severity of possible defect, the kind of defect (relating to security, integrity, privacy, fairness,
+etc.
+) and defect complexity (indicating the cost or schedule impact of repairs). Drawing an analogy to classical forecasting, this is analogous to not just the probability it will rain, but probability it will be a drizzle or be a drenching thunderstorm.
+Why calibration now?
+We’ve always had bugs; poor-quality code isn’t
+new. Our push for calibration, however,
+arises from the increasing amount of code generated by LLM. GitHub
+claims that up to 61% of code
+12
+12
+12
+github.blog/2023-02-14-github-copilot-now-has-a-better-ai-model-and-new-capabilities
+in some systems is generated by LLMs. It is also known that LLMs make a lot of mistakes. A recent paper has reported
+[
+jesseLargeLanguageModels2023b
+]
+that LLMs, even when trained on
+properly fixed
+code, tends to recapitulate
+the
+the old unfixed, buggy code
+when prompted in context. However, LLMs do have very
+high capacity, and a demonstrated ability to usefully reflect
+[
+shinnReflexionLanguageAgents2023b
+,
+baiConstitutionalAIHarmlessness2022b
+]
+on their generated text. Thus,
+we have both a high risk (of buggy code), and a chance to improve productivity.
+We believe that improved calibration could lead to better management of the risk-benefit
+of LLM-generated code. The studied correctness calibration is a stepping stone for more complex notions of confidence (like severity and localized confidence). Additionally, by studying code LLMs, we might make progress on the general safe deployment of capable generative models
+[
+grosAISafetySubproblems2023b
+]
+.
+Summarizing per-token probabilities
+To produce a summary confidence for generated token sequences in
+Sections
+IV-A
+3
+and
+IV-A
+4
+, in Tables
+IV-A
+3
+&
+IV-A
+4
+, we used (arithmetic mean) average & product to summarize
+the per-token probabilities. In this setting,
+it might be more reasonable to use geometric mean (as in
+[
+Liu2023LitCabLL
+]
+) to
+get a product value normalized for length;
+indeed, when we tried that, we found that Brier and skill scores improved marginally, but consistently so; future
+research could indicate whether these findings
+generalize.
+VI
+Threats to Validity
+Sample Size & Generalizability
+While three of our datasets contain more than 800+ samples each,
+HumanEval
+and
+Defects4J
+datasets consist of only 164 and 120 samples, respectively.
+Results on these datasets may not generalize. However, we note that our study
+has a large and natural dataset for the
+line-level code completion
+task, which has current
+practical importance. Given the noise and variance we observe, we recommend future work push towards larger and more natural datasets, in particular for Function Synthesis & Repair.
+While some of our treatments (
+e.g.
+, few-shotting) suggest substantial improvements in skill score (
+Table V
+), in other cases such as the different approaches to summarize per-token confidence differences, the differences are less clear. In future work, these differences could be judged more robustly using bootstrapped p-values and effect sizes.
+Artificial
+vs.
+real world data
+For function synthesis, we used the popular
+HumanEval
+and
+MBPP
+function synthesis datasets. These datasets contain small-ish Python programs that may not represent real-world software development functions. However, our other datasets, such as
+DyPyBench
+and
+SStubs
+are more representative of real-world, open-source GitHub projects.
+Model Selection
+Results might not generalize to all models, especially those with greatly differing training/finetuning or different architectures.
+Experimental Design
+Our exploration is not exhaustive; other SE tasks and datasets also could benefit from calibration studies. Additionally, the specific prompts we used for this paper surely played a role in our findings. Other prompts or problem phrasings (such as different forms of context for line-level code completion) may yield different results. Regarding
+test flakiness: the test “flake” rate of DyPyBench is not zero, but is quite low and
+not unrealistic
+[
+luoEmpiricalAnalysisFlaky2014a
+]
+.
+Despite these caveats, our study, which includes three tasks and five datasets, provides
+a good starting point for further studies.
+VII
+Related Work
+LLMs for code are extensively studied
+[
+zhangSurveyLearningbasedAutomated2023a
+,
+zhengSurveyLargeLanguage2024
+]
+. While calibration has a long history in modeling
+[
+brierVerificationForecastsExpressed1950a
+,
+steyerbergAssessingPerformancePrediction2010a
+]
+, it is not a frequently studied topic in the SE community. Early work moving into modern machine learning studied the calibration of smaller neural
+models performing classification tasks on text and images; while these early models were poorly calibrated
+per se
+, their performance could be improved by simple scaling
+[
+guoCalibrationModernNeural2017b
+]
+of their output probabilities. As models became larger, calibration was found to improve
+[
+srivastavaImitationGameQuantifying2023b
+]
+. Pre-training was also found to improve calibration
+[
+hendrycksUsingPreTrainingCan2019b
+,
+desaiCalibrationPretrainedTransformers2020b
+]
+; however, these findings have been disputed
+[
+chenCloseLookCalibration2023b
+]
+.
+More recent works evaluated LLM calibration on a wide variety of settings
+[
+kadavathLanguageModelsMostly2022c
+,
+jiangHowCanWe2021a
+,
+desaiCalibrationPretrainedTransformers2020b
+,
+keyTrustworthyNeuralProgram2023
+]
+.
+\textcite
+desaiCalibrationPretrainedTransformers2020b studied non-code (natural language) tasks such as inference or paraphrasing, with only intrinsic measures using older-generation models (BERT and RoBERTA).
+\textcite
+jiangHowCanWe2021a studied calibration for natural language question-answering using just intrinsic measures. In contrast, we study calibration for three coding-related tasks, using both artificial and natural code datasets, and both intrinsic and reflective confidence measures, to evaluate calibration in the SE domain.
+Other prior work has investigated tokens that might be edited.
+\textcite
+vasconcelos2022generation discusses code model uncertainty for function-synthesis-style problems, and ran human evaluation of the usefullness of colored highlighting of uncertain tokens. They found highlighting a human-derived ground-truth of which tokens might be edited was helpful, and more useful than raw token probabilities from the model.
+\textcite
+rusure developed method of highlighting likely edit tokens via a utility optimization algorithm comparing different file completions. We find exploring more on calibrated uncertainty for local areas be a interesting area for additional work.
+\textcite
+liOperationalCalibrationDebugging2020a investigate the calibration of Computer vision (CV) models from an operational perspective
+i.e.
+, the shift between training input and production inputs, presenting it as a software quality problem that can be addressed using Bayesian approaches.
+\textcite
+mindererRevisitingCalibrationModern2021a evaluate the calibration of at the time, state of the art CV models and find improved calibration with more recent models, notably those not using convolutions.
+\textcite
+parkCalibrationPretrainedLanguage2022a study the effect of the mixup technique
+[
+zhangMixupEmpiricalRisk2018a
+]
+on calibration in a natural language understanding (NLU) setting using older generation models (BERT and RoBERTa).
+\textcite
+chenCloseLookCalibration2023b investigate the calibration of pretrained language models on various NLP tasks, also using older generation models (RoBERTa and T5).
+\textcite
+bommasaniHolisticEvaluationLanguage2023 introduce the HELM benchmark, which includes calibration as one of its seven metrics to evaluate language models in a natural language context.
+\textcite
+lookleap explored LM uncertainty with a range of techniques and tasks, including both NLP and function synthesis tasks. They evaluated using correlation measures, rather than focusing on calibration. They explore interesting sample-based and perturbation techniques which could be explored more for calibration on diverse SE tasks. Other work
+[
+lever
+]
+has explored training an ML model that sees code and execution results to estimate correctness probabilities for solution reranking. For natural language question answering tasks, work has explored improving calibration by training a model to adjust token logits
+[
+Liu2023LitCabLL
+]
+, and training a model from LLM hidden states specifically around the
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+metric
+[
+Liu2024EnhancingLM
+]
+.
+When suitably prompted,
+\textcite
+kadavathLanguageModelsMostly2022c found that LLMs can output well-calibrated scores on whether their own answers are correct or not,
+viz.
+, larger models “know what they know”. While this work did investigate some function synthesis tasks (
+HumanEval
+& an unpublished Python function dataset), they did so using only their private models, and ultimately focused on natural language tasks.
+\textcite
+keyTrustworthyNeuralProgram2023 developed an approach that given a natural language problem description, produces a confidence score for a sampled candidate solution based on generated specifications, allowing them to judge whether the LLM can solve the problem at all. Their metrics include calibration. Recent work has also explored calibration of software topics such as root cause analysis
+[
+zhangPACELMPromptingAugmentation2023b
+]
+.
+VIII
+Conclusion
+In this paper, we begin with the observation that while LLMs
+are often helpful (for example producing code-completions
+for developers) they often produce
+buggy code. We
+argue that a
+well-calibrated
+confidence score,
+could provide a reliable indication of whether the generated code
+was correct,
+and help more rational, graduated quality-control of
+of LLM-generated code
+We studied the calibration of intrinsic and reflective confidence measures in several practical settings (completion and repair) and a widely-used competitive setting (synthesis), across several LLMs.
+We find that LLMs are generally poorly calibrated
+out of the box,
+across a variety of confidence measures (both intrinsic and reflective)
+We then found that Platt scaling generally results in somewhat better calibrated confidence measures.
+Finally, we focused in on a) coding task where LLMs are most widely-deployed,
+viz.
+code completion, and b) a very widely used instruction-tuned model,
+viz.
+Gpt-3.5
+, and investigated whether a reflective, in-context learning approach (few-shotting) could provide better calibrated confidence measures. In this setting, we found that calibration improves substantially, reaching a skill score of
+0.15
+0.15
+0.15
+0.15
+, particularly with retrieval augmented few-shotting.
+To our knowledge, our paper is the first to consider the problem of calibration
+in a real-world code generation setting. We do find that most models, both out-of-the-box and with simple reflection, don’t provide reliable confidence measures. However, our results with retrieval-augmented few-shotting are very encouraging, and point towards a future where Language Models could provide developers with guidance on how to quality-control the code they generate.
+IX
+Acknowledgments
+We acknowledge partial support for this work by
+the Intelligence Advanced Research Projects Agency (IARPA) under contract W911NF20C0038,
+the National Science Foundation under CISE SHF MEDIUM 2107592,
+the European Research Council (ERC grant agreement 851895), and
+the German Research Foundation (ConcSys, DeMoCo, and QPTest projects). Devanbu was supported by a Humboldt Research Award
+13
+13
+13
+https://www.humboldt-foundation.de/en/connect/explore-the-humboldt-network/singleview/1226147/prof-dr-premkumar-t-devanbu
+.
+Our conclusions do not necessarily reflect the position or the policy of
+our sponsors and no official endorsement should be inferred.
+\printbibliography
+{tblr}
+colspec = llccccccccc,
+vline3,6,9 = 4-24gray!75, dotted,
+columns = font=,
+\SetCell
+[c=3]c
+Line Completion
+\SetCell
+[c=6]c
+Program Repair
+\cmidrule
+[gray!75]3-6
+\cmidrule
+[lr,gray!75]6-11
+\SetCell
+[c=3]c DyPyBench
+\SetCell
+[c=3]c Defects4J
+\SetCell
+[c=3]c SStubs
+\cmidrule
+[lr]3-5
+\cmidrule
+[lr]6-8
+\cmidrule
+[lr]9-11
+Model  Metric
+ℬ
+ℬ
+{\mathcal{B}}
+caligraphic_B
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+ℬ
+ℬ
+{\mathcal{B}}
+caligraphic_B
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+ℬ
+ℬ
+{\mathcal{B}}
+caligraphic_B
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+GPT-3.5
+ Total Prob
+0.11
++0.38
+0.03
+ 0.13  +0.01
+0.16
++0.03
+Avg Prob
+ 0.13  +0.31  0.03
+ 0.13  +0.01 
+ 0.16  +0.02
+Ask T/F
+ 0.18  0.00
+0.12
++0.05
+0.16  0.00
+Ask T/F N
+ 0.18  0.00 
+ 0.13  +0.02 
+ 0.16  +0.01
+Verbalize
+ 0.18  0.00 
+ 0.13  -0.03 
+ 0.16  0.00
+Length
+ 0.17  +0.06  0.03
+ 0.14  -0.06 
+ 0.16  0.00
+Unskilled
+ 0.18  0.00 
+ 0.13  0.00 
+ 0.16  0.00
+[dashed]
+Codex
+ Total Prob
+0.10
++0.43
+0.02
+0.15
++0.01
+0.19
++0.05
+0.02
+Avg Prob
+ 0.12  +0.34  0.02
+ 0.16  -0.01 
+ 0.19  +0.05  0.02
+Ask T/F
+ 0.18  +0.01 
+ 0.16  -0.01 
+ 0.19  +0.04
+Ask T/F N
+ 0.18  +0.02 
+ 0.16  -0.01 
+ 0.20  +0.02
+Verbalize
+ 0.18  0.00 
+ 0.16  -0.01 
+ 0.20  0.00
+Length
+ 0.16  +0.09  0.02
+ 0.17  -0.11 
+ 0.20  0.00
+Unskilled
+ 0.18  0.00 
+ 0.16  0.00 
+ 0.20  0.00
+[dashed]
+CodeGen2
+ Total Prob
+0.09
++0.41
+0.01
+ -  - 
+ -  -
+Avg Prob
+ 0.11  +0.30  0.01
+ -  - 
+ -  -
+Ask T/F
+ 0.16  0.00 
+ -  - 
+ -  -
+Ask T/F N
+ 0.16  0.00 
+ -  - 
+ -  -
+Verbalize
+ 0.16  0.00 
+ -  - 
+ -  -
+Length
+ 0.15  +0.06  0.03
+ -  - 
+ -  -
+Unskilled
+ 0.16  0.00 
+ -  - 
+ -  -
+\bottomrule
+TABLE A1
+:
+Calibration measured as Platt-scaled Brier Score (
+ℬ
+ℬ
+{\mathcal{B}}
+caligraphic_B
+), Skill Score (
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+), and Expected Calibration Error (
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+), with respect to “exact-match” (EM) notion of correctness, excluding function synthesis tasks as EM is not a useful or commonly used notion of correctness. In cases where the
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+is less than 0.05, the
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+is omitted. This is because an estimate without any signal will become Platt-scaled to approximately the base rate. This will
+appear
+as one well calibrated bin, resulting in an
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+near zero, but does not provide information. CodeGen2 repair values are omitted as it does not perform the task with greater than 1% accuracy.
+{tblr}
+colspec = llccccc,
+vline3,4,6 = 3-24gray!75, dotted,
+columns = font=,
+\SetCell
+[c=1]c
+Line Completion
+\SetCell
+[c=2]c
+Function Synthesis
+\SetCell
+[c=2]c
+Program Repair
+\cmidrule
+[gray!75]3
+\cmidrule
+[lr,gray!75]4-5
+\cmidrule
+[l,gray!75]6-8
+Model  Metric
+\SetCell
+[c=1]c DyPyBench
+\SetCell
+[c=1]c HumanEval
+\SetCell
+[c=1]c MBPP
+\SetCell
+[c=1]c Defects4J
+\SetCell
+[c=1]c SStubs
+\cmidrule
+[l]1-17
+GPT-3.5
+ Total Prob
+ 0.67
+ 0.77
+ 0.70
+ 0.54
+ 0.61
+Avg Prob
+ 0.68
+ 0.61
+ 0.56
+ 0.57
+ 0.60
+Ask T/F
+ 0.54
+ 0.73
+ 0.71
+ 0.67
+ 0.54
+Ask T/F N
+ 0.53
+ 0.74
+ 0.73
+ 0.67
+ 0.57
+Verbalize
+ 0.53
+ 0.54
+ 0.60
+ 0.43
+ 0.51
+Length
+ 0.53
+ 0.64
+ 0.61
+ 0.48
+ 0.53
+Unskilled
+ 0.50
+ 0.50
+ 0.50
+ 0.50
+ 0.50
+[dashed]
+Codex
+ Total Prob
+ 0.68
+ 0.70
+ 0.66
+ 0.52
+ 0.66
+Avg Prob
+ 0.68
+ 0.71
+ 0.69
+ 0.57
+ 0.65
+Ask T/F
+ 0.49
+ 0.65
+ 0.56
+ 0.62
+ 0.61
+Ask T/F N
+ 0.49
+ 0.61
+ 0.53
+ 0.54
+ 0.59
+Verbalize
+ 0.52
+ 0.46
+ 0.50
+ 0.45
+ 0.49
+Length
+ 0.55
+ 0.51
+ 0.50
+ 0.43
+ 0.49
+Unskilled
+ 0.50
+ 0.50
+ 0.50
+ 0.50
+ 0.50
+[dashed]
+CodeGen2
+ Total Prob
+ 0.68
+ 0.44
+ 0.52
+ -
+ -
+Avg Prob
+ 0.66
+ 0.67
+ 0.52
+ -
+ -
+Ask T/F
+ 0.52
+ 0.39
+ 0.59
+ -
+ -
+Ask T/F N
+ 0.54
+ 0.34
+ 0.57
+ -
+ -
+Verbalize
+ 0.51
+ 0.49
+ 0.51
+ -
+ -
+Length
+ 0.55
+ 0.39
+ 0.47
+ -
+ -
+Unskilled
+ 0.50
+ 0.50
+ 0.50
+ -
+ -
+\bottomrule
+TABLE A2
+:
+AUC-ROC score of each technique
+Figure A1
+:
+Prompts for Verbalized Self-Ask and Question Answering logit.
+Figure A2
+:
+Prompt and model output for the tasks while calculating confidence measure based on Average Token Probability and Generated Sequence Probability.
+Figure A3
+:
+Calibration plots per model, confidence measure, and task. The blue bars represent nonscaled, evenly spaced bins. The orange bars are Platt scaled bins. The red lines represent five points of equal count quantiles (an equivalent number of problems in each bin).
+Figure A4
+:
+Reliability plots for GPT-3.5, from left to right: HumanEval Ask T/F (Scaled), MBPP Ask T/F (Scaled), and HumanEval Ask T/F (Nonscaled). Red line denotes five quantiles. All three examples have similar AUC (0.73, 0.71, 0.73) but vastly different
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+(0.11, 0.06, 0.37).
+Figure A5
+:
+AUC vs Scaled
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+(left) and AUC vs Scaled Skill Score (right) for GPT-3.5 confidence measures on all tasks. Shows a limited relationship between AUC and ECE, but a strong relationship between AUC and scaled SS.
+Figure A6
+:
+A comparison of the rescaling curves across tasks and measures for GPT-3.5. Logistic regression (Platt scaling) functions rescale the measurement (x-axis) to a new confidence (y-axis).
+The
+■
+■
+\blacksquare
+■
+represents a median measured value,
+▶
+▶
+\blacktriangleright
+▶
+the lower quartile, and
+◀
+◀
+\blacktriangleleft
+◀
+the upper quartile.
+The five curves from the different folds are shown in light gray, with the main line being the curve from fitting to all data. Dataset-measure pairs with less data or highly concentrated values have greater curve variance across folds. Scaled
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+is shown along with the logistic regression parameters.
+Figure A7
+:
+Exploration of GPT-3.5 confidences when fitting a rescaling for one the datasets, and then reusing it on another. In
+green is Skill Score
+, and in
+blue is the
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+. Above, we plot the raw (nonscaled)
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+for each task. This informs whether a measure would be better calibrated if one uses it as-is, or one reuses the rescaling. Cells where there is an improvement in
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+are shown in a
+coral
+outline. Datasets within similar task &
+base rate
+exhibit most potential for reuse, but still liable to sizable changes in
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+or
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+. This analysis suggests that
+reflective
+measures may be more robust across rescalings. Note values might differ slightly from results tables as the full data is used for training the rescaler, rather than folds.
+Figure A8
+:
+Bootstrapped resampling of varying sample for both an intrinsic and reflective measure. During each of 500 bootstrap simulations, a given number of data points is sampled. This is used to fit a Platt rescaling. We then apply that rescaling to the remaining non-sampled data points. We show the median simulation, and a 90% interval. We observe that as the number of examples used for the rescaling increases, there are improvements in
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+and
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+.
+Understanding effects of verbalized retry failures
+Our implementation for verbalized confidence prompts the model to output the probability its generation is correct at temperature 1.0. If it does not contain a probability, then we resample up to 3 times. If that loop fails, then a confidence of 0.5 is returned.
+This implementation seemed reasonable at the time (if the model won’t tell you its confidence, just go with the maximum uncertainty of 50-50), but after collecting the data and analyzing results we reconsidered, as 50% values might be overrepresented in the data.
+To try to estimate how this might have influenced our results and conclusions, we searched for instances where the verbalized confidence was 50% (this provides a upper bound on how often this happens. There can also be cases where the model actually verbalizes a 50% confidence). This is relatively rare for GPT-3.5 (with the mean dataset having 0.04 of instances as 50%, range 0.02-0.08). It is more common for Codex (mean 0.14, range 0.09-0.17) and for CodeGen2 (mean 0.10, range 0.09-0.12). This evidence of how the instruction tuned models are more likely to actually perform the prompted task.
+We reran our analysis excluding all these instances. We do not believe a different handling of these fail-retry values would have greatly changed our conclusions. In the scaled case, the Skill Score on average did not change (mean diff of 0.00) with extreme change of -0.04
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+when already low skill. In the nonscaled case there were some drops in calibration (mean
+S
+⁢
+S
+𝑆
+𝑆
+SS
+italic_S italic_S
+change of -0.11 and mean
+E
+⁢
+C
+⁢
+E
+𝐸
+𝐶
+𝐸
+ECE
+italic_E italic_C italic_E
+change of 0.02). The more extreme changes areas of already poor calibration.
+It is not clear what is the best default is in the situation where the model fails to verbalize a probability. It is not particularly valid to exclude these instance. More exploration is needed on this and the effects.
+{tblr}
+colspec = lcccccc,
+columns = font=,
+\SetCell
+[c=3]c HumanEval
+\SetCell
+[c=3]c MBPP
+\cmidrule
+[gray!75]2-5
+\cmidrule
+[lr,gray!75]5-8
+\cmidrule
+[l,gray!75]8-11
+Confidence Measure
+ℬ
+↓
+↓
+ℬ
+absent
+{\mathcal{B}}\downarrow
+caligraphic_B ↓
+S
+⁢
+S
+↑
+↑
+𝑆
+𝑆
+absent
+SS\uparrow
+italic_S italic_S ↑
+E
+⁢
+C
+⁢
+E
+↓
+↓
+𝐸
+𝐶
+𝐸
+absent
+ECE\downarrow
+italic_E italic_C italic_E ↓
+ℬ
+↓
+↓
+ℬ
+absent
+{\mathcal{B}}\downarrow
+caligraphic_B ↓
+S
+⁢
+S
+↑
+↑
+𝑆
+𝑆
+absent
+SS\uparrow
+italic_S italic_S ↑
+E
+⁢
+C
+⁢
+E
+↓
+↓
+𝐸
+𝐶
+𝐸
+absent
+ECE\downarrow
+italic_E italic_C italic_E ↓
+\cmidrule
+[l]1-11 0-Shot Reflect
+ 0.23  0.01  0.19
+ 0.22  -0.11  0.16
+0-Shot Reflect (Scaled)
+ 0.20  0.14  0.07
+ 0.18  0.11  0.04
+\cmidrule
+[l]1-11
+FS Random  0.20  0.12  0.11  0.20  -0.03  0.15
+FS Random (Scaled)  0.19  0.16  0.04  0.16  0.16  0.04
+FS BM25  0.19  0.19  0.08  0.19  0.00  0.11
+FS BM25 (Scaled)  0.19  0.18  0.04  0.17  0.14  0.04
+\bottomrule
+TABLE A3
+:
+Few-shot reflective prompting using
+Gpt-3.5
+. We observe the the unscaled skill score and ECE both improve. The raw SS improves 0.08-0.11 unscaled and further when scaled. The improvement from BM25 was more modest if doing rescaling, but appears useful if using raw values.

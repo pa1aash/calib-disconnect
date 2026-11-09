@@ -1,0 +1,58 @@
+[
+  {
+    "claim": "HumanEval- and LiveCodeBench-style code benchmarks use thin, homogeneous test cases that let subtle faults go undetected, artificially inflating pass@k and corrupting RLVR reward estimation.",
+    "stance": "supports",
+    "stance_target": "whole-task test-suite thinness undermines both evaluation and RL reward accuracy in code LLMs",
+    "evidence_type": "empirical",
+    "scope_conditions": "HumanEval, LiveCodeBench-style benchmarks",
+    "quoted_support": "a detailed examination reveals that these evaluation suites often comprise only a limited number of homogeneous test cases, resulting in subtle faults going undetected. This not only artificially inflates measured performance but also compromises accurate reward estimation in reinforcement learning frameworks utilizing verifiable rewards (RLVR).",
+    "numbers": [],
+    "entities": ["HumanEval", "LiveCodeBench", "RLVR"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "rethinking-verification-for-llm-code-generation-from-generation-to-testing"
+  },
+  {
+    "claim": "SAGA, a human-LLM collaborative test-case-generation method, achieves a 90.62% bug-detection rate and 32.58% verifier accuracy on TCGBench, and 10.78 percentage points higher verifier accuracy than LiveCodeBench-v6.",
+    "stance": "supports",
+    "stance_target": "improved test-case generation substantially raises verifier accuracy over existing benchmarks",
+    "evidence_type": "empirical",
+    "scope_conditions": "TCGBench: 1,840 competitive programming problems from Atcoder/Codeforces/Nowcoder",
+    "quoted_support": "Experiments show that SAGA achieves a detection rate of 90.62% and a verifier accuracy of 32.58% on TCGBench. The Verifier Accuracy (Verifier Acc) of the code generation evaluation benchmark synthesized by SAGA is 10.78% higher than that of LiveCodeBench-v6.",
+    "numbers": ["90.62%", "32.58%", "10.78pp", "1840 problems"],
+    "entities": ["SAGA", "TCGBench", "LiveCodeBench-v6"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "rethinking-verification-for-llm-code-generation-from-generation-to-testing"
+  },
+  {
+    "claim": "LLM-generated test suites exhibit high self-pass rates against LLM-generated code, indicating that models' own tests miss the same categories of human-like bugs (logical flaws, integer overflow, boundary conditions) that their code generation itself fails on.",
+    "stance": "supports",
+    "stance_target": "code-generation blind spots and test-generation blind spots are correlated within the same model",
+    "evidence_type": "empirical",
+    "scope_conditions": "competitive programming problems, direct LLM test-case generation baselines",
+    "quoted_support": "Direct generation issues: (a) Low quality of LLM-generated tests. (b) High self-pass rates suggest model blind spots.",
+    "numbers": [],
+    "entities": ["TCGBench"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "rethinking-verification-for-llm-code-generation-from-generation-to-testing"
+  },
+  {
+    "claim": "The blind-spot correlation between test-writing and code-writing is measured at whole-problem bug-detection-rate granularity, not mapped onto a decomposed per-requirement label space shared between code failures and test failures.",
+    "stance": "neutral",
+    "stance_target": "granularity gap a per-requirement harness could exploit",
+    "evidence_type": "theoretical",
+    "scope_conditions": "TCGBench design",
+    "quoted_support": "Direct generation issues: (a) Low quality of LLM-generated tests. (b) High self-pass rates suggest model blind spots.",
+    "numbers": [],
+    "entities": ["TCGBench"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "rethinking-verification-for-llm-code-generation-from-generation-to-testing"
+  }
+]

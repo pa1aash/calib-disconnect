@@ -1,0 +1,84 @@
+{
+  "tensions": [
+    {
+      "name": "DCPO occupies scalar code-confidence — is the direction still novel?",
+      "side_a": {
+        "position": "Training a code LLM to express calibrated discriminative scalar confidence (AUROC-measured) is now DONE by DCPO.",
+        "evidence": "DCPO (ICML 2026) decoded <conf> block vs hybrid execution-pass-rate target; AUROC 0.796-0.914 on LiveCodeBench v5/v6 + HumanEval+, beats RLCR on AUROC and accuracy.",
+        "proponents": ["decoupling-reasoning-and-confidence-resurrecting-calibration-in-reinforcement-le"]
+      },
+      "side_b": {
+        "position": "Prior code-calibration work either uses probes/no-AUROC (RLCM) or is QA-only (Rewarding Doubt), leaving genuine gaps.",
+        "evidence": "RLCM uses hidden-state probe, never reports AUROC (grep-verified); Rewarding Doubt/ConfTuner AUROC 0.86 but QA-only.",
+        "proponents": ["process-supervision-of-confidence-margin-for-calibrated-llm-reasoning", "rewarding-doubt", "conftuner"]
+      },
+      "resolution": "Side A wins for the SCALAR framing — DCPO substantially occupies it, so a scalar headline is incremental. The residual novelty is the code-UNIQUE capability DCPO's single-scalar output cannot express: per-test-case / structured / localized confidence. The paper must pivot the headline there; scalar becomes a DCPO-positioned baseline. Step 8 must verify structured code-confidence is unoccupied.",
+      "origin": "comparisons",
+      "decision_relevance": "high"
+    },
+    {
+      "name": "Decouple architecturally vs. bounded joint reward",
+      "side_a": {
+        "position": "A single joint accuracy+confidence objective has a provable gradient conflict and collapses discrimination.",
+        "evidence": "DCPO Prop 4.2 (gradient conflict for overconfident models); our own 274-example joint SFT collapsed to mean-0.900-everywhere; CAPO shows linear GRPO surrogate is AUC-inconsistent.",
+        "proponents": ["decoupling-reasoning-and-confidence-resurrecting-calibration-in-reinforcement-le", "capo", "disconnect-paper-grounding"]
+      },
+      "side_b": {
+        "position": "A well-chosen BOUNDED joint reward discriminates fine without decoupling, and is simpler/cheaper.",
+        "evidence": "Rewarding Doubt: integrated (non-decoupled) log-score reward, AUROC 0.859, single A40 LoRA, beats a decoupled SFT probe on discrimination; RLCR proper-scoring theorem.",
+        "proponents": ["rewarding-doubt", "beyond-binary-rewards"]
+      },
+      "resolution": "Adopt Side A (decouple) as the primary recipe because our documented collapse matches Prop 4.2's antecedent exactly, but run Side B (bounded joint reward) as the key ablation. Boundedness (Brier not log-score) is non-negotiable regardless — Beyond-Binary-Rewards' Toy-Arm experiment shows unbounded log-score reward-hacks into abstention-collapse under low signal.",
+      "origin": "contradiction-graph",
+      "decision_relevance": "high"
+    },
+    {
+      "name": "NLI/embedding semantic equivalence fails on code — only execution works",
+      "side_a": {
+        "position": "Generic semantic-similarity (NLI, embeddings, CodeBLEU, AST) proxies collapse on code confidence.",
+        "evidence": "Functional Entropy: NLI semantic entropy 0.47-0.58 (near chance) on code; Sharma&David: only symbolic-execution clustering restores signal, log-probs not significant; our AST proxy ECE 0.351.",
+        "proponents": ["functional-entropy-predicting-functional-correctness", "assessing-correctness-in-llm-based-code-generation-via-uncertainty", "disconnect-paper-grounding"]
+      },
+      "side_b": {
+        "position": "Cheap structural/embedding proxies (MST clustering) give usable signal.",
+        "evidence": "FASE embedding-clustering AUC 0.74-0.91, but with a blind spot on correlated-wrong collapse.",
+        "proponents": ["fase-fast-adaptive-semantic-entropy-for-code-quality"]
+      },
+      "resolution": "Side A: execution/functional equivalence is the only reliable label source for code confidence. This REINFORCES the method's use of per-test execution outcomes as ground truth — the labels are both free and uniquely trustworthy, which is precisely code's advantage over QA/math.",
+      "origin": "orphan-scan",
+      "decision_relevance": "medium"
+    },
+    {
+      "name": "ECE-primary vs AUROC-primary evaluation",
+      "side_a": {
+        "position": "Report ECE / calibration error.",
+        "evidence": "Most calibration papers (Multicalibration-for-code, 260113284) report ECE/BSS; Spiess uses ECE.",
+        "proponents": ["multicalibration-for-llm-based-code-generation", "balancing-classification-and-calibration-performance-in-decision-making-llms-via"]
+      },
+      "side_b": {
+        "position": "ECE alone is gameable by a near-constant predictor; report AUROC/discrimination.",
+        "evidence": "Roelofs: ECE_bin biased; CAPO/Spiess: a constant predictor satisfies ECE (our collapse: mean 0.900 everywhere, low ECE, no discrimination); Multicalibration-for-code never reports AUROC and cannot show discrimination.",
+        "proponents": ["201208668-mitigating-bias-in-calibration-error-estimation", "capo", "calibration-and-correctness-of-language-models-for-code"]
+      },
+      "resolution": "Side B decisively. The paper must make AUROC/discrimination (per-test AUROC for the headline) the PRIMARY metric, report debiased/adaptive ECE secondarily, and explicitly critique the ECE-only prior work — this is both methodologically correct and a positioning wedge against Multicalibration-for-code.",
+      "origin": "orphan-scan",
+      "decision_relevance": "high"
+    },
+    {
+      "name": "Is HumanEval's near-perfect oracle a contamination artifact?",
+      "side_a": {
+        "position": "HumanEval/MBPP contamination inflates results; the 0.987 oracle may be memorization.",
+        "evidence": "Riddell 2024 + TRACER 2026: surface AND semantic 'shared-logic' contamination; models score higher on contaminated subsets.",
+        "proponents": ["240304811-quantifying-contamination", "260524079-tracer-semantic-contamination"]
+      },
+      "side_b": {
+        "position": "The discrimination finding is robust on contamination-resistant benchmarks.",
+        "evidence": "ConSelf replicates the difficulty-level disconnect on LiveCodeBench (post-training-cutoff problems) with the same model families.",
+        "proponents": ["self-improving-code-generation-via-semantic-entropy"]
+      },
+      "resolution": "Side B, conditional on design: the paper MUST evaluate primarily on LiveCodeBench (contamination-controlled, time-windowed) and treat HumanEval as a legacy comparison point only. This converts a threat into a robustness pillar.",
+      "origin": "orphan-scan",
+      "decision_relevance": "high"
+    }
+  ]
+}

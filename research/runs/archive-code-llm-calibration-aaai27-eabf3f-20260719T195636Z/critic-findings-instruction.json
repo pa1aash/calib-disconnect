@@ -1,0 +1,32 @@
+{
+  "critic_type": "instruction",
+  "findings": [
+    {
+      "severity": "major",
+      "atomic_item": "How does the proposal defend novelty against the closest existing work (Spiess ICSE'25, Campos multicalibration, Stangel Rewarding Doubt, UQ4CT, semantic-entropy/self-consistency line, selective generation/abstention)?",
+      "failure_mode": "under-covered",
+      "location": "Section 9, 'Novelty Defense Against the Closest Prior Work' — four-axis defense plus the 'honest scoop caveat' paragraph.",
+      "issue": "The decomposition's novelty sub-question explicitly enumerates UQ4CT as a closest prior work to defend against, but UQ4CT appears nowhere in the report (0 mentions, not in the shortlist, not in Sources); Campos multicalibration is named but its distinction lives only in Section 2A, not in the Section 9 novelty defense where the named comparator belongs.",
+      "requires_orchestrator_restructure": false,
+      "recommendation": "Add a one-clause distinction for UQ4CT to Section 9 (it is a code-domain uncertainty method but not self-expressed per-test confidence, so it misses the four-axis wedge like the other near-misses). NOTE FOR REVISOR/GAP-FETCH: the vault has NO UQ4CT note (closest is UnCert-CoT, note 250315341, which is a distinct compute-gating method) — do not fabricate its numbers; either route to Layer 13 gap-fetch for the UQ4CT paper or add a brief explicit acknowledgment that it is a distinct CoT-uncertainty line not on the self-expressed/per-test axis. Also relocate/echo the Campos multicalibration distinction ([28], measures ECE/skill-score not AUROC) into Section 9 so every decomposition-named comparator is addressed in the novelty-defense section itself."
+    },
+    {
+      "severity": "minor",
+      "atomic_item": "Human-AI trust calibration for coding — required_fields: evidence, whether real user study needed",
+      "failure_mode": "under-covered",
+      "location": "Section 8C and Section 8E — the only touchpoints are the in-IDE study [26] (developers prefer categorical/color cues) and the forward-outlook paragraph; 'user study' appears 0 times.",
+      "issue": "The decomposition lists a human-AI-trust cluster whose required field is 'whether real user study needed'; the report cites the in-IDE evidence [26] but never explicitly resolves whether the proposed paper needs a real developer user study (the base paper's admitted limitation was 'no real developer user study').",
+      "requires_orchestrator_restructure": false,
+      "recommendation": "Add one sentence (Section 7 feasibility or Section 10 scope) explicitly stating that no developer user study is required for this methodological AUROC-primary contribution and that a user study is deliberately out of the single-GPU 7B scope, citing the in-IDE deployment finding [26] as the motivation that a per-requirement interface is what practitioners want — closing the 'whether real user study needed' field."
+    },
+    {
+      "severity": "minor",
+      "atomic_item": "## 11. The Shortlist: 5-10 Load-Bearing Papers",
+      "failure_mode": "wrong-format",
+      "location": "Section 11 heading, line 180: '## 11. The Shortlist: 5–10 Load-Bearing Papers'.",
+      "issue": "The required_section_heading uses an ASCII hyphen '5-10'; the draft heading uses an en-dash '5–10', so the H2 wording does not match the required string verbatim.",
+      "requires_orchestrator_restructure": true,
+      "recommendation": "Change the en-dash in the Section 11 heading to an ASCII hyphen so it reads exactly '## 11. The Shortlist: 5-10 Load-Bearing Papers', matching required_section_headings verbatim. Single-character H2 edit; routed to orchestrator per the patcher tool-lock on heading changes."
+    }
+  ]
+}

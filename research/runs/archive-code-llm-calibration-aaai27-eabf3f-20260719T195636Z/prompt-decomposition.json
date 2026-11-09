@@ -1,0 +1,59 @@
+{
+  "sub_questions": [
+    "What is the current research frontier (as of 2026) in confidence/calibration/uncertainty estimation for code LLMs, and which papers define it?",
+    "What are the specific caveats, holes, unproven claims, and open problems in that frontier that a new paper could occupy?",
+    "Where is the current 'calibration-disconnect' manuscript weak or merely diagnostic, and what positive/prescriptive extension would raise it to AAAI-27 main-track novelty?",
+    "Which ~5-10 papers are load-bearing for the chosen direction, and what does each contribute or leave open?",
+    "What is the single most novel headline claim available, and exactly which experiment(s) produce the headline number?",
+    "Why is that headline likely to come out favorable given ONLY single-GPU 7B-scale compute (feasibility + prior-evidence grounding)?",
+    "What supporting results are needed to make the headline defensible, and what is the most likely failure mode plus a pre-registered fallback?",
+    "How does the proposal defend novelty against the closest existing work (Spiess ICSE'25, Campos multicalibration, Stangel Rewarding Doubt, UQ4CT, semantic-entropy/self-consistency line, selective generation/abstention)?",
+    "Which single AAAI-27 primary topic/keyword (verbatim from the areas-and-topics list) best fits the proposed paper under AAAI's own selection rules, and what 1-2 secondary keywords, such that the paper's main methodological contribution sits squarely in that subarea and never drifts out of scope?"
+  ],
+  "entities": [
+    {"name": "Code-LLM calibration prior work", "type": "literature-cluster", "required_fields": ["what it shows", "what it leaves open", "relation to disconnect finding"]},
+    {"name": "Train-time / verbalized-confidence calibration methods", "type": "literature-cluster", "required_fields": ["method", "compute cost", "whether it closes the gap"]},
+    {"name": "Self-consistency & semantic uncertainty methods", "type": "literature-cluster", "required_fields": ["signal used", "code-domain applicability"]},
+    {"name": "Selective generation / abstention / deferral for code", "type": "literature-cluster", "required_fields": ["decision rule", "downstream utility"]},
+    {"name": "Human-AI trust calibration for coding", "type": "literature-cluster", "required_fields": ["evidence", "whether real user study needed"]},
+    {"name": "The candidate paper idea", "type": "deliverable", "required_fields": ["headline claim", "experiments", "feasibility argument", "failure mode + fallback", "novelty defense"]}
+  ],
+  "required_formats": [
+    "shortlist of ~5-10 papers with per-paper hole/contribution",
+    "scored comparison of 2-4 candidate paper directions on (novelty, confidence)",
+    "one committed paper proposal with a single headline claim"
+  ],
+  "required_sections": [
+    "## The One Paper (committed recommendation)",
+    "## Headline Claim and the Experiment That Produces It",
+    "## Why the Headline Will Likely Land (feasibility + prior evidence)",
+    "## Failure Mode and Pre-Registered Fallback",
+    "## Novelty Defense vs. Closest Prior Work"
+  ],
+  "required_section_headings": [
+    "## 1. The Research Frontier in Code-LLM Confidence and Calibration",
+    "## 2. Caveats, Holes, and Open Problems at the Frontier",
+    "## 3. Where the Current Calibration-Disconnect Paper Falls Short of Main-Track",
+    "## 4. Candidate Directions, Scored on Novelty and Confidence",
+    "## 5. The One Paper: Committed Recommendation",
+    "## 6. Headline Claim and the Exact Experiment That Produces It",
+    "## 7. Why the Headline Will Likely Land: Feasibility on Single-GPU 7B Compute",
+    "## 8. Supporting Results, Failure Mode, and Pre-Registered Fallback",
+    "## 9. Novelty Defense Against the Closest Prior Work",
+    "## 10. AAAI-27 Topic Alignment: Primary and Secondary Keywords",
+    "## 11. The Shortlist: 5-10 Load-Bearing Papers"
+  ],
+  "time_horizons": ["through AAAI-2027 submission cycle (deadline ~Aug 2026)", "literature 2022-present"],
+  "time_periods": [],
+  "scope_conditions": [
+    "single-GPU 7B-scale compute only (A100-40GB / GH200 98GB); no multi-node or frontier-scale training",
+    "priority 1 = novelty, priority 2 = confidence in attaining headline + supporting results (binding rank order)",
+    "the deliverable is a paper PROPOSAL, not a survey; exactly ONE final idea",
+    "must extend the existing calibration-disconnect code-LLM paper, not start an unrelated topic",
+    "MUST pin to one AAAI-27 primary topic/keyword (verbatim from areas-and-topics list) and never deviate from that scope; contribution must be METHODOLOGICAL (main-track), not application/measurement",
+    "must fit AAAI-27 format: 7 pages main content (max 9 total), reproducibility checklist; scope to ONE tight headline story"
+  ],
+  "pipeline_tier": "full",
+  "response_format": "argumentative",
+  "citation_style": "inline"
+}

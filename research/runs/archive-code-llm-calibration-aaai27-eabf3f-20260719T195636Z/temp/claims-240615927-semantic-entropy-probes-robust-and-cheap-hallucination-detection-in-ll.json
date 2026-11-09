@@ -1,0 +1,72 @@
+[
+  {
+    "claim": "Semantic Entropy Probes (SEPs) approximate semantic entropy directly from the hidden states of a single model generation, eliminating the need to sample multiple generations at test time.",
+    "stance": "supports",
+    "stance_target": "cheap single-pass approximations can recover the sampling-based uncertainty signal",
+    "evidence_type": "empirical",
+    "scope_conditions": "general LLM hallucination detection (QA-style tasks), not code generation",
+    "quoted_support": "To address this, we propose SEPs, which directly approximate SE from the hidden states of a single generation. SEPs are simple to train and do not require sampling multiple model generations at test time, reducing the overhead of semantic uncertainty quantification to almost zero.",
+    "numbers": [],
+    "entities": ["Semantic Entropy Probes", "SEP", "Jannik Kossen", "Yarin Gal", "Farquhar et al. 2024", "semantic entropy"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "240615927-semantic-entropy-probes-robust-and-cheap-hallucination-detection-in-ll"
+  },
+  {
+    "claim": "Full semantic entropy (SE) computation via sampling incurs a 5-to-10-fold increase in computation cost relative to a single generation, which hinders practical adoption.",
+    "stance": "supports",
+    "stance_target": "sampling-based confidence is accurate but expensive",
+    "evidence_type": "empirical",
+    "scope_conditions": "general LLM UQ",
+    "quoted_support": "the 5-to-10-fold increase in computation cost associated with SE computation hinders practical adoption.",
+    "numbers": ["5-to-10-fold"],
+    "entities": ["semantic entropy", "Farquhar et al. 2024"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "240615927-semantic-entropy-probes-robust-and-cheap-hallucination-detection-in-ll"
+  },
+  {
+    "claim": "SEPs retain high performance for hallucination detection and generalize better to out-of-distribution data than prior probing methods that directly predict model accuracy.",
+    "stance": "supports",
+    "stance_target": "hidden-state probes are a viable cheap proxy for sampling-based uncertainty",
+    "evidence_type": "empirical",
+    "scope_conditions": "general LLM tasks tested in the paper, OOD generalization explicitly claimed",
+    "quoted_support": "We show that SEPs retain high performance for hallucination detection and generalize better to out-of-distribution data than previous probing methods that directly predict model accuracy.",
+    "numbers": [],
+    "entities": ["SEP"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "240615927-semantic-entropy-probes-robust-and-cheap-hallucination-detection-in-ll"
+  },
+  {
+    "claim": "Ablation studies indicate that specific token positions and model layers of hidden states capture semantic-entropy-relevant information, implying the SE signal is linearly recoverable from internal representations.",
+    "stance": "supports",
+    "stance_target": "single-pass hidden states encode enough information to approximate multi-sample semantic uncertainty",
+    "evidence_type": "empirical",
+    "scope_conditions": "token/layer-level analysis within tested models",
+    "quoted_support": "our ablation studies give further insights into the token positions and model layers for which this is the case.",
+    "numbers": [],
+    "entities": ["SEP", "hidden states"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "240615927-semantic-entropy-probes-robust-and-cheap-hallucination-detection-in-ll"
+  },
+  {
+    "claim": "SEPs are not validated on code generation tasks in the published abstract, leaving a domain gap between general-QA hallucination detection and code-LLM confidence calibration.",
+    "stance": "neutral",
+    "stance_target": "existing single-pass UQ methods lack code-domain validation",
+    "evidence_type": "empirical",
+    "scope_conditions": "based on abstract-level description; full paper not yet confirmed",
+    "quoted_support": "We show that SEPs retain high performance for hallucination detection and generalize better to out-of-distribution data than previous probing methods that directly predict model accuracy.",
+    "numbers": [],
+    "entities": ["SEP", "code generation"],
+    "time_period": "2024",
+    "region": null,
+    "confidence": "low",
+    "source_note_id": "240615927-semantic-entropy-probes-robust-and-cheap-hallucination-detection-in-ll"
+  }
+]

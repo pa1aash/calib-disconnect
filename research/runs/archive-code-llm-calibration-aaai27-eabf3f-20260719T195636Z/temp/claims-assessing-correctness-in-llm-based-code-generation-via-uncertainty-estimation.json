@@ -1,0 +1,72 @@
+[
+  {
+    "claim": "Token-level log-probability confidence (LLM-Probability) shows no statistically significant correlation with code correctness on LiveCodeBench across three LLMs, a stronger negative result than merely weak discrimination.",
+    "stance": "supports",
+    "stance_target": "log-probability is a fundamentally unreliable expressed-confidence interface for code generation correctness",
+    "evidence_type": "empirical",
+    "scope_conditions": "gpt-3.5-turbo-instruct, DeepSeek-R1, claude-3-7-sonnet; LiveCodeBench, 831 problems (239 Easy/332 Medium/260 Hard)",
+    "quoted_support": "When relying on log-probabilities computed by the LLM (row corresponding to LLM-Probability in Table 2), we find no statistically significant correlation with correctness, indicating that token-level probabilities are insufficient proxies for correctness in code generation.",
+    "numbers": ["831 problems", "239 Easy", "332 Medium", "260 Hard"],
+    "entities": ["LLM-Probability", "DeepSeek-R1", "gpt-3.5-turbo-instruct", "claude-3-7-sonnet", "LiveCodeBench"],
+    "time_period": "2025",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "assessing-correctness-in-llm-based-code-generation-via-uncertainty-estimation"
+  },
+  {
+    "claim": "Standard NLG uncertainty methods (semantic entropy, mutual information) fail on code even when adapted with code-specific embeddings (text-embedding-ada-002) or CodeBLEU similarity, showing no statistically significant correlation with correctness -- only symbolic-execution-based clustering restores significance.",
+    "stance": "supports",
+    "stance_target": "coarse structural/embedding equivalence proxies (a category including AST-clustering) are insufficient substitutes for precise, execution-grounded equivalence; only exact symbolic/execution equivalence recovers a usable signal",
+    "evidence_type": "empirical",
+    "scope_conditions": "Same 3-model, LiveCodeBench setup; SE and MI adapted with code embeddings vs symbolic clustering",
+    "quoted_support": "the SE and MI techniques fail to exhibit statistically significant correlation between estimated uncertainty and correctness when applied to code generation—even when adapted with OpenAI's GPT text-embedding-ada-002 embeddings, which are tailored for code, or heuristic similarity metrics such as CodeBLEU... both techniques only achieve statistically significant correlation when paired with symbolic clustering.",
+    "numbers": [],
+    "entities": ["semantic entropy", "mutual information", "text-embedding-ada-002", "CodeBLEU", "symbolic clustering"],
+    "time_period": "2025",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "assessing-correctness-in-llm-based-code-generation-via-uncertainty-estimation"
+  },
+  {
+    "claim": "Symbolic-execution-based semantic entropy retains a statistically significant correlation with correctness even when the LLM's output probability distribution is discarded entirely and replaced with a uniform distribution over sampled outputs, showing the signal comes from equivalence precision, not from the probability channel.",
+    "stance": "supports",
+    "stance_target": "the discriminative power of sampling-based uncertainty comes from precise equivalence clustering rather than from token-level probabilities, meaning a model's expressed probability channel is dispensable if clustering is precise enough",
+    "evidence_type": "empirical",
+    "scope_conditions": "SE-SymbUniform and MI-SymbUniform variants, all three models",
+    "quoted_support": "In contrast, symbolic clustering provides a much stronger signal. Even when assuming a uniform distribution over LLM responses, SE-SymbUniform and MI-SymbUniform still yield a statistically significant correlation with correctness.",
+    "numbers": [],
+    "entities": ["SE-SymbUniform", "MI-SymbUniform"],
+    "time_period": "2025",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "assessing-correctness-in-llm-based-code-generation-via-uncertainty-estimation"
+  },
+  {
+    "claim": "A minimal proxy metric, symbolic cluster count (CC-Symb), correlates with correctness and enables an abstention policy achieving false positive rate below 0.02% (almost never presenting incorrect code) with false negative rates of 11.9%-20.3%, while the analogous code-embedding-based cluster count (CC-CodeEmbed) shows no significant correlation.",
+    "stance": "supports",
+    "stance_target": "a prescriptive, deployable abstention mechanism can be built from precise equivalence clustering alone, but only if the clustering is execution-grounded rather than embedding-based",
+    "evidence_type": "empirical",
+    "scope_conditions": "Abstention policy evaluation, correctness threshold 90%, 2-fold cross-validation, gpt-3.5-turbo-instruct and DeepSeek-R1",
+    "quoted_support": "SE-SymbNorm, SE-SymbUniform, and CC-Symb, all using symbolic clustering, achieve high accuracy and extremely low false positive rates... False negative rates (i.e., correct responses unnecessarily filtered out) range from 11.9% to 20.3%... CC-CodeEmbed doesn't exhibit statistically significant results.",
+    "numbers": ["false positive rate <0.02%", "false negative rate 11.9%-20.3%", "correctness threshold 90%"],
+    "entities": ["CC-Symb", "CC-CodeEmbed", "SE-SymbNorm", "SE-SymbUniform"],
+    "time_period": "2025",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "assessing-correctness-in-llm-based-code-generation-via-uncertainty-estimation"
+  },
+  {
+    "claim": "Symbolic execution is bounded (loops are unrolled up to a timeout), creating a risk of false-equivalence between programs whose behavioral differences only manifest beyond the unrolling limit -- a scalability and soundness limitation of execution-grounded equivalence.",
+    "stance": "neutral",
+    "stance_target": "practical feasibility limits of symbolic-execution-based equivalence clustering as a deployable technique",
+    "evidence_type": "theoretical",
+    "scope_conditions": "Limitations section",
+    "quoted_support": "A key limitation of our approach lies in the bounded nature of symbolic execution, particularly with respect to loops. To ensure tractability, we unroll loops and explore program paths only up to the timeout described in the experimental setup... two code snippets may be deemed semantically equivalent simply because their behavioural differences only manifest beyond the unrolling limit.",
+    "numbers": [],
+    "entities": ["symbolic execution", "loop unrolling"],
+    "time_period": "2025",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "assessing-correctness-in-llm-based-code-generation-via-uncertainty-estimation"
+  }
+]

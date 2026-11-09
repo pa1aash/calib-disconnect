@@ -1,0 +1,58 @@
+[
+  {
+    "claim": "Existing uncertainty scores for LLMs are often heuristic: choosing a threshold on such a score does not by itself provide statistical guarantees on the error rate among accepted (non-abstained) answers.",
+    "stance": "supports",
+    "stance_target": "the calibration disconnect: raw uncertainty scores alone are not trustworthy decision-making signals without further calibration machinery",
+    "evidence_type": "theoretical",
+    "scope_conditions": "general LLM QA deployment",
+    "quoted_support": "existing uncertainty scores for LLMs are often heuristic: a threshold chosen on such scores does not, by itself, provide statistical guarantees on the error rate among accepted answers.",
+    "numbers": [],
+    "entities": ["uncertainty scores", "selective answering"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260704430-uncertainty-aware-abstention-in-large-language-models-with-provable-al"
+  },
+  {
+    "claim": "CIC converts an ARBITRARY uncertainty score into a risk-controlled selective-answering rule by using a held-out calibration set to compute a high-probability upper confidence bound (Hoeffding or Clopper-Pearson) on the acceptance-conditioned error rate for each candidate threshold, then selecting the largest threshold whose bound stays below a user-set risk level alpha.",
+    "stance": "supports",
+    "stance_target": "a generic post-hoc wrapper can turn any uncertainty signal, well-calibrated or not, into a provably risk-controlled action -- directly applicable to wrapping a near-perfectly-calibrated sampling confidence signal",
+    "evidence_type": "theoretical",
+    "scope_conditions": "requires exchangeability assumption and a held-out calibration set",
+    "quoted_support": "For each candidate uncertainty threshold, CIC estimates the acceptance-conditioned error rate and constructs a high-probability upper confidence bound using either Hoeffding-style or Clopper-Pearson confidence intervals. It then selects the largest threshold whose upper bound is below a user-specified risk level alpha.",
+    "numbers": [],
+    "entities": ["CIC", "Hoeffding bound", "Clopper-Pearson interval"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260704430-uncertainty-aware-abstention-in-large-language-models-with-provable-al"
+  },
+  {
+    "claim": "Under exchangeability, CIC guarantees with probability at least 1-delta that the selected threshold controls the error rate among accepted answers at level alpha, and the method was validated on closed- and open-ended QA benchmarks across seven LLMs and multiple uncertainty estimators.",
+    "stance": "supports",
+    "stance_target": "feasibility of formally-guaranteed selective answering across diverse uncertainty estimator types",
+    "evidence_type": "empirical",
+    "scope_conditions": "seven LLMs, multiple uncertainty estimators, closed- and open-ended QA (general domain, not code)",
+    "quoted_support": "Under exchangeability, CIC guarantees with probability at least 1-delta that the selected threshold, if non-null, controls the error rate among accepted answers at level alpha.",
+    "numbers": ["seven LLMs"],
+    "entities": ["CIC", "exchangeability", "risk control"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260704430-uncertainty-aware-abstention-in-large-language-models-with-provable-al"
+  },
+  {
+    "claim": "CIC has not been applied to code generation or to repeated-sampling/self-consistency confidence signals specifically, leaving open whether wrapping a near-perfectly-calibrated sampling-based code confidence signal in this risk-control machinery yields a stronger accuracy-coverage tradeoff than existing code-specific abstention methods.",
+    "stance": "neutral",
+    "stance_target": "gap: CIC-style risk control has not been combined with the target paper's near-perfectly-calibrated sampling signal for code",
+    "evidence_type": "theoretical",
+    "scope_conditions": "inferred from abstract scope (general QA, not code)",
+    "quoted_support": "We evaluate CIC on both closed-ended and open-ended QA benchmarks across seven LLMs and multiple uncertainty estimators.",
+    "numbers": [],
+    "entities": ["code generation gap", "sampling confidence"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "260704430-uncertainty-aware-abstention-in-large-language-models-with-provable-al"
+  }
+]

@@ -1,0 +1,72 @@
+[
+  {
+    "claim": "FASE, an embedding-based adaptive-clustering semantic entropy that uses a minimum spanning tree of code-embedding distances to set clustering radius, outperforms LLM-entailment-based semantic entropy by ~25% average Spearman correlation and ~8-19% AUC while costing only ~0.3% of the runtime.",
+    "stance": "neutral",
+    "stance_target": "cheap consistency-based proxies can approximate expensive LLM-judge equivalence checks for code uncertainty estimation",
+    "evidence_type": "empirical",
+    "scope_conditions": "HumanEval (164 problems) and BigCodeBench-hard (148 problems); Mistral-7B, CodeLlama-7B, DeepSeek-Coder-7B, Qwen2.5-Coder-7B; Qwen3-Embedding-8B; m=10 samples, temperature 0.5, top_p 0.95",
+    "quoted_support": "FASE entropy... achieving a 25% average improvement in Spearman correlation and a 19% increase in ROCAUC score against Pass@1 from ground-truth test cases when using the Qwen3-Embedding-8B model... requiring only approximately 0.3% of the runtime cost of traditional semantic entropy approaches.",
+    "numbers": ["25% avg Spearman improvement", "19% AUC improvement (best embedding)", "0.3% runtime cost", "m=10 samples"],
+    "entities": ["FASE", "Qwen3-Embedding-8B", "DeepSeek-Coder-7B", "Qwen2.5-Coder-7B"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "fase-fast-adaptive-semantic-entropy-for-code-quality"
+  },
+  {
+    "claim": "For DeepSeek-Coder-7B and Qwen2.5-Coder-7B specifically -- the same model family used in the calibration-disconnect paper -- FASE achieves AUC of 0.74-0.98 against pass@1, depending on whether an analyst agent precedes the coder.",
+    "stance": "supports",
+    "stance_target": "consistency/clustering-based confidence signals are strongly discriminative for DeepSeek-Coder and Qwen2.5-Coder specifically",
+    "evidence_type": "empirical",
+    "scope_conditions": "HumanEval, coder-only and analyst+coder pipelines",
+    "quoted_support": "In the case of DeepSeek-Coder, FASE with scaled MST Mean/Mode achieves the strongest performance with a ρ of 0.40 and an AUC of 0.74... for Qwen2.5-Coder, FASE with scaled MST Mean/Mode again yields the best overall results, reaching a ρ of 0.50 and an AUC of 0.76... FASE again produces the strongest results for DeepSeek-Coder, with a ρ of 0.59 and an AUC of 0.91.",
+    "numbers": ["AUC 0.74 (DeepSeek-Coder, coder-only)", "AUC 0.76 (Qwen2.5-Coder, coder-only)", "AUC 0.91 (DeepSeek-Coder, with analyst)", "AUC 0.90 (Qwen2.5-Coder, with analyst, naive semantic entropy best)"],
+    "entities": ["DeepSeek-Coder-7B", "Qwen2.5-Coder-7B", "HumanEval"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "fase-fast-adaptive-semantic-entropy-for-code-quality"
+  },
+  {
+    "claim": "Naive text/NLI-based semantic entropy struggles to capture the functional impact of subtle symbolic code changes (e.g., range(n) vs range(n+1)), limiting its sensitivity to functional equivalence -- a structural blind spot of embedding/text similarity as an equivalence proxy.",
+    "stance": "supports",
+    "stance_target": "text/embedding-based semantic similarity is an unreliable proxy for functional equivalence in code, motivating execution-based or AST-based alternatives",
+    "evidence_type": "empirical",
+    "scope_conditions": "Comparison across Mistral, CodeLlama, DeepSeek-Coder, Qwen2.5-Coder on HumanEval/BigCodeBench-hard",
+    "quoted_support": "naive semantic entropy performs only moderately, as its underlying text-embedding models struggle to capture the functional impact of subtle but critical symbolic changes (e.g., range(n) vs. range(n+1)), limiting its sensitivity to functional equivalence.",
+    "numbers": [],
+    "entities": ["naive semantic entropy", "FASE union structural entropy"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "fase-fast-adaptive-semantic-entropy-for-code-quality"
+  },
+  {
+    "claim": "FASE has a structural blind spot: it cannot distinguish cases where all generated solutions consistently drift to the same wrong answer (low entropy despite being wrong), a failure mode inherent to any consistency-based confidence proxy.",
+    "stance": "refutes",
+    "stance_target": "consistency-based proxies (sampling agreement, semantic entropy, embedding clustering) are a complete substitute for ground-truth verification",
+    "evidence_type": "theoretical",
+    "scope_conditions": "Stated as future work / limitation, Section 7",
+    "quoted_support": "FASE does not explicitly distinguish cases where all generated solutions consistently drift away from the intended functionality with low entropy. Incorporating an additional dimension of semantic alignment with task requirements may improve the detection of functionally incorrect yet semantically consistent outputs.",
+    "numbers": [],
+    "entities": ["FASE"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "fase-fast-adaptive-semantic-entropy-for-code-quality"
+  },
+  {
+    "claim": "The study is explicitly constrained to 7B-parameter open-source models due to compute limits, matching a single-GPU research budget, and flags that broader model scales may change the results.",
+    "stance": "neutral",
+    "stance_target": "feasibility of single-GPU 7B-scale uncertainty quantification research for code LLMs",
+    "evidence_type": "empirical",
+    "scope_conditions": "Threats to Validity, Section 6",
+    "quoted_support": "Due to computational resource constraints, this study evaluates only open-source models with 7B parameters. The inclusion of additional models with broader architectural diversity and varying parameter scales may influence the observed performance and generalizability of FASE.",
+    "numbers": ["7B parameters"],
+    "entities": ["Mistral-7B", "CodeLlama-7B", "DeepSeek-Coder-7B", "Qwen2.5-Coder-7B"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "fase-fast-adaptive-semantic-entropy-for-code-quality"
+  }
+]

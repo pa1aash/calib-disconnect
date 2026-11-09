@@ -1,0 +1,58 @@
+[
+  {
+    "claim": "SCOPE adapts a Lean-theorem-proving-oriented model to emit three structured feedback fields (subgoals, gap analysis, robustness checklist) for code generation, trained via SFT plus process-aligned RL with dense structured-critique and sparse execution-score rewards.",
+    "stance": "neutral",
+    "stance_target": "candidate (a)/(d): requirement-decomposed generation and self-repair",
+    "evidence_type": "empirical",
+    "scope_conditions": "LiveCodeBench V6 and BigCodeBench (Hard), submitted July 2026",
+    "quoted_support": "We present SCOPE, a prover-initialized subgoal critic for code generation. SCOPE adapts a Lean-oriented prover model to produce three parseable feedback fields for downstream code generation: subgoals, gap analysis, and a robustness checklist.",
+    "numbers": ["LiveCodeBench V6: SCOPE 39.4% pass@1 vs Reflexion 36.6% vs coder-only 20.6%", "BigCodeBench (Hard): SCOPE 42.6% vs Reflexion 36.5% vs coder-only 34.5%"],
+    "entities": ["SCOPE", "Reflexion", "LiveCodeBench", "BigCodeBench", "Lean"],
+    "time_period": "Jul 2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260705810-scope-leveraging-subgoal-critiques-for-code-generation"
+  },
+  {
+    "claim": "SCOPE's improvement over baselines is concentrated specifically in tasks with concrete semantic constraints, and its code corrections are more localized than Reflexion's unstructured critique.",
+    "stance": "supports",
+    "stance_target": "value of requirement/subgoal-decomposed feedback for targeted repair",
+    "evidence_type": "empirical",
+    "scope_conditions": "LiveCodeBench V6 and BigCodeBench (Hard)",
+    "quoted_support": "Further analysis shows that SCOPE's gains are concentrated in tasks with concrete semantic constraints and that its code corrections are more localized than Reflexion's.",
+    "numbers": [],
+    "entities": ["SCOPE", "Reflexion"],
+    "time_period": "Jul 2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260705810-scope-leveraging-subgoal-critiques-for-code-generation"
+  },
+  {
+    "claim": "Existing feedback-based code generation methods rely on unstructured critique or raw execution signals that do not explicitly identify which semantic requirement the code is missing.",
+    "stance": "neutral",
+    "stance_target": "limitations of Reflexion-style unstructured feedback",
+    "evidence_type": "theoretical",
+    "scope_conditions": "feedback-based code generation literature",
+    "quoted_support": "Existing feedback-based methods improve over coder-only generation, but they often rely on unstructured critique or execution signals that do not explicitly identify what the code is semantically missing.",
+    "numbers": [],
+    "entities": ["SCOPE"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "260705810-scope-leveraging-subgoal-critiques-for-code-generation"
+  },
+  {
+    "claim": "SCOPE decomposes specifications into LLM/prover-generated subgoals rather than the actual per-unit-test requirement structure, and treats subgoals uniformly with no confidence-ranked prioritization of which subgoal deserves more inference-time compute.",
+    "stance": "supports",
+    "stance_target": "residual novelty of confidence-triggered per-requirement compute allocation (candidate b/d) even after SCOPE",
+    "evidence_type": "theoretical",
+    "scope_conditions": "as described in SCOPE abstract, July 2026",
+    "quoted_support": "SCOPE, a prover-initialized subgoal critic for code generation.",
+    "numbers": [],
+    "entities": ["SCOPE"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "low",
+    "source_note_id": "260705810-scope-leveraging-subgoal-critiques-for-code-generation"
+  }
+]

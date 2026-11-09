@@ -1,0 +1,44 @@
+[
+  {
+    "claim": "CAPO proves that GRPO-style overconfidence -- where incorrect responses obtain lower perplexity than correct ones -- stems specifically from uncertainty-agnostic advantage estimation, which misaligns optimization gradients with an AUC-style discrimination objective.",
+    "stance": "refutes",
+    "stance_target": "standard GRPO advantage estimation is compatible with good discrimination (AUC/AUROC)",
+    "evidence_type": "theoretical",
+    "scope_conditions": "GRPO-style RL post-training for reasoning",
+    "quoted_support": "We first prove that this degradation in GRPO-style algorithms stems from their uncertainty-agnostic advantage estimation, which inevitably misaligns optimization gradients with calibration.",
+    "numbers": [],
+    "entities": ["CAPO", "GRPO", "AUC"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260412632-calibration-aware-policy-optimization-for-reasoning-llms"
+  },
+  {
+    "claim": "CAPO replaces the standard advantage estimator with a logistic AUC surrogate loss that is theoretically consistent and admits a provable regret bound, making advantage estimation uncertainty-aware and directly optimizing for discrimination rather than calibration error alone.",
+    "stance": "supports",
+    "stance_target": "a discrimination-first (AUC-surrogate) training objective is a viable alternative to calibration-error-first objectives like Brier/log-scoring",
+    "evidence_type": "theoretical",
+    "scope_conditions": "CAPO's advantage-estimation redesign",
+    "quoted_support": "It adopts a logistic AUC surrogate loss that is theoretically consistent and admits regret bound, enabling uncertainty-aware advantage estimation.",
+    "numbers": [],
+    "entities": ["logistic AUC surrogate loss", "regret bound"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260412632-calibration-aware-policy-optimization-for-reasoning-llms"
+  },
+  {
+    "claim": "CAPO-1.5B improves calibration by up to 15% while matching or beating GRPO accuracy on multiple mathematical reasoning benchmarks, and boosts downstream inference-time-scaling accuracy by up to 5%; under an abstention option it achieves a Pareto-optimal precision-coverage trade-off.",
+    "stance": "supports",
+    "stance_target": "AUC-surrogate calibration-aware policy optimization achieves both calibration and accuracy gains, plus downstream abstention utility, at small model scale",
+    "evidence_type": "empirical",
+    "scope_conditions": "CAPO-1.5B, mathematical reasoning benchmarks, inference-time scaling and abstention settings",
+    "quoted_support": "Experiments on multiple mathematical reasoning benchmarks show that CAPO-1.5B significantly improves calibration by up to 15% while achieving accuracy comparable to or better than GRPO, and further boosts accuracy on downstream inference-time scaling tasks by up to 5%.",
+    "numbers": ["calibration improved up to 15%", "accuracy boosted up to 5%", "1.5B parameters"],
+    "entities": ["CAPO-1.5B", "inference-time scaling", "abstention"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260412632-calibration-aware-policy-optimization-for-reasoning-llms"
+  }
+]

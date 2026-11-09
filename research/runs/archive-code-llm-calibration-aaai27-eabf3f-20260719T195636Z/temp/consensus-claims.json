@@ -1,0 +1,32 @@
+[
+  {
+    "claim": "Sampling/execution-based (self-consistency) confidence is well-calibrated and discriminative for code functional correctness (AUROC ~0.80-0.99 across studies).",
+    "independent_sources": ["disconnect-paper-grounding (0.987)", "functional-entropy (0.87)", "fase (0.74-0.91)", "self-improving-consenf (0.804)", "assessing-correctness-sharma-david (symbolic-exec clustering)"],
+    "note": "This is now 2026 CONSENSUS. It is therefore NOT a novel headline by itself — the paper must build ON it, not re-establish it."
+  },
+  {
+    "claim": "Token log-probability is a poor predictor of code functional correctness; post-hoc calibration improves ECE but not discrimination.",
+    "independent_sources": ["disconnect-paper-grounding", "spiess-icse25", "sharma-david", "multicalibration-for-code", "guo2017 (post-hoc scaling background)"],
+    "note": "Settled ground; can assert without hedging."
+  },
+  {
+    "claim": "Every existing train-time method for making STATED/verbalized confidence calibrated has been evaluated on QA/math/reasoning, NOT on code generation.",
+    "independent_sources": ["rewarding-doubt", "beyond-binary-rewards", "csr", "conftuner", "lacie", "sayself", "conqord", "uncertainty-distillation", "orce", "jang-self-verification"],
+    "note": "The load-bearing GAP. ~10+ independent methods, zero code. RLCM touches code only via OOD probe transfer, not code-specific expressed-confidence training."
+  },
+  {
+    "claim": "Distilling a self-consistency / sampling signal into a model's stated confidence (via SFT or RL) raises verbal discrimination substantially (AUROC to ~0.79-0.86) at 7-8B single-GPU scale.",
+    "independent_sources": ["rewarding-doubt (A40 LoRA, 0.859)", "jang (SFT, 0.81)", "uncertainty-distillation (0.69-0.79)", "orce (DPO)", "conftuner (7-8B)"],
+    "note": "Strong PRIOR EVIDENCE that the proposed mechanism works => underwrites P2 (confidence the headline lands). The novelty is porting it to code with execution-grounded targets."
+  },
+  {
+    "claim": "Uncertainty signals, once available, translate into real downstream wins for code (decoding-time gains +16-21% pass@1; abstention with formal risk control).",
+    "independent_sources": ["adadec (+20.9%)", "uscd (+16.6%)", "task-abstention-for-code", "riscoset", "conformal-abstention-deepmind"],
+    "note": "Supports a utility/selective-generation corollary; AAAI precedent exists (AdapT @ AAAI 2024)."
+  },
+  {
+    "claim": "Deployed single-pass/post-hoc confidence interfaces fail to help real developers, and developers prefer coarse/categorical signals over raw numbers.",
+    "independent_sources": ["in-ide-calibration-at-scale (24M interactions)", "copilot-zoominfo (no signal exposed)", "critical-or-compliant"],
+    "note": "Motivation for a BETTER expressed interface; licenses a categorical/risk-tier output."
+  }
+]

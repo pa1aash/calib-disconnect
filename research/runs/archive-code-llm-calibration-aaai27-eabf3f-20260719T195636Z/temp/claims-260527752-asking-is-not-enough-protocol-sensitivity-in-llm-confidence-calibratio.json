@@ -1,0 +1,58 @@
+[
+  {
+    "claim": "The token-probability-vs-verbalized-confidence calibration gap reported in prior work is highly sensitive to the conditioning context under which the token probability is measured, to the point that the sign of the ECE gap can flip.",
+    "stance": "refutes",
+    "stance_target": "any single-protocol measurement of sampling-confidence vs. verbal-confidence calibration gap being treated as a stable, protocol-independent finding",
+    "evidence_type": "empirical",
+    "scope_conditions": "4 QA benchmarks, 3 open 7-8B base/Instruct model families, plus larger Qwen2.5 variants as robustness check",
+    "quoted_support": "conditioning context changes the sign or magnitude of the ECE gap across settings, token readout produces smaller but still sign-moving changes, and changing the ECE estimator has little effect.",
+    "numbers": ["4 QA benchmarks", "3 model families", "7-8B parameter models"],
+    "entities": ["Hankyeol Kim", "Pilsung Kang", "Qwen2.5", "ECE"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260527752-asking-is-not-enough-protocol-sensitivity-in-llm-confidence-calibratio"
+  },
+  {
+    "claim": "Under the default generated-answer, bare-context protocol, Instruct-tuned models show near parity between token-probability and verbalized confidence rather than the large verbalized-confidence deficit reported elsewhere.",
+    "stance": "neutral",
+    "stance_target": "the size/direction of the verbal-vs-token confidence gap in Instruct models",
+    "evidence_type": "empirical",
+    "scope_conditions": "generated-answer, bare-context elicitation protocol; Instruct model variants",
+    "quoted_support": "Under the default generated-answer, bare-context protocol, Instruct settings are close to parity rather than showing a large calibration gain for verbalized confidence.",
+    "numbers": [],
+    "entities": ["Instruct models"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "260527752-asking-is-not-enough-protocol-sensitivity-in-llm-confidence-calibratio"
+  },
+  {
+    "claim": "Verbalized confidence tracks answer plausibility and provenance rather than actual correctness: surface-plausible wrong answers receive nearly the same verbalized confidence as supplied gold answers.",
+    "stance": "supports",
+    "stance_target": "verbal confidence fails as a calibration signal because it reflects surface features rather than truth",
+    "evidence_type": "empirical",
+    "scope_conditions": "supplied-answer analysis variant of the protocol",
+    "quoted_support": "surface-plausible wrong answers receive nearly the same confidence as supplied gold answers, suggesting that verbalized confidence also reflects answer plausibility and provenance rather than correctness alone.",
+    "numbers": [],
+    "entities": [],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260527752-asking-is-not-enough-protocol-sensitivity-in-llm-confidence-calibratio"
+  },
+  {
+    "claim": "Both token-probability and verbalized confidence signals should be treated as protocol-dependent behavioral measurements rather than direct readouts of latent model uncertainty, and studies should report a checklist of elicitation provenance, scored answer, token-probability readout, and conditioning context.",
+    "stance": "refutes",
+    "stance_target": "treating AUROC/ECE calibration numbers from a single measurement protocol as an intrinsic property of the model",
+    "evidence_type": "theoretical",
+    "scope_conditions": "general methodological recommendation for LLM confidence calibration research",
+    "quoted_support": "We argue that both confidence signals should be treated as protocol-dependent behavioral measurements, and provide a reporting checklist covering elicitation provenance, scored answer, token-probability readout, and conditioning context.",
+    "numbers": [],
+    "entities": [],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260527752-asking-is-not-enough-protocol-sensitivity-in-llm-confidence-calibratio"
+  }
+]

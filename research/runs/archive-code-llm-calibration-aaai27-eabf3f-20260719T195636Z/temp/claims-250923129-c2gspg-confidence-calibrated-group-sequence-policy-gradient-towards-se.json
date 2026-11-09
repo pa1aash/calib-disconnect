@@ -1,0 +1,44 @@
+[
+  {
+    "claim": "C2GSPG defines model confidence as a normalized sequence-level log-probability (a logit-based internal signal) rather than a verbalized token, and applies a cross-entropy regularizer to align this confidence with the sequence-level reward.",
+    "stance": "neutral",
+    "stance_target": "logit-based confidence signals are a distinct design point from both verbalized tokens and hidden-state probes",
+    "evidence_type": "theoretical",
+    "scope_conditions": "C2GSPG's confidence definition and regularizer design",
+    "quoted_support": "For each reasoning problem, the method generates a group of sequences and defines model confidences using normalized sequence-level probabilities, proposing a confidence-modulated advantage function.",
+    "numbers": [],
+    "entities": ["C2GSPG", "GSPG", "normalized sequence-level probability"],
+    "time_period": "2025-2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "250923129-c2gspg-confidence-calibrated-group-sequence-policy-gradient-towards-se"
+  },
+  {
+    "claim": "The paper proves that its calibration regularizer and its sequence-level policy-gradient objective share the same gradient direction for binary rewards, meaning no accuracy/calibration trade-off arises in that setting, though a potential conflict is acknowledged and mitigated for non-binary rewards via nonlinear reward normalization and adaptive regularizer clipping.",
+    "stance": "refutes",
+    "stance_target": "joint calibration+accuracy objectives always suffer gradient conflict (contrasts with DCPO's more general claim)",
+    "evidence_type": "theoretical",
+    "scope_conditions": "binary-reward reasoning tasks specifically; non-binary rewards require additional mitigation",
+    "quoted_support": "We demonstrate that the confidence calibration regularizer and GSPG are collaborative for binary rewards, as their objectives always share the same gradient direction.",
+    "numbers": [],
+    "entities": ["cross-entropy regularizer", "binary reward"],
+    "time_period": "2025-2026",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "250923129-c2gspg-confidence-calibrated-group-sequence-policy-gradient-towards-se"
+  },
+  {
+    "claim": "C2GSPG is evaluated only on logical and mathematical reasoning post-training tasks, with no code-domain evaluation, and RLCM (a later 2026 paper) reports C2GSPG's logit-based confidence underperforms a hidden-state linear probe on both accuracy and calibration.",
+    "stance": "supports",
+    "stance_target": "logit-based confidence signals, though internal to the model, are still less expressive than hidden-state probes",
+    "evidence_type": "empirical",
+    "scope_conditions": "cross-paper comparison; C2GSPG's own evaluation is math/logic only",
+    "quoted_support": "Applying C2GSPG to post-train large language models in logical and mathematical reasoning tasks, we show its superiority over state-of-the-art methods in both reasoning accuracy and confidence calibration.",
+    "numbers": [],
+    "entities": ["C2GSPG", "RLCM"],
+    "time_period": "2025-2026",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "250923129-c2gspg-confidence-calibrated-group-sequence-policy-gradient-towards-se"
+  }
+]

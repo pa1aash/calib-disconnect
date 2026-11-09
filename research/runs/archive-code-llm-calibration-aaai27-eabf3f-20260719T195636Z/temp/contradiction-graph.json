@@ -1,0 +1,87 @@
+[
+  {
+    "cluster_id": "verbal-fixable",
+    "fight": "Can a code/LLM be made to EXPRESS discriminative confidence, or is the verbalized interface fundamentally hopeless?",
+    "side_a": {
+      "position": "Verbalized confidence is a dead end: unstable across paraphrases/resamples, adversarially brittle, and encoded orthogonally to the true calibration direction in activation space.",
+      "claims": ["CSR: verbalized confidence unstable across paraphrases, abandon it for semantic-level reward", "Miao&Ungar: calibration and verbal-confidence directions are orthogonal in activations; CoT contaminates the verbal direction", "Obadinma: verbal confidence adversarially brittle", "Our paper: self-verbal AUROC 0.52-0.56, 67% at max confidence; SFT gives calibration WITHOUT discrimination"],
+      "sources": ["calibrating-llms-with-semantic-level-reward", "260325052-closing-the-confidence-faithfulness-gap", "250706489-on-the-robustness-of-verbal-confidence", "disconnect-paper-grounding"]
+    },
+    "side_b": {
+      "position": "TRAINED verbalized confidence IS discriminative — the failure is untrained self-report, not the interface. Distilling self-consistency/execution signal into stated confidence works.",
+      "claims": ["Rewarding Doubt: RL log-score reward => verbal AUROC 0.859, more discriminative than a trained probe, single A40 LoRA", "Jang: SFT on self-consistency scalar => AUROC 50.57->81.25 on GSM8K", "Uncertainty Distillation: MC-sample+isotonic+SFT into verbal bins => AUROC 0.69-0.79", "ORCE: Spearman-rank DPO vs sampling surrogate => ECE 0.17->0.025", "ConfTuner: proper tokenized Brier => +14.4% AUROC"],
+      "sources": ["rewarding-doubt", "verbalized-confidence-triggers-self-verification", "uncertainty-distillation", "orce-order-aware-alignment", "conftuner"]
+    },
+    "evidence_quality_delta": "Both empirical. Side B has more independent demonstrations (5+ methods, AUROC 0.79-0.86) but ALL on QA/math; side A's strongest point (orthogonality, instability) is mechanistic and also QA. Neither side has CODE evidence — the decisive gap.",
+    "scope_overlap": "Genuine disagreement about the interface's ceiling, but both are QA-scoped. On code specifically it is UNRESOLVED — which is the paper's opening.",
+    "decision_relevance": "high"
+  },
+  {
+    "cluster_id": "self-vs-external-verbal",
+    "fight": "Does verbal confidence for code fail (AUROC ~0.52) or succeed (AUROC 0.75-0.97)?",
+    "side_a": {
+      "position": "Verbal confidence for code barely beats random.",
+      "claims": ["Our paper: verbal AUROC 0.519-0.564 on HumanEval (self-assessment, same model rates own solution)", "Functional Entropy: verbalized confidence inconsistent 0.52-0.80"],
+      "sources": ["disconnect-paper-grounding", "functional-entropy-predicting-functional-correctness"]
+    },
+    "side_b": {
+      "position": "External LLM-as-judge verbalized confidence discriminates well on simple code.",
+      "claims": ["AutoProbe: external LLM-as-Judge verbalized confidence 0.75-0.97 accuracy on independent-unit code (beats internal probing), collapses to 0.70-0.80 on repo-level"],
+      "sources": ["model-agnostic-correctness-assessment-via-dynamic-internal"]
+    },
+    "evidence_quality_delta": "Both empirical. Reconciliation likely: SELF-assessment (own solution, in-context) fails; EXTERNAL/fresh-context judge succeeds; and complexity mediates (simple vs repo-level reverse the ranking).",
+    "scope_overlap": "Scoped differently (self vs external judge; unit vs repo) and probably both right — the reconciliation IS a finding.",
+    "decision_relevance": "high"
+  },
+  {
+    "cluster_id": "single-pass-ceiling",
+    "fight": "Can a cheap single-pass interface (probe/logit) ever match the expensive n-sample oracle for code?",
+    "side_a": {
+      "position": "No — single-pass hidden states hit an informational ceiling for code correctness.",
+      "claims": ["AutoProbe/Openia: single-pass probes plateau 0.63-0.79; oracle upper bound ~0.66-0.77 on short code", "Sharma&David: log-probs NOT significantly correlated with correctness on LiveCodeBench; only symbolic-execution clustering restores signal", "Our paper: log-prob AUROC 0.668; post-hoc calibration DEGRADES AUROC"],
+      "sources": ["model-agnostic-correctness-assessment-via-dynamic-internal", "assessing-correctness-in-llm-based-code-generation-via-uncertainty", "disconnect-paper-grounding"]
+    },
+    "side_b": {
+      "position": "Yes — trained single-pass modules recover most of the multi-sample signal (in QA).",
+      "claims": ["Semantic Entropy Probes: single-generation hidden-state probe approximates semantic entropy at ~0 overhead", "Dist2ill: one-pass module approximates sampling-derived confidence", "Sample-scaling: n=2 hybrid gives +12 AUROC then diminishes"],
+      "sources": ["240615927-semantic-entropy-probes", "250511731-dist2ill", "260319118-how-uncertainty-estimation-scales-with-sampling"]
+    },
+    "evidence_quality_delta": "Side A code-specific and includes an oracle-bound argument (strong). Side B is QA and never validated on code. For CODE, side A currently wins => 'probe recovers oracle' is a risky headline.",
+    "scope_overlap": "Genuine on code; side B's success is out-of-domain (QA). The code informational ceiling is a real constraint.",
+    "decision_relevance": "high"
+  },
+  {
+    "cluster_id": "ece-validity",
+    "fight": "Is the calibration disconnect a real signal or a metric/benchmark artifact?",
+    "side_a": {
+      "position": "ECE and near-perfect AUROC may be artifacts: ECE_bin is biased, protocol-sensitive, and HumanEval is contaminated.",
+      "claims": ["Roelofs: ECE_bin biased, equal-width worst; debiased estimators change conclusions", "Kim&Kang: prob-vs-verbal ECE gap flips sign with conditioning", "Riddell/TRACER: HumanEval/MBPP overlap pretraining incl. semantic 'shared-logic' contamination", "Spiess: Platt 'bucket collapse' fakes ECE~0 while Skill Score shows no utility"],
+      "sources": ["201208668-mitigating-bias-in-calibration-error-estimation", "260527752-asking-is-not-enough-protocol-sensitivity", "240304811-quantifying-contamination", "calibration-and-correctness-of-language-models-for-code"]
+    },
+    "side_b": {
+      "position": "The discrimination gap is robust: it shows up on AUROC (binning-free), across models, and via execution ground-truth.",
+      "claims": ["Our paper: sampling AUROC 0.987 with INDEPENDENT labels; verbal 0.52 — a rank-metric gap immune to ECE binning", "ConSelf: replicates difficulty-level disconnect on same models + LiveCodeBench (contamination-resistant)"],
+      "sources": ["disconnect-paper-grounding", "self-improving-code-generation-via-semantic-entropy"]
+    },
+    "evidence_quality_delta": "Side A raises valid threats to ECE-based claims; side B's AUROC + LiveCodeBench replication answers them. Net: paper must use AUROC-primary + a contamination-free benchmark to be bulletproof.",
+    "scope_overlap": "Genuine methodological caution; resolvable by design (rank metrics + LiveCodeBench).",
+    "decision_relevance": "high"
+  },
+  {
+    "cluster_id": "joint-objective-conflict",
+    "fight": "Can accuracy and calibration be optimized jointly in one training objective?",
+    "side_a": {
+      "position": "No — there is a proven gradient conflict.",
+      "claims": ["DCPO: theoretically proves gradient conflict between jointly optimizing accuracy and a calibration term in one reward"],
+      "sources": ["260309117-dcpo"]
+    },
+    "side_b": {
+      "position": "Yes with the right surrogate — discrimination-first/proper-scoring losses preserve accuracy.",
+      "claims": ["CAPO: AUC/discrimination-first surrogate preserves accuracy", "Beyond Binary Rewards: bounded proper scoring rule yields accurate+calibrated policy", "Rewarding Doubt: negligible accuracy impact"],
+      "sources": ["capo", "beyond-binary-rewards", "rewarding-doubt"]
+    },
+    "evidence_quality_delta": "Side A theoretical (narrow conditions); side B empirical with multiple existence proofs. Design implication: decouple or use proper-scoring/advantage-reshaping, don't naively add an ECE penalty.",
+    "scope_overlap": "Both right under different objective designs; a design caveat, not a blocker.",
+    "decision_relevance": "medium"
+  }
+]

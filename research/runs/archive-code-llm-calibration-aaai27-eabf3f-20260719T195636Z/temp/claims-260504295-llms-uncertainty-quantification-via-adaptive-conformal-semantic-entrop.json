@@ -1,0 +1,58 @@
+[
+  {
+    "claim": "Adaptive Conformal Semantic Entropy (ACSE) clusters semantic entropy across multiple diverse sampled responses and adaptively adjusts the uncertainty score based on cluster semantic features, requiring multi-sample generation (not single-pass).",
+    "stance": "neutral",
+    "stance_target": "multi-sample semantic clustering methods as a UQ baseline",
+    "evidence_type": "empirical",
+    "scope_conditions": "general LLM QA tasks (e.g., TriviaQA), not code generation",
+    "quoted_support": "Our uncertainty scoring function is based on clustering semantic entropy of multiple diverse responses to the same prompt. The function adaptively adjusts the uncertainty score based on semantic features of each cluster.",
+    "numbers": [],
+    "entities": ["ACSE", "Adaptive Conformal Semantic Entropy", "Hamed Karimi"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260504295-llms-uncertainty-quantification-via-adaptive-conformal-semantic-entrop"
+  },
+  {
+    "claim": "ACSE applies conformal calibration to provide a finite-sample, distribution-free guarantee that the error rate among accepted (non-abstained) responses remains bounded by a user-specified tolerance.",
+    "stance": "supports",
+    "stance_target": "conformal calibration is a viable tool for providing statistical guarantees on top of semantic uncertainty scores",
+    "evidence_type": "theoretical",
+    "scope_conditions": "general LLM UQ with accept/abstain decision rule",
+    "quoted_support": "we use conformal calibration to apply a decision rule to accept/abstain the prompts, providing a finite-sample, distribution-free guarantee such that the error rate among the accepted responses remains bounded by a user-specified tolerance.",
+    "numbers": [],
+    "entities": ["conformal calibration", "ACSE"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260504295-llms-uncertainty-quantification-via-adaptive-conformal-semantic-entrop"
+  },
+  {
+    "claim": "ACSE achieves AUROC of 0.88 on TriviaQA, compared to 0.65 for a token-entropy baseline, using multi-sample semantic clustering plus conformal calibration.",
+    "stance": "supports",
+    "stance_target": "sampling-based semantic uncertainty substantially outperforms simple token-probability baselines",
+    "evidence_type": "empirical",
+    "scope_conditions": "TriviaQA dataset, specific LLMs tested in the paper",
+    "quoted_support": "As a highlight, for TriviaQA dataset, AUROC of our approach is 0.88 compared to 0.65 produced by the token entropy approach.",
+    "numbers": ["AUROC 0.88", "AUROC 0.65"],
+    "entities": ["ACSE", "TriviaQA", "token entropy"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260504295-llms-uncertainty-quantification-via-adaptive-conformal-semantic-entrop"
+  },
+  {
+    "claim": "Existing UQ approaches that prioritize lexical or probabilistic (token-level) measures often ignore the semantic variance of different responses that share the same meaning.",
+    "stance": "refutes",
+    "stance_target": "token-probability-only confidence measures are sufficient for LLM UQ",
+    "evidence_type": "theoretical",
+    "scope_conditions": "general LLM UQ literature",
+    "quoted_support": "Existing approaches for uncertainty quantification typically prioritize lexical or probabilistic measures; however, these techniques often ignore the semantic variance of different responses with similar meaning.",
+    "numbers": [],
+    "entities": ["lexical measures", "probabilistic measures", "semantic variance"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "260504295-llms-uncertainty-quantification-via-adaptive-conformal-semantic-entrop"
+  }
+]
