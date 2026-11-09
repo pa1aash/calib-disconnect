@@ -1,6 +1,6 @@
 # Project context (read first)
 
-Last updated: wave 2, 2026-11-10. This is the short capsule every session reads before doing anything
+Last updated: wave 3, 2026-11-10. This is the short capsule every session reads before doing anything
 else. Details live in the files it points to.
 
 ## Goal
@@ -99,10 +99,11 @@ not say which side is right.
 
 ## Current stage
 
-Waves 0 to 2 are complete: the repository is published and scrubbed, the legacy bundle is mapped,
-frozen, and inventoried, and the venue pack is in place. No new pipeline code, experiment, or
-manuscript text exists yet. The next stage is to design the new evaluation pipeline (benchmarks,
-models, label protocol, confidence methods, metrics, and seeds), informed by the method inventory.
+Waves 0 to 3 are complete. Wave 3 added the layout for new work (table above), the writing system
+(`paper/STYLE.md`, `docs/style/prose-audit-prompt.md`, `tools/prose_lint.py` with a baseline on v3 in
+`docs/s3/LINT_BASELINE_v3.md`), `docs/s3/ORIENTATION.md`, and `docs/s3/POSITIONING_BRIEF.md`. No
+pipeline code, experiment, or manuscript text exists yet. The next stage is the literature-positioning
+run scoped by the brief; pipeline design follows it.
 
 ## Conventions
 
