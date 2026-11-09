@@ -12,7 +12,7 @@ harder" additions.
 ## Run config
 - vault_tag: aaai-bar-eval-dprc-d78e07
 - query_file: research/query-aaai-bar-eval-dprc-d78e07.md
-- HPR: C:/Users/arjun/anaconda3/Scripts/hyperresearch.exe
+- HPR: <user-home>/anaconda3/Scripts/hyperresearch.exe
 - modality: SYNTHESIZE (defended verdict on standing + prioritized gap plan; compare-vs-accepted as substructure)
 
 ## Modality rationale

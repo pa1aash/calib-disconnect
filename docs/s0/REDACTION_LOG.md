@@ -40,3 +40,15 @@ Files withheld from git (via `.gitignore`), not redacted:
   `credentials/` are ignored anyway.
 - `src/v4_dprc/README.md` is withheld because it references a local agent-tool plan path.
   It needs an operator decision; see `docs/s0/W0_REPORT.md`.
+
+## W1 (2026-11-10)
+
+Operator decision A3: personal home path replaced with the placeholder `<user-home>`.
+The drive or mount prefix in front of the home directory (`C:` and `/c`) was replaced
+together with it, so each line now reads `<user-home>/...`. `/home/ubuntu` paths were
+left untouched by design.
+
+| # | File | Line | Class | Replacement token |
+|---|------|------|-------|-------------------|
+| 12 | research/runs/archive-aaai-bar-eval-dprc-d78e07-20260720T063245Z/scaffold.md | 15 | personal identifier (home path) | `<user-home>` |
+| 13 | research/runs/archive-code-llm-calibration-aaai27-eabf3f-20260719T195636Z/scaffold.md | 15 | personal identifier (home path) | `<user-home>` |

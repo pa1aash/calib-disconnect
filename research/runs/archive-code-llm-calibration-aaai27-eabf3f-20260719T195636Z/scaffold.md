@@ -12,7 +12,7 @@ attaining a headline and supporting results. give me a good paper!"
 ## Run config
 - vault_tag: code-llm-calibration-aaai27-eabf3f
 - query_file: research/query-code-llm-calibration-aaai27-eabf3f.md
-- HPR binary: /c/Users/arjun/anaconda3/Scripts/hyperresearch
+- HPR binary: <user-home>/anaconda3/Scripts/hyperresearch
 - modality: **compare/forecast hybrid → treated as SYNTHESIZE** (defended thesis:
   "here is the ONE paper idea and why it beats the alternatives"). Output is a
   single committed recommendation with a scored comparison of candidate ideas.
