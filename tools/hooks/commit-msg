@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Reject commit messages that contain tool attribution or co-author trailers.
+# Patterns use bracket classes so this file does not contain the literal strings.
+set -euo pipefail
+msg_file="$1"
+# Ignore git's comment lines when checking.
+body="$(grep -v '^#' "$msg_file" || true)"
+pattern='cl[a]ude|anthrop[i]c|co-authored[-]by|generated[ ]with'
+if printf '%s\n' "$body" | grep -qiE "$pattern"; then
+  echo "commit-msg hook: message contains a forbidden attribution string; rejected." >&2
+  exit 1
+fi
+exit 0
