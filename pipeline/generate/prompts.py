@@ -33,7 +33,11 @@ FUNCTION_BENCHMARKS = ("humaneval_plus", "mbpp_plus")
 # Stop strings for completion-style generation by base models (EvalPlus style: a new top-level
 # definition, comment, decorator, print, conditional, or a closing fence ends the function body).
 # Not verified against the installed evalplus source; recorded in config/prompts.json.
-BASE_STOP_STRINGS = ("\nclass", "\ndef", "\n#", "\n@", "\nprint", "\nif", "\n```")
+BASE_STOP_STRINGS: tuple[str, ...] = ("\nclass", "\ndef", "\n#", "\n@", "\nprint", "\nif", "\n```")
+try:   # the execute module exports the tuple that generation must share (design section 10)
+    from pipeline.execute.extract import BASE_STOP_STRINGS  # type: ignore[no-redef]
+except ImportError:
+    pass
 
 _PLACEHOLDER = re.compile(r"\{(payload|prompt|statement|starter_code|program|question)\}")
 

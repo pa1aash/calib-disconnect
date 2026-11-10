@@ -31,7 +31,10 @@ from .prompts import PromptSet, apply_chat, encode_prompt, render_generation_pro
 SENT_G = "QXGENQX"
 SENT_A = "QXASSTQX"
 SENT_U = "QXUSERQX"
-THOUGHT_END_MARKERS = ("</think>",)
+# Qwen3: "<think>...</think>". Gemma 4 (checked by rendering the pinned chat template with jinja2):
+# "<|channel>thought\n...<channel|>". With thinking off the Gemma generation prompt itself ends with the
+# empty block "<|channel>thought\n<channel|>", so it is part of the prompt and not of the completion.
+THOUGHT_END_MARKERS = ("</think>", "<channel|>")
 
 
 # ---------------------------------------------------------------------------------------------------

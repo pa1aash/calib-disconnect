@@ -17,3 +17,21 @@
    not verified against the installed evalplus source. vLLM `top_k=-1` and `generation_config="vllm"` are not verified on 0.33.0 (pod only).
 7. Capture shard indices follow generation shard indices one to one; shards are chunked within blocks of 10
    sample indices so adding samples 11..20 never changes earlier shards.
+
+## Gemma 4 thought markers (G21), for pipeline/execute/extract.py (owner: orchestrator)
+
+Verified by rendering the pinned chat template (`google/gemma-4-12B-it` at 43c9d014..., same template file
+hash for the 31B model) with jinja2; tokenizer_config.json names `<|channel>` (soc), `<channel|>` (eoc), `<turn|>` (eot).
+- Thinking off: the generation prompt itself ends with `<|channel>thought\n<channel|>`. The empty block is
+  therefore in the prompt, not emitted by the model, so completions normally contain no thought block.
+- Thinking on: the block is `<|channel>thought\n` ... `<channel|>`, followed by the answer.
+- Correct `THOUGHT_MARKERS` entry: `("<|channel>thought", "<channel|>", False)` (the existing `empty_only=True`
+  entry with these strings is right for thinking off; allow non-empty for thinking on). Remove the unverified
+  `("<|channel|>thought", "<|channel|>", ...)` and `("<start_of_thought>", "<end_of_thought>", ...)` entries.
+- `BASE_STOP_STRINGS` is now imported by `pipeline.generate.prompts` from `pipeline.execute.extract`.
+
+## Timing-only jobs (G10)
+
+`cfg.extra["timing_only"]`: generate writes only generation set "timing" (always rewritten); capture runs the
+forward passes over it and stores nothing; timings go to `StageReport.metrics` and `logs/timing_<model>.json`.
+Normal capture ignores the "timing" directory. Readouts and ops must not read it.

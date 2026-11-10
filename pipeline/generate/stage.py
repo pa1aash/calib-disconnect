@@ -36,12 +36,14 @@ from .backends import MockBackend, TransformersBackend, VLLMBackend
 from .capture import MockCapture, TransformersCapture
 from .prompts import PromptSet, chat_template_sha256, load_prompts, supports_thinking_flag
 from .requests import ModelSpec, build_fresh_requests, build_requests, model_spec
+from .cards import load_tracked as load_tracked_cards
 from .storage import (atomic_write, load_capture_shard, read_generation_shard, register, shard_complete,
                       write_capture_shard, write_generation_shard)
 from .tokens import answer_token_variants, derive_turns
 
 PRODUCER_GEN = "pipeline.generate.stage:run_generate"
 PRODUCER_CAP = "pipeline.generate.stage:run_capture"
+TIMING_SET = "timing"
 
 
 # ---------------------------------------------------------------------------------------------------
@@ -187,14 +189,15 @@ class _LazyGenBackend:
 
 def _run_sets(cfg: RunConfig, layout: RunLayout, manifest: Manifest, rep: StageReport, prompts: PromptSet, spec: ModelSpec,
               benchmark: str, problems: list[Problem], reqs: list, gen_set: str, backend: _LazyGenBackend,
-              adapter_path: str | None, dry_run: bool) -> None:
+              adapter_path: str | None, dry_run: bool, *, force: bool = False,
+              collect: list | None = None) -> None:
     shards = _chunks(reqs, cfg.shard_size)
     n_done = 0
     for idx, chunk in enumerate(shards):
         path = layout.generation_shard(spec.key, benchmark, gen_set, idx)
         h = _gen_hash(spec, benchmark, gen_set, cfg.shard_size, prompts, cfg.backend, chunk)
         rel = os.path.relpath(path, layout.root)
-        if shard_complete(manifest, layout, [path], h):
+        if not force and shard_complete(manifest, layout, [path], h):
             rep.skipped.append(rel)
             continue
         if dry_run:
@@ -204,6 +207,8 @@ def _run_sets(cfg: RunConfig, layout: RunLayout, manifest: Manifest, rep: StageR
         recs = backend.get().generate(chunk, adapter_path=adapter_path)
         dt = time.time() - t0
         write_generation_shard(path, recs)
+        if collect is not None:
+            collect.extend(recs)
         rep.outputs.extend(register(manifest, layout, [path], PRODUCER_GEN, h))
         _metrics_add(rep.metrics, f"{spec.key}/{benchmark}/{gen_set}", len(recs),
                      sum(len(r.completion_token_ids) for r in recs), dt,
@@ -215,6 +220,8 @@ def _run_sets(cfg: RunConfig, layout: RunLayout, manifest: Manifest, rep: StageR
 def run_generate(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool = False) -> StageReport:
     rep = StageReport(stage="generate", ok=True)
     prompts = load_prompts()
+    if cfg.extra.get("timing_only"):
+        return _run_generate_timing(cfg, layout, manifest, rep, prompts, dry_run)
     fresh = list(cfg.extra.get("fresh", []))
     indices = cfg.extra.get("sample_indices")
     for key in cfg.models:
@@ -244,6 +251,9 @@ def run_generate(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_r
             _record_prompts(layout, manifest, prompts, spec, backend)
     if not dry_run:
         _write_json_merged(layout, manifest, layout.prompts, "_prompts", prompts.describe(), PRODUCER_GEN)
+        _write_json_merged(layout, manifest, layout.prompts, "card_recommendations_not_used",
+                           {k: v for k, v in load_tracked_cards()["models"].items() if k in cfg.models or not cfg.models},
+                           PRODUCER_GEN)
         tot_tok = sum(v["tokens"] for k, v in rep.metrics.items() if isinstance(v, dict) and "tokens" in v)
         tot_s = sum(v["seconds"] for k, v in rep.metrics.items() if isinstance(v, dict) and "seconds" in v)
         rep.metrics["total"] = {"tokens": tot_tok, "seconds": tot_s, "tokens_per_second": tot_tok / tot_s if tot_s else None}
@@ -271,12 +281,14 @@ def read_extractions(path: Path) -> dict[str, ExtractionResult]:
 
 def _gen_shards(layout: RunLayout, key: str, bench: str) -> list[Path]:
     base = layout.root / "generations" / key / bench
-    return sorted(base.glob("*/shard-*.parquet")) if base.exists() else []
+    return sorted(p for p in base.glob("*/shard-*.parquet") if p.parent.name != TIMING_SET) if base.exists() else []
 
 
 def run_capture(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool = False) -> StageReport:
     rep = StageReport(stage="capture", ok=True)
     prompts = load_prompts()
+    if cfg.extra.get("timing_only"):
+        return _run_capture_timing(cfg, layout, rep, prompts, dry_run)
     for key in cfg.models:
         if key in cfg.generation_only_models:
             rep.notes.append(f"{key}: generation only; capture skipped")
@@ -321,18 +333,113 @@ def run_capture(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_ru
     return rep
 
 
-def _make_capture(cfg: RunConfig, layout: RunLayout, manifest: Manifest, spec: ModelSpec, problems: dict[str, Problem],
+def _make_capture(cfg: RunConfig, layout: RunLayout, manifest: Manifest | None, spec: ModelSpec, problems: dict[str, Problem],
                   prompts: PromptSet):
     if cfg.backend == "mock":
         mapping = mock_mapping(list(problems.values()))
-        _write_json_merged(layout, manifest, layout.answer_tokens, spec.key, {"backend": "mock"}, PRODUCER_CAP)
-        _write_json_merged(layout, manifest, layout.mask_spans, spec.key, {"backend": "mock"}, PRODUCER_CAP)
+        if manifest is not None:
+            _write_json_merged(layout, manifest, layout.answer_tokens, spec.key, {"backend": "mock"}, PRODUCER_CAP)
+            _write_json_merged(layout, manifest, layout.mask_spans, spec.key, {"backend": "mock"}, PRODUCER_CAP)
         return MockCapture(mapping, prompts=prompts)
     model, tok = load_hf(cfg, spec)
     cap = TransformersCapture(model, tok, prompts, chat=spec.chat, batch_size=int(cfg.extra.get("batch_size", 4)),
                               padding_side=cfg.extra.get("padding_side", "left"))
+    if manifest is None:
+        return cap
     _write_json_merged(layout, manifest, layout.answer_tokens, spec.key,
                        {"model_id": spec.model_id, "revision": spec.revision, **cap.answer_tokens}, PRODUCER_CAP)
     _write_json_merged(layout, manifest, layout.mask_spans, spec.key,
                        {"model_id": spec.model_id, "revision": spec.revision, **cap.spec.describe(tok)}, PRODUCER_CAP)
     return cap
+
+
+# ---------------------------------------------------------------------------------------------------
+# Timing-only jobs (design 13, throughput probes; G10)
+# ---------------------------------------------------------------------------------------------------
+def _write_timing(layout: RunLayout, key: str, part: str, value: dict[str, Any]) -> None:
+    """logs/timing_<model>.json (not a run product: no manifest entry, no analyzable content)."""
+    path = layout.logs / f"timing_{key}.json"
+    data = json.loads(path.read_text()) if path.exists() else {"model_key": key}
+    data[part] = value
+    text = json.dumps(data, indent=1, sort_keys=True) + "\n"
+    atomic_write(path, lambda tmp: tmp.write_text(text))
+
+
+def thinking_tokens(rec: GenerationRecord, tokenizer: Any | None) -> int:
+    """Tokens up to the end of the last thought block (0 when there is none). Without a tokenizer the
+    mock convention of one token per character applies."""
+    from .tokens import char_span_to_token_span, decode_ids, thought_end
+    ids = list(rec.completion_token_ids)
+    if tokenizer is None:
+        return thought_end(rec.completion_text)
+    end = thought_end(decode_ids(tokenizer, ids))
+    span = char_span_to_token_span(tokenizer, ids, 0, end) if end else None
+    return span[1] if span else 0
+
+
+def _run_generate_timing(cfg, layout, manifest, rep, prompts, dry_run) -> StageReport:
+    """Generate into the "timing" set only: no frozen path, no capture, no score. Timings go to the
+    report and to logs/timing_<model>.json. Timing shards are always rewritten (never skipped)."""
+    rep.notes.append("timing_only: generation set 'timing'")
+    for key in cfg.models:
+        spec = model_spec(key)
+        per_bench: dict[str, Any] = {}
+        for bench in cfg.benchmarks:
+            if spec.is_base and bench == "lcb_v6":
+                continue
+            problems = load_problems(layout, bench, cfg)
+            backend = _LazyGenBackend(cfg, spec, problems, prompts, False)
+            reqs = build_requests(key, problems, cfg.k, TIMING_SET, cfg.extra.get("sample_indices"), prompts=prompts)
+            recs: list[GenerationRecord] = []
+            _run_sets(cfg, layout, manifest, rep, prompts, spec, bench, problems, reqs, TIMING_SET, backend, None,
+                      dry_run, force=True, collect=recs)
+            if dry_run or not recs:
+                continue
+            m = rep.metrics[f"{key}/{bench}/{TIMING_SET}"]
+            d = {"samples": m["samples"], "tokens": m["tokens"], "seconds": m["seconds"],
+                 "tokens_per_second": m["tokens_per_second"], "mean_generated_tokens": m["tokens"] / m["samples"],
+                 "truncated": m.get("truncated", 0)}
+            if spec.thinking:
+                d["mean_thinking_tokens"] = sum(thinking_tokens(r, backend.tokenizer) for r in recs) / len(recs)
+            m.update({k: v for k, v in d.items() if k not in m})
+            per_bench[bench] = d
+        if per_bench and not dry_run:
+            _write_timing(layout, key, "generate", {"benchmarks": per_bench, "thinking": spec.thinking})
+    return rep
+
+
+def _run_capture_timing(cfg, layout, rep, prompts, dry_run) -> StageReport:
+    """Run the capture forward passes over the timing set and discard every array: no hidden state,
+    log-prob, or readout is written. generation_only_models does not apply to timing jobs."""
+    rep.notes.append("timing_only: capture over the 'timing' set; nothing is stored")
+    for key in cfg.models:
+        spec = model_spec(key)
+        per_bench: dict[str, Any] = {}
+        cap: Any = None
+        for bench in cfg.benchmarks:
+            base = layout.root / "generations" / key / bench / TIMING_SET
+            shards = sorted(base.glob("shard-*.parquet")) if base.exists() else []
+            if not shards:
+                rep.notes.append(f"{key}/{bench}: no timing generations to capture")
+                continue
+            if dry_run:
+                rep.notes.append(f"would time capture over {len(shards)} timing shards of {key}/{bench}")
+                continue
+            problems = {p.problem_id: p for p in load_problems(layout, bench)}
+            if cap is None:
+                cap = _make_capture(cfg, layout, None, spec, problems, prompts)
+            n = ntok = 0
+            secs = 0.0
+            for g in shards:
+                recs = read_generation_shard(g)
+                t0 = time.time()
+                crecs, _ = cap.capture(recs, {}, problems)
+                secs += time.time() - t0
+                n += len(crecs)
+                ntok += int(sum(c.elicitation_span[1] for c in crecs))
+            d = {"samples": n, "tokens": ntok, "seconds": secs, "tokens_per_second": ntok / secs if secs else None}
+            rep.metrics[f"{key}/{bench}/{TIMING_SET}"] = d
+            per_bench[bench] = d
+        if per_bench:
+            _write_timing(layout, key, "capture", {"benchmarks": per_bench})
+    return rep
