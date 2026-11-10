@@ -1,6 +1,6 @@
 # Project context (read first)
 
-Last updated: wave 5, 2026-11-10. This is the short capsule every session reads before doing anything
+Last updated: wave 6, 2026-11-10. This is the short capsule every session reads before doing anything
 else. Details live in the files it points to.
 
 ## Goal
@@ -43,6 +43,8 @@ New work goes only into these top-level paths (created in wave 3, each with a RE
 | `docs/s4/` | Wave 4 report (`W4_REPORT.md`) |
 | `docs/s5/` | Wave 5 report (`W5_REPORT.md`) |
 | `research/positioning/w5/` | Wave 5 gap-closing pass: `INSTRUMENTS.md`, `DIFFERENTIAL.md`, `parts/` |
+| `research/positioning/w6/` | Wave 6 Part A: decomposition occupancy, 2610.31820 protocol, MARGIN coverage, closed items, `DIFFERENTIAL_R1.md` |
+| `docs/s6/` | Wave 6: `W6_REPORT.md`, draft design `PIPELINE_DESIGN_R1.md` (R0 kept), `CRITIQUE_DISPOSITION.md`, `power/`, `parts/` |
 | `tools/prose_lint.py` | Prose linter for manuscript source (`tools/prose_lint.toml`, tests in `tests/prose_lint/`) |
 
 The pre-commit hook rejects any staged change (addition, modification, deletion, rename) under a
@@ -128,9 +130,20 @@ Read `DIGEST.md` first, then `VERDICTS.md` and `RECOMMENDATION.md`. The revised 
 - **Corrections to W4 numbers.** Campos "0.620 versus 0.629" is a mismatched pair. CREDO's untrained Base-d is .782.
 - **Instruments.** arXiv full-text search (search.arxiv.org) passes. Semantic Scholar bulk search works. Remaining gaps are partial, so every CLEAN cell stays CLEAN (provisional).
 
+## Headline findings: wave 6 (`docs/s6/W6_REPORT.md`)
+
+- **Spine (operator decision).** A systematics budget for the probe-versus-stated-confidence gap on frozen self-generated code: the raw gap $G_0$ is attributed by Shapley values to supervision (isotonic, trained stated readout), difficulty (pooled vs within-problem), and label validity (original vs EvalPlus), with a generation-shift contrast outside the attribution. Contamination and family/scale are strata; the estimator is a sensitivity analysis. The instrument and error-budget language is exposition only.
+- **Part A.** Stop not triggered: no full text jointly attributes the probe-versus-stated gap. The specific estimand is CLEAN (provisional); the broader idea is NARROW (2605.27752, 2609.04582, RADAR 2610.22139). Which generations 2610.31820 scored is unstated, so both readings are reproduced. Miglani "0.677 vs 0.703" is verified.
+- **Design R1 (draft, not frozen).**
+  - Three decisions on the mean within-problem residual over six instruct models (four Qwen, two Olmo): equivalence, probe ahead, stated readout ahead, at $\delta = 0.03$.
+  - $k = 10$ and $n = 542$ (HumanEval+ and MBPP+), plus 1,055 LiveCodeBench problems.
+  - 176.6 GPU-hours (220.8 with contingency).
+  - Reconciliation analogs for Ribeiro, Campos, and 2610.31820.
+- **Critics.** 59 findings, 49 accepted and 10 modified.
+
 ## Current stage
 
-Waves 0 to 5 are complete. Wave 5 Part A finished, and its stop condition fired: a full text unseated Rank 1. Part B (the pipeline design) was not started. No pipeline code, experiment, design document, or manuscript text exists. The next step is the operator's choice of spine (`docs/s5/W5_REPORT.md` section 10), then the design wave.
+Waves 0 to 6 are complete. Wave 6 produced the draft design `docs/s6/PIPELINE_DESIGN_R1.md`, which is not frozen or hashed. No pipeline code, experiment, or manuscript text exists. The next step is operator sign-off of the design (section 17 of R1), then a wave that freezes and hashes it and runs the pilot.
 
 ## Conventions
 
@@ -140,11 +153,11 @@ attribution trailers. Never use `--no-verify`.
 
 ## Open operator items
 
-1. Confirm the wave 5 replacement spine, or rule that concurrent works do not trigger the pivot rules (`docs/s5/W5_REPORT.md` section 10, items 1 and 2).
-2. Decide whether 2610.31820 must be compared experimentally or only discussed.
-3. Optional: put a Semantic Scholar or OpenAlex key in a local, untracked `.env`.
+1. Review and sign design R1 (section 17 block): margin, $k$ and problem counts, primary model set, a third family or not, readings for 2610.31820, LiveCodeBench contamination choice, GPU model.
+2. Name the GPU and its hourly price.
+3. Decide the Qwen3 and Qwen3-Coder contamination gap on LiveCodeBench release_v6 (accept, or name a newer problem source).
 4. Decide the wording of the TMLR LLM-use footnote.
-5. Decide the method definitions per `docs/s2/METHOD_INVENTORY.md`. The design wave proposes them, and the operator signs off.
+5. Optional: put a Semantic Scholar or OpenAlex key in a local, untracked `.env`.
 6. Rotate the former GPU host key and host if still live (from W0); keep the pristine local backup private.
 
-Resolved in wave 5: v4 (DPRC) is out of scope; the six-month window is confirmed; the unread leads were read; the allowlist was extended.
+Resolved in wave 6: the spine (systematics budget); 2610.31820 is compared experimentally; v4 (DPRC) out of scope; Rank 3 out of the main paper; method definitions are proposed in R1 section 11 (pending sign-off).
