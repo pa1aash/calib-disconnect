@@ -10,7 +10,7 @@ from analysis import sensitivity as SENS
 from analysis import strata as ST
 from analysis import stage
 from analysis.bootstrap import draw
-from analysis.budget import THREE_LABELS_FIRST, THREE_PLAYERS, THREE_READOUT_FIRST, model_budget, three_player_cells, three_player_report
+from analysis.budget import pooled_budget, simultaneous_level, THREE_LABELS_FIRST, THREE_PLAYERS, THREE_READOUT_FIRST, model_budget, three_player_cells, three_player_report
 from analysis.gap import Scores, replace_inputs, subset_inputs
 from analysis.shapley import shapley
 from pipeline.contracts.constants import BOOTSTRAP_SEED, PRIMARY_MODELS
@@ -62,6 +62,28 @@ def test_three_player_cells_and_efficiency():
     counts = _draws(inp, 40)
     rep, _ = three_player_report(cells, G.discrimination_cells(inp, counts)["cells"])
     assert abs(rep["shapley"]["efficiency_gap"]) <= 1e-12
+
+
+def test_pooled_three_player_levels_and_linearity():
+    stores = {}
+    for i, m in enumerate(("P1", "P2", "P3")):
+        inp = make_inputs(30 + i, n_problems=20, k=5)
+        _, stores[m] = model_budget(inp, _draws(inp, 50), None, secondary=False, routing=False, three_player=True)
+    pb = pooled_budget(stores, three_player=True)
+    lv3 = simultaneous_level(3)
+    assert abs(lv3 - (1 - 0.05 / 3)) <= 1e-15 and pb["interval_levels"]["simultaneous"] == lv3
+    assert pb["players"] == ["r", "t", "d"]
+    for term, ivs in pb["term_intervals"].items():
+        assert {f"{0.95:g}", f"{lv3:g}", f"{1 - 0.05 / 4:g}"} == set(ivs)
+        sim, mar = ivs[f"{lv3:g}"], ivs[f"{0.95:g}"]
+        assert sim["lo"] <= mar["lo"] and sim["hi"] >= mar["hi"]     # simultaneous is wider
+    # pooled terms equal the mean of per-model three-player terms (linearity)
+    for p in ("r", "t", "d"):
+        want = np.mean([stores[m]["three_terms_pt"][f"phi_{p}"] for m in stores])
+        assert abs(pb["shapley"]["phi"][p] - want) <= 1e-12
+    assert set(pb["heterogeneity"]) == set(pb["term_intervals"])
+    p4 = pooled_budget(stores)
+    assert p4["interval_levels"]["simultaneous"] == 1 - 0.05 / 4
 
 
 # ---------------------------------------------------------------------------------------------------
@@ -196,13 +218,16 @@ def test_stage_lcb_outputs(tmp_path):
     tp = budgets["P3|lcb"]["discrimination_three_player"]
     assert set(tp["shapley"]["phi"]) == set(THREE_PLAYERS)
     pooled = json.loads((res / "pooled.json").read_text())["pooled"]["lcb"]
-    assert "budget_three_player" in pooled
+    assert pooled["budget_three_player"]["primary"] is True and pooled["budget_primary_chain"]["primary"] is False
+    assert pooled["budget_three_player"]["interval_levels"]["simultaneous"] == simultaneous_level(3)
+    assert tp["primary"] is True and budgets["P3|lcb"]["discrimination"]["primary"] is False
     con = json.loads((res / "contamination.json").read_text())["contamination"]
     assert con["P1"]["has_stratum"] is False and con["P2"]["has_stratum"] is False
     assert con["P3"]["has_stratum"] and con["P3"]["partitions"]["post"]["n_problems"] == 10
     assert "post_minus_pre" in con["P3"]
     pc = con["pooled_olmo3_gemma4"]
     assert pc["no_stratum"] == ["P1", "P2"] and "post_minus_pre" in pc
+    assert pc["post"]["three_player"]["primary"] is True and pc["post"]["four_player"]["primary"] is False
     sens = json.loads((res / "sensitivity.json").read_text())["sensitivity"]
     s3 = sens["P3|lcb"]
     for key in ("readout_substitutions", "capacity_rule", "head_contrast", "no_tiebreak_budget",
@@ -228,7 +253,8 @@ def test_stage_lcb_sealed(tmp_path):
     res = tmp_path / "analysis" / "results" / "l"
     assert sorted(p.name for p in res.iterdir()) == ["INDEX.json", "operational.json"]
     text = (res / "operational.json").read_text()
-    for banned in ("shapley", "phi", "cells", "terms", "minus_primary", "post_minus", "three_player", "residual"):
+    for banned in ("shapley", "phi", "cells", "terms", "minus_primary", "post_minus", "three_player", "residual",
+                   "primary\": true", "interval_levels"):
         assert banned not in text, banned
     sealed = json.loads((layout.sealed / "gamma_sealed.json").read_text())
     assert {"sensitivity", "contamination", "strata"} <= set(sealed)

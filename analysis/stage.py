@@ -432,7 +432,8 @@ def sensitivity_for(scores, md: ModelData, inp: GapInputs, store: dict, counts, 
                 rep_f = SENS.budget_vs_primary(store, alt, counts)
                 tp, _ = three_player_report(G.discrimination_cells(alt)["cells"],
                                             None if counts is None else G.discrimination_cells(alt, counts)["cells"])
-                rep_f["three_player"] = tp
+                rep_f["three_player"] = {**tp, "primary": True}
+                rep_f["primary"] = False
                 out["lcb_full_labeling"] = rep_f
             else:
                 notes.append(f"{m}/lcb: lcb_full readouts incomplete; full-suite sensitivity skipped")
@@ -759,9 +760,9 @@ def run(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool 
                 for part in ("post", "pre"):
                     have = [x for x in ST.CONTAMINATION_POOLED if part in contam.get(x, {})]
                     if have == list(ST.CONTAMINATION_POOLED):
-                        pooled_c[part] = {"four_player": pooled_budget({x: contam[x][part] for x in have}),
-                                          "three_player": ST.term_intervals([contam[x][part] for x in have],
-                                                                            f"{part}, Olmo 3 and Gemma 4", "three")}
+                        sub = {x: contam[x][part] for x in have}
+                        pooled_c[part] = {"four_player": {**pooled_budget(sub), "primary": False},
+                                          "three_player": {**pooled_budget(sub, three_player=True), "primary": True}}
                 if "post" in pooled_c and "pre" in pooled_c:
                     pooled_c["post_minus_pre"] = ST.term_contrast([contam[x]["post"] for x in ST.CONTAMINATION_POOLED],
                                                                   [contam[x]["pre"] for x in ST.CONTAMINATION_POOLED],
@@ -793,8 +794,9 @@ def run(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool 
             pooled = res["pooled"].setdefault(pop, {})
             pooled["budget_primary_chain"] = pooled_budget(pst)
             if pop == "lcb":
-                pooled["budget_three_player"] = ST.term_intervals(list(pst.values()), "six primary models, l = lcb_label",
-                                                                  "three")
+                # DEV-011: the three-player game at l = lcb_label is primary; the four-player game is beside it
+                pooled["budget_primary_chain"]["primary"] = False
+                pooled["budget_three_player"] = {**pooled_budget(pst, three_player=True), "primary": True}
             pooled["k3_switched_models"] = sorted(mm for mm in PRIMARY_MODELS if chains[mm] == "SZ_V2")
             v2 = {}
             for mm in PRIMARY_MODELS:
