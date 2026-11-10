@@ -58,7 +58,7 @@ def answer_ids_from_config(layout_answer_tokens: Path, model_key: str, tokenizer
 
 class RealBackend:
     def __init__(self, model, layouts: Sequence[TeacherForcedLayout], yes_ids: Sequence[int], no_ids: Sequence[int], *,
-                 rtuning_tokens: RTuningTokens | None = None, pad_id: int = 0, micro_batch: int = 8,
+                 rtuning_tokens: RTuningTokens | None = None, pad_id: int = 0, micro_batch: int = 8, tokenizer=None,
                  eval_batch: int = 16, sr_micro_batch: int = 2, economy: bool = True):
         self.model, self.layouts = model, list(layouts)
         self.yes_ids, self.no_ids = list(yes_ids), list(no_ids)
@@ -66,6 +66,7 @@ class RealBackend:
         self.pad_id, self.micro_batch, self.eval_batch, self.sr_micro_batch = pad_id, micro_batch, eval_batch, sr_micro_batch
         self.economy = economy
         self.gate_done = False
+        self.tok = tokenizer
 
     def mask_gate(self, report_path: Path, register=None) -> dict:
         """7.12: run the mask unit test (real layouts, float32) before the first trained readout."""
@@ -91,7 +92,7 @@ class RealBackend:
         eot = getattr(tok, "eos_token_id", None)
         tokens = rtuning_tokens_from_tokenizer(tok, eot_id=eot if isinstance(eot, int) else None)
         return cls(model, layouts_fn(tok, model), yes, no, rtuning_tokens=tokens,
-                   pad_id=tok.pad_token_id if tok.pad_token_id is not None else 0)
+                   pad_id=tok.pad_token_id if tok.pad_token_id is not None else 0, tokenizer=tok)
 
     @contextlib.contextmanager
     def st(self, rank: int = K.LORA_RANK, head: bool = False, seed: int = 0):

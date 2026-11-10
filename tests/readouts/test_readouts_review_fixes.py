@@ -351,3 +351,27 @@ def test_gradient_equivalence_with_a_sliding_window_shorter_than_the_sequence():
     mx = max(x.abs().max().item() for x in g[False])
     assert mx > 1e-6 and all(torch.allclose(a, b, atol=1e-6 + 1e-4 * mx) for a, b in zip(g[False], g[True]))
     ad.close()
+
+
+def test_slice_keeps_every_layer_type_in_order():
+    inter = ["sliding_attention"] * 5 + ["full_attention"] + ["sliding_attention"] * 5 + ["full_attention"]
+    assert gate.slice_layer_indices(inter, 12) == [0, 5]
+    assert gate.slice_layer_indices(["a", "b", "a", "c"], 4) == [0, 1, 3]
+    assert gate.slice_layer_indices(["full_attention"] * 4, 4) == [0, 1]       # padded to two layers
+    assert gate.slice_layer_indices(None, 40) == [0, 1] and gate.slice_layer_indices([], 1) == [0]
+
+
+def test_slice_of_interleaved_model_copies_the_chosen_layers_and_reports_indices(tmp_path):
+    from transformers.models.gemma4.configuration_gemma4 import Gemma4TextConfig
+    from transformers.models.gemma4.modeling_gemma4 import Gemma4ForCausalLM
+    torch.manual_seed(0)
+    cfg = Gemma4TextConfig(vocab_size=VOCAB, vocab_size_per_layer_input=VOCAB, hidden_size=64, intermediate_size=128,
+                           num_hidden_layers=6, num_attention_heads=4, num_key_value_heads=2, head_dim=16,
+                           hidden_size_per_layer_input=16, sliding_window=8, global_head_dim=16, eos_token_id=2,
+                           bos_token_id=1, pad_token_id=0, layer_types=["sliding_attention"] * 5 + ["full_attention"])
+    m = Gemma4ForCausalLM(cfg).eval().to(torch.bfloat16)
+    small, idx = gate.float32_slice(m, 2)
+    assert idx == [0, 5] and small.config.get_text_config().layer_types == ["sliding_attention", "full_attention"]
+    assert torch.equal(small.model.layers[1].self_attn.q_proj.weight, m.model.layers[5].self_attn.q_proj.weight.float())
+    rep = gate.run_mask_gate(m, synthetic_layouts(VOCAB, n=5), tmp_path / "r.json", yes_ids=[1], no_ids=[2])
+    assert rep["passed"] and rep["slice_layer_indices"] == [0, 5] and "full_attention" in rep["layer_types"]

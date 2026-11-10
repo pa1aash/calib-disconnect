@@ -42,16 +42,16 @@ from pipeline.contracts.layout import RunLayout
 from pipeline.contracts.manifest import Manifest
 from pipeline.contracts.schemas import LABEL_SUITES_LCB, LABEL_SUITES_LV, READOUTS, FoldPlan, iso
 
-from . import files
+from . import files, fresh
 from .adapter_readout import AdapterReadout
 from .codetext import crossfit_codetext
 from .common import Folds
 from .isotonic import crossfit_isotonic, drop_inner_split, rename_iso
 from .lat import crossfit_lat
-from .probe import crossfit_family, crossfit_mlp, crossfit_prompt
+from .probe import FittedProbe, crossfit_family, crossfit_mlp, crossfit_prompt
 from .gate import MaskTestFailed
 from .recipe import Recipe, RecipeTable
-from .surrogate import SurrogateTrainer, surrogate_features
+from .surrogate import SurrogateTrainer, apply_saved_surrogate, surrogate_features
 from .unsupervised import agreement_scores, ast_cluster_scores, tl_scores
 from .verbal import v1_parse_report, v1_scores, v1_train_scores, v2_scores
 
@@ -84,6 +84,28 @@ def _is_primary(model_key: str) -> bool:
     return model_key in K.PRIMARY_MODELS or model_key in STUDY_LIKE
 
 
+def _st_primary(model_key: str) -> bool:
+    """S^T seed refits (fold seeds 0, 1, 2) and inner adapters: the primary models and the pilot model T1."""
+    return _is_primary(model_key) or model_key == K.PILOT_MODEL
+
+
+# Which LoRA readouts run for which model (G18; design 3.2, 7.4, 7.5, 7.11, 10).
+def st_allowed(model_key: str, population: str) -> bool:
+    if model_key in ("X1", "X2"):
+        return False
+    return population != "lcb" or _is_primary(model_key) or model_key == "S1"
+
+
+def sr_allowed(model_key: str, population: str) -> bool:
+    if model_key in STUDY_LIKE:
+        return True
+    return (population == "label_validity" and model_key in ("P1", "S1")) or (population == "lcb" and model_key == "S1")
+
+
+def ladder_allowed(model_key: str, population: str) -> bool:
+    return population == "label_validity" and (model_key in K.CAPACITY_MODELS or model_key in STUDY_LIKE)
+
+
 class _Ctx:
     """Everything one (model, population) needs."""
 
@@ -106,6 +128,7 @@ class _Ctx:
         suites = cfg.extra.get("suites") or SUITES_BY_POP[population]
         self.suites = [s for s in suites if s in data.labels]
         self.primary = _is_primary(model_key)
+        self.st_primary = _st_primary(model_key)
 
     # -- selection of what to run ------------------------------------------------------------------
     def want(self, name: str) -> bool:
@@ -136,6 +159,9 @@ class _Ctx:
             rows["AST"] = ast_cluster_scores(d, m, p)
         for name, r in rows.items():
             w.scores(m, p, name, None, None, r)
+            if name.startswith("TL_") or name == "AGREE":
+                self.report.metrics.setdefault("missing_counts", {}).setdefault(f"{m}/{p}", {})[name] = {
+                    "n": len(r), "missing": sum(x.missing for x in r)}
         return rows
 
     def run_zero_shot_seed(self, seed: int, plan: FoldPlan, unsup: dict[str, list]) -> None:
@@ -166,13 +192,21 @@ class _Ctx:
     def run_probes(self, seed: int, plan: FoldPlan, suite: str) -> None:
         m, p, w, d = self.model, self.pop, self.w, self.data
         fam_names = tuple(n for n in ("P", "P2", "P3", "Pmulti", "P2_single_split") if self.want(n))
-        mlp_ok = self.want("MLP") and (self.explicit or (self.primary and suite == "E" and seed == 0
-                                                          and p == "label_validity"))
+        mlp_ok = self.want("MLP") and self.primary and (self.explicit or (suite == "E" and seed == 0
+                                                                         and p == "label_validity"))
+        if self.want("MLP") and not self.primary:
+            self.report.notes.append(f"{m}: MLP probe runs on primary models only")
         if fam_names or mlp_ok:
             fam = crossfit_family(d, plan, suite, m, p, want=fam_names + (("MLP",) if mlp_ok else ()))
             for n in fam_names:
                 w.scores(m, p, n, suite, seed, fam.scores.get(n, []))
                 w.fits(m, p, n, suite, seed, fam.fits.get(n, []))
+            if sr_allowed(m, p):   # G4: persist P for reading A (the probe read on the fresh sets)
+                for (f, n), fp in fam.fitted.items():
+                    if n == "P":
+                        pp = fresh.probe_path(self.layout, m, p, suite, seed, f)
+                        fp.save(pp)
+                        w._register(pp)
             if mlp_ok:
                 s, f = crossfit_mlp(d, plan, suite, m, p, layer_by_fold=fam.best_single_layer)
                 w.scores(m, p, "MLP", suite, seed, s)
@@ -267,12 +301,19 @@ class _Ctx:
             yield t
 
     def lora_seeds(self) -> list[int]:
-        if self.primary and self.pop == "label_validity":
+        if self.st_primary and self.pop == "label_validity":
             return self.seeds
         return self.seeds[:1]
 
     def run_lora(self) -> None:
         names = [n for n in LORA_FAMILY if self.want(n)]
+        allowed = {"ST": st_allowed(self.model, self.pop), "SR": sr_allowed(self.model, self.pop)}
+        for n in ("ST_r1", "ST_r4", "ST_r16", "ST_head"):
+            allowed[n] = ladder_allowed(self.model, self.pop) and allowed["ST"]
+        dropped = [n for n in names if not allowed[n]]
+        if dropped and self.explicit:
+            self.report.notes.append(f"{self.model}/{self.pop}: {dropped} not run for this model's role")
+        names = [n for n in names if allowed[n]]
         if not names:
             return
         for seed in self.lora_seeds():
@@ -280,13 +321,12 @@ class _Ctx:
             suites = list(self.suites) if seed == self.seeds[0] else [s for s in self.suites if s == "E"]
             if not suites:
                 continue
-            inner = self.primary and self.pop == "label_validity" and seed == self.seeds[0]
+            inner = self.st_primary and self.pop == "label_validity" and seed == self.seeds[0]
             if "ST" in names or any(n.startswith("ST_") for n in names) or "SR" in names:
                 self._run_st(seed, plan, suites, inner, "ST" in names)
             if "SR" in names and seed == self.seeds[0]:
                 self._run_sr(seed, plan, suites)
-            if seed == self.seeds[0] and self.pop == "label_validity" and "E" in suites and (
-                    self.explicit or self.model in K.CAPACITY_MODELS or self.model in STUDY_LIKE):
+            if seed == self.seeds[0] and "E" in suites and any(n.startswith("ST_") for n in names):
                 self._run_ladder(seed, plan)
 
     def _have_recipes(self, seed: int, plan: FoldPlan, suite: str) -> bool:
@@ -363,16 +403,52 @@ class _Ctx:
             self._run_st(seed, plan, suites[:1], False, False)
         for suite in suites:
             def save_path(s, f, su):
-                if self.cfg.backend == "mock":
-                    return None
-                return str(self.layout.adapters(m) / f"sr_{p}_{su}_seed{s}_fold{f}")
+                return str(fresh.sr_adapter_path(self.layout, m, p, su, s, f, surrogate=self.cfg.backend == "mock"))
             with self.trainer("sr") as tr:
                 res = AdapterReadout("SR", tr, table, keep_insample=False, max_steps=self.cfg.lora_max_steps,
                                      save_path_fn=save_path).crossfit_full(d, plan, suite, m, p)
             w.scores(m, p, "SR", suite, seed, res.scores)
             w.fits(m, p, "SR", suite, seed, res.fits)
-            if self.cfg.backend != "mock" and self.layout.adapters(m).exists():
+            if self.layout.adapters(m).exists():
                 w.tree(self.layout.adapters(m))
+
+    # -- reading A: fresh sets (G4) -------------------------------------------------------------------
+    def run_fresh(self) -> None:
+        if not sr_allowed(self.model, self.pop) or not (self.want("SR") or self.want("P")):
+            return
+        m, p, w = self.model, self.pop, self.w
+        for fs in fresh.discover_fresh_sets(self.layout, m, self.benches):
+            data = files.load_readout_data(self.layout, m, self.benches, fs.gen_set)
+            if data is None:
+                self.report.notes.append(f"{m}/{p}/{fs.gen_set}: no capture")
+                continue
+            pp = fresh.probe_path(self.layout, m, p, fs.suite, fs.seed, fs.fold)
+            if self.want("P"):
+                if pp.exists():
+                    w.scores(m, p, "P", fs.suite, fs.seed, fresh.probe_rows(data, FittedProbe.load(pp), m, p, fs), fs.gen_set)
+                else:
+                    self.report.notes.append(f"{m}/{p}/{fs.gen_set}: no persisted probe at {pp.name}")
+            if not self.want("SR"):
+                continue
+            mock = self.cfg.backend == "mock"
+            ap = fresh.sr_adapter_path(self.layout, m, p, fs.suite, fs.seed, fs.fold, surrogate=mock)
+            if not ap.exists():
+                self.report.notes.append(f"{m}/{p}/{fs.gen_set}: no saved S^R adapter {ap.name}")
+                continue
+            if mock:
+                z = apply_saved_surrogate(ap, surrogate_features(data))
+            else:
+                from .real_backend import load_layouts_provider
+                from .rtuning import score_rtuning
+                with self.trainer("sr") as tr:
+                    tr.mlm.load_adapter(ap)
+                    lays = load_layouts_provider(self.cfg)(self.cfg, self.layout, m, self.benches, data.sample_uids,
+                                                           self._real.tok, self._real.model, gen_set=fs.gen_set)
+                    sc = score_rtuning(self._real.model, tr.mlm, [(l.prompt_ids, l.completion_ids) for l in lays],
+                                       self._real.rtuning_tokens, batch_size=tr.eval_batch, pad_id=self._real.pad_id,
+                                       own_suffix=True)
+                z = np.array([x.logit for x in sc])
+            w.scores(m, p, "SR", fs.suite, fs.seed, fresh.sr_rows(data, z, m, p, fs), fs.gen_set)
 
 
 def _planned(cfg: RunConfig, layout: RunLayout, model_key: str, population: str) -> list[str]:
@@ -406,6 +482,9 @@ def run(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool 
             if data is None:
                 report.notes.append(f"{model_key}/{population}: no capture index; skipped")
                 continue
+            if population == "label_validity":   # G1: problems valid under BOTH suites, for every suite
+                n_removed = files.apply_reference_exclusions(data, files.valid_label_validity_problems(layout))
+                report.metrics.setdefault("reference_excluded_samples", {})[f"{model_key}/{population}"] = n_removed
             ctx = _Ctx(cfg, layout, writer, report, model_key, population, benches, data)
             if not ctx.seeds:
                 report.ok = False
@@ -419,6 +498,7 @@ def run(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool 
                     for suite in ctx.suites:
                         ctx.run_probes(seed, plan, suite)
                 ctx.run_lora()
+                ctx.run_fresh()
             except (MissingRecipeError, MaskTestFailed):
                 raise
             except RuntimeError as e:   # for example a missing token-layout provider for the real backend

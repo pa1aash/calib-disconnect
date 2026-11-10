@@ -77,6 +77,17 @@ def build_sft_example(prompt_ids: Sequence[int], completion_ids: Sequence[int], 
     return ids, sup
 
 
+def own_suffix_context(prompt_ids: Sequence[int], completion_ids: Sequence[int], tokens: RTuningTokens) -> list[int]:
+    """Reading A: a sample generated with the adapter carries its own suffix. The context is the prompt plus the
+    completion up to and including the last "I am" it contains; without one, fall back to reading B's context
+    (completion without end-of-turn, joiner, "I am")."""
+    comp, am = list(completion_ids), list(tokens.am_ids)
+    for i in range(len(comp) - len(am), -1, -1):
+        if comp[i:i + len(am)] == am:
+            return list(prompt_ids) + comp[:i + len(am)]
+    return context_ids(prompt_ids, completion_ids, tokens)
+
+
 @dataclass(frozen=True)
 class RTuningScore:
     lp_sure: float
@@ -110,13 +121,15 @@ def _left_pad(seqs: Sequence[Sequence[int]], pad_id: int, device):
 
 @torch.no_grad()
 def score_rtuning(model, adapter: MaskedLoraModel | None, sequences: Sequence[tuple[Sequence[int], Sequence[int]]],
-                  tokens: RTuningTokens, *, batch_size: int = 8, pad_id: int = 0) -> list[RTuningScore]:
+                  tokens: RTuningTokens, *, batch_size: int = 8, pad_id: int = 0,
+                  own_suffix: bool = False) -> list[RTuningScore]:
     """Score (prompt_ids, completion_ids) pairs after "I am". `adapter` is a MaskedLoraModel used in full
     (unmasked) mode, or None for the base weights."""
     device = next(model.parameters()).device
     if adapter is not None:
         adapter.eval()
-    ctxs = [context_ids(p, c, tokens) for p, c in sequences]
+    ctx_fn = own_suffix_context if own_suffix else context_ids
+    ctxs = [ctx_fn(p, c, tokens) for p, c in sequences]
     lps = {}
     for tag, cont in (("sure", tokens.sure_ids), ("unsure", tokens.unsure_ids)):
         L = len(cont)

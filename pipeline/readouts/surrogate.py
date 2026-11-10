@@ -80,4 +80,14 @@ class SurrogateTrainer:
         if score_sets:
             for name, r in score_sets.items():
                 out.final_scores[name] = self._score(w, b, mu, sd, np.asarray(r))
+        if save_path:   # persisted "adapter" of the surrogate (used for the fresh-set step on the mock backend)
+            from pathlib import Path
+            Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+            with open(save_path, "wb") as fh:
+                np.savez(fh, mu=mu, sd=sd, w=w, b=np.array(b))
         return out
+
+
+def apply_saved_surrogate(path, features: np.ndarray) -> np.ndarray:
+    z = np.load(path)
+    return (((np.asarray(features, dtype=np.float64) - z["mu"]) / z["sd"]) @ z["w"] + float(z["b"])).astype(np.float32)

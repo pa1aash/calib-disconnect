@@ -19,13 +19,13 @@ from readouts_helpers import make_data, make_plan
 pytestmark = pytest.mark.filterwarnings("ignore")
 
 
-def build_run(tmp_path, seeds=(0, 1)):
-    d = make_data(n_problems=30, k=4)
-    layout = RunLayout.for_run("t", tmp_path)
+def build_run(tmp_path, seeds=(0, 1), model="MOCK", gen_set="frozen", d=None, layout=None, plans=True):
+    d = d if d is not None else make_data(n_problems=30, k=4)
+    layout = layout or RunLayout.for_run("t", tmp_path)
     root = layout.root
     n = len(d.sample_uids)
-    shard = layout.capture_shard("MOCK", "humaneval_plus", "frozen", 0)
-    shard.parent.mkdir(parents=True)
+    shard = layout.capture_shard(model, "humaneval_plus", gen_set, 0)
+    shard.parent.mkdir(parents=True, exist_ok=True)
     offs = np.concatenate([[0], np.cumsum([len(x) for x in d.code_logprobs])]).astype(np.int64)
     arrays = {k: torch.tensor(v).to(torch.bfloat16) for k, v in d.hidden.items()}
     arrays["code_logprobs"] = torch.tensor(np.concatenate(d.code_logprobs))
@@ -38,19 +38,19 @@ def build_run(tmp_path, seeds=(0, 1)):
                          n_code_tokens=c.n_code_tokens, code_token_span=list(c.code_token_span), p1=c.p1, p2=c.p2, p3=c.p3,
                          elicitation_span=list(c.elicitation_span), yes_no_logodds=c.yes_no_logodds, v1_text=c.v1_text,
                          v1_value=c.v1_value, sum_logprob=c.sum_logprob, mean_logprob=c.mean_logprob, min_logprob=c.min_logprob))
-    pq.write_table(pa.Table.from_pylist(rows), layout.capture_index("MOCK", "humaneval_plus", "frozen", 0))
-    lab = layout.labels("MOCK", "humaneval_plus", "frozen")
-    lab.parent.mkdir(parents=True)
+    pq.write_table(pa.Table.from_pylist(rows), layout.capture_index(model, "humaneval_plus", gen_set, 0))
+    lab = layout.labels(model, "humaneval_plus", gen_set)
+    lab.parent.mkdir(parents=True, exist_ok=True)
     pq.write_table(pa.Table.from_pylist([dict(sample_uid=u, suite_id=s, y=int(d.labels[s][i]), source="execution", failure=None, cache_key=None)
                                          for i, u in enumerate(d.sample_uids) for s in ("O", "E")]), lab)
-    ext = layout.extractions("MOCK", "humaneval_plus", "frozen")
-    ext.parent.mkdir(parents=True)
+    ext = layout.extractions(model, "humaneval_plus", gen_set)
+    ext.parent.mkdir(parents=True, exist_ok=True)
     pq.write_table(pa.Table.from_pylist([dict(sample_uid=u, code=d.code_texts[i], method="fenced", failure=None)
                                          for i, u in enumerate(d.sample_uids)]), ext)
-    ag = layout.agreement_outputs("MOCK", "humaneval_plus", "frozen")
-    ag.parent.mkdir(parents=True)
-    pq.write_table(pa.Table.from_pylist([dict(sample_uid=u, signature=json.dumps(list(d.agreement_outputs[u]))) for u in d.sample_uids]), ag)
-    for s in seeds:
+    ag = layout.agreement_outputs(model, "humaneval_plus", gen_set)
+    ag.parent.mkdir(parents=True, exist_ok=True)
+    pq.write_table(pa.Table.from_pylist([dict(sample_uid=u, signature=None if d.agreement_outputs[u] is None else json.dumps(list(d.agreement_outputs[u]))) for u in d.sample_uids]), ag)
+    for s in (seeds if plans else ()):
         p = layout.folds("label_validity", s)
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(json.dumps(make_plan(set(d.problem_ids), seed=s).to_dict()))

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import copy
 import json
+import re
 from collections import Counter
 from pathlib import Path
 from typing import Callable, Sequence
@@ -31,27 +32,54 @@ def arch_key(model) -> str:
     return str(model.config.get_text_config().model_type or model.config.model_type)
 
 
+def slice_layer_indices(layer_types, n_total: int, n_layers: int = 2) -> list[int]:
+    """Decoder layers kept in the float32 slice: the first layer of every distinct value in `layer_types`
+    (for example sliding_attention and full_attention), padded with the earliest unused layers up to
+    `n_layers`, in original order. Without `layer_types`: the first `n_layers` layers."""
+    if not layer_types:
+        return list(range(min(n_layers, n_total)))
+    first: dict = {}
+    for i, t in enumerate(list(layer_types)[:n_total]):
+        first.setdefault(t, i)
+    keep = set(first.values())
+    for i in range(n_total):
+        if len(keep) >= n_layers:
+            break
+        keep.add(i)
+    return sorted(keep)
+
+
 def float32_slice(model, n_layers: int = 2):
-    """A float32 copy of `model` with its first `n_layers` decoder layers, embeddings, final norm, and head
-    (real weights), on the model's device. The architecture class, projections, and attention are those of
-    the real model, so the mask hooks run on the real code path."""
+    """A float32 copy of `model` with a few decoder layers (see `slice_layer_indices`), embeddings, final norm,
+    and head (real weights), on the model's device. Returns (model, kept layer indices). The architecture
+    class, projections, and every attention type present in the real model run on the real code path."""
     cfg = copy.deepcopy(model.config)
     tc = cfg.get_text_config()
-    tc.num_hidden_layers = min(n_layers, tc.num_hidden_layers)
-    if getattr(tc, "layer_types", None):
-        tc.layer_types = list(tc.layer_types)[:tc.num_hidden_layers]
+    types = getattr(tc, "layer_types", None)
+    idx = slice_layer_indices(types, tc.num_hidden_layers, n_layers)
+    tc.num_hidden_layers = len(idx)
+    if types:
+        tc.layer_types = [list(types)[i] for i in idx]
     old = torch.get_default_dtype()
     torch.set_default_dtype(torch.float32)
     try:
         small = type(model)(cfg)
     finally:
         torch.set_default_dtype(old)
-    sd = {k: v.detach().to("cpu", torch.float32) for k, v in model.state_dict().items()}
-    small.load_state_dict({k: v for k, v in sd.items() if k in small.state_dict() and small.state_dict()[k].shape == v.shape},
-                          strict=False)
+    new_of = {i: j for j, i in enumerate(idx)}
+    pat = re.compile(r"(\.layers\.)(\d+)(\.)")
+    sd = {}
+    for k, v in model.state_dict().items():
+        m = pat.search(k)
+        if m:
+            if int(m.group(2)) not in new_of:
+                continue
+            k = pat.sub(lambda mm: f"{mm.group(1)}{new_of[int(mm.group(2))]}{mm.group(3)}", k, count=1)
+        sd[k] = v.detach().to("cpu", torch.float32)
+    own = small.state_dict()
+    small.load_state_dict({k: v for k, v in sd.items() if k in own and own[k].shape == v.shape}, strict=False)
     small.tie_weights()
-    dev = next(model.parameters()).device
-    return small.to(dev).eval()
+    return small.to(next(model.parameters()).device).eval(), idx
 
 
 def pick_layouts(layouts: Sequence[TeacherForcedLayout], n: int = 4) -> list[TeacherForcedLayout]:
@@ -76,11 +104,16 @@ def run_mask_gate(model, layouts: Sequence[TeacherForcedLayout], report_path: Pa
         if old.get("passed"):
             return old
     dtype = next(model.parameters()).dtype
-    test_model = model if dtype == torch.float32 else float32_slice(model, n_slice_layers)
+    kept = None
+    if dtype == torch.float32:
+        test_model = model
+    else:
+        test_model, kept = float32_slice(model, n_slice_layers)
     rep = mask_unit_test(test_model, pick_layouts(layouts), LoraSpec(), atol=K.MASK_TEST_ATOL, pad_id=pad_id,
                          yes_ids=yes_ids, no_ids=no_ids, init_std=init_std)
     rep = {**rep, "arch": arch_key(model), "model_class": type(model).__name__, "tested_dtype": "float32",
-           "model_dtype": str(dtype), "tested_on": "model" if test_model is model else f"float32 slice of {n_slice_layers} layers"}
+           "model_dtype": str(dtype), "tested_on": "model" if test_model is model else f"float32 slice of {len(kept)} layers",
+           "slice_layer_indices": kept, "layer_types": getattr(model.config.get_text_config(), "layer_types", None)}
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(json.dumps(rep, indent=1, sort_keys=True) + "\n")
     if register is not None:

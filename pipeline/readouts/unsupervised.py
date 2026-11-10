@@ -7,12 +7,13 @@ Token likelihood, over the code tokens only (the capture excludes the fence and 
   TL_min: rank_score = prob = exp(min log p)
   TL_sum: rank_score = sum log p (length-confounded);  prob = exp(sum log p), the probability of the
           whole generated code, documented here because the design does not define a probability for it.
-A sample with no code token is `missing`: prob = rank_score = 0 for TL_geo and TL_min, and for TL_sum
-rank_score is one below the smallest observed sum and prob = 0.
+A sample with no code token (or NaN log-probs from the capture) is `missing`: prob = rank_score = NaN for all
+three; analysis and the isotonic map drop missing rows.
 
 Agreement: A(c_ij) = share of the other k-1 samples of the problem with the same behavior signature
 (tuple of per-input canonical outputs, floats normalized to AGREEMENT_SIGNATURE_FLOAT_SIG significant
-digits). A sample without a signature (None) agrees with no one. A problem with no agreement inputs (no
+digits). A sample without a signature (None, for example an extraction failure) is `missing` with NaN prob and
+rank_score, never 0 and never imputed; it still counts in k. A problem with no agreement inputs (no
 sample has a non-empty signature) or with a single sample is `missing` for every sample (prob and
 rank_score NaN); AGREE is never imputed. `AGREE_problem` is the problem-level variant: the share of the
 largest cluster of equal signatures, repeated on every sample of the problem.
@@ -53,12 +54,12 @@ def tl_scores(data: ReadoutData, model_key: str, population: str) -> dict[str, l
     mean, mn, sm, ok = np.zeros(n), np.zeros(n), np.zeros(n), np.zeros(n, dtype=bool)
     for i in range(n):
         lp = _code_logprobs(data, i)
-        if lp is not None and lp.size:
+        if lp is not None and lp.size and np.isfinite(lp).all():
             mean[i], mn[i], sm[i], ok[i] = lp.mean(), lp.min(), lp.sum(), True
-        elif lp is None and data.capture is not None and data.capture[i].n_code_tokens > 0:
+        elif lp is None and data.capture is not None and data.capture[i].n_code_tokens > 0 \
+                and np.isfinite(data.capture[i].mean_logprob):
             c = data.capture[i]
             mean[i], mn[i], sm[i], ok[i] = c.mean_logprob, c.min_logprob, c.sum_logprob, True
-    floor = (sm[ok].min() - 1.0) if ok.any() else -1.0
     out: dict[str, list[ReadoutScore]] = {"TL_geo": [], "TL_min": [], "TL_sum": []}
     for i in range(n):
         kw = dict(model_key=model_key, population=population, label_suite=None, fold_seed=None, fold=None,
@@ -69,9 +70,9 @@ def tl_scores(data: ReadoutData, model_key: str, population: str) -> dict[str, l
             out["TL_min"].append(make_score(data, i, readout="TL_min", prob=m, rank_score=m, **kw))
             out["TL_sum"].append(make_score(data, i, readout="TL_sum", prob=float(np.exp(s)), rank_score=s, **kw))
         else:
-            out["TL_geo"].append(make_score(data, i, readout="TL_geo", prob=0.0, rank_score=0.0, **kw))
-            out["TL_min"].append(make_score(data, i, readout="TL_min", prob=0.0, rank_score=0.0, **kw))
-            out["TL_sum"].append(make_score(data, i, readout="TL_sum", prob=0.0, rank_score=float(floor), **kw))
+            nan = float("nan")   # no code tokens: undefined, missing, never imputed
+            for name in ("TL_geo", "TL_min", "TL_sum"):
+                out[name].append(make_score(data, i, readout=name, prob=nan, rank_score=nan, **kw))
     return out
 
 
@@ -121,7 +122,12 @@ def agreement_scores(data: ReadoutData, model_key: str, population: str) -> dict
             continue
         share = max(counts.values()) / k
         for i in idxs:
-            a = (counts[valid[i]] - 1) / (k - 1) if i in valid else 0.0
+            if i not in valid:
+                rows["AGREE"].append(make_score(data, i, readout="AGREE", prob=float("nan"), rank_score=float("nan"),
+                                                missing=True, **kw))
+                rows["AGREE_problem"].append(make_score(data, i, readout="AGREE_problem", prob=share, rank_score=share, **kw))
+                continue
+            a = (counts[valid[i]] - 1) / (k - 1)
             rows["AGREE"].append(make_score(data, i, readout="AGREE", prob=a, rank_score=a, **kw))
             rows["AGREE_problem"].append(make_score(data, i, readout="AGREE_problem", prob=share, rank_score=share, **kw))
     return rows

@@ -14,3 +14,7 @@
    the rank-16 recipe.
 5. Resolved: the token layouts now come from `pipeline.generate.capture.TransformersCapture.build_layout`
    (`pipeline/readouts/layouts.py`); the answer-token file is read in the generate stage's format.
+6. Reading A inputs (conformance G4). Fresh sets must be named `fresh:SR_<suite>_seed<s>_fold<f>` and generated with the
+   S^R adapter saved at `adapters/<model>/sr_<population>_<suite>_seed<s>_fold<f>` (peft directory); the persisted probes are
+   at `adapters/<model>/probes/P_<population>_<suite>_seed<s>_fold<f>.npz`. Their base-weights capture uses the usual
+   capture layout with that generation set. Fresh scores are written with `layout.scores(..., gen_set=...)`.

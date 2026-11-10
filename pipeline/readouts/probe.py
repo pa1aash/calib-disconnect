@@ -77,7 +77,8 @@ class _Features:
 # ---------------------------------------------------------------------------------------------------
 # Fit primitives
 # ---------------------------------------------------------------------------------------------------
-def _design(Xtr: np.ndarray, Xaps: list[np.ndarray], multi: bool, tag: str, pids: set[str] | frozenset[str]):
+def _design(Xtr: np.ndarray, Xaps: list[np.ndarray], multi: bool, tag: str, pids: set[str] | frozenset[str],
+            state_out: dict | None = None):
     """Standardize with training mean and variance; optionally PCA fit on the training rows."""
     record_fit(f"{tag}:scaler", pids)
     mu = Xtr.mean(axis=0)
@@ -94,10 +95,15 @@ def _design(Xtr: np.ndarray, Xaps: list[np.ndarray], multi: bool, tag: str, pids
         pca = PCA(n_components=k, svd_solver=solver, random_state=0).fit(Ztr)
         Ztr = pca.transform(Ztr)
         Zaps = [pca.transform(Z) for Z in Zaps]
+        if state_out is not None:
+            state_out.update(pca_mean=pca.mean_.astype(np.float32), pca_components=pca.components_.astype(np.float32))
+    if state_out is not None:
+        state_out.update(mu=mu, sd=sd)
     return Ztr, Zaps
 
 
-def _lr_logits(Ztr: np.ndarray, ytr: np.ndarray, Zaps: list[np.ndarray], Cs, tag: str, pids) -> dict[float, list[np.ndarray]]:
+def _lr_logits(Ztr: np.ndarray, ytr: np.ndarray, Zaps: list[np.ndarray], Cs, tag: str, pids,
+               clf_out: dict | None = None) -> dict[float, list[np.ndarray]]:
     """Logits of an L2 logistic regression for each C (ascending, warm-started)."""
     record_fit(f"{tag}:classifier", pids)
     out: dict[float, list[np.ndarray]] = {}
@@ -105,6 +111,8 @@ def _lr_logits(Ztr: np.ndarray, ytr: np.ndarray, Zaps: list[np.ndarray], Cs, tag
         c = float(logit(train_base_rate(ytr)))
         for C in Cs:
             out[C] = [np.full(len(Z), c) for Z in Zaps]
+        if clf_out is not None:
+            clf_out.update(coef=np.zeros(Ztr.shape[1], dtype=np.float64), intercept=c)
         return out
     clf = LogisticRegression(C=1.0, max_iter=LR_MAX_ITER, warm_start=True)
     with warnings.catch_warnings():
@@ -113,6 +121,8 @@ def _lr_logits(Ztr: np.ndarray, ytr: np.ndarray, Zaps: list[np.ndarray], Cs, tag
             clf.set_params(C=C)
             clf.fit(Ztr, ytr)
             out[C] = [clf.decision_function(Z).astype(np.float64) for Z in Zaps]
+    if clf_out is not None:
+        clf_out.update(coef=clf.coef_[0].astype(np.float64), intercept=float(clf.intercept_[0]))
     return out
 
 
@@ -168,12 +178,75 @@ def select_over_specs(feats: _Features, F: Folds, f: int, specs: list[FeatureSpe
     return sel
 
 
-def _final_logits(feats: _Features, F: Folds, f: int, spec: FeatureSpec, C: float, tag: str) -> tuple[np.ndarray, np.ndarray]:
+@dataclass
+class FittedProbe:
+    """A fitted probe, enough to score new hidden states (reading A applies it to fresh samples)."""
+
+    member: str
+    layer: int | None
+    key: str
+    C: float
+    mu: np.ndarray
+    sd: np.ndarray
+    coef: np.ndarray
+    intercept: float
+    pca_mean: np.ndarray | None = None
+    pca_components: np.ndarray | None = None
+    label_suite: str = ""
+    fold_seed: int = 0
+    outer_fold: int = 0
+
+    def logits(self, hidden: dict[str, np.ndarray]) -> np.ndarray:
+        h = np.asarray(hidden[self.key])
+        X = h.reshape(h.shape[0], -1) if self.layer is None else h[:, self.layer, :]
+        Z = (X.astype(np.float32) - self.mu) / self.sd
+        if self.pca_components is not None:
+            Z = (Z - self.pca_mean) @ self.pca_components.T
+        return Z.astype(np.float64) @ self.coef + self.intercept
+
+    def save(self, path) -> None:
+        import json as _json
+        from pathlib import Path as _P
+        _P(path).parent.mkdir(parents=True, exist_ok=True)
+        meta = dict(member=self.member, layer=self.layer, key=self.key, C=self.C, intercept=self.intercept,
+                    label_suite=self.label_suite, fold_seed=self.fold_seed, outer_fold=self.outer_fold,
+                    has_pca=self.pca_components is not None)
+        arrs = dict(mu=self.mu, sd=self.sd, coef=self.coef, meta=np.array(_json.dumps(meta)))
+        if self.pca_components is not None:
+            arrs.update(pca_mean=self.pca_mean, pca_components=self.pca_components)
+        with open(path, "wb") as fh:
+            np.savez(fh, **arrs)
+
+    @classmethod
+    def load(cls, path) -> "FittedProbe":
+        import json as _json
+        z = np.load(path, allow_pickle=False)
+        m = _json.loads(str(z["meta"]))
+        return cls(member=m["member"], layer=m["layer"], key=m["key"], C=m["C"], mu=z["mu"], sd=z["sd"], coef=z["coef"],
+                   intercept=m["intercept"], pca_mean=z["pca_mean"] if m["has_pca"] else None,
+                   pca_components=z["pca_components"] if m["has_pca"] else None, label_suite=m["label_suite"],
+                   fold_seed=m["fold_seed"], outer_fold=m["outer_fold"])
+
+
+def _final_fit(feats: _Features, F: Folds, f: int, spec: FeatureSpec, C: float, tag: str
+               ) -> tuple[np.ndarray, np.ndarray, FittedProbe]:
     tr, te = F.outer_train(f), F.outer_test(f)
     X = feats(spec)
     pids = F.problems_of(tr)
-    Ztr, (Zte,) = _design(X[tr], [X[te]], spec.multi, f"{tag}:{spec.member}:final", pids)
-    return te, _lr_logits(Ztr, F.y[tr], [Zte], [C], f"{tag}:{spec.member}:final", pids)[C][0]
+    st: dict = {}
+    clf: dict = {}
+    Ztr, (Zte,) = _design(X[tr], [X[te]], spec.multi, f"{tag}:{spec.member}:final", pids, state_out=st)
+    logits = _lr_logits(Ztr, F.y[tr], [Zte], [C], f"{tag}:{spec.member}:final", pids, clf_out=clf)[C][0]
+    fp = FittedProbe(member=spec.member, layer=spec.layer, key=spec.key, C=C, mu=st["mu"], sd=st["sd"],
+                     coef=clf["coef"], intercept=clf["intercept"], pca_mean=st.get("pca_mean"),
+                     pca_components=st.get("pca_components"), label_suite=F.suite or "", fold_seed=F.plan.fold_seed,
+                     outer_fold=f)
+    return te, logits, fp
+
+
+def _final_logits(feats: _Features, F: Folds, f: int, spec: FeatureSpec, C: float, tag: str) -> tuple[np.ndarray, np.ndarray]:
+    te, logits, _ = _final_fit(feats, F, f, spec, C, tag)
+    return te, logits
 
 
 # ---------------------------------------------------------------------------------------------------
@@ -185,6 +258,7 @@ class FamilyResult:
     fits: dict[str, list[FitRecord]] = field(default_factory=dict)
     chosen: dict[int, dict[str, dict]] = field(default_factory=dict)   # outer fold -> readout -> selection
     best_single_layer: dict[int, int] = field(default_factory=dict)    # outer fold -> layer for the MLP probe
+    fitted: dict[tuple[int, str], "FittedProbe"] = field(default_factory=dict)  # (outer fold, readout) -> fitted probe
 
 
 def _spec_for(specs: dict[str, list[FeatureSpec]], member: str, layer: int | None) -> FeatureSpec:
@@ -223,12 +297,12 @@ def _family_once(data, plan, label_suite, model_key, population, want, C_grid, r
     all_specs = [s for m in members for s in specs[m]]
     res = FamilyResult(scores={w: [] for w in want}, fits={w: [] for w in want})
     fails: list[bool] = []
-    final_cache: dict[tuple, tuple[np.ndarray, np.ndarray]] = {}
+    final_cache: dict[tuple, tuple[np.ndarray, np.ndarray, FittedProbe]] = {}
 
     def final(f, spec, C):
         key = (f, spec.member, spec.layer, C)
         if key not in final_cache:
-            final_cache[key] = _final_logits(feats, F, f, spec, C, f"probe:outer{f}")
+            final_cache[key] = _final_fit(feats, F, f, spec, C, f"probe:outer{f}")
         return final_cache[key]
 
     for f in F.outer_folds:
@@ -252,7 +326,8 @@ def _family_once(data, plan, label_suite, model_key, population, want, C_grid, r
                 continue
             (member, layer, C), cv_loss = picks[name]
             spec = _spec_for(specs, member, layer)
-            te, logits = final(f, spec, C)
+            te, logits, fitted = final(f, spec, C)
+            res.fitted[(f, name)] = fitted
             res.scores[name] += scores_from_arrays(data, te, logits, expit(logits), folds=F, model_key=model_key,
                                                    population=population, readout=name, label_suite=label_suite,
                                                    flagged=flagged)

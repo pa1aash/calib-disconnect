@@ -51,12 +51,13 @@ def build_layouts(capture, sample_uids: Sequence[str], records: Mapping[str, Gen
 
 
 def default_layouts_provider(cfg, layout: RunLayout, model_key: str, benches: Sequence[str],
-                             sample_uids: Sequence[str], tokenizer, model) -> list[TeacherForcedLayout]:
+                             sample_uids: Sequence[str], tokenizer, model, gen_set: str = "frozen"
+                             ) -> list[TeacherForcedLayout]:
     from pipeline.generate.capture import TransformersCapture
     from pipeline.generate.requests import model_spec
     spec = model_spec(model_key)
     cap = TransformersCapture(model, tokenizer, chat=spec.chat, padding_side=cfg.extra.get("padding_side", "left"))
-    recs, problems, exts = load_generation_inputs(layout, model_key, benches)
+    recs, problems, exts = load_generation_inputs(layout, model_key, benches, gen_set)
     missing = [u for u in sample_uids if u not in recs]
     if missing:
         raise RuntimeError(f"{len(missing)} samples have no generation record (first: {missing[0]})")

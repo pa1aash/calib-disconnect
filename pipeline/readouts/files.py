@@ -174,21 +174,21 @@ class Writer:
             self.report.outputs.append(rel)
 
     def scores(self, model_key: str, population: str, readout: str, suite: str | None, seed: int | None,
-               rows: Sequence[ReadoutScore]) -> Path | None:
+               rows: Sequence[ReadoutScore], gen_set: str = "frozen") -> Path | None:
         if not rows:
             self.report.notes.append(f"no rows: {model_key}/{population}/{readout}/{suite}/seed{seed}")
             return None
-        p = self.layout.scores(model_key, population, readout, suite, seed)
+        p = self.layout.scores(model_key, population, readout, suite, seed, gen_set)
         p.parent.mkdir(parents=True, exist_ok=True)
         pq.write_table(scores_table(rows), p)
         self._register(p)
         return p
 
     def fits(self, model_key: str, population: str, readout: str, suite: str, seed: int,
-             records: Sequence[FitRecord]) -> Path | None:
+             records: Sequence[FitRecord], gen_set: str = "frozen") -> Path | None:
         if not records:
             return None
-        p = self.layout.fits(model_key, population, readout, suite, seed)
+        p = self.layout.fits(model_key, population, readout, suite, seed, gen_set)
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(json.dumps([_nan_to_none(r.to_dict()) for r in records], indent=1) + "\n")
         self._register(p)
@@ -209,3 +209,31 @@ class Writer:
 def json_load_fits(path: Path) -> list[FitRecord]:
     return [FitRecord.from_dict({k: (float("nan") if v is None and k.endswith("logloss") else v) for k, v in d.items()})
             for d in json.loads(Path(path).read_text())]
+
+
+def valid_label_validity_problems(layout: RunLayout) -> set[str] | None:
+    """Problems whose reference solution is valid under BOTH suites O and E (design 4 and 1.4), from
+    data/reference_checks.parquet. None if the file does not exist (no restriction)."""
+    p = layout.reference_checks
+    if not p.exists():
+        return None
+    ok: dict[str, set[str]] = {}
+    seen: set[str] = set()
+    for r in _read_parquet_rows(p):
+        if r["suite_id"] not in ("O", "E"):
+            continue
+        seen.add(r["problem_id"])
+        if not r["excluded"]:
+            ok.setdefault(r["problem_id"], set()).add(r["suite_id"])
+    return {pid for pid in seen if ok.get(pid, set()) >= {"O", "E"}}
+
+
+def apply_reference_exclusions(data: ReadoutData, valid: set[str] | None) -> int:
+    """Set every suite's label to -1 for samples of problems outside `valid`, so that no suite's fit or
+    score uses a problem excluded under either suite. Returns the number of samples removed."""
+    if valid is None:
+        return 0
+    bad = np.array([p not in valid for p in data.problem_ids], dtype=bool)
+    for s in data.labels:
+        data.labels[s] = np.where(bad, NO_LABEL, data.labels[s]).astype(np.int8)
+    return int(bad.sum())

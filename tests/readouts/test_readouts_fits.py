@@ -276,8 +276,9 @@ def test_token_likelihood_variants():
     assert r["TL_min"][0].prob == pytest.approx(0.25, rel=1e-5)
     assert r["TL_sum"][0].rank_score == pytest.approx(np.log(0.125), rel=1e-5)
     assert r["TL_sum"][0].prob == pytest.approx(0.125, rel=1e-5)
-    assert r["TL_geo"][1].missing and r["TL_geo"][1].prob == 0.0
-    assert r["TL_sum"][1].rank_score < min(r["TL_sum"][0].rank_score, r["TL_sum"][2].rank_score)
+    for name in ("TL_geo", "TL_min", "TL_sum"):      # no code tokens: NaN and missing, never a value
+        assert r[name][1].missing and np.isnan(r[name][1].prob) and np.isnan(r[name][1].rank_score)
+        assert not r[name][0].missing
     assert not r["TL_geo"][2].missing and r["TL_geo"][2].prob == pytest.approx(0.9, rel=1e-5)
 
 
@@ -290,6 +291,7 @@ def test_agreement_share_of_other_samples():
     s = {r.sample_uid: r for r in rows["AGREE"]}
     u = d.sample_uids
     assert s[u[0]].prob == pytest.approx(0.5) and s[u[1]].prob == pytest.approx(0.5) and s[u[2]].prob == 0.0
+    assert not s[u[2]].missing   # it has a signature, it just matches no one
     assert all(s[x].missing and np.isnan(s[x].prob) for x in u[3:6])   # no inputs: missing, never imputed
     assert s[u[6]].missing                                              # single sample: undefined
     p = {r.sample_uid: r for r in rows["AGREE_problem"]}
@@ -300,8 +302,9 @@ def test_agreement_float_normalization_and_none_sample():
     assert normalize_signature(("0.1234567891",)) == normalize_signature(("0.1234567894",))
     assert normalize_signature(("0.123456",)) != normalize_signature(("0.123457",))
     d = _mini(["x"] * 3, sigs=[("1",), ("1",), None])
-    s = {r.sample_uid: r.prob for r in agreement_scores(d, "MOCK", "label_validity")["AGREE"]}
-    assert list(s.values()) == [0.5, 0.5, 0.0]       # a sample without a signature agrees with no one
+    rows = agreement_scores(d, "MOCK", "label_validity")["AGREE"]
+    assert [r.prob for r in rows[:2]] == [0.5, 0.5]
+    assert rows[2].missing and np.isnan(rows[2].prob) and np.isnan(rows[2].rank_score)   # no signature: missing, never 0
 
 
 def test_ast_renaming_docstrings_and_singletons():

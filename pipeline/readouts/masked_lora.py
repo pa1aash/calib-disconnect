@@ -269,6 +269,14 @@ class MaskedLoraModel:
     def save_adapter(self, path) -> None:
         self.peft.save_pretrained(str(path))
 
+    def load_adapter(self, path) -> None:
+        """Load LoRA weights saved by `save_adapter` (peft format) into this wrapper's adapter."""
+        from pathlib import Path as _P
+        from peft import set_peft_model_state_dict
+        from safetensors.torch import load_file
+        f = _P(path) / "adapter_model.safetensors"
+        set_peft_model_state_dict(self.peft, load_file(str(f)))
+
     def close(self) -> None:
         """Remove hooks and unwrap the LoRA layers, restoring the base model in place."""
         if self._closed:
