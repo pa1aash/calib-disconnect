@@ -1,0 +1,17 @@
+HumanEval/1 plus v0.1.9 1000 plus v0.1.10 83 contract changed False
+HumanEval/28 plus v0.1.9 1000 plus v0.1.10 861 contract changed False
+HumanEval/99 plus v0.1.9 710 plus v0.1.10 710 contract changed True
+HumanEval/160 plus v0.1.9 449 plus v0.1.10 449 contract changed True
+CONTRACT HumanEval/99 
+  old: '\n    try: # $_CONTRACT_$\n        assert isinstance(value, str) # $_CONTRACT_$\n        float(value) # $_CONTRACT_$\n    except: # $_CONTRACT_$\n        raise Exception("invalid inputs") # $_CONTRACT_$\n    import math # $_CONTRACT_$\n    assert not (math.isinf(value) or math.isnan(value)), "inval 
+  new: '\n    try: # $_CONTRACT_$\n        assert isinstance(value, str) # $_CONTRACT_$\n        value = float(value) # $_CONTRACT_$\n    except: # $_CONTRACT_$\n        raise Exception("invalid inputs") # $_CONTRACT_$\n    import math # $_CONTRACT_$\n    assert not (math.isinf(value) or math.isnan(value))
+CONTRACT HumanEval/160 
+  old: '\n    assert type(operator) == list and type(operand) == list, "invalid inputs" # $_CONTRACT_$\n    assert len(operator) >= 1, "invalid inputs" # $_CONTRACT_$\n    assert len(operand) == len(operator) + 1, "invalid inputs" # $_CONTRACT_$\n    assert all(type(x) == int and x >= 0 for x in operand),  
+  new: '\n    assert type(operator) == list and type(operand) == list, "invalid inputs" # $_CONTRACT_$\n    assert len(operator) >= 1, "invalid inputs" # $_CONTRACT_$\n    assert len(operand) == len(operator) + 1, "invalid inputs" # $_CONTRACT_$\n    assert all(type(x) == int and x >= 0 for x in operand), 
+HE+ v0.1.10 HumanEvalPlus-Mini.jsonl.gz plus inputs not in full plus: 0 base not in full base: 0
+HE+ v0.1.10 HumanEvalPlus-NoExtreme.jsonl.gz plus inputs not in full plus: 0 base not in full base: 0
+HE+ v0.1.10 tasks with zero plus inputs: 0 []
+HE+ v0.1.10 duplicate plus inputs within task: 6 plus inputs equal to a base input: 218
+MBPP+ v0.2.0 MbppPlus-NoExtreme.jsonl.gz plus inputs not in full plus: 0 base not in full base: 0
+MBPP+ v0.2.0 tasks with zero plus inputs: 1 ['Mbpp/793']
+MBPP+ v0.2.0 duplicate plus inputs within task: 244 plus inputs equal to a base input: 134
