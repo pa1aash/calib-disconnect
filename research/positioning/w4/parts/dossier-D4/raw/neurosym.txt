@@ -1,0 +1,758 @@
+                NeuroSym-Cal: Bridging the Reasoning-Execution Gap in Code
+                         Generation via Hierarchical Calibration
+             Peiyang Liu1,2 , Yining Wang3 , Youru Li4 , Long Li5 , Zhi Cai4 and Wei Ye1, *
+1
+    National Engineering Research Center for Software Engineering, Peking University, Beijing, China,
+              2
+                School of Software and Microelectronics, Peking University, Beijing, China,
+                 3
+                   Electrical and Computer Engineering, University of Toronto, Canada,
+           4
+             College of Computer Science, Beijing University of Technology, Beijing, China,
+                                     5
+                                       Infly Tech, Shanghai, China.
+                                         liupeiyang@pku.edu.cn
+
+                               Abstract                               Liu et al., 2025a, 2026). Models such as DeepSeek-
+                                                                      R1 and OpenAI’s o-series (Guo et al., 2025; Yan
+             While Chain-of-Thought (CoT) reasoning en-               et al., 2025) engage in extended CoT (Zhang et al.,
+             hances code generation in Large Language                 2025b) processes to decompose complex algorith-
+             Models (LLMs), it introduces a critical chal-
+                                                                      mic problems. While these models achieve state-
+             lenge in uncertainty estimation: Confidence
+             Saturation. Existing calibration methods, such           of-the-art performance on benchmarks like Live-
+             as Self-Consistency, rely on the assumption that         CodeBench (Jain et al., 2024), their deployment in
+             consensus implies correctness. This assump-              critical workflows is hindered by a persistent chal-
+             tion fails under systematic errors, where mod-           lenge: the lack of reliable confidence calibration
+             els confidently repeat flawed logic, leading to          (Liu et al., 2025c).
+             miscalibrated high-confidence predictions. To                Ideally, a code generation model should be well-
+             address this, we introduce N EURO S YM -C AL,
+                                                                      calibrated: a solution predicted with 90% confi-
+             a hierarchical calibration framework. We posit
+             that reliable confidence requires interrogating          dence should be correct 90% of the time. How-
+             the model at two complementary levels: the               ever, current reasoning models are prone to over-
+             extrinsic consensus of its symbolic outputs and          confidence, particularly when they exhibit system-
+             the intrinsic self-assessment of its generated           atic errors. We argue that prevailing calibration
+             logic. Specifically, we propose Self-Verification        paradigms are ill-suited for this new generation of
+             Analysis, which prompts the model to holisti-            models due to the problem of Confidence Satura-
+             cally re-evaluate its completed candidate, ex-           tion.
+             ploiting the cognitive asymmetry between au-
+                                                                          Standard calibration methods, such as Self-
+             toregressive generation and post-hoc reviewing.
+             This provides a fine-grained continuous signal           Consistency (SC) (Wang et al., 2022), operate on
+             that persists even when output consensus sat-            the “wisdom of the crowd” assumption: if the ma-
+             urates. These orthogonal features, augmented             jority of sampled outputs are identical, the solution
+             by code-level descriptors, are fused by a Con-           is likely correct. While effective for stochastic er-
+             textual Calibration Network to predict correct-          rors, this assumption collapses under Entrenched
+             ness. Experiments across state-of-the-art rea-           Hallucinations (Jiang et al., 2026). When a model
+             soning models (e.g., DeepSeek-R1) demon-
+                                                                      falls into a reasoning trap, it may confidently re-
+             strate that N EURO S YM -C AL effectively de-
+             saturates overconfident errors, achieving state-         produce the same flawed logic across all samples.
+             of-the-art Expected Calibration Error (ECE)              In such cases, SC assigns a confidence score of
+             and superior selective generation performance            1.0, rendering the metric indistinguishable from a
+             on Out-Of-Domain (OOD) benchmarks.                       correct solution. This saturation destroys the gran-
+                                                                      ularity required for effective risk management.
+     1       Introduction                                                 To address this, we posit that reliable calibration
+                                                                      requires interrogating the model at two orthogonal
+     The advent of Large Language Models (LLMs)
+                                                                      levels, corresponding to the horizontal and ver-
+     with “System 2” reasoning capabilities has funda-
+                                                                      tical axes in Figure 1: the extrinsic consensus of
+     mentally transformed automated software engineer-
+                                                                      its symbolic outputs (what it says) and the intrin-
+     ing and broad AI applications (Li et al., 2025b;
+                                                                      sic self-assessment of its own code (how reliable
+     Dong et al., 2026; Chen et al., 2026; Hu et al.,
+                                                                      it judges itself to be). We introduce N EURO S YM -
+     2026; Zhang et al., 2026a; Li et al., 2024, 2026;
+                                                                      C AL, a hierarchical framework that fuses these
+         *    Corresponding author                                    complementary signals.
+                                                                 6132
+                          Findings of the Association for Computational Linguistics: ACL 2026, pages 6132–6143
+                                      July 2-7, 2026 ©2026 Association for Computational Linguistics
+                              1.0     Robust Correctness
+                                      Entrenched Error
+                                                                                                                                              lines. In summary, our contributions are as follows:
+                                      Stochastic Noise
+
+
+
+                              0.8
+                                                                                                                           NeuroSym-Cal           • We identify Confidence Saturation as a pri-
+                                                                       Robust Certainty:                                   De-saturation
+                                                                                                                                                    mary failure mode of Self-Consistency in rea-
+
+
+
+Intrinsic Stability (Sintr)
+                                                                       Stable Reasoning
+
+
+
+                              0.6
+                                                                                                                                                    soning models, where systematic errors mimic
+                                                                 Brittle Consensus:
+                                                                 Sensitive Reasoning
+                                                                 (Hidden from SC)
+                                                                                                                                                    the statistical signature of correct solutions.
+
+                                                                                             High Consensus Zone
+                              0.4
+                                                                                                                                                  • We propose N EURO S YM -C AL, a framework
+                                                                                                                                                    that combines AST-based consensus (Extrin-
+
+                                                                                             (SC Confidence → 1.0)
+                              0.2
+                                                                                                                                                    sic) with self-verification analysis (Intrinsic),
+                                                                                                                                                    augmented by lightweight code-level descrip-
+                              0.0
+                                0.0        0.2             0.4          0.6            0.8                           1.0                            tors (length, cyclomatic complexity), to cap-
+                                                     Extrinsic Consensus (Sext)
+                                                                                                                                                    ture a holistic view of epistemic uncertainty.
+Figure 1: The Intuition behind N EURO S YM -C AL.
+Traditional methods rely solely on Extrinsic Semantic                                                                                             • We demonstrate that fusing these orthogo-
+Consensus (x-axis), suffering from Confidence Satu-                                                                                                 nal signals allows for effective confidence
+ration: both robust correctness (Blue) and entrenched                                                                                               de-saturation, achieving state-of-the-art Ex-
+errors (Red) cluster at 1.0. By introducing a second                                                                                                pected Calibration Error (ECE) (Posocco and
+orthogonal dimension, Intrinsic Self-Verification (y-                                                                                               Bonnefoy, 2021) and superior selective gener-
+axis), we recover a critical signal for calibration. While
+                                                                                                                                                    ation performance on OOD tasks.
+not perfectly separable, errors often exhibit lower self-
+assessment scores than ground truths. Our framework
+                                                                                                                                              2     Related Work
+exploits this statistical difference to “de-saturate” the
+confidence of high-consensus but unreliable solutions.                                                                                        2.1    Reasoning and Alignment in Code
+                                                                                                                                                     Generation
+   N EURO S YM -C AL operates on a neuro-symbolic                                                                                             The paradigm of code generation has shifted
+principle. At the symbolic level, we employ Se-                                                                                               from statistical sequence completion (Chen, 2021;
+mantic Equivalence Clustering based on Abstract                                                                                               Roziere et al., 2023) to “System 2” reasoning
+Syntax Trees (ASTs) (Zhang et al., 2019; Liu et al.,                                                                                          (Zhang et al., 2025a). Models like DeepSeek-R1
+2025b) to measure consensus, filtering out syn-                                                                                               and OpenAI’s o-series (Guo et al., 2025) employ
+tactic noise. At the intrinsic level, we introduce                                                                                            CoT (Wei et al., 2022; Li and Ma, 2025; Zhang
+Self-Verification Analysis. We prompt the LLM                                                                                                 et al., 2026b) to decompose complex specifications
+to re-evaluate its own generated code, exploiting                                                                                             before implementation. While CoT significantly
+the cognitive asymmetry between myopic autore-                                                                                                enhances performance on algorithmic benchmarks
+gressive generation and holistic post-hoc review-                                                                                             (Jain et al., 2024), it introduces the alignment chal-
+ing. Our key observation is that while entrenched                                                                                             lenge known as the “Reasoning-Execution Gap”
+errors may be behaviorally consistent across sam-                                                                                             (Turpin et al., 2023; Lanham et al., 2023; Li et al.,
+ples, the model’s intrinsic self-assessment of such                                                                                           2025a; Fang et al., 2026b,a; Fu et al., 2026). Prior
+errors is statistically lower than that of correct solu-                                                                                      works have largely treated reasoning traces as static
+tions, providing a continuous calibration signal that                                                                                         context. In contrast, we treat the model’s own as-
+generation-time token probabilities fail to capture.                                                                                          sessment of its generated code as a dynamic signal
+   These two signals are synthesized by a Con-                                                                                                of reliability.
+textual Calibration Network (CCN). Rather than
+treating calibration as a simple voting mechanism,                                                                                            2.2    Uncertainty Estimation and Calibration
+the CCN learns a non-linear mapping that softens                                                                                              Reliable confidence estimation is critical for de-
+predicted probabilities in high-consensus regimes                                                                                             ploying LLMs. Standard methods fall into two cat-
+when self-verification disagrees.                                                                                                             egories: logit-based and consistency-based. Logit-
+   We evaluate N EURO S YM -C AL across three                                                                                                 based methods (e.g., Platt Scaling) (Guo et al.,
+state-of-the-art reasoning models and three di-                                                                                               2017; Platt et al., 1999) rely on the model’s raw to-
+verse benchmarks. Our experiments demonstrate                                                                                                 ken probabilities. However, LLMs are notoriously
+that by leveraging the “vertical axis” of self-                                                                                               overconfident (Tian et al., 2025), and raw proba-
+verification, our method significantly outperforms                                                                                            bilities often fail to reflect functional correctness.
+both probability-based and consistency-based base-                                                                                            Consistency-based approaches, such as SC (Wang
+                                                                                                                                           6133
+et al., 2022) and Semantic Entropy (Kuhn et al.,                 noise (Aleatoric Uncertainty) by observing
+2023), aggregate multiple sampled outputs. While                 output agreement.
+SC generally outperforms logit methods, it relies
+on the assumption that the majority vote converges            • Intrinsic Self-Verification (Sintr ): A fine-
+to the truth. This assumption fails under system-               grained measure that probes the model’s post-
+atic errors or “entrenched hallucinations” (Zhang               hoc assessment of a completed candidate,
+et al., 2025b), where a model consistently generates            measuring how reliably the model judges its
+the same flawed solution. In these high-consensus               own code when explicitly prompted to re-
+regimes, SC suffers from Confidence Saturation,                 evaluate.
+assigning near-perfect scores to incorrect code. Our
+work addresses this by introducing an orthogonal           Our framework fuses these signals to learn a cal-
+signal, intrinsic self-verification, to regularize these   ibrated probability function, effectively using in-
+saturated estimates.                                       trinsic self-verification to regularize overconfident
+                                                           consensus.
+2.3 Neuro-Symbolic Analysis
+Our framework bridges two distinct analytical              3.1   Problem Formulation
+traditions: symbolic structure and neural self-            Let M be a generative code model taking a prompt
+assessment. On the symbolic side, metrics like             x. The model generates a reasoning chain r and
+CodeBERTScore (Zhou et al., 2023) utilize ASTs             code y, denoted as (r, y) ∼ M(x). The func-
+primarily for offline evaluation. We repurpose AST         tional correctness is given by an oracle O(y, x) ∈
+analysis for online calibration, using canonicaliza-       {0, 1}. Our goal is to learn a calibration function
+tion to de-noise the variance in generated code and        fθ (x, r, y) → p̂ ∈ [0, 1] such that p̂ accurately re-
+obtain a cleaner consensus signal. On the neural           flects the true probability P (O(y, x) = 1). Specif-
+side, recent works have explored using LLMs as             ically, we aim to minimize the ECE by distinguish-
+evaluators for continuous P (True) estimates (Ka-          ing between robust certainty (high self-verification,
+davath et al., 2022). However, existing methods            high consensus) and brittle consensus (low self-
+typically deploy self-verification as a standalone,        verification, high consensus).
+scalar confidence estimator. N EURO S YM -C AL
+unifies these directions: rather than treating self-       3.2   Intrinsic Uncertainty: Self-Verification
+evaluation as an isolated metric, we treat it as an              Analysis
+intrinsic feature to de-saturate overconfident sym-        While sample-based consistency captures output
+bolic consensus. This effectively fuses the strict         variance, it treats the generation process as a black
+logical grouping of AST with the semantic intuition        box and suffers from saturation when errors are en-
+of neural self-assessment.                                 trenched. To capture fine-grained epistemic uncer-
+                                                           tainty without requiring white-box access to latent
+3    Methodology
+                                                           states, we implement a Post-hoc Self-Verification
+We propose N EURO S YM -C AL, a hierarchical cali-         Analysis that leverages the neural model’s intrinsic
+bration framework illustrated in Figure 2, designed        capacity to critically evaluate its own outputs.
+to address the limitations of single-modal uncer-
+tainty estimation in CoT code generation.                  Holistic Re-evaluation. During autoregressive
+   Current state-of-the-art methods, particularly          generation, the model commits to each token se-
+SC, suffer from Confidence Saturation. When                quentially, often falling into localized reasoning
+a model generates the same solution repeatedly             traps. However, when presented with a complete
+(whether correct or consistently wrong), SC as-            solution in evaluation mode, the model can assess
+signs a confidence score approaching 1.0. This             the code holistically. We exploit this cognitive
+lack of granularity leads to severe miscalibration         asymmetry by formulating a verification prompt
+in high-confidence regimes. To resolve this, we            pver (x, y), which instructs the model M to act as
+posit that uncertainty must be interrogated from           an impartial judge and rate the functional correct-
+two complementary perspectives:                            ness of its own candidate y for problem x on a
+                                                           continuous scale of 0 to 100.
+    • Extrinsic Consensus (Sext ): A coarse-                  Let v ∈ [0, 100] be the scalar score extracted
+      grained measure that filters out stochastic          from the model’s textual response. To account
+                                                       6134
+                                        Intrinsic Self Verification
+
+                                                                      𝑺𝒊𝒏𝒕𝒓    Contextual
+                                                          Self                 Calibration
+                                    Neural patw         Evaluate                Network
+                                     inspecting
+                                                                                               0.0          1.0
+                                                                                                      0.7
+        Input         LLM
+       Prompt                                  AST
+
+
+                                                                   𝑺𝒆𝒙𝒕
+                                  Sampled                                        Code
+                                   outpus            Clustering                 metadata
+                                     Extrinsic Semantic Consensus
+
+Figure 2: The N EURO S YM -C AL Architecture. The framework addresses the “Confidence Saturation” problem in
+reasoning models. Top (Intrinsic): We perform Self-Verification by prompting the model to re-evaluate its own
+generated code, producing a confidence score that captures the model’s post-hoc assessment. Bottom (Extrinsic):
+We compute Semantic Consensus based on canonicalized ASTs. Fusion: The CCN synthesizes these orthogonal
+signals. Crucially, when Extrinsic Consensus saturates (approaches 1.0), the network uses Intrinsic self-verification
+to “de-saturate” the confidence, providing a more granular and honest probability estimate.
+
+
+for parsing anomalies, we define the Intrinsic Self-        this by projecting solutions into a canonical seman-
+Verification score Sintr (y) as a normalized expec-         tic space (Liu et al., 2020, 2021c,a).
+tation:
+                                                            Equivalence Partitioning. We define a canoni-
+             (                                              calization mapping T : Y → Z, which parses code
+                v
+                     if v is a valid parsed integer,
+ Sintr (y) = 100                                            into an Abstract Syntax Tree (AST) and applies
+               γ     otherwise,                             structural normalization rules. This induces an
+                                                  (1)       equivalence relation ∼ over the sampled set, where
+where γ = 0.5 serves as a conservative fallback             two solutions are deemed semantically equivalent
+penalty for unparsable or evasive responses, reflect-       if their canonical forms are identical:
+ing high uncertainty.
+                                                                         yi ∼ yj ⇐⇒ T (yi ) = T (yj ).            (2)
+Rationale. Generation confidence (derived from
+                                                            Based on this relation, we partition the sam-
+token-level log-probabilities) often misaligns with
+                                                            ple space Y into M disjoint equivalence classes
+correctness, as models can confidently hallucinate
+                                                            (clusters)
+                                                            SM         C = {C1 , C2 , . . . , CM }, such that
+flawed logic. In contrast, Sintr conditions on the
+                                                              m=1 Cm = Y and ∀ya , yb ∈ Cm , ya ∼ yb .
+completed logical structure. A lower Sintr score
+on a high-consensus output indicates a discrepancy          Consensus Estimation. For any candidate so-
+between generation-time determinism and post-hoc            lution y ∈ Y, let C(y) ∈ C denote the unique
+structural validity, serving as a powerful proxy for        equivalence class containing y. We define the Ex-
+implicit self-doubt.                                        trinsic Consensus score Sext (y) as the empirical
+                                                            probability of the semantic cluster to which y be-
+3.3 Extrinsic Uncertainty: AST-based                        longs:
+    Semantic Consensus                                                                         |C(y)|
+                                                                         Sext (y) = P̂ (y | x) =      .      (3)
+To quantify the extrinsic uncertainty, we estimate                                               K
+the probability mass associated with the semantic           Unlike standard Self-Consistency which selects the
+logic of a generated solution. Given a set of K             mode of the distribution (arg max |Cm |), we assign
+sampled outputs Y = {yk }K   k=1 from the model             this density score to every sample in the cluster.
+M(x), relying on exact string matching yields a             This provides the subsequent calibration network
+fragmented distribution due to syntactic variance           with a continuous measure of the model’s surface-
+(e.g., variable naming, formatting). We mitigate            level confidence in that specific logical path.
+                                                       6135
+3.4 Contextual Calibration Network (CCN)                  and accuracy per bin:
+The core innovation of N EURO S YM -C AL lies                                 XM     PN
+in the fusion of these signals. We employ a
+                                                                                  Sm   i=1 wi,m p̂i
+                                                                 LSof t−ECE =
+lightweight MLP (Popescu et al., 2009; Dong et al.,                               N      Sm
+                                                                              m=1    |    {z      }
+2025; Liu et al., 2021b), the Contextual Calibra-                                               Soft-Confm
+                                                                                 PN                           (6)
+tion Network (CCN), to map the feature vector                                       wi,m yi
+v = [Sintr , Sext , Lcode , Lreason , Ccyc ] to a cali-                       − i=1         ,
+                                                                                  Sm
+brated probability p̂, where Lcode and Lreason are                             |   {z     }
+                                                                                    Soft-Accm
+lengths of code and reasoning chains, and Ccyc is
+the cyclomatic complexity (Ebert et al., 2016) of                    P
+                                                          where Sm = N  i=1 wi,m is the effective size of bin
+the generated code.                                       m, and σ controls the smoothness of the assign-
+                                                          ment.
+De-saturation Mechanism. The CCN learns a
+non-linear interaction between the features. We           4     Experimental Setup
+hypothesize that the network acts as a conditional
+gate:                                                     We design our experiments to rigorously evaluate
+                                                          the N EURO S YM -C AL framework against diverse
+                                                          baselines on reasoning-intensive code generation
+   • When Sext is low (high disagreement), the
+                                                          tasks. Our goal is to validate whether fusing intrin-
+     model is clearly uncertain; Sext dominates the
+                                                          sic and extrinsic signals effectively mitigates con-
+     prediction.
+                                                          fidence saturation. We frame our analysis around
+                                                          three research questions:
+   • When Sext is high (saturation), the network          RQ1 (Calibration Efficacy): Does incorporating
+     relies on Sintr to determine the quality of that     intrinsic self-verification yield better calibrated con-
+     consensus.                                           fidence scores than methods relying solely on out-
+                                                          put consistency, particularly in de-saturating over-
+If a solution has High Consensus (Sext ≈ 1.0)             confident errors?
+but Low Self-Verification (Sintr ≪ 1.0), the CCN          RQ2 (Selective Generation): Can N EURO S YM -
+learns to penalize the confidence score, effectively      C AL effectively filter out incorrect code to improve
+“de-saturating” it to reflect the true empirical risk.    the reliability of the system in deployment scenar-
+                                                          ios (Risk-Coverage analysis)?
+Objective Function. We train the CCN using                RQ3 (Signal Complementarity): Are both the
+a hybrid objective to handle class imbalance and          symbolic consensus and neural self-verification
+directly optimize calibration:                            necessary for optimal calibration, and what are
+                                                          their respective roles?
+      L = LF L (p̂, y) + βLSof t−ECE (p̂, y).      (4)
+                                                          4.1    Benchmarks and Models
+where LF L is Focal Loss (Lin et al., 2017). To           To ensure our evaluation reflects the capabilities
+ensure differentiability for LSof t−ECE , we employ       of modern reasoning models and avoids training
+a kernel-based soft binning approach (Karandikar          data contamination, we employ three challenging,
+et al., 2021; Liu et al., 2022). Let {cm }M               execution-based benchmarks:
+                                            m=1 be
+the fixed centers of M bins. For a sample i with          LiveCodeBench (LCB) (Jain et al., 2024). We
+prediction p̂i , we compute a soft assignment weight      utilize the Test split of LCB (v2406–v2506), con-
+wi,m using a softmax over the Euclidean distance          sisting of 400 LeetCode-style contest problems.
+to bin centers:                                           Because the three evaluated models have differ-
+                                                         ent knowledge cutoffs (Qwen2.5-Coder-32B ≈
+                  exp −(p̂i − cm )2 /σ 2                  2024-07, DeepSeek-R1-Distill-Llama-70B ≈ 2024-
+      wi,m = PM                                .   (5)
+                                       2  2
+                  k=1 exp (−(p̂i − ck ) /σ )              07, Llama-3.3-70B ≈ 2024-12), only problems
+                                                          released strictly after a given model’s cutoff are
+The Soft-ECE is then calculated as the weighted           treated as out-of-distribution for that model. We
+absolute difference between average confidence            report the held-out subset per model and follow
+                                                      6136
+the LCB convention of treating the full v2406–                is our primary subject for analyzing the
+v2506 window as a harder-than-training testbed                Reasoning-Execution Gap.
+rather than a universally OOD set.
+                                                           • Qwen2.5-Coder-32B-Instruct (Hui et al.,
+HumanEval-Pro (Yu et al., 2025). An extension                2024): Currently one of the strongest open-
+of the classic HumanEval dataset that includes ad-           source code-specific models.
+ditional, more rigorous hidden test cases. This mit-
+igates the issue of “false positives” where models         • Llama-3.3-70B-Instruct (Grattafiori et al.,
+overfit to simple public tests, allowing for a more          2024): A general-purpose strong baseline to
+accurate ground-truth correctness label.                     test the universality of our method.
+
+DS-1000 (Lai et al., 2023). A data science              All models are run in half-precision (BF16) us-
+coding benchmark comprising 1,000 real-world            ing the vLLM inference engine. We set the sam-
+Python problems requiring the use of libraries like     pling temperature to T = 0.6 and top-p = 0.95
+Pandas and NumPy. This dataset tests the model’s        to encourage diversity for our extrinsic uncertainty
+ability to handle complex API logic and multi-step      estimation, generating K = 10 samples per prob-
+data manipulation, providing a different reasoning      lem. For intrinsic self-verification, we prompt each
+flavor than algorithmic puzzles.                        model to rate its own solutions with temperature
+   For all datasets, we use the provided canonical      T = 0.
+solutions and test suites to determine the binary
+                                                        4.2   Baselines
+correctness label y ∈ {0, 1}.
+                                                        We compare N EURO S YM -C AL against a compre-
+Training Data and CCN Implementation. To                hensive set of calibration strategies, categorized
+strictly prevent data leakage and rigorously eval-      into three groups to highlight different levels of
+uate Out-Of-Domain (OOD) generalization, the            sophistication:
+Contextual Calibration Network (CCN) is trained
+on a completely disjoint corpus. Specifically, we       I. Standard Baselines (Logit-based). These
+construct our training set using the APPS (Intro-       methods rely solely on the output token probabili-
+ductory split) (Hendrycks et al., 2021) combined        ties, representing the default uncertainty estimation
+with an older, historical split of LiveCodeBench. To    capability of the LLM.
+capture a realistic distribution of “high-consensus
+but incorrect” negative samples (i.e., entrenched          • AvgLogit: The exponential of the average log-
+hallucinations) (Liu et al., 2023; Liu, 2024) for the        probability. We report AvgLogit-Code (proba-
+CCN to effectively learn the de-saturation mech-             bilities averaged over code tokens only) as it
+anism, we sample the training trajectories at the            typically outperforms full-sequence averaging
+same temperature used for inference (T = 0.6).               for correctness prediction.
+This ensures strict consistency in the consensus dis-      • Platt Scaling (Platt et al., 1999): A para-
+tribution between training and evaluation. None              metric approach that fits a logistic regression
+of the evaluation benchmarks overlap with this               model on the AvgLogit-Code scores to correct
+training set. For reproducibility, the CCN is imple-         global miscalibration.
+mented as a lightweight 3-layer MLP with hidden
+dimensions [64, 32]. We train the network for 50           • P-True (Kadavath et al., 2022): We prompt
+epochs using the AdamW optimizer with a learn-               the model to verbally estimate the probability
+ing rate of 1e-3 and a batch size of 128. The soft-          that its generated solution is correct.
+binning parameter is set to σ = 0.05 and the loss
+weighting factor to β = 0.5.                            II. Strong Baselines (Consistency-based).
+   We evaluate our method on three state-of-the-art     These methods utilize sampling diversity to
+open-weight models that exhibit strong reasoning        estimate uncertainty, currently considered the gold
+capabilities:                                           standard for reasoning tasks. SC (Wang et al.,
+                                                        2022): We sample K = 10 solutions and define
+   • DeepSeek-R1-Distill-Llama-70B         (Guo         confidence as the percentage of samples that are
+     et al., 2025): A distilled reasoning model         strictly identical (string match) to the majority
+     that explicitly generates CoT traces. This         vote.
+                                                    6137
+III. State-of-the-Art Baseline (Multicalibration).       successfully de-saturating confidence when self-
+We implement the most effective multicalibration         verification (Sintr ) contradicts surface-level con-
+approach identified in recent literature (Campos         sensus (Sext ).
+et al., 2025) to serve as our primary competitor.        Generalization vs. Statistical Baselines. A nu-
+Iterative Grouped Linear Binning (IGLB): This            anced trend emerges when comparing against the
+method iteratively refines calibration errors across     multicalibration baseline IGLB. On in-distribution
+intersecting groups. Following prior work on code        tasks (HumanEval-Pro), IGLB remains highly
+generation, we define groups based on cyclomatic         competitive (ECE 0.038 vs. 0.035), suggesting
+complexity and code length. IGLB represents the          that statistical binning based on code metadata
+best-performing metadata-driven calibration tech-        (length, complexity) is sufficient for standard prob-
+nique, allowing us to directly compare our neuro-        lems. However, on the complex OOD logic of
+symbolic features against explicit metadata group-       LiveCodeBench, N EURO S YM -C AL regains the ad-
+ing.                                                     vantage (ECE 0.072 vs. 0.078). This indicates that
+                                                         while metadata captures aleatoric noise in simple
+4.3 Metrics
+                                                         distributions, intrinsic self-verification is essential
+We assess performance using three complementary          for capturing epistemic uncertainty in harder, un-
+metrics:                                                 seen reasoning trajectories.
+    • Expected Calibration Error (ECE): We use           Discriminative Power. In terms of ranking (AU-
+      the unbiased estimator with M = 10 bins to         ROC), our method attains the best score on LCB
+      measure the average discrepancy between con-       (0.805), though the margin over IGLB (0.798) is
+      fidence and accuracy (Posocco and Bonnefoy,        modest. This indicates that while Extrinsic Con-
+      2021).                                             sensus drives the primary ranking of solutions, the
+                                                         Intrinsic module is most useful for the probability
+    • Brier Score (BS): The mean squared error be-       scaling required to minimize ECE rather than for
+      tween predicted probabilities and binary out-      re-ordering candidates.
+      comes. Lower is better (Rufibach, 2010).
+
+    • AUROC: The Area Under the Receiver Op-             5.2   Selective Generation (RQ2)
+      erating Characteristic curve. This measures
+                                                         To assess practical utility, we evaluate selective gen-
+      the discriminative power of the confidence
+                                                         eration, where the system abstains from predictions
+      score, i.e., how well it separates correct from
+                                                         below a confidence threshold. Figure 3 illustrates
+      incorrect code, independent of the calibration
+                                                         the Risk-Coverage (RC) curves on LiveCodeBench.
+      threshold (McDermott et al., 2024).
+                                                         N EURO S YM -C AL demonstrates a superior risk pro-
+5    Experimental Results                                file, minimizing the error rate at equivalent cover-
+                                                         age levels. Quantitatively, our framework reduces
+5.1 Main Results: Calibration Performance                the Area Under Risk-Coverage (AURC) by 6.7%
+    (RQ1)                                                relative to the strongest baseline (IGLB) and 35.7%
+Table 1 presents the calibration performance across      relative to SC.
+three benchmarks. N EURO S YM -C AL consistently             The performance advantage is most pronounced
+achieves superior calibration compared to standard       in the operational coverage interval (20%–80%).
+baselines, validating the efficacy of fusing extrinsic   In this regime, standard SC suffers from satu-
+and intrinsic uncertainty signals.                       ration, assigning near-perfect confidence to “en-
+Mitigation of Confidence Saturation. On the              trenched hallucinations” which prevents effective
+OOD LiveCodeBench, our method yields the most            filtration. In contrast, N EURO S YM -C AL lever-
+significant gains, reducing Expected Calibration Er-     ages self-verification (Sintr ) to detect unreliable
+ror (ECE) by 37.4% compared to Self-Consistency          solutions within these high-consensus errors. By
+(0.072 vs. 0.115) for DeepSeek-R1. The improve-          pulling these samples down from near-saturated
+ment in Brier Score (0.182 vs. 0.198) further con-       confidence to intermediate values, our framework
+firms that our framework penalizes overconfident         re-ranks the generation queue so that the system pri-
+errors more effectively than consensus alone. This       oritizes genuinely robust solutions over confidently
+confirms that the CCN acts as a conditional gate,        wrong ones, acting as a safety filter for deployment.
+                                                     6138
+                                                                      LiveCodeBench (OOD)              HumanEval-Pro                  DS-1000 (Data Sci)
+            Model                       Method
+                                                                      ECE ↓    BS ↓    AUC ↑      ECE ↓       BS ↓     AUC ↑     ECE ↓         BS ↓    AUC ↑
+                                        AvgLogit                      0.155    0.231      0.710    0.120     0.215      0.735        0.145     0.228   0.698
+                                        Platt Scaling                 0.085    0.218      0.710    0.075     0.185      0.735        0.091     0.208   0.698
+            DeepSeek-R1                 P-True                        0.132    0.225      0.738    0.105     0.205      0.755        0.125     0.215   0.722
+            (Distill-70B)               Self-Consistency              0.115    0.198      0.792    0.095     0.168      0.810        0.105     0.188   0.765
+                                        IGLB (SOTA)                   0.078    0.195      0.798    0.038     0.150      0.825        0.062     0.180   0.780
+                                        NS-C AL (Ours)                0.072    0.182      0.805    0.035     0.148      0.828        0.055     0.172   0.792
+                                        AvgLogit                      0.138    0.228      0.725    0.115     0.212      0.748        0.132     0.225   0.715
+                                        Platt Scaling                 0.092    0.215      0.725    0.068     0.182      0.748        0.088     0.205   0.715
+            Qwen2.5                     P-True                        0.118    0.222      0.752    0.098     0.198      0.768        0.115     0.212   0.738
+            (Coder-32B)                 Self-Consistency              0.108    0.195      0.801    0.088     0.162      0.822        0.098     0.185   0.778
+                                        IGLB (SOTA)                   0.075    0.192      0.805    0.040     0.145      0.838        0.065     0.175   0.795
+                                        NS-C AL (Ours)                0.051    0.178      0.812    0.038     0.140      0.840        0.058     0.168   0.805
+                                        AvgLogit                      0.142    0.230      0.705    0.125     0.218      0.728        0.135     0.226   0.692
+                                        Platt Scaling                 0.095    0.216      0.705    0.072     0.188      0.728        0.092     0.210   0.692
+            Llama-3.3                   P-True                        0.128    0.224      0.730    0.108     0.208      0.745        0.122     0.218   0.715
+            (70B-Instruct)              Self-Consistency              0.112    0.202      0.785    0.092     0.172      0.805        0.102     0.192   0.758
+                                        IGLB (SOTA)                   0.082    0.196      0.790    0.045     0.155      0.818        0.075     0.184   0.772
+                                        NS-C AL (Ours)                0.075    0.185      0.798    0.042     0.150      0.820        0.065     0.176   0.785
+
+                               Table 1: Main Calibration Results. Best results are bolded, second-best are underlined.
+
+
+                    0.5                                                                           Configuration              ECE ↓     BS ↓    AUC ↑   ∆ ECE
+                            AvgLogit (AURC: 0.236)
+                            Self-Consistency (AURC: 0.196)                                        N EURO S YM -C AL (Full)   0.072     0.182   0.805     -
+                            IGLB (SOTA) (AURC: 0.135)
+                    0.4     NeuroSym-Cal (Ours) (AURC: 0.126)                                       w/o Intrinsic (Sintr )   0.082     0.192   0.799   +13.9%
+                            Operational Interval                                                    w/o Extrinsic (Sext )    0.125     0.220   0.745   +73.6%
+
+
+
+
+Risk (Error Rate)
+                                                                                                    w/o AST (String Match)   0.089     0.188   0.798   +23.6%
+                    0.3
+                                                                                                   Table 2: Ablation Results on LiveCodeBench.
+                    0.2
+
+
+                    0.1                     De-saturation                                     ECE (+13.9%) and Brier Score (+5.5%) while
+                                            Gain
+                                                                                              only mildly affecting AUROC. This is consistent
+                    0.0
+                                                                                              with our hypothesis that self-verification functions
+                       0%        20%           40%              60%      80%       100%       mainly as a calibration regularizer: it re-ranks so-
+                            Coverage (Percentage of Samples Retained)
+                                                                                              lutions only weakly, but scales probabilities by de-
+      Figure 3: Risk-Coverage Curves on LiveCodeBench.                                        tecting unreliable code in high-consensus errors.
+                                                                                              Necessity of Symbolic Abstraction. Replacing
+                                                                                              AST canonicalization with naive string matching
+  5.3 Ablation Study (RQ3)                                                                    (w/o AST) increases ECE (0.072 → 0.089). This
+ To validate the complementarity of our neuro-                                                indicates that syntactic noise (e.g., formatting, vari-
+ symbolic components, we conduct an ablation                                                  able naming) dilutes the consensus signal. Struc-
+ study on LCB using DeepSeek-R1. Table 2 sum-                                                 tural parsing is essential to filter aleatoric noise and
+ marizes the performance impact of removing or                                                recover the true epistemic distribution.
+ simplifying specific modules.
+                                                                                              6    Conclusion
+ Orthogonality of Signals. The results highlight
+ distinct roles for extrinsic and intrinsic features.                                         In this work, we address the challenge of Confi-
+ Removing Extrinsic Consensus (Sext ) causes the                                              dence Saturation in reasoning-enhanced code gen-
+ sharpest decline in AUROC (0.805 → 0.745), con-                                              eration, where standard consistency methods fail
+ firming that consensus remains the primary dis-                                              to detect entrenched hallucinations. We introduce
+ criminator for ranking solutions. Conversely, re-                                            N EURO S YM -C AL, a hierarchical framework that
+ moving Intrinsic Self-Verification (Sintr ) degrades                                         fuses extrinsic AST-based symbolic consensus with
+                                                                                          6139
+a novel intrinsic self-verification analysis. By lever-   repository-level synthesis.
+aging the model’s own post-hoc re-evaluation of its
+generated code, our method effectively identifies         Language-Specific Symbolic Constraints. The
+unreliable solutions even when output consensus           Semantic Equivalence Clustering relies on ro-
+saturates. Empirical results across multiple bench-       bust AST parsers and manually defined canoni-
+marks demonstrate that N EURO S YM -C AL achieves         calization rules (e.g., normalizing variable names
+state-of-the-art calibration error and superior selec-    and loops). In this work, we implemented
+tive generation performance, particularly in out-of-      rules for high-resource languages (Python). Ex-
+distribution scenarios. Our findings underscore that      tending N EURO S YM -C AL to low-resource lan-
+reliable uncertainty estimation in code generation        guages, domain-specific languages (DSLs), or
+requires moving beyond output agreement to probe          mixed-language scenarios requires engineering ef-
+the model’s own assessment of its solutions. Fu-          fort to develop corresponding parsers and transfor-
+ture work will explore leveraging these calibrated        mation rules. A purely neural or language-agnostic
+signals to guide iterative self-correction in complex     approach to semantic equivalence remains an open
+reasoning domains (Lin et al., 2025).                     challenge.
+
+7   Limitations                                           References
+While N EURO S YM -C AL demonstrates significant          Viola Campos, Robin Kuschnereit, and Adrian Ulges.
+advancements in calibrating reasoning-oriented              2025. Multicalibration for llm-based code generation.
+code generation models, we acknowledge several              arXiv preprint arXiv:2512.08810.
+limitations that define the boundaries of our current     Mark Chen. 2021. Evaluating large language models
+work and point towards future research directions.         trained on code. arXiv preprint arXiv:2107.03374.
+
+Dependency on Self-Evaluation Capability.                 Zhiwei Chen, Yupeng Hu, Zhiheng Fu, Zixu Li, Jiale
+Unlike our initial explorations into white-box la-          Huang, Qinlei Huang, and Yinwei Wei. 2026. Intent:
+                                                            Invariance and discrimination-aware noise mitigation
+tent probing, the finalized Intrinsic module relies         for robust composed image retrieval. In Proceedings
+on the model’s ability to critically evaluate its own       of the AAAI Conference on Artificial Intelligence,
+generated code via self-verification. While this            volume 40, pages 20463–20471.
+elegantly removes the need for white-box access
+                                                          Haonan Dong, Kehan Jiang, Haoran Ye, Wenhao Zhu,
+to internal states (gradients or hidden representa-         Zhaolu Kang, and Guojie Song. 2026. Neurea-
+tions) and broadens applicability to closed-source          soner: Towards explainable, controllable, and unified
+APIs, it heavily assumes that the model possesses           reasoning via mixture-of-neurons. arXiv preprint
+sufficient meta-cognitive ability to assess code cor-       arXiv:2604.02972.
+rectness. For smaller or less capable models (e.g.,       Haonan Dong, Wenhao Zhu, Guojie Song, and Liang
+< 7B parameters), self-verification scores may col-         Wang. 2025. Aurora: Breaking low-rank bottle-
+lapse or become uninformative. Future work could            neck of lora with nonlinear mapping. arXiv preprint
+investigate decoupling this by using a separate, spe-       arXiv:2505.18738.
+cialized verifier model.                                  Christof Ebert, James Cain, Giuliano Antoniol, Steve
+                                                            Counsell, and Phillip Laplante. 2016. Cyclomatic
+Inference Latency and Computational Over-                   complexity. IEEE software, 33(6):27–29.
+head. The overall framework incurs higher com-
+putational costs compared to greedy decoding. The         Yangyi Fang, Jiaye Lin, Xiaoliang Fu, Cong Qin, Haolin
+                                                            Shi, Chaowen Hu, Lu Pan, Ke Zeng, and Xunliang
+Extrinsic module requires sampling K solutions              Cai. 2026a. How to allocate, how to learn? dynamic
+(where K = 10 in our experiments) and parsing               rollout allocation and advantage modulation for pol-
+them into ASTs. The Intrinsic module requires               icy optimization. arXiv preprint arXiv:2602.19208.
+an additional inference pass for self-verification.
+                                                          Yangyi Fang, Jiaye Lin, Xiaoliang Fu, Cong Qin, Haolin
+While both can be parallelized, they increase the           Shi, Chang Liu, and Peilin Zhao. 2026b. Proximity-
+token consumption. This trade-off between calibra-          based multi-turn optimization: Practical credit as-
+tion reliability and inference latency may restrict         signment for llm agent training. arXiv preprint
+deployment in strictly real-time, low-latency cod-          arXiv:2602.19225.
+ing assistants, though it remains highly viable for       Xiaoliang Fu, Jiaye Lin, Yangyi Fang, Chaowen Hu,
+asynchronous tasks like automated code review or            Cong Qin, Zekai Shao, Binbin Zheng, Lu Pan, and
+                                                      6140
+  Ke Zeng. 2026. From log π to π: Taming diver-           Lorenz Kuhn, Yarin Gal, and Sebastian Farquhar. 2023.
+  gence in soft clipping via bilateral decoupled de-        Semantic uncertainty: Linguistic invariances for un-
+  cay of probability gradient weight. arXiv preprint        certainty estimation in natural language generation.
+  arXiv:2603.14389.                                         arXiv preprint arXiv:2302.09664.
+Aaron Grattafiori, Abhimanyu Dubey, Abhinav Jauhri,       Yuhang Lai, Chengxi Li, Yiming Wang, Tianyi Zhang,
+  Abhinav Pandey, Abhishek Kadian, Ahmad Al-                Ruiqi Zhong, Luke Zettlemoyer, Wen-tau Yih, Daniel
+  Dahle, Aiesha Letman, Akhil Mathur, Alan Schelten,        Fried, Sida Wang, and Tao Yu. 2023. Ds-1000: A
+  Alex Vaughan, and 1 others. 2024. The llama 3 herd        natural and reliable benchmark for data science code
+  of models. arXiv preprint arXiv:2407.21783.               generation. In International Conference on Machine
+                                                            Learning, pages 18319–18345. PMLR.
+Chuan Guo, Geoff Pleiss, Yu Sun, and Kilian Q Wein-
+  berger. 2017. On calibration of modern neural net-      Tamera Lanham, Anna Chen, Ansh Radhakrishnan,
+  works. In International conference on machine learn-      Benoit Steiner, Carson Denison, Danny Hernandez,
+  ing, pages 1321–1330. PMLR.                               Dustin Li, Esin Durmus, Evan Hubinger, Jackson
+                                                            Kernion, and 1 others. 2023. Measuring faithful-
+Daya Guo, Dejian Yang, Haowei Zhang, Junxiao                ness in chain-of-thought reasoning. arXiv preprint
+  Song, Ruoyu Zhang, Runxin Xu, Qihao Zhu, Shi-             arXiv:2307.13702.
+  rong Ma, Peiyi Wang, Xiao Bi, and 1 others. 2025.
+  Deepseek-r1: Incentivizing reasoning capability in      Mengdi Li, Jiaye Lin, Xufeng Zhao, Wenhao Lu,
+  llms via reinforcement learning. arXiv preprint          Peilin Zhao, Stefan Wermter, and Di Wang. 2025a.
+  arXiv:2501.12948.                                        Curriculum-rlaif: Curriculum alignment with rein-
+                                                           forcement learning from ai feedback. arXiv preprint
+Dan Hendrycks, Steven Basart, Saurav Kadavath, Man-
+                                                           arXiv:2505.20075.
+  tas Mazeika, Akul Arora, Ethan Guo, Collin Burns,
+  Samir Puranik, Horace He, Dawn Song, and Jacob          Xiping Li and Jianghong Ma. 2025. Aimcot: Ac-
+  Steinhardt. 2021. Measuring coding challenge com-         tive information-driven multimodal chain-of-thought
+  petence with apps. Preprint, arXiv:2105.09938.            for vision-language reasoning. arXiv preprint
+Yupeng Hu, Zixu Li, Zhiwei Chen, Qinlei Huang, Zhi-         arXiv:2509.25699.
+  heng Fu, Mingzhu Xu, and Liqiang Nie. 2026. Re-
+                                                          Xiping Li, Jianghong Ma, Kangzhe Liu, Shanshan Feng,
+  fine: Composed video retrieval via shared and differ-
+                                                            Haijun Zhang, and Yutong Wang. 2024. Category-
+  ential semantics enhancement. ACM Transactions on
+                                                            based and popularity-guided video game recommen-
+  Multimedia Computing, Communications and Appli-
+                                                            dation: a balance-oriented framework. In Proceed-
+  cations.
+                                                            ings of the ACM Web Conference 2024, pages 3734–
+Binyuan Hui, Jian Yang, Zeyu Cui, Jiaxi Yang,               3744.
+  Dayiheng Liu, Lei Zhang, Tianyu Liu, Jiajun
+  Zhang, Bowen Yu, Kai Dang, and 1 others. 2024.          Xiping Li, Aier Yang, Jianghong Ma, Kangzhe Liu,
+  Qwen2. 5-coder technical report. arXiv preprint           Shanshan Feng, Haijun Zhang, and Yi Zhao. 2026.
+  arXiv:2409.12186.                                         Cpgrec+: A balance-oriented framework for person-
+                                                            alized video game recommendations. ACM Transac-
+Naman Jain, King Han, Alex Gu, Wen-Ding Li, Fanjia          tions on Information Systems, 44(3):1–44.
+  Yan, Tianjun Zhang, Sida Wang, Armando Solar-
+  Lezama, Koushik Sen, and Ion Stoica. 2024. Live-        Zhong-Zhi Li, Duzhen Zhang, Ming-Liang Zhang, Ji-
+  codebench: Holistic and contamination free eval-          axin Zhang, Zengyan Liu, Yuxuan Yao, Haotian Xu,
+  uation of large language models for code. arXiv           Junhao Zheng, Pei-Jie Wang, Xiuyi Chen, and 1 oth-
+  preprint arXiv:2403.07974.                                ers. 2025b. From system 1 to system 2: A survey
+                                                            of reasoning large language models. arXiv preprint
+Kehan Jiang, Haonan Dong, Zhaolu Kang, Zhengzhou            arXiv:2502.17419.
+  Zhu, and Guojie Song. 2026. Foe: Forest of errors
+  makes the first solution the best in large reasoning    Jiaye Lin, Yifu Guo, Yuzhen Han, Sen Hu, Ziyi Ni,
+  models. arXiv preprint arXiv:2604.02967.                   Licheng Wang, Mingguang Chen, Hongzhang Liu,
+                                                             Ronghao Chen, Yangfan He, and 1 others. 2025. Se-
+Saurav Kadavath, Tom Conerly, Amanda Askell, Tom             agent: Self-evolution trajectory optimization in multi-
+  Henighan, Dawn Drain, Ethan Perez, Nicholas                step reasoning with llm-based agents. arXiv preprint
+  Schiefer, Zac Hatfield-Dodds, Nova DasSarma, Eli           arXiv:2508.02085.
+  Tran-Johnson, and 1 others. 2022. Language mod-
+  els (mostly) know what they know. arXiv preprint        Tsung-Yi Lin, Priya Goyal, Ross Girshick, Kaiming He,
+  arXiv:2207.05221.                                         and Piotr Dollár. 2017. Focal loss for dense object
+                                                            detection. In Proceedings of the IEEE international
+Archit Karandikar, Nicholas Cain, Dustin Tran, Bal-         conference on computer vision, pages 2980–2988.
+  aji Lakshminarayanan, Jonathon Shlens, Michael C
+  Mozer, and Becca Roelofs. 2021. Soft calibration        Peiyang Liu. 2024. Unsupervised corrupt data detection
+  objectives for neural networks. Advances in Neural        for text training. Expert Systems with Applications,
+  Information Processing Systems, 34:29768–29779.           248:123335.
+                                                      6141
+Peiyang Liu, Zhirui Chen, Xi Wang, Di Liang, Youru Li,         Advances in Neural Information Processing Systems,
+  Zhi Cai, and Wei Ye. 2026. Learning from contrasts:          37:44102–44163.
+  Synthesizing reasoning paths from diverse search
+  trajectories. Preprint, arXiv:2604.11365.                 John Platt and 1 others. 1999. Probabilistic outputs for
+                                                              support vector machines and comparisons to regular-
+Peiyang Liu, Ziqiang Cui, Di Liang, and Wei Ye. 2025a.        ized likelihood methods. Advances in large margin
+  Who stole your data? a method for detecting unau-           classifiers, 10(3):61–74.
+  thorized rag theft. arXiv preprint arXiv:2510.07728.
+                                                            Marius-Constantin Popescu, Valentina E Balas, Lil-
+Peiyang Liu, Sen Wang, Xi Wang, Wei Ye, and Shikun           iana Perescu-Popescu, and Nikos Mastorakis. 2009.
+  Zhang. 2021a. Quadrupletbert: An efficient model           Multilayer perceptron and neural networks. WSEAS
+  for embedding-based large-scale retrieval. In Pro-         Transactions on Circuits and Systems, 8(7):579–588.
+  ceedings of the 2021 Conference of the North Amer-
+  ican Chapter of the Association for Computational         Nicolas Posocco and Antoine Bonnefoy. 2021. Esti-
+  Linguistics: Human Language Technologies, pages             mating expected calibration errors. In International
+  3734–3739.                                                  conference on artificial neural networks, pages 139–
+                                                              150. Springer.
+Peiyang Liu, Xi Wang, Ziqiang Cui, and Wei Ye. 2025b.
+                                                            Baptiste Roziere, Jonas Gehring, Fabian Gloeckle, Sten
+  Queries are not alone: Clustering text embeddings
+                                                              Sootla, Itai Gat, Xiaoqing Ellen Tan, Yossi Adi,
+  for video search. In Proceedings of the 48th Inter-
+                                                              Jingyu Liu, Romain Sauvestre, Tal Remez, and 1
+  national ACM SIGIR Conference on Research and
+                                                              others. 2023. Code llama: Open foundation models
+  Development in Information Retrieval, pages 874–
+                                                              for code. arXiv preprint arXiv:2308.12950.
+  883.
+                                                            Kaspar Rufibach. 2010. Use of brier score to assess
+Peiyang Liu, Xi Wang, Lin Wang, Wei Ye, Xiangyu               binary predictions. Journal of clinical epidemiology,
+  Xi, and Shikun Zhang. 2021b. Distilling knowledge           63(8):938–939.
+  from bert into simple fully connected neural networks
+  for efficient vertical retrieval. In Proceedings of the   Zailong Tian, Zhuoheng Han, Yanzhe Chen, Haozhe Xu,
+  30th ACM International Conference on Information            Xi Yang, Richeng Xuan, Houfeng Wang, and Lizi
+  & Knowledge Management, pages 3965–3975.                    Liao. 2025. Overconfidence in llm-as-a-judge: Diag-
+                                                              nosis and confidence-driven solution. arXiv preprint
+Peiyang Liu, Xi Wang, Sen Wang, Wei Ye, Xiangyu Xi,           arXiv:2508.06225.
+  and Shikun Zhang. 2021c. Improving embedding-
+  based large-scale retrieval via label enhancement. In     Miles Turpin, Julian Michael, Ethan Perez, and Samuel
+  Findings of the Association for Computational Lin-          Bowman. 2023. Language models don’t always say
+  guistics: EMNLP 2021, pages 133–142.                        what they think: Unfaithful explanations in chain-of-
+                                                              thought prompting. Advances in Neural Information
+Peiyang Liu, Xiangyu Xi, Wei Ye, and Shikun Zhang.            Processing Systems, 36:74952–74965.
+  2022. Label smoothing for text mining. In Proceed-
+  ings of the 29th international conference on compu-       Xuezhi Wang, Jason Wei, Dale Schuurmans, Quoc Le,
+  tational linguistics, pages 2210–2219.                      Ed Chi, Sharan Narang, Aakanksha Chowdhery, and
+                                                              Denny Zhou. 2022. Self-consistency improves chain
+Peiyang Liu, Jinyu Yang, Lin Wang, Sen Wang, Yunlai           of thought reasoning in language models. arXiv
+  Hao, and Huihui Bai. 2023. Retrieval-based unsu-            preprint arXiv:2203.11171.
+  pervised noisy label detection on text data. In Pro-
+  ceedings of the 32nd ACM International Conference         Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten
+  on Information and Knowledge Management, pages               Bosma, Fei Xia, Ed Chi, Quoc V Le, Denny Zhou,
+  4099–4104.                                                   and 1 others. 2022. Chain-of-thought prompting elic-
+                                                               its reasoning in large language models. Advances
+Peiyang Liu, Wei Ye, Xiangyu Xi, Tong Wang, Jin-               in neural information processing systems, 35:24824–
+  glei Zhang, and Shikun Zhang. 2020. Not all syn-             24837.
+  onyms are created equal: Incorporating similarity of
+  synonyms to enhance word embeddings. In 2020              Zijun Yan, Ke-qin Fan, Qi Zhang, Xinyan Wu, Yuquan
+  International Joint Conference on Neural Networks            Chen, Xinyu Wu, Ting Yu, Ning Su, Yan Zou, Hao
+  (IJCNN), pages 1–8. IEEE.                                    Chi, and 1 others. 2025. Comparative analysis of the
+                                                               performance of the large language models deepseek-
+Xiaoou Liu, Tiejin Chen, Longchao Da, Chacha Chen,             v3, deepseek-r1, open ai-o3 mini and open ai-o3
+  Zhen Lin, and Hua Wei. 2025c. Uncertainty quantifi-          mini high in urology. World Journal of Urology,
+  cation and confidence calibration in large language          43(1):416.
+  models: A survey. In Proceedings of the 31st ACM
+  SIGKDD Conference on Knowledge Discovery and              Zhaojian Yu, Yilun Zhao, Arman Cohan, and Xiao-
+  Data Mining V. 2, pages 6107–6117.                          Ping Zhang. 2025. Humaneval pro and mbpp pro:
+                                                              Evaluating large language models on self-invoking
+Matthew McDermott, Haoran Zhang, Lasse Hansen,                code generation task. In Findings of the Association
+ Giovanni Angelotti, and Jack Gallifant. 2024. A              for Computational Linguistics: ACL 2025, pages
+ closer look at auroc and auprc under class imbalance.        13253–13279.
+                                                        6142
+Jian Zhang, Xu Wang, Hongyu Zhang, Hailong Sun,
+   Kaixuan Wang, and Xudong Liu. 2019. A novel
+   neural source code representation based on abstract
+   syntax tree. In 2019 IEEE/ACM 41st International
+   Conference on Software Engineering (ICSE), pages
+   783–794. IEEE.
+Mingyu Zhang, Zixu Li, Zhiwei Chen, Zhiheng Fu,
+  Xiaowei Zhu, Jiajia Nie, Yinwei Wei, and Yupeng Hu.
+  2026a. Hint: Composed image retrieval with dual-
+  path compositional contextualized network. arXiv
+  preprint arXiv:2603.26341.
+Qianchi Zhang, Hainan Zhang, Liang Pang, Yongxin
+  Tong, Hongwei Zheng, and Zhiming Zheng. 2025a.
+  Less is more: Compact clue selection for efficient
+  retrieval-augmented generation reasoning. arXiv
+  preprint arXiv:2502.11811.
+Yuanjun Zhang, Fuzel Ahamed Shaik, Suvojit Acharjee,
+  Fahad Khalid, and Mourad Oussalah. 2026b. To-
+  wards reliable multimodal disaster severity assess-
+  ment through preference optimization and explain-
+  able vision-language reasoning. Reliability Engineer-
+  ing & System Safety, page 112674.
+
+Zhuosheng Zhang, Yao Yao, Aston Zhang, Xiangru
+  Tang, Xinbei Ma, Zhiwei He, Yiming Wang, Mark
+  Gerstein, Rui Wang, Gongshen Liu, and 1 others.
+  2025b. Igniting language intelligence: The hitch-
+  hiker’s guide from chain-of-thought reasoning to lan-
+  guage agents. ACM Computing Surveys, 57(8):1–39.
+Shuyan Zhou, Uri Alon, Sumit Agarwal, and Gra-
+  ham Neubig. 2023. Codebertscore: Evaluating code
+  generation with pretrained models of code. arXiv
+  preprint arXiv:2302.05527.
+
+
+
+
+                                                      6143
+

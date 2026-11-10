@@ -1,0 +1,295 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/GaDrc1uHiuNhUVZzTpqNPelJOro</id>
+  <title>arXiv Query: search_query=all:measurement AND all:instrument AND all:language AND all:model AND all:calibration&amp;id_list=&amp;start=0&amp;max_results=15</title>
+  <updated>2026-11-09T23:01:30Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=all:measurement+AND+(all:instrument+AND+(all:language+AND+(all:model+AND+all:calibration)))&amp;start=0&amp;max_results=15&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>15</opensearch:itemsPerPage>
+  <opensearch:totalResults>41</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2610.25735v1</id>
+    <title>A Calibrated Instrument for Detecting Disposition Drift in Language Models</title>
+    <updated>2026-10-19T03:41:20Z</updated>
+    <link href="https://arxiv.org/abs/2610.25735v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.25735v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Before language models are released, they are tested for harmful traits such as willingness to carry out dangerous requests, deception, power seeking, and sycophancy. The safe behavior these tests certify may degrade as models are modified, by topical fine-tuning, new training data, or changes to settings such as the depth of their reasoning. Most work reports such drift as single summary rates scored by another AI model, without the error analysis needed to interpret them. We adapt a calibrated measurement methodology recently developed for assessing how inference optimizations affect the quality of model outputs. Applying it to several misalignment dimensions in two open-weight models, we first establish the instrument's precision, showing that shifts of a few percentage points can be reliably detected. We then induce drift deliberately by fine-tuning on correct and on subtly harmful medical and financial advice; harmful advice induces a far greater shift than correct advice. Most strikingly, a model that reasons before answering can conceal the shift almost entirely in its answers, even though a direct reading of its internal state shows that its disposition has moved. With reasoning switched off, the same model shifts steadily as the share of harmful advice in its training grows. These results demonstrate the importance of testing safety with reasoning turned both on and off.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-19T03:41:20Z</published>
+    <arxiv:comment>32 pages, 3 figures. Code and data: https://github.com/jerrykaplan/calibrated-drift-instrument</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Jerry Kaplan</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.18005v1</id>
+    <title>A Calibrated Instrument for Measuring How Inference Optimizations Affect Output Quality</title>
+    <updated>2026-09-16T01:49:12Z</updated>
+    <link href="https://arxiv.org/abs/2609.18005v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.18005v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language model optimization is an active research area, spanning quantization of model weights, early-exit methods for skipping layers, and speculative decoding. Each track uses its own quality measures, typically an idiosyncratic benchmark score. Few approach the measurement precision required by other scientific disciplines.
+  We propose a rigorous methodology for measuring output quality, suitable for cross-system and cross-technique comparison. We score outputs with an LLM as a judge, but calibrate the judge formally: we compare its scores on two ordinary runs of a model given the same prompts, verifying that it shows no systematic preference between statistically equivalent outputs and measuring its per-sample noise. Each design also includes a 'null' condition, provably identical in distribution to the unmodified model, whose measured difference must be zero.
+  With this one instrument we measure several acceleration techniques on the same prompts, so their quality costs can be compared. Perceived quality proves highly dependent on the domain of discourse. A 4-bit model was indistinguishable from its 16-bit original down to our design's +/-0.3-point resolution, in English prose and Chinese alike. At 3-bit precision the same prompts lost 0.5 points in English prose, 0.9 in Chinese, and 1.1 on multi-step math; early exit that cost 0.7 points on prose cost 2.5 on math, cutting correctly solved problems from 19 of 27 to 6. The pattern held for models from Alibaba and from Meta, but not its magnitude: the same quantizer cost Meta's model 1.8 points where it cost Alibaba's 0.7.
+  A model's certainty about a token predicts how likely it is to differ from the full model's choice, but not how much that difference affects judged quality, so acceptance rules relying on certainty cannot distinguish errors that matter from errors that don't.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-16T01:49:12Z</published>
+    <arxiv:comment>23 Pages. 6 tables in main text,5 tables in appendices. Code, prompts, and result files at https://github.com/jerrykaplan/Calibrated-Instrument</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Jerry Kaplan</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.08731v2</id>
+    <title>Trusting sovereign language models as scientific instruments: evidence from Portugal's AMALIA</title>
+    <updated>2026-07-20T07:11:20Z</updated>
+    <link href="https://arxiv.org/abs/2607.08731v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.08731v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>National language models are becoming publicly funded epistemic infrastructure. Public ownership, linguistic specialization, and open weights create a presumption of trustworthiness. Such an instrument, built by and for a language community, looks like the natural choice for measuring what that community says and values. Whether such a model validly measures anything is untested at release. The evaluation of LLMs as measurement instruments is typically task-specific and stops at agreement with human coders. Agreement cannot distinguish an LLM instrument that measures a construct from one that reaches matching codes through surface correlates. We audit the presumption on a favourable case: AMALIA, Portugal's publicly funded 9B model, coding the moral foundation of authority in European Portuguese. The \textit{recovery gap} operationalizes the audit: decompose the codebook into its theory-defined clauses, recombine them through the theory's explicit rule, and measure how much of the original prompt's performance the stated theory reproduces. In a pre-registered, out-of-sample study on a transcreated (English to European Portuguese) corpus, AMALIA agrees with trained coders within six points of open models eight to thirteen times its size. Yet, the recovery gap shows that only about half of coding performance on authority can be attributed to the theory. A larger multilingual LLM closes the recovery gap on the same corpus, suggesting the shortfall lies in the annotator model, not the corpus or its translation. Sovereignty earns operational and performance trust; epistemic trust requires calibration -- and the audit method is inexpensive, and portable across models, languages and tasks.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CY" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-09T17:34:25Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Manuel Pita</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.32638v1</id>
+    <title>Can Open-Weight Large Language Models (LLMs) Simulate Human Survey Populations? A Cross-Instrument Calibration Study</title>
+    <updated>2026-09-26T14:01:34Z</updated>
+    <link href="https://arxiv.org/abs/2609.32638v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.32638v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) are increasingly used to generate synthetic survey respondents and digital twins of real people, but whether their output preserves real human statistical structure, rather than surface plausibility, remains unresolved, and most existing evidence comes from proprietary models rather than open-weight ones. We evaluate three open-weight LLM families on a cross-instrument calibration task: conditioning personas on real respondents' verbatim answers to one psychometric instrument and measuring them on a second, construct-distance-controlled instrument, checked against a 2,058-person human panel. Across a 139-pair grid, the simulated cross-instrument correlation tracks the real human correlation at r = 0.70 - 0.73 in every model, driven mainly by correct sign rather than precise magnitude and concentrated in pairs of moderate construct distance. A correlation of this magnitude, obtained from untuned open-weight models conditioned only on individual-level survey data, is a substantively encouraging result for LLM-based behavioral simulation and digital-twin applications: specific model families and releases already reproduce a meaningful share of real human cross-instrument structure without any fine-tuning. This capability does not, however, improve monotonically across model releases: on a matched panel, the newest of three tested Llama releases performs worst on two of three headline metrics, so realizing its promise in practice requires release-specific, distance-aware verification rather than a one-time benchmark.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-26T14:01:34Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Grandee Lee</name>
+    </author>
+    <author>
+      <name>Wang Yue</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2602.01022v3</id>
+    <title>Calibrating Behavioral Parameters with Large Language Models</title>
+    <updated>2026-05-08T20:39:16Z</updated>
+    <link href="https://arxiv.org/abs/2602.01022v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2602.01022v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Behavioral parameters such as loss aversion, herding, and extrapolation are central to asset pricing models but remain difficult to measure reliably. We develop a framework that treats large language models (LLMs) as calibrated measurement instruments for behavioral parameters. Using four models and 24{,}000 agent--scenario pairs, we document systematic rationality bias in baseline LLM behavior, including attenuated loss aversion, weak herding, and near-zero disposition effects relative to human benchmarks. Profile-based calibration induces large, stable, and theoretically coherent shifts in several parameters, with calibrated loss aversion, herding, extrapolation, and anchoring reaching or exceeding benchmark magnitudes. To assess external validity, we embed calibrated parameters in an agent-based asset pricing model, where calibrated extrapolation generates short-horizon momentum and long-horizon reversal patterns consistent with empirical evidence. Our results establish measurement ranges, calibration functions, and explicit boundaries for eight canonical behavioral biases.</summary>
+    <category term="econ.GN" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-02-01T05:14:58Z</published>
+    <arxiv:primary_category term="econ.GN"/>
+    <author>
+      <name>Brandon Yee</name>
+    </author>
+    <author>
+      <name>Pairie Koh</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.20729v1</id>
+    <title>Calibrating Criterion Revision in LLM Agents: Failure Modes and a Trace-Anchored Protocol</title>
+    <updated>2026-08-21T04:21:28Z</updated>
+    <link href="https://arxiv.org/abs/2608.20729v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.20729v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Language-model agents can improve after failure or carry text across episodes without revising what counts as success. We study the narrower attribution problem of criterion revision: when criterion K0 accepts an outcome violating a broader commitment B, what observations justify saying that the system formed and persistently used K1? We require five non-compensatory conditions: criterion-failure detection, a model-emitted proposal, new-episode transfer, intervention sensitivity on the claimed carrier, and preservation.
+  We evaluate CMB-0.1 on twelve cross-domain cases and four arms: stateless inference, append-only history, model-generated but harness-committed state, and evaluator-written oracle state. Seven mechanism fixtures yield 84 deterministic scorer trials; four local quantized artifacts yield 96 calls and 192 model-case-arm trials. No model trial satisfies all five conditions, but this zero does not establish general capability absence. Eleven calls remain invalid after one retry; several commitments disclose the target distinction; the harness performs commits; deletion reuses a stateless call; and conflict changes multiple factors. Qwen2.5-7B answers every transfer and preservation item without revision state, exposing zero-state reconstruction.
+  These failures make CMB-0.1 an instrument-calibration result rather than a model ranking. We derive a prospective, trace-anchored CMB-0.4 protocol requiring concealed transfer, explicit WRITE/NO-WRITE/ESCALATE actions, a separately logged policy-selected commit, matched interventions, repeated hidden items, and a frozen executable oracle. It is a successor design, not a completed confirmatory result. The paper contributes a measurement chain, an empirical diagnosis of its first implementation, and a more discriminating protocol for future tests of criterion revision.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-21T04:21:28Z</published>
+    <arxiv:comment>18 pages, 8 tables, 1 figure. CMB-0.1 is an instrument-calibration study; CMB-0.4 is a prospective protocol, not an empirical result</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Guodong Xu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.14754v1</id>
+    <title>Calibrating Interpretability Instruments Before Trusting Their Verdicts</title>
+    <updated>2026-09-13T19:37:02Z</updated>
+    <link href="https://arxiv.org/abs/2609.14754v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.14754v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Causal claims about large language model (LLM) internals rest on measurements. Those might include a projection, a cosine, an ablation delta, or an interchange patch among others. These measurements fail in specific, diagnosable ways that return a plausible number instead of an error, so a broken instrument can easily read as a finding. A covariance-matched null can saturate until every direction looks typical, a per-head attribution can overshoot the true residual write threefold on reordered-normalization architectures, an interchange patch can go sign-chaotic because its outcome is pinned at a ceiling, or a read-from verdict can be an artifact of measuring past the layer where the model already decided. This note documents six such failures from a causal interpretability program on refusal and moral representation, spanning several papers and a four-model open-weight panel; each mode is established on one or two of the four. For each we give the tell that catches it and a protocol keyed to a detectable trigger (reordered normalization, massive activations, a low-dimensional decision channel), so we and readers can check whether a given setup is exposed. The discipline reduces to four moves: calibrate against a positive-control ladder, certify with an orthogonal cell, compute power before spending compute, and state every read-from verdict at a depth referenced to the model's commitment. The evidence is four architectures across three families within a single program; external replication across programs is future work.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-13T19:37:02Z</published>
+    <arxiv:comment>16 pages, 3 figures, 1 table. Companion to "Refusal Reads Only a Slice of What the Model Knows" (submitted concurrently). Per-unit arrays: https://doi.org/10.5281/zenodo.22731361. Code: https://github.com/deepsteer/deepsteer</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Orion Reblitz-Richardson</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.28574v1</id>
+    <title>Correct codes for the wrong reasons? validating LLMs as measurement instruments for theoretical constructs</title>
+    <updated>2026-06-26T19:58:39Z</updated>
+    <link href="https://arxiv.org/abs/2606.28574v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.28574v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>When a large language model (LLM) codes a construct in text as a human annotator would, that agreement makes the LLM a reliable coder. Yet reliability leaves construct validity untouched. The instrument may be theory-naive, reaching the code through a correlate that meets none of the demands the construct's theory makes, and no current method tells that apart from genuine measurement. We propose grain calibration as a method that closes the gap. It decomposes a construct into clause-level components, tests each against the text with extractive evidence, and combines the results through an explicit, theory-derived rule. Because the rule is stated rather than lodged in one opaque pass, its structure is evidence about the process rather than the output. It shows which components settled a code, and, when the code is wrong, whether a component was missed or an adjacent construct mistaken for it. Validation shifts from scoring an instrument's outputs against an annotator to showing that the instrument runs on the construct its theory specifies.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CY" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-26T19:58:39Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Manuel Pita</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2601.07984v3</id>
+    <title>Cross-Cultural Expert-Level Art Critique Evaluation with Vision-Language Models</title>
+    <updated>2026-02-24T23:58:43Z</updated>
+    <link href="https://arxiv.org/abs/2601.07984v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2601.07984v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Vision-Language Models (VLMs) excel at visual description yet remain under-validated for cultural interpretation. Existing benchmarks assess perception without interpretation, and common evaluation proxies, such as automated metrics and LLM-judge averaging, are unreliable for culturally sensitive generative tasks. We address this measurement gap with a tri-tier evaluation framework grounded in art-theoretical constructs (Section 2). The framework operationalises cultural understanding through five levels (L1--L5) and 165 culture-specific dimensions across six traditions: Tier I computes automated quality indicators, Tier II applies rubric-based single-judge scoring, and Tier III calibrates the aggregate score to human expert ratings via sigmoid calibration. Applied to 15 VLMs across 294 evaluation pairs, the validated instrument reveals that (i) automated metrics and judge scoring measure different constructs, establishing single-judge calibration as the more reliable alternative; (ii) cultural understanding degrades from visual description (L1--L2) to cultural interpretation (L3--L5); and (iii) Western art samples consistently receive higher scores than non-Western ones. To our knowledge, this is the first cross-cultural evaluation instrument for generative art critique, providing a reproducible methodology for auditing VLM cultural competence. Framework code is available at https://github.com/yha9806/VULCA-Framework.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-01-12T20:33:35Z</published>
+    <arxiv:comment>16 pages, 7 figures, submitted to ACL 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Haorui Yu</name>
+    </author>
+    <author>
+      <name>Xuehang Wen</name>
+    </author>
+    <author>
+      <name>Fengrui Zhang</name>
+    </author>
+    <author>
+      <name>Qiufeng Yi</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2603.03623v1</id>
+    <title>A Neural Topic Method Using a Large-Language-Model-in-the-Loop for Business Research</title>
+    <updated>2026-03-04T01:20:39Z</updated>
+    <link href="https://arxiv.org/abs/2603.03623v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2603.03623v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The growing use of unstructured text in business research makes topic modeling a central tool for constructing explanatory variables from reviews, social media, and open-ended survey responses, yet existing approaches function poorly as measurement instruments. Prior work shows that textual content predicts outcomes such as sales, satisfaction, and firm performance, but probabilistic models often generate conceptually diffuse topics, neural topic models are difficult to interpret in theory-driven settings, and large language model approaches lack standardization, stability, and alignment with document-level representations. We introduce LX Topic, a neural topic method that conceptualizes topics as latent linguistic constructs and produces calibrated document-level topic proportions for empirical analysis. LX Topic builds on FASTopic to ensure strong document representativeness and integrates large language model refinement at the topic-word level using alignment and confidence-weighting mechanisms that enhance semantic coherence without distorting document-topic distributions. Evaluations on large-scale Amazon and Yelp review datasets demonstrate that LX Topic achieves the highest overall topic quality relative to leading models while preserving clustering and classification performance. By unifying topic discovery, refinement, and standardized output in a web-based system, LX Topic establishes topic modeling as a reproducible, interpretable, and measurement-oriented instrument for marketing research and practice.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="econ.EM" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-03-04T01:20:39Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Stephan Ludwig</name>
+    </author>
+    <author>
+      <name>Peter J. Danaher</name>
+    </author>
+    <author>
+      <name>Xiaohao Yang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.03755v1</id>
+    <title>LAP: An Agent-to-Instrument Protocol for Autonomous Science</title>
+    <updated>2026-06-02T15:03:43Z</updated>
+    <link href="https://arxiv.org/abs/2606.03755v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.03755v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Autonomous science is moving from demonstration to infrastructure. Large language model agents now plan experiments, and self-driving laboratories execute them. Yet every such system rebuilds the link between the reasoning agent and the physical instrument from scratch, against fragmented vendor SDKs and standards built for deterministic software clients rather than probabilistic, goal-directed agents. Recent agent-interoperability protocols clarify two of the three edges of an agentic ecosystem (Anthropic's Model Context Protocol (MCP) standardizes the agent-to-tool edge, and Google's Agent2Agent (A2A) the agent-to-agent edge), but neither models the agent-to-instrument edge, where operations are stateful, safety-critical, exclusively owned, physically embodied, and produce measurements with units, calibration, and uncertainty. We present the Lab Agent Protocol (LAP), a protocol design that fills this gap. LAP retains A2A's peer-to-peer, discovery-first, task-lifecycle structure and adds four physical-world primitives: (i) the InstrumentCard, a signed capability and physical-limit description; (ii) first-class reservation for exclusive instrument and sample locking; (iii) a safety-fence handshake with operator-confirmation tokens cryptographically bound to a specific task and its parameters, gating hazardous and irreversible operations; and (iv) a MeasurementResult schema that makes every result physically typed (QUDT/UCUM), calibration-anchored, uncertainty-bearing, and reproducible by construction. We specify roles, a six-layer architecture, the JSON-RPC method set, the task and safety state machines, the error model, and cross-laboratory federation, and walk a closed-loop autonomous campaign through the protocol end-to-end. LAP is transport-compatible with the A2A/MCP ecosystem and encapsulates rather than replaces existing device standards such as SiLA 2 and OPC-UA.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-02T15:03:43Z</published>
+    <arxiv:comment>31 pages</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Linwu Zhu</name>
+    </author>
+    <author>
+      <name>Liqiang Gao</name>
+    </author>
+    <author>
+      <name>Yan Chen</name>
+    </author>
+    <author>
+      <name>Dan Zhu</name>
+    </author>
+    <author>
+      <name>Jian Huang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.36095v1</id>
+    <title>Instruction Capacity: Behavior and Degradation of Language Models under Controlled Load</title>
+    <updated>2026-10-26T18:15:26Z</updated>
+    <link href="https://arxiv.org/abs/2610.36095v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.36095v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The quality with which language models follow instructions falls as the load grows, yet there is still no quantity that expresses the limit of a model in units of load with an uncertainty. We propose an instrument in which the load consists of rules that replace single-token words in a text without meaning: such an instruction is atomic, the rules are independent by the construction of the task, and the outcome of every application of a rule is determined by a computable reference answer. Every occurrence of a word to be replaced becomes a Bernoulli trial with a known position in the answer and a known rule number. The statistical model first measures the shape of the dependence of the probability of a right replacement on the text length, the word position, the replacement density, the number of rules and the rule number, then describes it by smooth laws and restores a reference level that does not depend on the choice of the coding. The model yields the instruction capacity - the number of rules held at a given share of right replacements - with an uncertainty. A measurement of GPT-4o mini (2958 requests, 642,430 trials) gave regular laws for every load factor and for the collapse of the answer; the instruction capacity was about 37-38 rules at a share of right replacements of 0.95, and about 18-19 rules at the full replacement density. The code of the instrument, the measurement data and the passport are open, and every number of the passport is recomputed from the published points. The passport of a model serves as the calibration of a future meter of the instruction load of prompts.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-26T18:15:26Z</published>
+    <arxiv:comment>70 pages, 20 figures. Code and data: https://github.com/kutomanovhennadii/instruction-capacity</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Hennadii Kutomanov</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/1101.1745v2</id>
+    <title>The MeqTrees software system and its use for third-generation calibration of radio interferometers</title>
+    <updated>2011-01-11T09:34:09Z</updated>
+    <link href="https://arxiv.org/abs/1101.1745v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/1101.1745v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The formulation of the radio interferometer measurement equation (RIME) by Hamaker et al. has provided us with an elegant mathematical apparatus for better understanding, simulation and calibration of existing and future instruments. The calibration of the new radio telescopes (LOFAR, SKA) would be unthinkable without the RIME formalism, and new software to exploit it. MeqTrees is designed to implement numerical models such as the RIME, and to solve for arbitrary subsets of their parameters. The technical goal of MeqTrees is to provide a tool for rapid implementation of such models, while offering performance comparable to hand-written code. We are also pursuing the wider goal of increasing the rate of evolution of radio astronomical software, by offering a tool for rapid experimentation and exchange of ideas.
+  MeqTrees is implemented as a Python-based front-end called the meqbrowser, and an efficient (C++-based) computational back-end called the meqserver. Numerical models are defined on the front-end via a Python-based Tree Definition Language (TDL), then rapidly executed on the back-end. The use of TDL facilitates an extremely short turn-around time for experimentation with new ideas. This is also helped by unprecedented visualization capabilities for all final and intermediate results. A flexible data model and a number of important optimizations in the back-end ensures that the numerical performance is comparable to that of hand-written code.
+  MeqTrees is already widely used as the simulation tool for new instruments (LOFAR, SKA) and technologies (focal plane arrays). It has demonstrated that it can achieve a noise-limited dynamic range in excess of a million, on WSRT data. It is the only package that is specifically designed to handle what we propose to call third-generation calibration (3GC), which is needed for the new generation of giant radio telescopes.</summary>
+    <category term="astro-ph.IM" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2011-01-10T09:37:40Z</published>
+    <arxiv:comment>15 pages; 14 figures</arxiv:comment>
+    <arxiv:primary_category term="astro-ph.IM"/>
+    <arxiv:journal_ref>A&amp;A 2010, 524, A61</arxiv:journal_ref>
+    <author>
+      <name>Jan E. Noordam</name>
+    </author>
+    <author>
+      <name>Oleg M. Smirnov</name>
+    </author>
+    <arxiv:doi>10.1051/0004-6361/201015013</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.1051/0004-6361/201015013" title="doi"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.14699v1</id>
+    <title>Perceive, Refine, Reason: A Calibrated Pipeline for Measuring Indicators in Strategic Visual Communication on Social Media</title>
+    <updated>2026-09-13T17:54:01Z</updated>
+    <link href="https://arxiv.org/abs/2609.14699v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.14699v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Visual content shapes audience perception and opinion on social media, and computational social science increasingly relies on automated tools to analyze images at scale. Yet a measurement gap persists: existing tools rely on predefined categories or produce only coarse image-level labels, while measuring which specific objects appear in an image, how prominently, and where in the frame remains difficult at scale. We introduce Perceive, Refine, Reason (PRR), a calibrated pipeline that turns flexible vision-language detectors into auditable measurement instruments for social-scientific research. PRR combines natural-language category prompts with pixel-level spatial refinement via the Segment Anything Model (SAM) and a multimodal LLM arbitration layer whose reasoning chains externalize domain knowledge and lower the expertise threshold for human-in-the-loop validation. A complementary three-tier auditability framework applies quantification learning to profile per-category reliability, support task-aligned configuration, and statistically correct prevalence estimates. Across four vision-language detectors and nine sociological categories, the pipeline yields substantial precision gains over zero-shot baselines, including a 43.3-point improvement for the strongest backbone. Applying PRR to 103,920 Facebook images from U.S. legislators during the 2024 election cycle and linking detections to DW-NOMINATE ideology scores, we find that more conservative legislators display U.S. flags as larger visual elements, with a weaker tendency toward peripheral placement, a spatial pattern invisible to binary detection. PRR provides computational social scientists with a model-agnostic toolkit for accessible, spatially-grounded, and correctable visual measurement.</summary>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CY" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-13T17:54:01Z</published>
+    <arxiv:primary_category term="cs.CV"/>
+    <author>
+      <name>Weihong Qi</name>
+    </author>
+    <author>
+      <name>Chen Ling</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.29143v1</id>
+    <title>VeeReview: Measuring Build-Verify Pairs in Agent-Authored Pull Requests from a V-Model Perspective</title>
+    <updated>2026-10-21T03:25:44Z</updated>
+    <link href="https://arxiv.org/abs/2610.29143v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.29143v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Context: Reviewing a pull request requires verification evidence that addresses the proposed change. Coding agent benchmarks and studies of pull request outcomes do not directly assess this relationship. Objective: We test whether the V-Model's build and verify pairs can measure verification evidence in pull requests and support comparisons between agent-authored and human-authored changes. Method: VeeReview classifies four build and verify pairs using repository signals and a language-model judge. Three pairs use model judgements constrained by deterministic signals, and a rule over the diff and repository tree decides Module Design-Unit Test. We evaluated VeeReview against a 25-pull request reference set labelled by two raters and applied it to 1,454 matched pairs of agent and human pull requests from 741 repositories. Results: VeeReview assigned lower build-only rates to agent-authored pull requests on all four pairs, contrary to the preregistered hypothesis (mixed-effects odds ratios 0.52 to 0.86). Architecture-Integration was not significant. Standardization for linked issues, shipped tests and size reduced matched-rate differences by 34% to 60%, and the rule-decided pair's standardized interval included zero. The instrument did not meet its preregistered calibration criterion: agreement with adjudicated labels was 4% to 60% against a required 80%, and inter-rater agreement was weak (kappa = 0.154). Conclusions: The rule-decided pair shows that a process measure judged by a language model partly reflects how a pull request is presented rather than the verification work behind it. We report the cohort differences as observations made with this instrument, and we argue that such measures need a mechanically decided component and a validated human reference before they can support comparisons of verification practice.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-21T03:25:44Z</published>
+    <arxiv:comment>47 pages, 9 figures, 11 tables. Under review at Empirical Software Engineering. Replication package: https://zenodo.org/records/22884519</arxiv:comment>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Gabriel Dautovi</name>
+    </author>
+    <author>
+      <name>Jie JW Wu</name>
+    </author>
+  </entry>
+</feed>

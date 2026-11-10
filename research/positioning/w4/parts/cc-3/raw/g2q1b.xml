@@ -1,0 +1,2053 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/rGYbX0j9pVrcDAkizNGqIyK9ZeM</id>
+  <title>arXiv Query: search_query=(abs:EvalPlus OR abs:"HumanEval+") AND (abs:calibration OR abs:confidence OR abs:uncertainty)&amp;id_list=&amp;start=0&amp;max_results=100</title>
+  <updated>2026-11-10T08:53:21Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=(abs:EvalPlus+OR+abs:%22HumanEval%2B%22)+AND+(abs:calibration+OR+(abs:confidence+OR+abs:uncertainty))&amp;start=0&amp;max_results=100&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>100</opensearch:itemsPerPage>
+  <opensearch:totalResults>75</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2611.10486v1</id>
+    <title>Test-Time Scaling for Diffusion Language Models with Frequency-Aware Remasking</title>
+    <updated>2026-11-07T05:26:09Z</updated>
+    <link href="https://arxiv.org/abs/2611.10486v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2611.10486v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Diffusion language models (DLMs) generate text through iterative denoising, where decisions about which tokens to commit or remask strongly affect output quality. Existing certainty-aware strategies rely on instantaneous confidence or entropy, but these local signals can be misleading on difficult reasoning problems. We formulate DLM test-time scaling as adaptive allocation of both inference compute and decoding strategies. Our two-stage approach uses a fast base sampler to solve easy questions, then applies frequency-aware remasking to the remaining hard questions. This strategy tracks how often each token's prediction changes across denoising steps and preferentially commits frequently changing tokens, encouraging samples to explore alternative reasoning paths rather than collapse onto the model's preferred trajectory. Experiments with LLaDA-8B-Instruct and Dream-7B-Instruct show consistent improvements over a strong adaptive allocation baseline, with absolute accuracy gains of up to 3.73 percentage points (LLaDA) and 7.33 percentage points (Dream) on MATH-500, and absolute coverage gains of up to 11.39 percentage points (LLaDA) and 10.98 percentage points (Dream) on HumanEval. On questions unsolved by the base certainty-aware strategy after 100 samples, frequency-aware remasking recovers solutions for 3.75% to 18.75% of examples.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-11-07T05:26:09Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Bowen Zuo</name>
+    </author>
+    <author>
+      <name>Yue Yu</name>
+    </author>
+    <author>
+      <name>Dongruo Zhou</name>
+    </author>
+    <author>
+      <name>Yinglun Zhu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2611.04380v1</id>
+    <title>Twice as Fast, Until It Isn't: Quantized Serving of Mid-Size Open LLMs</title>
+    <updated>2026-11-03T06:12:09Z</updated>
+    <link href="https://arxiv.org/abs/2611.04380v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2611.04380v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>A team serving a 9B-20B open-weight language model on vLLM or SGLang must choose a quantization recipe, and needs two numbers: the speedup over BF16 and the accuracy given up. We assemble every public measurement of these numbers that we could verify and find that the record supplies them only in pieces. Only two checkpoints, both INT4 builds of Gemma 3 12B, have both a vLLM timing and an accuracy score, and that score covers a single MMLU subject, one that the AWQ build was calibrated on. The batch-1 timings predate current engine releases, AMD and Intel Gaudi have no timing in this band at all, and FP4 has none against BF16. The timings that do exist follow one rule. Decoding a small batch is limited by memory bandwidth, so 4-bit weights roughly double speed (2.12x for Qwen2.5-14B on an A100), but the gain vanishes once a large batch makes the GPU compute-bound (1.02x for Gemma 3 12B at batch size 256), where FP8 is the recipe that can still help. Many published accuracy deltas, including every HumanEval delta, lie within benchmark sampling noise. We close with a seven-item reporting checklist for future measurements.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-11-03T06:12:09Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Smit Kadvani</name>
+    </author>
+    <author>
+      <name>Kriti Faujdar</name>
+    </author>
+    <author>
+      <name>Spurthi Tallam</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.39853v1</id>
+    <title>KV Cache Quantization for Diffusion Language Models</title>
+    <updated>2026-10-29T11:31:41Z</updated>
+    <link href="https://arxiv.org/abs/2610.39853v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.39853v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>KV cache quantization is well studied for autoregressive language models, where cached prefix states are exact under causal attention and quantization is mainly a cache reconstruction problem. Diffusion language models (dLLMs) break this assumption. Fast dLLM inference reuses KV states across denoising steps, but bidirectional token representations can change as masked tokens are revealed, so the reused cache may already differ from full recomputation before quantization is applied. We study KV cache quantization under this cache-reuse error. We adapt KIVI and KVQuant to Fast-dLLM-style prefix and dual cache reuse, and introduce TRACE and dLLM-KVQ. TRACE reconstructs feasible dLLM reveal trajectories from prompt-answer pairs, providing calibration states that match iterative masked decoding. dLLM-KVQ uses these trajectories to choose per-layer K-cache entries that remain in high precision according to output- and attention-level behavior metrics, while applying standard low-bit value quantization. Across LLaDA and Dream evaluations on GSM8K, HumanEval, MATH, and MBPP, dLLM-KVQ achieves the highest average score among quantized methods across the reported 4-bit and 2-bit prefix/dual cache settings.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-29T11:31:41Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Yan Tai</name>
+    </author>
+    <author>
+      <name>Yunan Ding</name>
+    </author>
+    <author>
+      <name>Guangzhao Li</name>
+    </author>
+    <author>
+      <name>Siqi Luo</name>
+    </author>
+    <author>
+      <name>Chaoyang Zhang</name>
+    </author>
+    <author>
+      <name>Guangtao Zhai</name>
+    </author>
+    <author>
+      <name>Guodong Guo</name>
+    </author>
+    <author>
+      <name>Xiaohong Liu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.31576v1</id>
+    <title>What Makes a Good Unmasking Policy? A Controlled Study of Learned Unmasking in Diffusion Language Models</title>
+    <updated>2026-10-22T17:15:04Z</updated>
+    <link href="https://arxiv.org/abs/2610.31576v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.31576v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Masked diffusion language models generate tokens in parallel, but their efficiency depends on which predictions are committed. Learned unmasking policies improve the speed--accuracy trade-off, yet differ in supervision, inputs, and capacity, obscuring which choices matter. We view supervised policies as distilling a decoding procedure through a teacher and examine independently what the teacher labels as committable, on which states the policy imitates it, what the policy observes, and how much the number of function evaluations (NFE) must decrease to offset policy overhead. We find that labeling predictions matching the final output is overly permissive at low NFE, and hidden states are weak alone but can complement confidence. About a 10% NFE reduction suffices to offset policy overhead for policies up to 7.5M parameters across tested settings. We therefore train a policy on trajectory-contraction targets, which accept only commitments staying on a reference trajectory, using confidence and hidden states. On LLaDA-8B-Instruct, the resulting 856K-parameter policy achieves the best accuracy--NFE frontier and highest throughput on GSM8K, is competitive at moderate targets on MATH-500 and HumanEval, and largely transfers to Dream-7B-Instruct.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-22T17:15:04Z</published>
+    <arxiv:comment>Preprint.32 pages, 11 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Jinya Sakurai</name>
+    </author>
+    <author>
+      <name>Xun Xu</name>
+    </author>
+    <author>
+      <name>Jaehong Yoon</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.31338v2</id>
+    <title>ValuSpec: Plug-and-Play Candidate Valuation before Target Verification for Tree-Based Speculative Decoding</title>
+    <updated>2026-11-05T15:09:32Z</updated>
+    <link href="https://arxiv.org/abs/2610.31338v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.31338v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Tree-based speculative decoding accelerates large language model inference by verifying multiple candidate branches in parallel. However, in practical serving scenarios, similar requests repeatedly induce overlapping candidate branches. While retrieval-based methods mitigate this by reusing historical drafts, the resulting candidate trees often contain many low-quality branches as the candidate tree grows, which reduces verification efficiency and wastes target-side computation. To address this, we propose ValuSpec, a plug-and-play candidate valuation mechanism that filters low-quality branches from a supplied candidate tree before expensive target-side verification. ValuSpec introduces transfer-based supervision to align filtering with the target model's behavior. A filtering threshold is estimated from the target model's greedy trajectories on a calibration split, without any parameter training. The target model then verifies the filtered tree under the output-identical greedy rule, so accepted tokens are guaranteed to match standard autoregressive decoding exactly. Experimental results on HumanEval, GSM8K, Dolly, and SpecBench show that, in our main evaluation, ValuSpec achieves up to 2.38x end-to-end speedup in retrieval-based tree settings. Furthermore, integrating ValuSpec into the EAGLE-3 dynamic tree framework yields up to 2.78x end-to-end speedup without modifying its tree construction strategy, demonstrating that ValuSpec serves as a generally applicable and plug-and-play candidate valuation module.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-22T14:23:26Z</published>
+    <arxiv:comment>NeurIPS 2026 poster</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Liang He</name>
+    </author>
+    <author>
+      <name>SiYuan Ma</name>
+    </author>
+    <author>
+      <name>Qishi Zhan</name>
+    </author>
+    <author>
+      <name>Yongqi Fan</name>
+    </author>
+    <author>
+      <name>Mingyu Cao</name>
+    </author>
+    <author>
+      <name>Qizhen Lan</name>
+    </author>
+    <author>
+      <name>Zhaolu Kang</name>
+    </author>
+    <author>
+      <name>Xilu Wang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.31120v1</id>
+    <title>SetCommit: Coordinated Token Commitments for Few-Step Diffusion Language Model Decoding</title>
+    <updated>2026-10-22T11:33:49Z</updated>
+    <link href="https://arxiv.org/abs/2610.31120v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.31120v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Diffusion language models generate multiple token positions in parallel, but few-step decoding makes parallel commitment difficult: tokens that appear reliable individually may be jointly inconsistent, while premature commitments can prevent later context-dependent refinement. In this paper, we introduce SetCommit, a training-free method for coordinated parallel token commitment. Instead of selecting tokens independently by confidence, SetCommit selects a commitment set that balances token reliability against local joint commitment risk, preserving conditioning opportunities for subsequent denoising steps. It further performs budget-neutral local exchanges, replacing vulnerable earlier commitments when newly revealed context supports more reliable alternatives. SetCommit requires no retraining or architectural modification and is compatible with existing diffusion decoding strategies. Experiments with LLaDA-8B and Dream-7B on GSM8K, MATH-500, MBPP, and HumanEval show accuracy/pass@1 gains of up to 7.4 percentage points over native decoding at 32 model evaluations. At common quality targets, geometric-mean incremental speedups range from $1.44$ to $1.74\times$. Code is available at https://github.com/Kissmetothemoon/SetCommit.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-22T11:33:49Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Yuannuo Feng</name>
+    </author>
+    <author>
+      <name>Yubing Ye</name>
+    </author>
+    <author>
+      <name>Wenshuai Yao</name>
+    </author>
+    <author>
+      <name>Yizhe Chen</name>
+    </author>
+    <author>
+      <name>Ngai Wong</name>
+    </author>
+    <author>
+      <name>Wenyong Zhou</name>
+    </author>
+    <author>
+      <name>Wang Kang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.29121v1</id>
+    <title>Recursive Self-Improvement on a Budget: Scoring Code Edits Before They Run</title>
+    <updated>2026-10-21T03:04:25Z</updated>
+    <link href="https://arxiv.org/abs/2610.29121v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.29121v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>A coding agent that rewrites its own scaffold has to choose which proposed edit to expand before that edit has been evaluated, and the search then has to return one agent. Each run fits one linear readout on the parent's steering-split solve rate and eight coordinates of the proposed diff, from 96 scaffold edits labeled by four evaluations of a 16-instance fit split, and then freezes the coefficients. HumanEval+ reserves 48 instances as the steering split and Polyglot reserves 64. That split scores parents and keeps an archive of four nodes. Huxley-Gödel Machine selection draws a parent by Thompson sampling on the steering counts of nodes that have already been evaluated, and it expands the child that parent proposes. Every method then returns the earliest evaluated node whose steering-split solve count is maximal. The tables report the held-out score of that node on the other 100 HumanEval+ instances and the other 145 Polyglot instances, next to the root scaffold and the calibration edit with the highest fit-split label. Twelve runs of GPT-4o return a node at 87.0% on held-out HumanEval+, against 84.2% for the parent-rate ablation. On that split Huxley-Gödel Machine selection returns 85.1%, the root is at 81.2%, and the calibration-best edit is at 82.8%. On the same split Claude Sonnet 4.5 returns 86.6%, beside 86.5% for Huxley-Gödel Machine selection, 85.3% for the parent-rate ablation, and 85.1% for the calibration-best edit.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-21T03:04:25Z</published>
+    <arxiv:comment>9 pages, 3 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Erfan Darzi</name>
+    </author>
+    <author>
+      <name>Sree Bhargavi Balija</name>
+    </author>
+    <author>
+      <name>Sheng He</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.24722v1</id>
+    <title>PV-Decoding: Progressive Verification Decoding with Decode Gating for Diffusion Language Models</title>
+    <updated>2026-10-17T14:34:05Z</updated>
+    <link href="https://arxiv.org/abs/2610.24722v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.24722v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Discrete diffusion language models (dLLMs) offer an attractive alternative to autoregressive generation by updating multiple tokens in parallel, but their inference efficiency is still limited by the cost of safely committing tentative predictions. In particular, speculative decoding for dLLMs is challenging because speculative tokens within the same diffusion block may depend on one another, making aggressive acceptance prone to error propagation and strict verification computationally expensive. We present PV-Decoding, a confidence-driven speculative decoding framework with progressive verification for block diffusion inference. PV-Decoding partitions masked positions into directly decoded tokens, speculative tokens, and unresolved tokens using two confidence thresholds, and then verifies speculative tokens with progressively stronger policies, including single-batch, dual-batch, and multi-batch verification. This design exposes a practical accuracy--efficiency trade-off: weaker verification minimizes overhead, whereas stronger verification improves acceptance precision and robustness. Experiments on three diffusion language models across GSM8K, MBPP, and HumanEval show that PV-Decoding reduces sequential model forward passes (MFPs) by 8%--37% relative to confidence-based decoding, while keeping the largest observed accuracy drop to 1.3%. On Dream-7B-Instruct/GSM8K, PV-Decoding (1-batch) and PV-Decoding (2-batch) improve throughput by 7.0%--13.6% under the same hardware budget, whereas PV-Decoding (multi-batch) is slower under the current runtime. These results suggest that confidence-guided speculation with structured verification is a practical path toward efficient and reliable dLLM inference.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-17T14:34:05Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Renxi Liu</name>
+    </author>
+    <author>
+      <name>Yiming Li</name>
+    </author>
+    <author>
+      <name>Shengyin Sun</name>
+    </author>
+    <author>
+      <name>Chen Chen</name>
+    </author>
+    <author>
+      <name>Xian Wang</name>
+    </author>
+    <author>
+      <name>Shuai Yang</name>
+    </author>
+    <author>
+      <name>Huiling Zhen</name>
+    </author>
+    <author>
+      <name>Xianzhi Yu</name>
+    </author>
+    <author>
+      <name>Yaoyuan Wang</name>
+    </author>
+    <author>
+      <name>Weizhe Lin</name>
+    </author>
+    <author>
+      <name>Xiaosong Li</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.17375v1</id>
+    <title>PIG: Parallel Inconsistency Guidance for Accelerating Diffusion Language Models</title>
+    <updated>2026-10-12T20:33:53Z</updated>
+    <link href="https://arxiv.org/abs/2610.17375v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.17375v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Diffusion language models accelerate generation by decoding multiple masked positions per forward pass. However, accuracy is known to drop when parallel decoding trajectories deviate from their sequential counterparts, which are slow and expensive "oracles" that adhere to the joint distribution of language. In this paper, we propose Parallel Inconsistency Guidance (PIG), a new paradigm that uses a trained auxiliary model to directly estimate the inconsistency between parallel and sequential generation from a single model forward pass. During inference, masked positions are traversed by decreasing confidence, and tokens are added to the parallel decode set one-at-a-time until the total estimated inconsistency between the parallel and sequential generation exceeds a threshold. Surprisingly, it suffices to train a lightweight ~2M parameter auxiliary model on a small mixture drawn from OpenCoder, GSM8K-train, MATH-train, and MBPP-train. For LLaDA-8B Instruct and NemotronDiffusion-3B Instruct, PIG extends the accuracy-TPF frontier on GSM8K, MATH500, MBPP, HumanEval, and MMLU, when compared to the industry standard Fast-dLLM and measures favorably on LLaDA-8B Instruct against DAPD, KLASS, EB-sampler, and other learned unmasking policies.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-12T20:33:53Z</published>
+    <arxiv:comment>66 pages, 22 figures, 11 tables. Code: https://github.com/Quentin-Fruytier/PIG-DLM-release</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Quentin Fruytier</name>
+    </author>
+    <author>
+      <name>Anton Xue</name>
+    </author>
+    <author>
+      <name>Sanjay Shakkottai</name>
+    </author>
+    <author>
+      <name>Sujay Sanghavi</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.15159v1</id>
+    <title>Beyond Adjacent Layers: Graph-Guided Layer Fusion for Compressing Large Language Models</title>
+    <updated>2026-10-10T20:16:30Z</updated>
+    <link href="https://arxiv.org/abs/2610.15159v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.15159v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Existing depth-compression methods for large language models (LLMs) score layers individually or group only adjacent or contiguous layers, implicitly assuming that functional redundancy is local. We test this assumption by computing full pairwise Centered Kernel Alignment (CKA) similarity matrices for thirteen LLMs from six architecture families (1.6B-14B parameters). Non-adjacent layers have 3.6-15.9x more high-similarity pairs than adjacent ones, a structure that prior similarity-based layer merging has not systematically exploited. We propose Fusion via Community Mining (FCM), which builds the full L x L similarity graph, uses spectral community detection to find clusters of functionally equivalent layers, keeps the highest-Block-Influence layer in each cluster, and applies LoRA recovery; a pre-specified rule computed only on calibration data chooses between cosine and CKA similarity. At 2x compression, FCM lowers mean perplexity below ShortGPT on twelve of thirteen models, significantly on ten (Welch's t-test with Holm-Bonferroni correction; up to 50% on Qwen3-4B), with Mistral-7B the only loss (+13.4%). Against FlattenGPT, SWM, and DeltaLLM under matched calibration and recovery, FCM gives the best perplexity on ten of thirteen models (mean rank 1.15), and it also outperforms MKA on three anchor models. FCM matches or exceeds ShortGPT on 15 of 20 zero-shot reasoning cells and also improves MMLU, LAMBADA, HumanEval pass@1, and free-form generation quality. The 2x-compressed Qwen2.5-7B has 46% fewer parameters, 42% lower peak VRAM, and 84% higher decode throughput on a single A100. Spectral grouping outperforms Fisher contiguous segmentation by 41% and uniform partitioning by 51%, and FCM's advantage grows beyond a 2x crossover up to 3x and persists at the 14B scale. Code: https://github.com/Usama1002/fcm-layer-fusion</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-10T20:16:30Z</published>
+    <arxiv:comment>Accepted at NeurIPS 2026. Code: https://github.com/Usama1002/fcm-layer-fusion</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Muhammad Usama</name>
+    </author>
+    <author>
+      <name>Yeoreum Jung</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.15058v1</id>
+    <title>The Optimal Decoder is Tilted Temperature</title>
+    <updated>2026-10-10T16:49:38Z</updated>
+    <link href="https://arxiv.org/abs/2610.15058v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.15058v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Larger sample budgets benefit from higher sampling temperatures in LLMs, but what temperature tuning optimizes and why it works remain poorly understood. We seek to answer these questions: we pose decoding as pass@$k$ maximization subject to two constraints that encode critical decoding failure modes: an entropy floor preventing diversity collapse, and a cross-entropy ceiling preventing implausibility. We prove that this maximization takes the form of a single closed-form conditional sampling rule, the \emph{tilted temperature} $q^\star \propto \bigl(p e^{ηV}\bigr)^{1/T}$. Here, the tilt comes from a verifier potential $V$ that quantifies how likely a partial generation is to eventually pass. Ordinary temperature sampling, verifier-greedy decoding, and reward-tilted policies represent special cases. We further show that, under a natural rule for scaling the diversity budget with sample size $k$, the resulting optimal temperature increases with $k$, turning empirical choice into a theorem. The optimum still needs the unknown verifier potential, which we estimate using two design approaches. In the online setting, our J-EOS algorithm jointly tracks the two constraint multipliers and learns the verifier potential from binary pass/ fail feedback alone. In the offline setting, we show that when the model is calibrated, its log-probability tracks correctness up to an affine map. Under this condition, the tilt collapses into the exponent and the optimum reduces to ordinary temperature sampling. Calibrated Temperature Decoding (CTD) then fits one scalar offline and samples with zero additional inference-time overhead relative to temperature sampling. Building on these decision rules, we design a practical decoding algorithm for code generation and evaluate it alongside CTD on benchmarks including HumanEval and MBPP, showing improvements over standard and adaptive decoding baselines.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-10T16:49:38Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Nikolaos Papagiannis</name>
+    </author>
+    <author>
+      <name>Ananth Grama</name>
+    </author>
+    <author>
+      <name>Wojciech Szpankowski</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.00656v1</id>
+    <title>Lingtai: What Concept Geometry Reveals--and Does Not Reveal--About LLM Inference</title>
+    <updated>2026-09-30T19:55:20Z</updated>
+    <link href="https://arxiv.org/abs/2610.00656v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.00656v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Observing what a large language model computes during autoregressive inference--online and without training probes--remains difficult. We introduce Lingtai, a training-free concept telemetry layer: at each generation step, residual states are projected onto a domain-specific bank of named concept anchors, constructed without labeled concept examples, outcome labels, gradient fitting, or activation-space optimization, producing a structured per-step concept-coordinate signal. Across code generation and grade-school mathematical reasoning, this signal exhibits a robust association with predictive uncertainty: the association survives problem-identity and token-position controls and is not attributable to a single token type, is not explained by a simple correct/incorrect mixture on GSM8K, and is not reproduced by matched random anchors; it is markedly weaker or direction-inconsistent in K-means and PCA projections. Two structures emerge: a recurring uncertainty-linked activity signal whose functional geometry is task-conditioned (distinct activity-entropy shapes on HumanEval, MBPP, and GSM8K), and an execution-specific trajectory identity with strong local inertia but weak re-instantiation invariance--under completion-only elastic alignment, corruption at k=32 (approximately a median quarter of the completion) on the matched re-execution subset still retrieves the archived episode at 62.0%, while a fresh execution retrieves it only 11.7-16.0% of the time. Finally, a matched audit finds no evidence that the scalar concept-activity signal used here supplies a stable correctness coordinate under the tested protocol; we therefore treat correctness as externally supplied. Telemetry adds 0.7-1.6% per-token decode overhead for the 161-anchor code implementation, with unchanged generated tokens.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-30T19:55:20Z</published>
+    <arxiv:comment>15 pages, 4 figures, 7 tables. An earlier version was publicly released on Zenodo (DOI: 10.5281/zenodo.23068698)</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Jiangang Chen</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.37294v1</id>
+    <title>SafeLLM4SE: Statistical Evaluation and Reporting for LLM-based Software Engineering Systems</title>
+    <updated>2026-09-29T11:34:56Z</updated>
+    <link href="https://arxiv.org/abs/2609.37294v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.37294v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) are increasingly used for software engineering tasks, yet their stochastic behavior challenges the validity, reproducibility, and comparability of their evaluations. Conventional practices such as reporting a single output, an average score, best-of-N, or pass@k performance can obscure variability and estimation uncertainty, potentially leading to misleading conclusions about system reliability. This article presents SafeLLM4SE, a practical methodology and reporting standard for statistically principled evaluation of LLM-based software engineering systems. Rather than treating generated outputs as deterministic artifacts, SafeLLM4SE treats them as realizations of a stochastic process and distinguishes quality, stability, and estimation uncertainty. It combines adaptive sampling with confidence intervals, distribution-aware statistical comparisons, effect sizes, and a minimum reporting standard covering model configuration, reproducibility, evaluation procedures, and resource usage. SafeLLM4SE is also provided as an open-source software package available on PyPI, enabling researchers and practitioners to reproduce and extend the methodology. We illustrate its application by comparing two LLMs on HumanEval, a benchmark of programming problems assessed through functional tests.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-29T11:34:56Z</published>
+    <arxiv:comment>This work has been submitted for possible publication. Copyright may be transferred without notice, after which this version may no longer be accessible</arxiv:comment>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Francisco Ortin</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.22511v1</id>
+    <title>Identity or Prompt Noise? A Calibrated Invariance Audit of LLM Code Generation</title>
+    <updated>2026-09-18T19:20:12Z</updated>
+    <link href="https://arxiv.org/abs/2609.22511v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.22511v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Identity cues are irrelevant to a fixed programming specification, but raw counterfactual differences can arise from unequal samples and prompt wording. We audit 30.73 million executed Python generations from seven checkpoints on HumanEval+ and MBPP+, supplemented by an exploratory 550B slice, under model-assigned gender, country, and occupation personas. Within-task randomization and false-discovery-rate control identify occupation as the most consistent structural axis: CodeBLEU dispersion exceeds its exchangeability null in 10/14 model--benchmark cells, remains significant in 8/12 full-coverage cells, and exceeds the country ratio in every paired cell, although the median excess is only 0.141 points. In six high-pass-rate cells, occupation dispersion replicates across token similarity, length, comments, reference similarity, and complexity, while pass-rate dispersion is significant in none. Country leads raw dispersion in 12/14 cells but has a median calibrated ratio of 1.00. Gender-associated variation cannot be separated from persona wording in this design. Thus, the evidence supports small, reproducible occupation-conditioned changes in code form, not stable disadvantage to named identities or demonstrated downstream harm. We use this finding to motivate a broader commentary on the potential impacts of bias in code generation, including the possibility that models may condition their outputs on identity information available from prior conversational context.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-18T19:20:12Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Maksim E. Eren</name>
+    </author>
+    <author>
+      <name>Ryan Barron</name>
+    </author>
+    <author>
+      <name>Eric Michalak</name>
+    </author>
+    <author>
+      <name>Charles Nicholas</name>
+    </author>
+    <author>
+      <name>Manish Bhattarai</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.13890v2</id>
+    <title>Learning How Much to Collaborate: Difficulty-Aware Topology Selection for Multi-Agent Code Generation</title>
+    <updated>2026-11-01T22:26:48Z</updated>
+    <link href="https://arxiv.org/abs/2609.13890v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.13890v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Multi-agent code-generation systems often use one communication topology for every problem. Across five topologies and 614 problems from APPS, HumanEval+ and LiveCodeBench, the advantage of hierarchical collaboration over a single agent grows from 2.4 points of pass@1 on the easiest third to 21.1 points on the hardest third, at about ten times the token cost. We propose the Difficulty-Aware Topology Selector (DATS), which predicts each topology's success probability and maximises predicted success minus cost. Its graph predictor treats topologies as nodes of a connectivity order. The complete graph-head comparison reports a 1.7-point advantage over a flat multi-label head while changing several mechanisms; capacity-matched adjacency controls show smaller descriptive differences. A scalar cost penalty can be recalibrated without retraining for approximately matched-spend comparisons when targets are attained. With a shared penalty, six methods span 21.6 percentage points of spend; two leading baselines fall behind DATS after method-specific calibration near the common target. At 40% of always-hierarchical cost, DATS reaches 77.7% pass@1 versus 73.6% for always-hierarchical and 74.3% for the strongest learned competitor. The main comparison includes Holm--Bonferroni-adjusted McNemar tests; unequal-cost differences do not imply matched-budget superiority. Backbone-specific gains are 4.07--4.23 points across four backbones. Alternatives to the 39 interpretable features, including a hybrid encoder, yield a largest observed gain of 1.3 points, with no significant pairwise improvement; this establishes neither equivalence nor an upper bound. A study on 400 mathematical reasoning problems reproduces difficulty-dependent collaboration gains, widening from 2.5 to 20.9 points.</summary>
+    <category term="cs.MA" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-12T11:28:16Z</published>
+    <arxiv:comment>Accepted for publication in Neurocomputing. Revised manuscript incorporating peer-review revisions. 23 pages, 11 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.MA"/>
+    <author>
+      <name>Yunsong Hong</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.05881v3</id>
+    <title>Broken on Arrival: Non-Functional Quantized LLM Artifacts in Public Model Registries and How to Catch Them</title>
+    <updated>2026-10-29T03:12:13Z</updated>
+    <link href="https://arxiv.org/abs/2609.05881v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.05881v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Developers download quantized large language models (LLMs) from public registries to run them locally. None of the registries we examined documented functional testing of their files. We tested all 305 eligible code-capable GGUF tags (the llama.cpp format) across 15 model lines in the official Ollama library, plus 22 popular Hugging Face community files. A 15-task code screen identified suspects, which we retested on all 164 HumanEval+ tasks. Seven official tags (2.3%) solved at most six of them. All were low-bit quantizations of models with at most four billion parameters. We rebuilt five suspect files from the original weights. All five registry files matched our uncalibrated rebuilds tensor for tensor, so none was corrupted. Exact reproducibility did not imply function. With the weights, toolchain and tensor mix held fixed, adding an importance matrix raised Qwen2.5-Coder-3B scores at three quantization levels from zero to 76-113 of 164 tasks. The same uncalibrated recipe left the smaller Qwen2.5-Coder-1.5B functional, showing that the recipe alone does not predict failure. None of 66 sampled tags that passed the screen was non-functional. We release the audit data and the quantcheck tool and recommend screening low-bit tags before publication, then calibrating or withholding failures.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-05T05:05:51Z</published>
+    <arxiv:comment>v3 revises the diagnosis of one community file pair (Sec. V, RQ2): a template test on the same hardware shows the two deepseek-coder-6.7B community files fail for lack of a chat template, not by backend; release v3.4 adds the test. All other results unchanged. Code and data: https://github.com/aditi-p31/quantcheck (release v3.4)</arxiv:comment>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Aditi Patodiya</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.03156v1</id>
+    <title>Compound Prompt Constraints in LLM Code Generation: A Factorial Study of Format, Persona, and Urgency</title>
+    <updated>2026-09-02T20:40:54Z</updated>
+    <link href="https://arxiv.org/abs/2609.03156v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.03156v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) are increasingly used in software engineering pipelines for code generation, where production prompts often combine multiple constraints. This paper presents a full-factorial empirical study of how output formatting, persona assignment, and urgency framing jointly affect LLM code-generation reliability. We evaluate all 27 combinations in a controlled 3x3x3 design and decompose each compound condition into an additive prediction and a residual interaction term that captures super-additive degradation. The study uses all 164 HumanEval+ problems across five OpenAI models from the GPT-4o family, GPT-4.1 family, and o3-mini, yielding 22,140 greedy-decoding evaluations. A format-aware extraction pipeline separates formatting failures from reasoning failures, and significance is assessed with McNemar's test, odds ratios, and 95% confidence intervals.
+  Results show that compound constraints can produce architecture-dependent degradation not predictable from single-factor experiments. The GPT-4o family exhibits consistent super-additive effects, with pass@1 reductions 3-12 percentage points beyond additive predictions; the largest interaction is -12.2 pp on GPT-4o-mini for JSON + expert persona + moderate urgency. JSON combinations generally produce larger interactions than XML. In contrast, the GPT-4.1 family is largely resistant, while o3-mini shows a qualitatively different pattern in which structured output constraints can improve performance. These findings show that vulnerability is architecture-dependent rather than size-dependent, that individually neutral or beneficial constraints can combine to cause substantial degradation, and that compound-prompt testing should be standard in reliability assessment for LLM-assisted engineering pipelines.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-02T20:40:54Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Shrenik Jadhav</name>
+    </author>
+    <author>
+      <name>Nickalsa LaPlaca</name>
+    </author>
+    <author>
+      <name>Caleb Stone</name>
+    </author>
+    <author>
+      <name>Ashok Raja</name>
+    </author>
+    <author>
+      <name>Omar Ochoa</name>
+    </author>
+    <author>
+      <name>Vidhyashree Nagaraju</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.01106v1</id>
+    <title>Hints Help But Do They Teach? Evaluating Skills Transfer in Code Generation</title>
+    <updated>2026-09-01T11:47:39Z</updated>
+    <link href="https://arxiv.org/abs/2609.01106v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.01106v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>When a hint turns a failing generated program into a passing one, does it provide missing information or merely steer the model toward a solution it could already produce? We test these hypotheses on HumanEval+ and MBPP+ using executable evaluation. For Qwen2.5-3B-Instruct, adaptive relevant hints rescue 36 of 79 selected failures; an unrelated hint rescues 19, while eight unhinted samples solve 46 and recover 31 of the 36 relevant-hint rescues. Phi-3.5-mini shows the same pattern: relevant hints rescue 42 of 101 failures, an unrelated hint rescues 17, and unhinted sampling solves 57, including 36 of the 42 relevant-hint rescues. Because the hint conditions use different attempt budgets, these comparisons do not isolate a purely semantic effect. Mechanistic tests on Qwen identify a stable activation direction shared by relevant and unrelated hints. Persistently adding this direction yields 14 rescues and 18 regressions, with no detectable net accuracy gain; learned low-rank interventions have a positive but imprecise estimated effect. Full textual specifications solve 22 of 24 context-defined problems, versus 5-11 for tested virtual-KV prefixes. Post-generation hidden-state probes transfer across benchmarks, with pooled AUROC 0.806 and 0.780, but their top-one selection advantage over token confidence is statistically unresolved. Overall, relevant hints can rescue failures, but most rescued solutions are already reachable through ordinary sampling, and the internal interventions tested here do not establish task-general capability transfer.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-01T11:47:39Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Will Badr</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.22646v1</id>
+    <title>CAI-DLLM: Convergence Aware Inference for Diffusion Language Models</title>
+    <updated>2026-08-23T23:03:59Z</updated>
+    <link href="https://arxiv.org/abs/2608.22646v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.22646v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Diffusion language models can generate many tokens in parallel, but they still require repeated denoising steps during inference. This makes generation costly, especially when the model continues to recompute tokens that are already stable. To address these limitations, we propose CAI-DLLM, a training-free inference method that uses first-step confidence to guide denoising and reduce inference time. Specifically, CAI-DLLM commits easy tokens earlier, allocates more denoising steps to harder tokens, and adjusts decoding schedules across output blocks. As it relies only on first-step confidence signals, it does not require retraining, extra predictors, or weight updates. We evaluate CAI-DLLM on LLaDA-8B-Instruct and Dream-7B-Instruct across math, code, reasoning, commonsense, and long-context tasks. CAI-DLLM achieves up to 18.2x wall clock inference speedup on LLaDA GSM8K while improving accuracy from 76.27% to 77.41%, and up to 13.1x speedup on Dream HumanEval while achieving higher pass@1 than no-cache inference, 48.17% compared with 46.95%. On harder reasoning tasks, speedups reach 44.8x, with a largest accuracy drop of 4.4 points, while energy consumption is reduced by up to 95.3%.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-23T23:03:59Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Farhana Amin</name>
+    </author>
+    <author>
+      <name>Sabiha Afroz</name>
+    </author>
+    <author>
+      <name>Dimitrios S. Nikolopoulos</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.14787v2</id>
+    <title>From Positionwise Confidence to Prefix Scheduling: Verifier Skipping in Speculative Decoding</title>
+    <updated>2026-10-01T23:52:34Z</updated>
+    <link href="https://arxiv.org/abs/2608.14787v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.14787v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Speculative decoding is a leading technique to reduce the cost of autoregressive generation by using a small drafter to propose several tokens, which are then verified in parallel by a larger target model. Speculative diffusion decoding (SDD) further removes sequential drafting by generating every position in a draft block in parallel with a discrete diffusion model. However, SDD still invokes the target on every block, leaving verification as a potential bottleneck. This paper recognizes that this creates a new control handle: whether to invoke the verifier at all. Thus, we study verifier skipping, a lossy policy that commits a selected draft prefix directly, and ask which confidence signal should schedule it. Interestingly, our study finds that better token predictors need not yield better schedulers: skips require contiguous high-confidence prefixes, while short skips can induce additional drafting rounds. To study this mismatch, we compare raw confidence with learned marginal and conditional survival scores under the same policy, using Strict SDD, lenience, and top-$k$ acceptance as baselines. On HumanEval with DiffuCoder-7B-Instruct and Qwen3-32B, all three confidence signals save $9.6\%$ to $13.5\%$ of verifier calls at the same observed pass@1 as Strict SDD. Surprisingly, raw confidence saves the most; marginal survival has higher positionwise AUROC than raw confidence at most positions, yet neither learned signal dominates online. Our analysis shows that verifier skipping is a useful new lossy axis and, surprisingly, its key challenge is prefix scheduling rather than token prediction alone.</summary>
+    <category term="cs.CR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-14T18:00:08Z</published>
+    <arxiv:comment>Accepted at UncertaiNLP 2026 (non-archival). 14 pages, 6 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.CR"/>
+    <author>
+      <name>Haoxuan Luo</name>
+    </author>
+    <author>
+      <name>Jameson Sandler</name>
+    </author>
+    <author>
+      <name>Ferdinando Fioretto</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.12599v1</id>
+    <title>Dead text or binding clause? Measuring and restoring constraint influence in black-box LLM dialogues</title>
+    <updated>2026-08-12T21:12:32Z</updated>
+    <link href="https://arxiv.org/abs/2608.12599v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.12599v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Multi-turn dialogues let users revoke constraints as easily as impose them, but revocation does not reliably take effect: models keep enacting withdrawn requirements (occasionally beneath comments asserting their removal), a failure we call \emph{behavioral relapse}, or revocation inertia. No existing instrument measures this influence per clause, predicts it before delivery, or repairs it under matched budgets. \sysname{} closes the three gaps through the model API alone: a contract ledger pairs every constraint with an executable checker, records revocations as tombstones, and compiles the net constraint state ahead of time into a single specification; a sequential ablation probe measures per-clause adherence and incremental behavioral effect; a repair ladder operates under token- and attempt-matched budgets. On \dataname{} (\NTasks{} HumanEval tasks, \NClauses{} verified checkers), relapse at an 8B operating point climbs from \ScaleDelayedMTwo{} to \ScaleDelayedMEight{} as constraint load grows, while stronger models sit at floor. Under matched checkers, model, and budget, ahead-of-time compilation significantly reduces relapse against a no-ledger verifier-retry baseline (\RestoreDiff{}, 95\% CI \RestoreDiffCI{}, $p$ \RestoreDiffP{}); adaptive ladder interventions stacked on top add no detectable gain (95\% confidence excludes gains $\geq$ \LadderExcludedGain{}). The probe predicts relapse before delivery (AUROC \AurocPrimary{}); a one-sentence tombstone note recovers about a third of the compilation effect and survives a placebo control. At \CostDeliveryFactor{} delivery overhead and \CostTotalHedged{} of API compute for every result, revocation failure becomes a measurable, predictable, and repairable property of dialogue state rather than an invisible one.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-12T21:12:32Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Haoyuan Zhu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.10333v1</id>
+    <title>MERA: Model Evolution and Routing with Skill Adaptation for Agentic Systems at Scale</title>
+    <updated>2026-08-11T00:28:02Z</updated>
+    <link href="https://arxiv.org/abs/2608.10333v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.10333v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>LLM agents execute heterogeneous sequences of model calls within a single task: some invocations require careful reasoning, while others are structured steps such as formatting or tool-argument construction. Prior routing methods exploit this asymmetry by assigning easy invocations to a cheaper small model and difficult ones to a large model. Such policies reduce inference cost, but they leave the small model's capability unchanged, so attainable savings remain bounded by the work the student can already solve. MERA instead improves the small model itself, using a single model invocation as the unit of adaptation. In each cycle, MERA replays failed student invocations to obtain execution-verified teacher demonstrations, distills recurring procedures into an iteratively updated SkillBook, and fine-tunes a student LoRA adapter via supervised learning and optional GRPO. Routing serves as supporting machinery for deployment: the improved student is served behind a cost-calibrated router with verifier-backed fallback, and a candidate SkillBook, adapter, or router is admitted only when joint replay preserves task quality. Empirically, four-cycle adaptation raises Qwen2.5-Coder-1.5B from 28.7% to 49.7% pass on held-out HumanEval+MBPP. Under verifier-backed fallback, the deployed policy retains 88.3% pass at 60.8% of always-Luna cost. On TAU-2, a fine-tuned Qwen3.5-2B improves from 14/35 to 18/35 and matches an unadapted 4B model. These results indicate that verifier-backed multi-cycle adaptation can increase small-model capability, rather than only routing around a fixed student.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-11T00:28:02Z</published>
+    <arxiv:comment>Preliminary version in CAIS RL-Eval</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Yuhang Yao</name>
+    </author>
+    <author>
+      <name>Zeyu Wang</name>
+    </author>
+    <author>
+      <name>Wanyi Chen</name>
+    </author>
+    <author>
+      <name>Tongyun Yang</name>
+    </author>
+    <author>
+      <name>Yuhang Han</name>
+    </author>
+    <author>
+      <name>Jie Xiao</name>
+    </author>
+    <author>
+      <name>Chengke Bao</name>
+    </author>
+    <author>
+      <name>Tianyi Zhao</name>
+    </author>
+    <author>
+      <name>Lynn Ai</name>
+    </author>
+    <author>
+      <name>Eric Yang</name>
+    </author>
+    <author>
+      <name>Tianyu Shi</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.00531v1</id>
+    <title>CURE: Local Uncertainty Repair for Block-Parallel Speculative Decoding</title>
+    <updated>2026-08-01T08:43:34Z</updated>
+    <link href="https://arxiv.org/abs/2608.00531v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.00531v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Speculative decoding mitigates the latency of sequential generation in autoregressive Large Language Models (LLMs) by interleaving draft generation with target verification. However, existing parallel drafting backends often suffer from rapid accuracy degradation over long horizons, leading to high rejection rates during verification and suboptimal wall-clock speedups. We observe that drafting errors are not uniformly distributed but typically stem from localized high-uncertainty tokens that destabilize downstream generation trajectories. Motivated by this token error pattern, we propose CURE, a budget-aware dynamic repair tree designed to repair errors at uncertainty focal points without incurring prohibitive tree-verification overheads. Specifically, our method uses predictive confidence margins to dynamically locate candidate error tokens within a block-parallel draft, expands bounded repair paths only at these fragile nodes, and employs a novel repair resynchronization mechanism to realign draft states post-verification. Evaluations on code-generation benchmarks (HumanEval, MBPP, and LiveCodeBench-lite) and mathematical reasoning benchmark (GSM8K) demonstrate that CURE increases the average accepted length by 4.2-7.5% over parallel baselines without repair, translating to an end-to-end speedup of $2.66-3.49\times$ over target-only decoding. Furthermore, we provide a plug-and-play repair module compatible with standard parallel drafting frameworks. We also characterize the trade-off between draft compute and verification efficiency.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-01T08:43:34Z</published>
+    <arxiv:comment>9 pages, 2 figures, 5 tables</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Aofan Liu</name>
+    </author>
+    <author>
+      <name>Jingxiang Meng</name>
+    </author>
+    <author>
+      <name>Fangxin Liu</name>
+    </author>
+    <author>
+      <name>Yongbiao Chen</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.14659v1</id>
+    <title>When Uncertainty Isn't Enough: An Empirical Study of Self-Correction in Code Generation</title>
+    <updated>2026-07-31T21:13:02Z</updated>
+    <link href="https://arxiv.org/abs/2608.14659v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.14659v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models for code generation often produce incorrect solutions without reliable indicators of failure. We study whether uncertainty estimation methods developed for natural language transfer to code generation, and whether such signals can improve code generation via selective self-correction. We evaluate five uncertainty methods: mean token entropy, verbalized confidence, $P(\text{True})$, entropy ensembles, and semantic entropy probes, across three small code LLMs on HumanEval and BigCodeBench. We find that multi-sample $P(\text{True})$ achieves the strongest correlation with correctness, while all the other methods, including semantic entropy probes, yield only weak correlation. We then use these uncertainty signals to drive three self-correction policies: adaptive decoding, uncertainty-based regeneration, and verification-based regeneration. Our results reveal a stronger negative finding than anticipated: uncertainty-based self-correction fails to reliably improve Pass@1, degrading accuracy in 5 of 6 configurations across both benchmarks ($-3$pp to $-10$pp), and adaptive decoding degrades accuracy in 4 of 6 configurations. Only verification-based self-correction reliably improves Pass@1, with gains of $+6$ to $+26$ percentage points on HumanEval and $+8$ to $+20$ percentage points on BigCodeBench, scaling inversely with baseline strength. These findings replicate consistently across both benchmarks and suggest that cheap uncertainty estimators are insufficient on their own to improve code correctness, and that their practical value lies in serving as gating signals for costlier execution-based correction loops rather than as standalone substitutes for verification.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-31T21:13:02Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Pranav Rakasi</name>
+    </author>
+    <author>
+      <name>Maanas Lalwani</name>
+    </author>
+    <author>
+      <name>Arnav Srivastava</name>
+    </author>
+    <author>
+      <name>Arya Palanivel</name>
+    </author>
+    <author>
+      <name>Tinuade Adeleke</name>
+    </author>
+    <author>
+      <name>Ruizhe Li</name>
+    </author>
+    <author>
+      <name>Sean Wu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.11235v1</id>
+    <title>CORA-Diff: Confidence-Oriented Residual Acceptance for Efficient Diffusion Language Model Inference</title>
+    <updated>2026-07-31T07:32:10Z</updated>
+    <link href="https://arxiv.org/abs/2608.11235v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.11235v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Diffusion language models (DLMs) update many tokens in parallel, yet practical decoders often use a fixed denoising horizon. Many predictions stabilize early, but blockwise decoding continues until all positions are resolved, causing repeated dense forward passes. Existing accelerators often rely on learned filters, modified scores, dependency models, or cache-specific mechanisms. We ask whether native trajectory signals can identify residual positions likely to match the deterministic dense endpoint. We propose CORA-Diff, a training-free method that preserves the original transfer rule and applies confidence-and-persistence gating only to positions that rule leaves unresolved. Accepted tokens remain visible as context, and the block terminates once all positions are resolved. This requires no backbone change, learned acceptance model, or logit modification. Our theory explains why high-confidence, persistent predictions are more likely to match the fixed-horizon dense endpoint, and paired post-intervention trajectories provide direct empirical support. We select one operating point on a separate GSM8K calibration subset and freeze it for all evaluations. Under a matched Learn2PD-style LLaDA protocol, CORA-Diff has the lowest measured runtime in all eight task-length settings. Task scores match or exceed dense decoding in five settings, and the largest observed drop is 1.22 points. Its incremental speedups over EOS-aware dense decoding are 2.70x and 3.32x on GSM8K and HumanEval. It also reaches 13.14x under the fixed-horizon 1024/1024 mechanism-isolation protocol and transfers to Dream without retuning at 3.18x-3.53x. These results show that native confidence and persistence enable reliable residual acceptance, reducing repeated denoising computation while preserving task quality.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-31T07:32:10Z</published>
+    <arxiv:comment>9 pages, 2 figures, 3 tables. Code: https://github.com/wyffffff/cora-diff-llada</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Yifan Wu</name>
+    </author>
+    <author>
+      <name>Yufeng Zhang</name>
+    </author>
+    <author>
+      <name>Kenli Li</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.28529v1</id>
+    <title>CoGate: Confidence-Gated Co-Decoding for Secure Code Generation</title>
+    <updated>2026-07-30T17:02:12Z</updated>
+    <link href="https://arxiv.org/abs/2607.28529v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.28529v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models are widely used for code generation, but they can also produce insecure programs due to patterns learned from their pretraining data. Decoding-time steering has become an important solution to this problem: a small expert model is combined with the target model at each step to generate more secure code, which is referred to as co-decoding. However, the acceptance rule for existing co-decoding approaches does not consider the expert model's confidence. When the security expert is unconfident due to unseen patterns or out-of-distribution (OOD) contexts, its guidance can therefore be misleading. To address the challenge, we propose CoGate, a confidence-gated co-decoding approach that controls the expert's influence on the co-decoding process based on its confidence. We implement our approach and evaluate it across multiple LLM backends (CodeGen, DeepSeek-Coder, Qwen-Coder, StarCoder) on several code generation benchmarks (HumanEval, security suite, and CWEval). Our approach outperforms existing co-decoding methods (CoSec+) across multiple benchmarks, achieving up to a 12.6% gain of Func-Sec@10 on CWEval.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-30T17:02:12Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Minghao Hu</name>
+    </author>
+    <author>
+      <name>Lannan Luo</name>
+    </author>
+    <author>
+      <name>Allen Roush</name>
+    </author>
+    <author>
+      <name>Phillip Howard</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.24604v3</id>
+    <title>Looping Is Not Reliability: State-Bound Evidence and Typed Revision Contracts for Agentic Code Repair</title>
+    <updated>2026-10-04T08:12:24Z</updated>
+    <link href="https://arxiv.org/abs/2607.24604v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.24604v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Generate--test--revise loops are common in coding agents, but repetition alone provides no reliability guarantee. We study the gap between finding a correct patch and retaining, verifying, and submitting it. A sealed five-seed study over 30 HumanEval repairs produces 900 three-revision trajectories. Under forced revision, current correctness with current traces falls from 0.820 after one revision to 0.673 after two, although ever-correct rises to 0.847. Two common-state studies use 2,430 branches from identical frozen programs to remove post-treatment risk-set bias. In a prespecified 14B replication, stale traces harm 34/135 correct starts versus 4/135 with current traces, a 22.2-point increase (task-cluster 95\% CI $[8.9,37.0]$, exact Holm $p=0.0337$). A prospective 540-rollout policy eliminates observed correct-start harm but reduces wrong-start repair and fails its joint criterion. Repository experiments over 24 bugs and four coder stacks expose floor effects and component heterogeneity without Holm-significant effects. We therefore separate admission, preservation, grounded certification, competence, and liveness. We derive an evidence-bound typed loop contract and instantiate its mechanically enforceable subset in a reference implementation that binds verifier evidence to exact code states, preserves verified checkpoints, and emits auditable admission receipts. The implementation is an executable specification and conformance artifact, not evidence of improved repair competence or calibrated verifier dependence.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-27T16:05:23Z</published>
+    <arxiv:comment>11 pages, 5 figures, 8 tables. Accepted at AgenticDev 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Xueping Gao</name>
+    </author>
+    <author>
+      <name>Jianwei Yang</name>
+    </author>
+    <author>
+      <name>Qiang Yang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.02897v2</id>
+    <title>Margins, Not Windows: Training-Free Per-Step Lossy Speculative Decoding</title>
+    <updated>2026-09-28T22:20:07Z</updated>
+    <link href="https://arxiv.org/abs/2609.02897v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.02897v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Speculative decoding accelerates LLM inference by drafting candidate tokens and verifying them in parallel. Tree-attention drafters such as EAGLE-3 are widely adopted, yet typically hold two decisions fixed: (1) a strict token-match verification rule and (2) a static draft-tree shape. Prior work relaxes each in isolation under limiting assumptions: long draft chains for training-free lossy verification, and adaptive tree shaping under a fixed token budget. We introduce AdaptiveSpec, a training-free per-step speculative decoding method that adapts both decisions from internal signals already produced during decoding. A per-step margin rule promotes a mismatched draft-proposed token when the ratio of the target's probability on the drafted token to its top-1 probability exceeds a threshold with no dependence on draft length or underlying drafter architecture. A per-step tree policy adjusts the draft tree's depth, width, and node count directly from a fused signal of draft top-1 confidence and a rolling acceptance history capturing recent draft-target agreement, allowing the total draft count to vary rather than only be redistributed. The two adaptations operate on orthogonal axes and compound in effect. Implemented on the SGLang production-grade serving engine, AdaptiveSpec improves throughput over the state-of-the-art autoregressive speculative decoding method EAGLE-3 by up to 56%, recovering 93% to fully lossless task accuracy across GSM8K, MATH-500, and HumanEval on three target models (DeepSeek-R1-Distill-Llama-8B, Llama-3.1-8B-Instruct, Qwen3-8B).</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-03T20:43:49Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Oszkár Urbán</name>
+    </author>
+    <author>
+      <name>Young D. Kwon</name>
+    </author>
+    <author>
+      <name>Stylianos I. Venieris</name>
+    </author>
+    <author>
+      <name>Cecilia Mascolo</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.03126v3</id>
+    <title>ACPO: Asymmetric Credit Policy Optimization via Mode-Local Entropy Surrogate</title>
+    <updated>2026-07-30T07:05:26Z</updated>
+    <link href="https://arxiv.org/abs/2607.03126v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.03126v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Outcome-supervised reinforcement learning scales to verifiable reasoning tasks, but trajectory-level rewards assign the same outcome signal to all sampled tokens, overlooking their unequal contributions to the reasoning process. Entropy provides a natural indicator of the model's decision state, yet using it for token-level credit assignment presents two key challenges: long-tail probabilities in large vocabularies corrupt both entropy values and gradients, and uncertainty carries distinct semantics across positive- and non-positive-advantage trajectories. We propose Asymmetric Credit Policy Optimization (ACPO), which replaces global entropy with the complement of the top-token probability as a mode-local proxy. Guided by gradient analysis, ACPO incorporates mismatch routing and saturation correction to shape policy updates into the desired asymmetric form, emphasizing uncertain decisions on positive trajectories while penalizing confident regions on failed ones. Theoretically, ACPO locally preserves the advantage direction while bounding surrogate error. Experiments on mathematical and coding reasoning benchmarks, including AIME 2025 and HumanEval Pro, show that ACPO consistently outperforms both entropy-aware methods (e.g., 80/20, GTPO) and strong outcome-supervised RL baselines (e.g., DAPO, SAPO).</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-03T09:14:27Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Zijun Xie</name>
+    </author>
+    <author>
+      <name>Yuyang You</name>
+    </author>
+    <author>
+      <name>Yongzhi Li</name>
+    </author>
+    <author>
+      <name>Enlei Gong</name>
+    </author>
+    <author>
+      <name>Quan Chen</name>
+    </author>
+    <author>
+      <name>Yanhua Cheng</name>
+    </author>
+    <author>
+      <name>Peng Jiang</name>
+    </author>
+    <author>
+      <name>Binbin Zheng</name>
+    </author>
+    <author>
+      <name>Xiaolong Liu</name>
+    </author>
+    <author>
+      <name>Zeyu Chen</name>
+    </author>
+    <author>
+      <name>Yadong Mu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.25331v1</id>
+    <title>Improved Large Language Diffusion Models</title>
+    <updated>2026-06-24T02:51:36Z</updated>
+    <link href="https://arxiv.org/abs/2606.25331v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.25331v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Modern large language models are predominantly trained with autoregressive factorization and causal attention. We present \emph{iLLaDA}, an 8B masked diffusion language model trained from scratch with fully bidirectional attention. iLLaDA keeps the masked diffusion objective throughout pre-training and supervised fine-tuning (SFT), scaling pre-training to 12T tokens and fine-tuning on a 25B-token instruction corpus for 12 epochs. We further use variable-length generation for efficiency and introduce confidence-based scoring for multiple-choice evaluation. Compared with LLaDA, iLLaDA improves broadly across general, mathematical, and code benchmarks; for example, iLLaDA-Base improves by 21.6 points on BBH and 14.9 points on ARC-Challenge, while iLLaDA-Instruct improves by 14.5 points on MATH and 16.5 points on HumanEval. Despite its non-autoregressive training, iLLaDA also remains competitive with Qwen2.5 7B on several benchmarks. These results show that fully bidirectional diffusion training from scratch is a competitive path toward strong language models. Model weights and codes: https://github.com/ML-GSAI/LLaDA.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-24T02:51:36Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Shen Nie</name>
+    </author>
+    <author>
+      <name>Qiyang Min</name>
+    </author>
+    <author>
+      <name>Shaoxuan Xu</name>
+    </author>
+    <author>
+      <name>Zihao Huang</name>
+    </author>
+    <author>
+      <name>Yuxuan Song</name>
+    </author>
+    <author>
+      <name>Yong Shan</name>
+    </author>
+    <author>
+      <name>Yankai Lin</name>
+    </author>
+    <author>
+      <name>Wayne Xin Zhao</name>
+    </author>
+    <author>
+      <name>Chongxuan Li</name>
+    </author>
+    <author>
+      <name>Ji-Rong Wen</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.22792v1</id>
+    <title>The Origins of Stochasticity: Comprehensive Investigations on Uncertainty Quantification for Large Language Models</title>
+    <updated>2026-06-22T03:05:04Z</updated>
+    <link href="https://arxiv.org/abs/2606.22792v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.22792v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Recent advancements in Large Language Models (LLMs) have enabled sophisticated reasoning and content generation, yet their inherent stochasticity poses significant challenges for ensuring predictive credibility. While traditional uncertainty taxonomy paradigms, such as the dichotomy of aleatoric and epistemic uncertainties, provide conceptual foundations, they often fail to capture the multi-component and multi-stage nature of LLM generation and struggle to evaluate the effectiveness of various Uncertainty Quantification (UQ) methods. In this paper, we propose a granular uncertainty taxonomy that systematically attributes LLM uncertainty into input-level, parameter-level, token-level, and decoding-process sources. Correspondingly, we categorize existing UQ methods into Bayesian, ensemble, consensus-based, and single-pass approaches. Furthermore, we introduce a comprehensive evaluation framework covering diverse generation settings and metrics. We empirically evaluate 21 typical UQ methods across three prominent LLM families, including Qwen3, Llama 3.2, and DeepSeek-V3, on benchmarks such as TriviaQA, GSM8K, and HumanEval. Our experimental results demonstrate that (i) the effectiveness of UQ methods is sensitive to task types and generation settings; (ii) consensus-based methods, typed Deg and EigV, consistently outperform other UQ approaches; and (iii) larger model scales correlate with lower uncertainty estimates, suggesting an empirical scaling law for LLM uncertainty. This work bridges the gap between theoretical origins and practical deployment, providing a versatile diagnostic tool for systematically quantifying uncertainty in LLM applications.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-22T03:05:04Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Xiang-Jun Ou</name>
+    </author>
+    <author>
+      <name>Shuang Liang</name>
+    </author>
+    <author>
+      <name>Xin-Yu Hu</name>
+    </author>
+    <author>
+      <name>Rong-Hao Huang</name>
+    </author>
+    <author>
+      <name>Jing Wang</name>
+    </author>
+    <author>
+      <name>Shao-Qun Zhang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.20499v1</id>
+    <title>ExecuGraph: A Multi-Agent, Execution-Grounded Framework for Reliable Backend Code Synthesis with Large Language Models</title>
+    <updated>2026-06-18T05:58:17Z</updated>
+    <link href="https://arxiv.org/abs/2607.20499v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.20499v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models generate plausible backend code, but a single-pass paradigm provides no guarantee of correctness or runtime reliability. We present ExecuGraph, a multi-agent framework that places execution-based validation at the center of backend code synthesis. Six specialized agents (Planner, Code Generator, Logical Reviewer, Evaluator, Optimizer, and Explainer) are coordinated by a typed directed workflow with a bounded retry budget, implemented on LangGraph with locally hosted models (Ollama) and an optional retrieval layer for algorithmic technique recall. A subprocess-isolated sandbox with a wall-clock timeout guards every evaluation. We evaluate on a curated 30-problem DSA suite (internal-30), HumanEval (n=64), and an APPS-introductory subset, contrasting ExecuGraph against a single-agent one-shot baseline and a single-agent execution-retry baseline (a Reflexion-style ablation that isolates the contribution of multi-agent decomposition). On internal-30, the three conditions are statistically indistinguishable (n=30; paired Wilcoxon p=0.59 MF vs. SO, p=0.08 SR vs. SO); 95% bootstrap confidence intervals on all pairwise mean differences include zero. On HumanEval, multi-full edges ahead by +3.1 pp. The strongest signal is cross-model: with DeepSeekCoder V2 Lite, graph-category accuracy improves from 57.5% (oneshot) to 80.0% (multi-full), a +22.5 pp jump that supports a scaling hypothesis: the value of multi-agent decomposition grows with base-model capability. The framework's primary contribution is methodological: a single codebase that collapses by configuration into one-shot, execution-retry, and per-agent ablation conditions, enabling controlled measurement of each lever's marginal contribution. A per-agent ablation, retry-budget sweep, error-class taxonomy, and test-source audit are reported.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-18T05:58:17Z</published>
+    <arxiv:comment>Submitted to Data Science and Management</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Sai Deekshith Lekkala</name>
+    </author>
+    <author>
+      <name>Jothi Prabha Appadurai</name>
+    </author>
+    <author>
+      <name>Rohith Reddy Bellibatlu</name>
+    </author>
+    <author>
+      <name>Manpreet Singh</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.16999v1</id>
+    <title>Selection Without Signal, Recovery Through Expression: A Measurement Study of Post-Hoc Falsification Operators for Frozen Small Code Models</title>
+    <updated>2026-06-15T17:36:23Z</updated>
+    <link href="https://arxiv.org/abs/2606.16999v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.16999v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Frozen small code models (&lt;=1.5B parameters, run locally without fine-tuning) suit offline and privacy-constrained use, but often emit plausible-but-wrong programs. A natural remedy is a post-hoc operator that selects, verifies, repairs, or re-processes the model's samples without retraining; in principled form it is Popperian: attack each candidate with a severe test, keep what survives. We measure whether such operators help. Under one deterministic execution oracle and a leakage-free, matched-compute protocol, 26 semantic post-hoc operators (selection, verification, repair, elimination, portfolios, sound vetoes, generation conditioning) are evaluated against Best-of-N (BoN); on the cells and benchmarks tested, none improves held-out accuracy over BoN. The negative is mechanistic: a coverage wall (systematic hard-task failures deeper sampling does not rescue), a capability scissors (a competent generator leaves almost no discriminable error among visible-test passers), and a near-empty consensus trap (the visible-pass-but-hidden-wrong majority a leakage-free selector needs rarely co-occurs with a correct alternative). A distribution-free do-no-harm bound cannot certify a harm rate &lt;=alpha at zero observed harm unless n&gt;=45. Two operators help on a different axis, outside the semantic output space. An expression-layer recovery (M1), the only accuracy gain here, recovers correct programs the standard extractor discards (robust extraction and public-test signature alignment); it does no harm (b10=0), is leakage-free, and lifts DeepSeek-Coder-1.3B by +12 tasks on HumanEval+ (p=2.4e-4). An adaptive consensus early-stop (ACE) is a calibrated compute-saving control (~19% saving, zero harm). M1 and the selection negative replicate on HumanEval+ and MBPP+ across three model cells. The lesson: fix the harness and measure coverage before blaming semantic post-hoc reasoning.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-15T17:36:23Z</published>
+    <arxiv:comment>33 pages, 4 figures, 8 tables</arxiv:comment>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Mehmet Iscan</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.11863v1</id>
+    <title>Enhancing LLM-Based Code Translation with Verified Multi-Semantic Representations</title>
+    <updated>2026-06-10T09:38:40Z</updated>
+    <link href="https://arxiv.org/abs/2606.11863v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.11863v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) have shown great promise for automated code translation, yet existing approaches often rely on token-level statistical patterns rather than sufficient understanding of program semantics. As a result, translated programs may still contain logical and semantic errors. Although high-quality semantic guidance, such as functional descriptions and test cases, can help mitigate these errors, such resources are often unavailable in real-world scenarios. This raises two key challenges: how to construct rich semantic information directly from source code, and how to ensure that such semantics are accurate and reliable enough to guide translation.To address these challenges, we propose Multisage, a multi-semantic augmentation and self-calibration framework for LLM-based code translation. Multisage consists of three modules. First, a semantic representation parsing module extracts structured base semantics from source code, including data-flow graphs, type constraints, and external API information. Second, a multi-semantic augmentation module builds on these representations to generate diverse augmented semantics, including code summaries, function-level test cases, and API-oriented descriptions and tests. Third, a semantic consistency calibration module uses semantics-preserving mutations and cross-semantic consistency verification to filter, calibrate, and refine the generated semantics.Experiments on the HumanEval-X code translation benchmark show that Multisage improves translation success rates by up to 2.22 times across diverse backbone models. It consistently outperforms vanilla prompting, instruction-tuned LLMs, and Chain-of-Thought reasoning, with the largest gains observed on smaller models. These results demonstrate that explicit semantic augmentation can substantially improve the reliability of LLM-based code translation.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-10T09:38:40Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Yufu Wang</name>
+    </author>
+    <author>
+      <name>He Jiang</name>
+    </author>
+    <author>
+      <name>Hao Lin</name>
+    </author>
+    <author>
+      <name>Peiyu Zou</name>
+    </author>
+    <author>
+      <name>Ang Jia</name>
+    </author>
+    <author>
+      <name>Xiaochen Li</name>
+    </author>
+    <author>
+      <name>Zhilei Ren</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.10829v6</id>
+    <title>Attention-Discounted Adaptive Sampler for Masked Diffusion Language Models</title>
+    <updated>2026-11-04T11:00:30Z</updated>
+    <link href="https://arxiv.org/abs/2606.10829v6" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.10829v6" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Masked diffusion language models can reduce inference steps by revealing multiple tokens per denoising iteration, but this parallelism is fragile: positions that are individually confident may be unsafe to commit together when their predictions are coupled. Existing training-free samplers such as Top-$k$, Fast-dLLM, and EB-Sampler mainly control how many tokens to reveal, while often ranking candidates by token-wise scores that ignore interactions within the selected set. We propose ADAS, a training-free reranking rule that leaves the base sampler's stopping rule unchanged and greedily discounts each token-wise confidence score according to its attention to already selected positions, weighted by their prediction uncertainty. Across LLaDA-8B-Base and Dream-7B-Base on the reasoning benchmarks GSM8K and MATH500 and the code benchmarks HumanEval and MBPP, plugging ADAS into all three samplers improves low-NFE performance at matched denoiser evaluations by $9.11$ and $10.46$ percentage points on average, respectively, with $3.1\%$ per-forward runtime overhead. Code is available at https://github.com/yusufsahin99/ADAS.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-09T13:17:27Z</published>
+    <arxiv:comment>Accepted at NeurIPS 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Yusuf Sahin</name>
+    </author>
+    <author>
+      <name>Ahmed Rockey Saikia</name>
+    </author>
+    <author>
+      <name>Volkan Cevher</name>
+    </author>
+    <author>
+      <name>Paolo Favaro</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.09800v1</id>
+    <title>FASE: Fast Adaptive Semantic Entropy for Code Quality</title>
+    <updated>2026-06-08T17:53:05Z</updated>
+    <link href="https://arxiv.org/abs/2606.09800v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.09800v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Multi-agent code generation offers a promising paradigm for autonomous software development by simulating the human software engineering lifecycle. However, system reliability remains hindered by LLM hallucinations and error propagation across interacting agents. While semantic entropy provides a principled way to quantify uncertainty without ground-truth answers, current methods often rely on costly LLM-driven equivalence checks. In this work, we introduce Fast Adaptive Semantic Entropy (FASE), a novel metric that approximates functional correctness based on the minimum spanning tree of structural and semantic dissimilarity graphs. Evaluations on HumanEval and BigCodeBench demonstrate that FASE outperforms state-of-the-art semantic entropy by LLM entailment, achieving a 25% average improvement in Spearman correlation and a 19% increase in ROCAUC score against Pass@1 from ground-truth test cases when using the Qwen3-Embedding-8B model. Furthermore, by eliminating costly LLM-driven equivalence evaluation, FASE incurs negligible computational overhead, requiring only approximately 0.3% of the runtime cost of traditional semantic entropy approaches. These results position FASE as a practical, cost-effective solution for optimizing uncertainty quantification in real-world multi-agent workflows.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.MA" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-08T17:53:05Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Shizhe Lin</name>
+    </author>
+    <author>
+      <name>Ladan Tahvildari</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.06454v1</id>
+    <title>Scaffold, Not Vocabulary? A Controlled, Two-Tier, Pre-Registered Study of a Popperian Code-Generation Skill</title>
+    <updated>2026-06-04T17:49:00Z</updated>
+    <link href="https://arxiv.org/abs/2606.06454v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.06454v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models increasingly write, review, and judge code, and a fast-growing practice equips them with prompt 'skills' that ask the model to reason like a scientist. A prominent example tells the model to act as a Popperian falsificationist, and such skills are reported to improve generated code. But these gains are almost always read off an LLM-as-a-judge, an instrument with documented positional, self-preference, and stylistic biases. We ask: if it appears to help, is the gain from the skill's Popperian content, or from the structure any scaffold imposes? We pre-register a two-tier ablation with three controls: a length-matched placebo, a labels-only scaffold that keeps the Popperian headers but strips the procedure, and an execution oracle (HumanEval+ unit tests), plus a vocabulary-halo sentinel and a same-model self-judge audit. On a frontier model (Claude Sonnet 4.6, N=163) all conditions sit near the benchmark ceiling and do not separate, so the pre-registered +5-point improvement is not supported (a ceiling-limited non-detection). On a small model (Qwen2.5-Coder-0.5B, N=164) structured arms lift best-of-eight correctness by 20-22 points, but the full skill shows no separable benefit over a labels-only scaffold (aggregate F@8=L@8 vs V@8=34.8%), and the placebo trails by only 2.4 points. A 0.5B self-judge applying the Popperian rubric does not beat random selection and concentrates 60% of its picks on one index. In the two settings tested, the skill's Popperian procedural content adds no separable execution-correctness benefit beyond a labels-only scaffold, so the gains track scaffold structure. We contribute a calibrated negative result and a reusable disambiguation protocol; the finding bounds an engineering claim about one prompt-skill family and is not an evaluation of Popperian methodology in general.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-04T17:49:00Z</published>
+    <arxiv:comment>34 pages, 5 figures, 8 tables</arxiv:comment>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Mehmet Iscan</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.03458v1</id>
+    <title>KVarN: Variance-Normalized KV-Cache Quantization Mitigates Error Accumulation in Reasoning Tasks</title>
+    <updated>2026-06-02T10:34:56Z</updated>
+    <link href="https://arxiv.org/abs/2606.03458v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.03458v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Test-time scaling is a powerful approach to obtain better reasoning in large language models, but it becomes memory-bottlenecked during long-horizon decoding, as the KV-cache grows. KV-cache quantization can help improve this, but current methods are evaluated under prefill-like settings and errors behave differently under autoregressive decoding. We show that in the latter regime, quantization errors accumulate across timesteps, driven primarily by incorrect token scales. We introduce KVarN, a calibration-free KV-cache quantizer that applies a Hadamard rotation followed by a dual-scaling variance normalization across both axes of the K and V matrices. We find that this combination fixes outlying token-scale errors and substantially reduces error accumulation over existing baselines. KVarN establishes a new state-of-theart for KV-cache quantization on generative benchmarks, including MATH500, AIME24 and HumanEval, at 2-bit precision. A vLLM implementation of the KVarN method is available at https://github.com/huawei-csl/KVarN</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-02T10:34:56Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Lorenz K. Muller</name>
+    </author>
+    <author>
+      <name>Philippe Bich</name>
+    </author>
+    <author>
+      <name>Chiara Boretti</name>
+    </author>
+    <author>
+      <name>Hyun-Min Chang</name>
+    </author>
+    <author>
+      <name>Jiawei Zhuang</name>
+    </author>
+    <author>
+      <name>Lukas Cavigelli</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.02955v2</id>
+    <title>Fast-dLLM++: Fréchet Profile Decoding for Faster Diffusion LLM Inference</title>
+    <updated>2026-06-15T16:47:38Z</updated>
+    <link href="https://arxiv.org/abs/2606.02955v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.02955v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Diffusion large language models promise parallel token generation, yet inference remains bottlenecked by deciding which masked tokens can be safely committed together. Fast-dLLM addressed this with KV caching and confidence-guided parallel decoding, but its decoding theory uses a homogeneous high-confidence assumption that effectively reduces each candidate set to its weakest selected token. We argue that this leaves speed on the table because real decoding steps exhibit heterogeneous confidence profiles. We propose \textbf{Fast-dLLM++}, a training-free extension that introduces \emph{Fréchet profile decoding}: selecting parallel commit sets from the full sorted confidence profile rather than a single worst-case confidence. The resulting rule is a heterogeneous-confidence generalization of Fast-dLLM's factor selector and it recovers the previous rule exactly in the equal-confidence case and adds a provable \emph{heterogeneity bonus} when the selected tokens have uneven confidences. Fast-dLLM++ leaves the model, diffusion process, and cache implementation entirely unchanged, making it a drop-in replacement for existing Fast-dLLM decoding. Experiments on GSM8K, MATH, HumanEval, and MBPP with the LLaDA-8B model show that the theoretical improvement translates directly into empirical gains: profile-aware selection improves the accuracy--throughput frontier by exploiting safe parallelism that weakest-token rules miss, achieving up to 37\% higher throughput at comparable accuracy. Our code release is at https://github.com/Ringo-Star/FastdLLM_plusplus.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-01T23:18:59Z</published>
+    <arxiv:comment>Initial version accepted at Workshop on Structured Probabilistic Inference &amp; Generative Modeling, ICML 2026. Project Page: https://ringo-star.github.io/projectpage_frechet/</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Siva Rajesh Kasa</name>
+    </author>
+    <author>
+      <name>Yasong Dai</name>
+    </author>
+    <author>
+      <name>Sumit Negi</name>
+    </author>
+    <author>
+      <name>Hongdong Li</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.30218v1</id>
+    <title>MarginGate: Sparse Margin-Triggered Verification for Batch-Invariant LLM Inference</title>
+    <updated>2026-05-28T16:50:19Z</updated>
+    <link href="https://arxiv.org/abs/2605.30218v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.30218v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Temperature-zero BF16 LLM inference is often treated as reproducible, yet the same request can emit different tokens when decoded alone or inside a larger batch. Existing fixes use batch-invariant operators or LLM-42's per-token verification, incurring cost even when most steps are stable. We ask whether verification can be applied exclusively to flipped tokens. Across five models, batch-induced token flips are sparse on the flip-rate benchmarks: on MATH500, Llama-3.1-8B flips on $0.48\%$ of synchronous decode steps, and all tested models stay within the 0.3-1.3% range on MATH500, GSM8K, and HumanEval. K/V perturbations remain flat before flips, while low top-1/top-2 logit margins expose much of the flip risk. MarginGate turns these observations into a verifier policy: it keeps BF16 decoding on high-margin steps, verifies only low-margin steps, and repairs confirmed mismatches by replacing the current K/V column. We evaluate on four datasets, calibrating on MATH500 and transferring to GSM8K, SharedGPT, and HumanEval. MarginGate restores 100% sequence-level deterministic decoding on Llama-3.1-8B and Qwen2.5-14B with 18.56%/15.05% verifier trigger rates, reducing LLM-42's latency increment by 2.23x/1.99x relative to always-on verification. On DSR1-Distill-Qwen-7B, the same policy reaches determinism in a harder regime at 49.50% triggers.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.PF" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-28T16:50:19Z</published>
+    <arxiv:comment>13 pages, 5 figures, 11 tables</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Kexin Chu</name>
+    </author>
+    <author>
+      <name>Yang Zhou</name>
+    </author>
+    <author>
+      <name>Wei Zhang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.29463v2</id>
+    <title>Honest Lying: Understanding Memory Confabulation in Reflexive Agents</title>
+    <updated>2026-05-31T05:31:18Z</updated>
+    <link href="https://arxiv.org/abs/2605.29463v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.29463v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Reflexion-style agents rely on self-generated reflections as memory, implicitly assuming that agents can accurately diagnose their own failures. We show that this assumption can fail systematically: across ALFWorld and HumanEval, agents store confident but incorrect interpretations of the task and continue acting on them across trials, even though the environment resets to the correct task each time. We call this failure mode memory confabulation and introduce the Reflection Repetition Rate (RRR), a log-based metric that detects repeated reliance on incorrect reflective content. Using RRR, we identify 16 frozen environments in ALFWorld, where 0 of 121 reflections mention the correct target object, and 4 analogous cases in HumanEval. Our mitigation replaces open-ended self-diagnosis with programmatic extraction of trajectory-level failure signals, increasing correct object mention from 0% to 86%, reducing RRR from 0.64 to 0.10, and solving 3 of 16 frozen ALFWorld environments, suggesting that reflective memory can reinforce false beliefs rather than correct them.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-28T06:56:42Z</published>
+    <arxiv:comment>Accepted to ICML 2026 Workshop "Failure Modes in Agentic AI"</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Prakhar Dixit</name>
+    </author>
+    <author>
+      <name>Sadia Kamal</name>
+    </author>
+    <author>
+      <name>Tim Oates</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.26120v1</id>
+    <title>Dynamic-dLLM: Dynamic Cache-Budget and Adaptive Parallel Decoding for Training-Free Acceleration of Diffusion LLM</title>
+    <updated>2026-05-27T02:47:50Z</updated>
+    <link href="https://arxiv.org/abs/2606.26120v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.26120v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Diffusion Large Language Models (dLLMs) offer a promising alternative to autoregressive models, excelling in text generation tasks due to their bidirectional attention mechanisms. However, their computational complexity scales on the order of L cubed with the sequence length L. This poses significant challenges for long-sequence and real-time applications, primarily due to the lack of compatibility with key-value caching and the non-autoregressive nature of denoising steps. Existing acceleration methods rely on static caching or parallel decoding strategies, which fail to account for the dynamic behavior of token properties across layers and decoding steps. We propose Dynamic-dLLM, a training-free framework that enhances dLLM inference efficiency through two components: Dynamic Cache Updating (DCU), which adaptively allocates cache-update budgets based on layer-wise token dynamics, and Adaptive Parallel Decoding (APD), which dynamically calibrates decoding thresholds to balance generation quality and efficiency. Extensive experiments on models like LLaDA-8B-Instruct, LLaDA-1.5, and Dream-v0-7B-Instruct across benchmarks such as MMLU, GSM8K, and HumanEval demonstrate that Dynamic-dLLM significantly improves inference speed. It attains an average speedup exceeding 3 times while maintaining performance. Dynamic-dLLM outperforms state-of-the-art acceleration methods and provides a plug-and-play solution for efficient dLLM deployment without compromising performance. The code is available at https://github.com/TianyiWu233/DYNAMIC-DLLM.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-27T02:47:50Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Tianyi Wu</name>
+    </author>
+    <author>
+      <name>Xiaoxi Sun</name>
+    </author>
+    <author>
+      <name>Yanhua Jiao</name>
+    </author>
+    <author>
+      <name>Yulin Li</name>
+    </author>
+    <author>
+      <name>Yixin Chen</name>
+    </author>
+    <author>
+      <name>YunHao Cao</name>
+    </author>
+    <author>
+      <name>YiQi Hu</name>
+    </author>
+    <author>
+      <name>Zhuotao Tian</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.16727v1</id>
+    <title>PopuLoRA: Co-Evolving LLM Populations for Reasoning Self-Play</title>
+    <updated>2026-05-16T00:29:35Z</updated>
+    <link href="https://arxiv.org/abs/2605.16727v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.16727v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We introduce PopuLoRA, a population-based asymmetric self-play framework for reinforcement learning with verifiable rewards (RLVR) post-training of LLMs. Teachers and students are specialised LoRA adapters on a shared frozen base: teachers propose problems, matched students solve them under a programmatic verifier, and cross-evaluation between sub-populations replaces the self-calibration that limits single-agent self-play. A family of LoRA weight-space evolution operators (mutations and crossovers that produce same-rank population members in seconds) serves as the replacement step of a population-based training loop at 7B scale. We instantiate PopuLoRA on top of Absolute Zero Reasoner and compare it against a per-adapter compute-matched single-agent baseline. Where the single agent self-calibrates to generating easy problems it can reliably solve, the population enters a co-evolutionary arms race: teachers produce increasingly complex problems, student solve rates oscillate, and problem-space coverage keeps expanding throughout training. Despite lower training-time reward, the population mean outperforms the baseline on three code benchmarks (HumanEval+, MBPP+, LiveCodeBench) and seven math benchmarks (AIME 24/25, AMC 23, MATH-500, Minerva, GSM8K, OlympiadBench), and even the weakest member of the population beats the baseline on aggregate.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-16T00:29:35Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Roger Creus Castanyer</name>
+    </author>
+    <author>
+      <name>Geoffrey Bradway</name>
+    </author>
+    <author>
+      <name>Lorenz Wolf</name>
+    </author>
+    <author>
+      <name>Maxwill Lin</name>
+    </author>
+    <author>
+      <name>Augustine N. Mavor-Parker</name>
+    </author>
+    <author>
+      <name>Matthew James Sargent</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.16604v1</id>
+    <title>R2V Agent: Teaching SLMs When to Ask for Help</title>
+    <updated>2026-05-15T20:10:24Z</updated>
+    <link href="https://arxiv.org/abs/2605.16604v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.16604v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Efficient agentic systems should incur expensive frontier-model costs only on decisions where a cheaper local model is likely to fail. Existing LLM cascades usually route whole queries before execution, but task difficulty shifts mid-trajectory - after flaky tool calls, truncated observations, or compounding local errors - making pre-execution routing brittle. We introduce \textbf{R2V-Agent}, a risk-calibrated SLM-LLM routing framework for interactive agents. R2V combines four components: a distilled small language model (SLM) policy, a stronger teacher LLM, a lightweight process verifier that scores candidate actions at each step, and a calibrated step-level router. The router is our central contribution: after the SLM is trained, it estimates residual failure risk at each step and escalates only when teacher intervention is warranted. To make the routing problem well-defined, we first train a stable local SLM using a standard offline pipeline: behavioral cloning (BC) on teacher trajectories, followed by verifier-guided Direct Preference Optimization (DPO) with consistency regularization. The router is then trained on this fixed policy's residual failures using Brier-calibrated probability estimation and a Conditional Value-at-Risk (CVaR)-constrained objective that penalizes worst-case failures across perturbation seeds. Across HumanEval+, TextWorld, and TerminalBench with four SLM backbones, R2V improves the reliability-cost frontier: it achieves $94.3\%$ HumanEval+ success with $0.60\%$ LLM escalation, recovers TextWorld from $64.6\%$ SLM-only success to $98.2\%$ at $41.7\%$ escalation, and reaches $93.3\%$ TerminalBench success at $33.9\%$ LLM calls, roughly half the heuristic-router cost.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-15T20:10:24Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Raghu Vamshi Hemadri</name>
+    </author>
+    <author>
+      <name>Humaira Firdowse Mohammed</name>
+    </author>
+    <author>
+      <name>Rishabh Maheshwary</name>
+    </author>
+    <author>
+      <name>Srivatsava Daruru</name>
+    </author>
+    <author>
+      <name>Sagar Davasam</name>
+    </author>
+    <author>
+      <name>Vikas Yadav</name>
+    </author>
+    <author>
+      <name>Srinivas Sunkara</name>
+    </author>
+    <author>
+      <name>Sai Rajeswar</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.18817v2</id>
+    <title>Multi-Token Residual Prediction</title>
+    <updated>2026-06-11T08:50:30Z</updated>
+    <link href="https://arxiv.org/abs/2605.18817v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.18817v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Diffusion Language Models (DLMs) generate text by iteratively denoising masked token sequences, offering a tradeoff between parallelism and quality compared to autoregressive models. In current practice, the number of tokens decoded per step is controlled by a confidence threshold, and quality degrades monotonically as more tokens are denoised per step. We introduce Multi-token Residual Prediction (MRP), a lightweight module that enables dependency-aware multi-token denoising within a single backbone forward pass. MRP exploits a key property of the denoising process: the logit distributions at adjacent denoising steps are remarkably similar. Rather than running the backbone a second time to obtain the next-step logits, MRP predicts the residual between steps from the backbone's hidden states, effectively denoising more tokens per backbone forward at a fraction of the cost. We apply MRP across the two operating regimes of DLM decoding. In the high-quality-low-throughput static denoising regime, MRP serves as a drafter for speculative decoding: its proposals are verified against the backbone, yielding lossless acceleration of up to 1.4x in SGLang. In the low-quality-high-throughput dynamic denoising regime, MRP instead drives a remasking scheme that revokes over-eager reveals, recovering most of the accuracy lost to aggressive low-threshold decoding and improving accuracy by up to 22.6 points on code generation task HumanEval and 17.7 points on reasoning task GSM8K.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-12T11:40:39Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Yufeng Xu</name>
+    </author>
+    <author>
+      <name>Zishuo Bao</name>
+    </author>
+    <author>
+      <name>Qian Wang</name>
+    </author>
+    <author>
+      <name>Zeshen Zhang</name>
+    </author>
+    <author>
+      <name>Haoqi Zhang</name>
+    </author>
+    <author>
+      <name>Bowen Peng</name>
+    </author>
+    <author>
+      <name>Ang Li</name>
+    </author>
+    <author>
+      <name>Rahul Chalamala</name>
+    </author>
+    <author>
+      <name>Yucheng Lu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.09023v1</id>
+    <title>Using Semantic Distance to Estimate Uncertainty in LLM-Based Code Generation</title>
+    <updated>2026-05-09T16:02:54Z</updated>
+    <link href="https://arxiv.org/abs/2605.09023v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.09023v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>LLMs show strong performance in code generation, but their outputs lack correctness guarantees. Sample-based uncertainty estimators address this by generating multiple candidate programs and measuring their disagreement. However, existing estimators make different design choices about how behaviours are identified, aggregated, referenced and compared, making them difficult to assess. We therefore first introduce a taxonomy that disentangles these choices and reveals a missing design point: semantic distance-aware uncertainty estimation, which measures not only whether sampled programs disagree, but how severely their execution behaviours differ. Across LiveCodeBench, MBPP, HumanEval-X and BigCodeBench, spanning Python, Java and C++, our metrics provide strong proxies for correctness, and consistently outperform state-of-the-art sample-based baselines across both closed-source models (GPT-3.5-Turbo, GPT-4o-mini, Gemini-2.5-Flash-Lite, Claude Opus 4.5) and an open-source model (DeepSeek-Coder-V2). The method is practical: it requires neither model internals nor LLM-as-judge calls, remains robust across models, languages, sampling temperatures and fuzzing settings, and reduces runtime by approximately 48-79% relative to existing baselines.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-09T16:02:54Z</published>
+    <arxiv:comment>Preprint. 23 pages, 4 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Weilin He</name>
+    </author>
+    <author>
+      <name>Arindam Sharma</name>
+    </author>
+    <author>
+      <name>Cristina David</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2604.19825v1</id>
+    <title>SolidCoder: Bridging the Mental-Reality Gap in LLM Code Generation through Concrete Execution</title>
+    <updated>2026-04-20T13:00:46Z</updated>
+    <link href="https://arxiv.org/abs/2604.19825v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2604.19825v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>State-of-the-art code generation frameworks rely on mental simulation, where LLMs internally trace execution to verify correctness. We expose a fundamental limitation: the Mental-Reality Gap -- where models hallucinate execution traces and confidently validate buggy code. This gap manifests along two orthogonal dimensions: the Specification Gap (overlooking edge cases during planning) and the Verification Gap (hallucinating correct behavior for flawed code). We propose SolidCoder with a simple principle: don't imagine -- execute. The S.O.L.I.D. architecture addresses both dimensions by forcing edge-case awareness before algorithm design and replacing imagined traces with sandboxed execution using property-based oracles. With GPT-4o, SolidCoder achieves state-of-the-art pass@1 performance: 95.7% on HumanEval (+0.6%p), 77.0% on CodeContests (+4.3%p), and 26.7% on APPS (+3.4%p). Ablation reveals that edge-case awareness provides the largest individual gain, while execution grounding catches categorically different errors that specification improvements cannot address. These gains generalize to RL post-trained models, validating that bridging both gap dimensions is essential for robust code synthesis. We release our code and framework to facilitate future research.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-04-20T13:00:46Z</published>
+    <arxiv:comment>23 pages, 2 figures, Accepted at Findings of ACL 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Woojin Lee</name>
+    </author>
+    <author>
+      <name>Jin-Xia Huang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2604.11867v1</id>
+    <title>Disposition Distillation at Small Scale: A Three-Arc Negative Result</title>
+    <updated>2026-04-13T17:40:31Z</updated>
+    <link href="https://arxiv.org/abs/2604.11867v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2604.11867v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We set out to train behavioral dispositions (self-verification, uncertainty acknowledgment, feedback integration) into small language models (0.6B to 2.3B effective parameters) through a four-stage all-MIT distillation pipeline, with follow-on experiments on inference-time attention-head interventions and a frozen-base confidence-gated sidecar. An internal draft reported +33.9-point MCAS and +15.3-point HumanEval gains on a Qwen3-0.6B student; a second-pass sanity check falsified both numbers before publication. The HumanEval delta was a truncation artifact (n_predict=512) that inverted to -8.0 points at n_predict=1024; the MCAS gain disappeared under apples-to-apples scoring. That falsification triggered three subsequent arcs. Across (1) SFT/DPO LoRA on three model families and two domains, (2) inference-time attention-head tempering on o_proj, and (3) a training-free frozen-base sidecar reading the final-token hidden state h_last, we find no operator that moves judge-measured disposition without damaging content or collapsing into stylistic mimicry. The failure is consistent across five models (Qwen3-0.6B, Qwen3-1.7B, Qwen3.5-0.8B, Gemma 4 E2B, and SmolLM2-1.7B-Instruct). A within-distribution cross-validation pass (AUC=0.683) collapsed to chance on fresh prompts (AUC=0.516). We contribute a three-arc negative result with mechanism, a two-failure-mode taxonomy for linear h_last probes, and an honest falsification pipeline that converts the class of false positives we ourselves produced into publishable negatives. As an independent finding, Gemma 4 E2B exhibits near-complete confidence-correctness decoupling on the Chef domain (assertion asymmetry -0.009; the model asserts at 91% regardless of correctness).</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-04-13T17:40:31Z</published>
+    <arxiv:comment>16 pages, 4 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Hari Sadasivan</name>
+      <arxiv:affiliation>Tinman Lab</arxiv:affiliation>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2604.00375v1</id>
+    <title>Locally Confident, Globally Stuck: The Quality-Exploration Dilemma in Diffusion Language Models</title>
+    <updated>2026-04-01T02:01:30Z</updated>
+    <link href="https://arxiv.org/abs/2604.00375v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2604.00375v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Diffusion large language models (dLLMs) theoretically permit token decoding in arbitrary order, a flexibility that could enable richer exploration of reasoning paths than autoregressive (AR) LLMs. In practice, however, random-order decoding often hurts generation quality. To mitigate this, low-confidence remasking improves single-sample quality (e.g., Pass@$1$) by prioritizing confident tokens, but it also suppresses exploration and limits multi-sample gains (e.g., Pass@$k$), creating a fundamental quality--exploration dilemma. In this paper, we provide a unified explanation of this dilemma. We show that low-confidence remasking improves a myopic proxy for quality while provably constraining the entropy of the induced sequence distribution. To overcome this limitation, we characterize the optimal distribution that explicitly balances quality and exploration, and develop a simple Independent Metropolis--Hastings sampler that approximately targets this distribution during decoding. Experiments across a range of reasoning benchmarks including MATH500, AIME24/25, HumanEval, and MBPP show that our approach yields better exploration-quality tradeoff than both random and low-confidence remasking.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-04-01T02:01:30Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Liancheng Fang</name>
+    </author>
+    <author>
+      <name>Aiwei Liu</name>
+    </author>
+    <author>
+      <name>Henry Peng Zou</name>
+    </author>
+    <author>
+      <name>Yankai Chen</name>
+    </author>
+    <author>
+      <name>Enze Ma</name>
+    </author>
+    <author>
+      <name>Leyi Pan</name>
+    </author>
+    <author>
+      <name>Chunyu Miao</name>
+    </author>
+    <author>
+      <name>Wei-Chieh Huang</name>
+    </author>
+    <author>
+      <name>Xue Liu</name>
+    </author>
+    <author>
+      <name>Philip S. Yu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2603.15661v1</id>
+    <title>DynaTrust: Defending Multi-Agent Systems Against Sleeper Agents via Dynamic Trust Graphs</title>
+    <updated>2026-03-09T05:53:16Z</updated>
+    <link href="https://arxiv.org/abs/2603.15661v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2603.15661v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Model-based Multi-Agent Systems (MAS) have demonstrated remarkable collaborative reasoning capabilities but introduce new attack surfaces, such as the sleeper agent, which behave benignly during routine operation and gradually accumulate trust, only revealing malicious behaviors when specific conditions or triggers are met. Existing defense works primarily focus on static graph optimization or hierarchical data management, often failing to adapt to evolving adversarial strategies or suffering from high false-positive rates (FPR) due to rigid blocking policies. To address this, we propose DynaTrust, a novel defense method against sleeper agents. DynaTrust models MAS as a dynamic trust graph~(DTG), and treats trust as a continuous, evolving process rather than a static attribute. It dynamically updates the trust of each agent based on its historical behaviors and the confidence of selected expert agents. Instead of simply blocking, DynaTrust autonomously restructures the graph to isolate compromised agents and restore task connectivity to ensure the usability of MAS. To assess the effectiveness of DynaTrust, we evaluate it on mixed benchmarks derived from AdvBench and HumanEval. The results demonstrate that DynaTrust outperforms the state-of-the-art method AgentShield by increasing the defense success rate by 41.7%, achieving rates exceeding 86% under adversarial conditions. Furthermore, it effectively balances security with utility by significantly reducing FPR, ensuring uninterrupted system operations through graph adaptation.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-03-09T05:53:16Z</published>
+    <arxiv:comment>9 pages</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Yu Li</name>
+    </author>
+    <author>
+      <name>Qiang Hu</name>
+    </author>
+    <author>
+      <name>Yao Zhang</name>
+    </author>
+    <author>
+      <name>Lili Quan</name>
+    </author>
+    <author>
+      <name>Jiongchi Yu</name>
+    </author>
+    <author>
+      <name>Junjie Wang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2603.23528v1</id>
+    <title>The Compression Paradox in LLM Inference: Provider-Dependent Energy Effects of Prompt Compression</title>
+    <updated>2026-03-06T23:31:00Z</updated>
+    <link href="https://arxiv.org/abs/2603.23528v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2603.23528v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The rapid proliferation of Large Language Models has created an environmental paradox: the very technology that could help solve climate challenges is itself becoming a significant contributor to global carbon emissions. We test whether prompt compression improves inference energy efficiency in 28,421 successful API trials (28,428 planned) across three providers (OpenAI GPT-4o-mini, Anthropic Claude-3.5-Sonnet, and DeepSeek-Chat), five benchmarks (HumanEval, MBPP, GSM8K, MATH, MMLU), and four compression ratios (r in {1.0, 0.7, 0.5, 0.3}). Energy is estimated with a token-based proxy calibrated against local direct measurements, and quality is tracked with benchmark pass rates. Compression produced substantial quality loss (overall pass rate 26.0% at baseline vs. 1.5% at r=0.7) and strongly provider-dependent energy behavior. DeepSeek exhibited output expansion under compression (21 to 798 tokens at r=0.3), corresponding to energy increases up to +2,140%, while GPT-4o-mini showed mixed effects including a reduction at r=0.5. These results indicate that input-token reduction alone is not a reliable energy optimization strategy in production inference. For the evaluated settings, model selection and output-length control provided more consistent energy-quality tradeoffs than prompt compression.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-03-06T23:31:00Z</published>
+    <arxiv:comment>16 pages, 5 figures, 5 tables. Includes data/code availability, ethics statement, and competing interests</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Warren Johnson</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2603.03995v1</id>
+    <title>Spectral Surgery: Training-Free Refinement of LoRA via Gradient-Guided Singular Value Reweighting</title>
+    <updated>2026-03-04T12:38:36Z</updated>
+    <link href="https://arxiv.org/abs/2603.03995v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2603.03995v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Low-Rank Adaptation (LoRA) improves downstream performance by restricting task updates to a low-rank parameter subspace, yet how this limited capacity is allocated within a trained adapter remains unclear. Through a geometric and empirical study across multiple tasks and backbones, we find that trained LoRA updates often exhibit an inefficient spectrum: task effects concentrate in a small subset of singular directions, while many remaining components are neutral or detrimental, motivating post-hoc refinement within the learned subspace. We propose Spectral Surgery, a training-free refinement that decomposes a LoRA update with SVD, estimates per-component sensitivity using gradients on a small calibration set, and reweights singular values under a magnitude constraint while keeping the learned directions fixed. Across Llama-3.1-8B and Qwen3-8B on four benchmarks, Spectral Surgery yields consistent gains (up to +4.4 points on CommonsenseQA and +2.4 pass@1 on HumanEval) by adjusting only $\approx 1{,}000$ scalar coefficients. These results demonstrate that SVD-structured, low-cost parameter editing can serve as a practical route to improving trained LoRA adapters in a purely post-hoc manner.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-03-04T12:38:36Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Zailong Tian</name>
+    </author>
+    <author>
+      <name>Yanzhe Chen</name>
+    </author>
+    <author>
+      <name>Zhuoheng Han</name>
+    </author>
+    <author>
+      <name>Lizi Liao</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2603.06617v1</id>
+    <title>Evo: Autoregressive-Diffusion Large Language Models with Evolving Balance</title>
+    <updated>2026-02-20T15:26:52Z</updated>
+    <link href="https://arxiv.org/abs/2603.06617v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2603.06617v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We introduce \textbf{Evo}, a duality latent trajectory model that bridges autoregressive (AR) and diffusion-based language generation within a continuous evolutionary generative framework. Rather than treating AR decoding and diffusion generation as separate paradigms, Evo reconceptualizes text generation as a latent flow: each token is associated with a vector-valued embedding that evolves over a progression variable $t_i \in [0, 1]$, indicating its semantic maturity. Low $t_i$ values correspond to confident AR-like refinement, while high values invoke diffusion-style planning, allowing the model to adaptively balance AR and diffusion based on uncertainty. Theoretically, we show that both AR and diffusion models emerge as discretizations of a shared probability flow, and we derive Evo's training objective from a unified variational ELBO. The model is implemented as a time-conditioned Transformer governed by a shared vector field, trained end-to-end to jointly infer latent codes and their progression times. During decoding, Evo performs efficient, semantics-aware refinement, achieving high-quality outputs without sacrificing speed. Empirically, Evo 8B achieves state-of-the-art or highly competitive results on 15 diverse benchmarks, including reasoning (GSM8K, ARC-C), code generation (HumanEval, MBPP), and general language understanding, while maintaining fast inference speed. Our results demonstrate that Evo delivers a new paradigm for LLM design with strong generation quality, robust symbolic reasoning, and decoding efficiency.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-02-20T15:26:52Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Junde Wu</name>
+    </author>
+    <author>
+      <name>Minhao Hu</name>
+    </author>
+    <author>
+      <name>Jiayuan Zhu</name>
+    </author>
+    <author>
+      <name>Yuyuan Liu</name>
+    </author>
+    <author>
+      <name>Tianyi Zhang</name>
+    </author>
+    <author>
+      <name>Kang Li</name>
+    </author>
+    <author>
+      <name>Jingkun Chen</name>
+    </author>
+    <author>
+      <name>Jiazhen Pan</name>
+    </author>
+    <author>
+      <name>Min Xu</name>
+    </author>
+    <author>
+      <name>Yueming Jin</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2602.10953v2</id>
+    <title>Search or Accelerate: Confidence-Switched Position Beam Search for Diffusion Language Models</title>
+    <updated>2026-02-25T11:16:34Z</updated>
+    <link href="https://arxiv.org/abs/2602.10953v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2602.10953v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Diffusion Language Models (DLMs) generate text by iteratively denoising a masked sequence, repeatedly deciding which positions to commit at each step. Standard decoding follows a greedy rule: unmask the most confident positions, yet this local choice can lock the model into a suboptimal unmasking order, especially on reasoning-heavy prompts. We present SOAR, a training-free decoding algorithm that adapts its behavior to the model's uncertainty. When confidence is low, SOAR briefly widens the search over alternative unmasking decisions to avoid premature commitments; when confidence is high, it collapses the search and decodes many positions in parallel to reduce the number of denoising iterations. Across mathematical reasoning and code generation benchmarks (GSM8K, MBPP, HumanEval) on Dream-7B and LLaDA-8B, SOAR improves generation quality while maintaining competitive inference speed, offering a practical way to balance quality and efficiency in DLM decoding. Our Code is available at https://github.com/duterscmy/SOAR</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-02-11T15:41:09Z</published>
+    <arxiv:comment>11 pages, 8 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Mingyu Cao</name>
+    </author>
+    <author>
+      <name>Alvaro H. C. Correia</name>
+    </author>
+    <author>
+      <name>Christos Louizos</name>
+    </author>
+    <author>
+      <name>Shiwei Liu</name>
+    </author>
+    <author>
+      <name>Lu Yin</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2602.08229v1</id>
+    <title>InfiCoEvalChain: A Blockchain-Based Decentralized Framework for Collaborative LLM Evaluation</title>
+    <updated>2026-02-09T03:05:00Z</updated>
+    <link href="https://arxiv.org/abs/2602.08229v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2602.08229v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The rapid advancement of large language models (LLMs) demands increasingly reliable evaluation, yet current centralized evaluation suffers from opacity, overfitting, and hardware-induced variance. Our empirical analysis reveals an alarming inconsistency in existing evaluations: the standard deviation across ten repeated runs of a single model on HumanEval (1.67) actually exceeds the performance gap among the top-10 models on the official leaderboard (0.91), rendering current rankings statistically precarious. To mitigate these instabilities, we propose a decentralized evaluation framework that enables hardware and parameter diversity through large-scale benchmarking across heterogeneous compute nodes. By leveraging the blockchain-based protocol, the framework incentivizes global contributors to act as independent validators, using a robust reward system to ensure evaluation integrity and discourage dishonest participation. This collective verification transforms evaluation from a "centralized black box" into a "decentralized endorsement" where multi-party consensus and diverse inference environments yield a more stable, representative metric. Experimental results demonstrate that the decentralized evaluation framework reduces the standard deviation across ten runs on the same model to 0.28. This significant improvement over conventional frameworks ensures higher statistical confidence in model rankings. We have completely implemented this platform and will soon release it to the community.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-02-09T03:05:00Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Yifan Yang</name>
+    </author>
+    <author>
+      <name>Jinjia Li</name>
+    </author>
+    <author>
+      <name>Kunxi Li</name>
+    </author>
+    <author>
+      <name>Puhao Zheng</name>
+    </author>
+    <author>
+      <name>Yuanyi Wang</name>
+    </author>
+    <author>
+      <name>Zheyan Qu</name>
+    </author>
+    <author>
+      <name>Yang Yu</name>
+    </author>
+    <author>
+      <name>Jianmin Wu</name>
+    </author>
+    <author>
+      <name>Ming Li</name>
+    </author>
+    <author>
+      <name>Hongxia Yang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2602.04291v3</id>
+    <title>Disentangling Intrinsic Importance from Emergent Structure in Multi-Expert Orchestration</title>
+    <updated>2026-07-12T16:10:30Z</updated>
+    <link href="https://arxiv.org/abs/2602.04291v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2602.04291v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Multi-expert systems, where multiple Large Language Models (LLMs) collaborate to solve complex tasks, are increasingly adopted for high-performance reasoning and generation. However, the orchestration policies governing expert interaction and sequencing remain largely opaque. We introduce INFORM, an interpretability analysis that treats orchestration as an explicit, analyzable computation, enabling the decoupling of expert interaction structure, execution order, and functional attribution. We use INFORM to evaluate an orchestrator on GSM8K, HumanEval, and MMLU using a homogeneous consortium of ten instruction-tuned experts drawn from LLaMA-3.1 8B, Qwen3 8B, and DeepSeek-R1 8B, with controlled decoding-temperature variation, and a secondary heterogeneous consortium spanning 1B-7B parameter models. Across tasks, routing dominance is a poor proxy for functional necessity. We reveal a divergence between relational importance, captured by routing mass and interaction topology, and intrinsic importance, measured via gradient sensitivity: frequently selected experts often act as interaction hubs with limited influence, while sparsely routed experts can be structurally critical. Orchestration behaviors emerge asynchronously, with expert centralization preceding stable routing confidence and expert ordering remaining non-deterministic. Targeted ablations show that masking intrinsically important experts induces disproportionate collapse in interaction structure compared to masking frequent peers, confirming that INFORM exposes functional and structural dependencies beyond accuracy metrics alone. Our code is available at https://github.com/parmanu-lcs2/inform.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.MA" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-02-04T07:41:32Z</published>
+    <arxiv:comment>Accepted by Transactions on Machine Learning Research (TMLR)</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Sudipto Ghosh</name>
+    </author>
+    <author>
+      <name>Sujoy Nath</name>
+    </author>
+    <author>
+      <name>Sunny Manchanda</name>
+    </author>
+    <author>
+      <name>Tanmoy Chakraborty</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2601.22662v1</id>
+    <title>Task-Aware LLM Council with Adaptive Decision Pathways for Decision Support</title>
+    <updated>2026-01-30T07:29:20Z</updated>
+    <link href="https://arxiv.org/abs/2601.22662v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2601.22662v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) have shown strong capabilities across diverse decision-making tasks. However, existing approaches often overlook the specialization differences among available models, treating all LLMs as uniformly applicable regardless of task characteristics. This limits their ability to adapt to varying reasoning demands and task complexities. In this work, we propose Task-Aware LLM Council (TALC), a task-adaptive decision framework that integrates a council of LLMs with Monte Carlo Tree Search (MCTS) to enable dynamic expert selection and efficient multi-step planning. Each LLM is equipped with a structured success memory profile derived from prior task trajectories, enabling semantic matching between current reasoning context and past successes. At each decision point, TALC routes control to the most contextually appropriate model and estimates node value using a dual-signal mechanism that fuses model-based evaluations with historical utility scores. These signals are adaptively weighted based on intra-node variance and used to guide MCTS selection, allowing the system to balance exploration depth with planning confidence. Experiments on WebShop, HumanEval, and the Game of 24 demonstrate that TALC achieves superior task success rates and improved search efficiency compared to strong baselines, validating the benefits of specialization-aware routing and adaptive planning.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.MA" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-01-30T07:29:20Z</published>
+    <arxiv:comment>A shorter version of this work has been accepted by ICASSP 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Wei Zhu</name>
+    </author>
+    <author>
+      <name>Lixing Yu</name>
+    </author>
+    <author>
+      <name>Hao-Ren Yao</name>
+    </author>
+    <author>
+      <name>Zhiwen Tang</name>
+    </author>
+    <author>
+      <name>Kun Yue</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2601.21469v1</id>
+    <title>Adaptive Confidence Gating in Multi-Agent Collaboration for Efficient and Optimized Code Generation</title>
+    <updated>2026-01-29T09:48:15Z</updated>
+    <link href="https://arxiv.org/abs/2601.21469v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2601.21469v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>While Large Language Models (LLMs) have catalyzed breakthroughs in automated code generation, Small Language Models (SLMs) often encounter reasoning bottlenecks and failure loops when addressing complex logical requirements. To overcome these challenges, we propose DebateCoder, a multi-agent collaborative framework designed to improve the reasoning ability of SLMs (e.g., Pangu-1B) in resource-constrained environments. DebateCoder uses a structured role-playing protocol with three agents: User Agent (A_UA), Technical Agent (A_TA), and Quality Assurance Agent (A_QA). It also includes an Adaptive Confidence Gating mechanism with a 95% threshold to balance accuracy and inference efficiency. In addition, we introduce a multi-turn deliberation module and a reviewer-guided analytical debugging loop for orthogonal pre-generation debate and post-generation refinement. Experiments on HumanEval and MBPP show that DebateCoder achieves 70.12% Pass@1 on HumanEval, outperforming MapCoder while reducing API overhead by about 35%. These results indicate that collaborative protocols can mitigate limitations of small-parameter models and provide a scalable, efficient approach to high-quality automated software engineering.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-01-29T09:48:15Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Haoji Zhang</name>
+    </author>
+    <author>
+      <name>Yuzhe Li</name>
+    </author>
+    <author>
+      <name>Zhenqiang Liu</name>
+    </author>
+    <author>
+      <name>Chenyang Liu</name>
+    </author>
+    <author>
+      <name>Shenyang Zhang</name>
+    </author>
+    <author>
+      <name>Yi Zhou</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2512.15596v3</id>
+    <title>Corrective Diffusion Language Models</title>
+    <updated>2026-11-05T17:13:47Z</updated>
+    <link href="https://arxiv.org/abs/2512.15596v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2512.15596v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>While Diffusion Language Models (DLMs) are theoretically well-suited for iterative refinement due to their non-causal structure, off-the-shelf masked diffusion language models (MDLMs) often fail to reliably revise incorrect tokens in practice. The key challenge is that the model cannot tell correct from erroneous visible tokens: standard MDLM training supervises only masked positions, undermining confidence-guided refinement. We study corrective behavior in DLMs, the ability to assign lower confidence to incorrect tokens and iteratively refine them while preserving correct content. Under matched compute and data, we show that conventional masked-diffusion fine-tuning induces much less of this capability than a correction-oriented post-training principle that explicitly supervises visible corrupted tokens, which enables discriminative confidence and targeted refinement. We further find that also supervising clean visible tokens, as in BERT- or GIDD-style training, stops remask-based refinement from improving with additional steps. To evaluate it, we introduce the Code Revision Benchmark, a controllable, executable benchmark for error localization and in-place correction. The effect transfers from a 0.5B model to LLaDA-8B and persists, with a smaller margin, when corruptions are drawn from the base model's own most plausible predictions. The same error-aware confidence also makes parallel decoding more effective. In HumanEval(+) code completion at 0.5B, mathematical reasoning at 16B, and high-entropy parallel decoding with remasking (ParallelBench), models trained with our objective outperform standard masked-diffusion fine-tuning under matched compute, and outperform the base model on HumanEval(+), MATH, and the high-entropy ParallelBench average; at 8B, neither objective improves from-scratch generation over the base model. Code and data: https://github.com/zhangshuibai/CDLM</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-12-17T17:04:38Z</published>
+    <arxiv:comment>NeurIPS 2026. 72 pages. Code: https://github.com/zhangshuibai/CDLM</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Shuibai Zhang</name>
+    </author>
+    <author>
+      <name>Fred Zhangzhi Peng</name>
+    </author>
+    <author>
+      <name>Yiheng Zhang</name>
+    </author>
+    <author>
+      <name>Jin Pan</name>
+    </author>
+    <author>
+      <name>Grigorios G. Chrysos</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2512.15176v1</id>
+    <title>DEER: Draft with Diffusion, Verify with Autoregressive Models</title>
+    <updated>2025-12-17T08:19:04Z</updated>
+    <link href="https://arxiv.org/abs/2512.15176v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2512.15176v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Efficiency, as a critical practical challenge for LLM-driven agentic and reasoning systems, is increasingly constrained by the inherent latency of autoregressive (AR) decoding. Speculative decoding mitigates this cost through a draft-verify scheme, yet existing approaches rely on AR draft models (a.k.a., drafters), which introduce two fundamental issues: (1) step-wise uncertainty accumulation leads to a progressive collapse of trust between the target model and the drafter, and (2) inherently sequential decoding of AR drafters. Together, these factors cause limited speedups. In this paper, we show that a diffusion large language model (dLLM) drafters can naturally overcome these issues through its fundamentally different probabilistic modeling and efficient parallel decoding strategy. Building on this insight, we introduce DEER, an efficient speculative decoding framework that drafts with diffusion and verifies with AR models. To enable high-quality drafting, DEER employs a two-stage training pipeline to align the dLLM-based drafters with the target AR model, and further adopts single-step decoding to generate long draft segments. Experiments show DEER reaches draft acceptance lengths of up to 32 tokens, far surpassing the 10 tokens achieved by EAGLE-3. Moreover, on HumanEval with Qwen3-30B-A3B, DEER attains a 5.54x speedup, while EAGLE-3 achieves only 2.41x. Code, model, demo, etc, will be available at https://czc726.github.io/DEER/</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-12-17T08:19:04Z</published>
+    <arxiv:comment>Homepage : https://czc726.github.io/DEER/</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Zicong Cheng</name>
+    </author>
+    <author>
+      <name>Guo-Wei Yang</name>
+    </author>
+    <author>
+      <name>Jia Li</name>
+    </author>
+    <author>
+      <name>Zhijie Deng</name>
+    </author>
+    <author>
+      <name>Meng-Hao Guo</name>
+    </author>
+    <author>
+      <name>Shi-Min Hu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2511.18001v1</id>
+    <title>Enhancing Automated Program Repair via Faulty Token Localization and Quality-Aware Patch Refinement</title>
+    <updated>2025-11-22T10:05:26Z</updated>
+    <link href="https://arxiv.org/abs/2511.18001v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2511.18001v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) have recently demonstrated strong potential for automated program repair (APR). However, existing LLM-based techniques primarily rely on coarse-grained external feedback (e.g.,test results) to guide iterative patch generation, while lacking fine-grained internal signals that reveal why a patch fails or which parts of the generated code are likely incorrect. This limitation often leads to inefficient refinement, error propagation, and suboptimal repair performance. In this work, we propose TokenRepair, a novel two-level refinement framework that enhances APR by integrating internal reflection for localizing potentially faulty tokens with external feedback for quality-aware patch refinement. Specifically, TokenRepair first performs internal reflection by analyzing context-aware token-level uncertainty fluctuations to identify suspicious or low-confidence tokens within a patch. It then applies Chain-of-Thought guided rewriting to refine only these localized tokens, enabling targeted and fine-grained correction. To further stabilize the iterative repair loop, TokenRepair incorporates a quality-aware external feedback mechanism that evaluates patch quality and filters out low-quality candidates before refinement. Experimental results show that TokenRepair achieves new state-of-the-art repair performance, correctly fixing 88 bugs on Defects4J 1.2 and 139 bugs on HumanEval-Java, demonstrating substantial improvements ranging from 8.2% to 34.9% across all models on Defects4J 1.2 and from 3.3% to 16.1% on HumanEval-Java.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-11-22T10:05:26Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Jiaolong Kong</name>
+    </author>
+    <author>
+      <name>Xiaofei Xie</name>
+    </author>
+    <author>
+      <name>Yiheng Xiong</name>
+    </author>
+    <author>
+      <name>Yuekun Wang</name>
+    </author>
+    <author>
+      <name>Jian Wang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2511.02077v3</id>
+    <title>Beyond Static Cutoffs: One-Shot Dynamic Thresholding for Diffusion Language Models</title>
+    <updated>2026-02-15T20:31:11Z</updated>
+    <link href="https://arxiv.org/abs/2511.02077v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2511.02077v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Masked diffusion language models (MDLMs) are becoming competitive with their autoregressive counterparts but typically decode with fixed steps and sequential unmasking. To accelerate decoding, recent work such as Fast-dLLM enables parallel decoding via a static global confidence threshold, yet we observe strong block- and step-wise confidence fluctuations and, within a dataset, near-identical confidence trajectories across inputs as measured by cosine similarity. Motivated by these observations, we introduce One-Shot Dynamic Thresholding (OSDT), which calibrates thresholds on a single sequence and applies them to subsequent inputs with negligible overhead. On GPQA, GSM8K, and HumanEval, OSDT attains superior accuracy-throughput trade-offs (+24% tokens/s on GSM8K at the best accuracy, +45% on GPQA with comparable accuracy, and +50% on HumanEval with a modest accuracy gap). Beyond these results, our findings suggest broader opportunities to leverage reusable task-level confidence signatures for more general-purpose algorithmic and systems innovations in diffusion decoding.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-11-03T21:30:03Z</published>
+    <arxiv:comment>7 pages, NeurIPS 2025 Efficient Reasoning Workshop</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Jucheng Shen</name>
+    </author>
+    <author>
+      <name>Yeonju Ro</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2510.11052v3</id>
+    <title>Latent Refinement Decoding: Enhancing Diffusion-Based Language Models by Refining Belief States</title>
+    <updated>2026-11-06T22:30:17Z</updated>
+    <link href="https://arxiv.org/abs/2510.11052v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2510.11052v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Autoregressive (AR) models remain the dominant paradigm for natural language generation, but their strictly sequential decoding process leads to high inference latency. Recent diffusion-inspired language models, such as LLaDA and Dream, alleviate this issue through parallel generation, yet they still face two key limitations: information loss, since predictive distributions over non-finalised tokens are discarded at each step, and unstable commitment dynamics, where local token decisions are not sufficiently coordinated at the global level. We propose Latent Refinement Decoding (LRD), a two-stage decoding framework consisting of Latent Refinement and a Predictive Feedback Loop. In the first stage, LRD keeps masked positions as distributional mixtures of predicted tokens and the mask embedding, enabling the model to form more globally consistent beliefs before committing tokens. In the second stage, LRD progressively finalises confident tokens while preserving uncertain ones for further iterative refinement, with KL-divergence dynamics serving as a stable criterion for convergence and early stopping. Experiments show that LRD improves performance on both coding tasks, including HumanEval by 6.3 and MBPP by 2.6, and reasoning tasks, including GSM8K by 2.9 and MATH500 by 3.8, while achieving up to 10.6x overall speedup. Moreover, LRD is compatible with single-token decoding, multi-token threshold commitment, and system-level accelerators; when combined with Fast-dLLM, it reaches up to 18.4x speedup over vanilla decoding while further improving accuracy.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-10-13T06:38:13Z</published>
+    <arxiv:comment>Accepted at NeurIPS 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Qinglin Zhu</name>
+    </author>
+    <author>
+      <name>Yizhen Yao</name>
+    </author>
+    <author>
+      <name>Runcong Zhao</name>
+    </author>
+    <author>
+      <name>Yanzheng Xiang</name>
+    </author>
+    <author>
+      <name>Siya Qi</name>
+    </author>
+    <author>
+      <name>Amrutha Saseendran</name>
+    </author>
+    <author>
+      <name>Chen Jin</name>
+    </author>
+    <author>
+      <name>Philip Teare</name>
+    </author>
+    <author>
+      <name>Bin Liang</name>
+    </author>
+    <author>
+      <name>Yulan He</name>
+    </author>
+    <author>
+      <name>Lin Gui</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2510.03270v1</id>
+    <title>CoDA: Coding LM via Diffusion Adaptation</title>
+    <updated>2025-09-27T05:41:55Z</updated>
+    <link href="https://arxiv.org/abs/2510.03270v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2510.03270v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Diffusion language models promise bidirectional context and infilling capabilities that autoregressive coders lack, yet practical systems remain heavyweight. We introduce CoDA, a 1.7B-parameter diffusion coder trained on TPU with a fully open-source training pipeline. CoDA pairs large-scale diffusion pre-training with code-centric mid-training and instruction tuning, enabling confidence-guided sampling that keeps inference latency competitive. On Humaneval, MBPP, and EvalPlus, CoDA-1.7B-Instruct matches or surpasses diffusion models up to 7B parameters. Our release includes model checkpoints, evaluation harnesses, and TPU training pipelines to accelerate research on lightweight diffusion-based coding assistants.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-09-27T05:41:55Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Haolin Chen</name>
+    </author>
+    <author>
+      <name>Shiyu Wang</name>
+    </author>
+    <author>
+      <name>Can Qin</name>
+    </author>
+    <author>
+      <name>Bo Pang</name>
+    </author>
+    <author>
+      <name>Zuxin Liu</name>
+    </author>
+    <author>
+      <name>Jielin Qiu</name>
+    </author>
+    <author>
+      <name>Jianguo Zhang</name>
+    </author>
+    <author>
+      <name>Yingbo Zhou</name>
+    </author>
+    <author>
+      <name>Zeyuan Chen</name>
+    </author>
+    <author>
+      <name>Ran Xu</name>
+    </author>
+    <author>
+      <name>Shelby Heinecke</name>
+    </author>
+    <author>
+      <name>Silvio Savarese</name>
+    </author>
+    <author>
+      <name>Caiming Xiong</name>
+    </author>
+    <author>
+      <name>Huan Wang</name>
+    </author>
+    <author>
+      <name>Weiran Yao</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2506.19037v5</id>
+    <title>Plan for Speed: Dilated Scheduling for Masked Diffusion Language Models</title>
+    <updated>2026-05-25T06:12:46Z</updated>
+    <link href="https://arxiv.org/abs/2506.19037v5" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2506.19037v5" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Masked diffusion language models (MDLMs) promise fast, non-autoregressive text generation, yet existing samplers, which pick tokens to unmask based on model confidence, ignore interactions when unmasking multiple positions in parallel and effectively reduce to slow, autoregressive behavior. We propose the Dilated Unmasking Scheduler (DUS), an inference-only, planner-model-free method that partitions sequence positions into non-adjacent dilated groups and unmasks them in parallel so as to minimize an upper bound on joint entropy gain at each denoising step. By explicitly trading off the number of network calls against generation quality, DUS recovers most of the performance lost under traditional parallel unmasking strategies. Across math (GSM8K, MATH500), code (HumanEval, MBPP), general-knowledge (BBH, MMLU-Pro), and instruction following (IFEval) benchmarks, DUS outperforms confidence-based planners and turns the diffusion-specific quality-speed trade-off into a deterministic, predictable speedup set by the block size $B$, yielding up to $5.8\times$ wall-clock speedup over token-by-token MDLM decoding without modifying the underlying denoiser. Applied as a drop-in post-filter, dilated spacing also improves adaptive samplers. Code is available at https://github.com/omerlux/DUS.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.IT" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.NE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-06-23T18:49:23Z</published>
+    <arxiv:comment>Accepted at ICML 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Omer Luxembourg</name>
+    </author>
+    <author>
+      <name>Haim Permuter</name>
+    </author>
+    <author>
+      <name>Eliya Nachmani</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2506.14606v1</id>
+    <title>Guaranteed Guess: A Language Modeling Approach for CISC-to-RISC Transpilation with Testing Guarantees</title>
+    <updated>2025-06-17T15:06:54Z</updated>
+    <link href="https://arxiv.org/abs/2506.14606v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2506.14606v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The hardware ecosystem is rapidly evolving, with increasing interest in translating low-level programs across different instruction set architectures (ISAs) in a quick, flexible, and correct way to enhance the portability and longevity of existing code. A particularly challenging class of this transpilation problem is translating between complex- (CISC) and reduced- (RISC) hardware architectures, due to fundamental differences in instruction complexity, memory models, and execution paradigms. In this work, we introduce GG (Guaranteed Guess), an ISA-centric transpilation pipeline that combines the translation power of pre-trained large language models (LLMs) with the rigor of established software testing constructs. Our method generates candidate translations using an LLM from one ISA to another, and embeds such translations within a software-testing framework to build quantifiable confidence in the translation. We evaluate our GG approach over two diverse datasets, enforce high code coverage (&gt;98%) across unit tests, and achieve functional/semantic correctness of 99% on HumanEval programs and 49% on BringupBench programs, respectively. Further, we compare our approach to the state-of-the-art Rosetta 2 framework on Apple Silicon, showcasing 1.73x faster runtime performance, 1.47x better energy efficiency, and 2.41x better memory usage for our transpiled code, demonstrating the effectiveness of GG for real-world CISC-to-RISC translation tasks. We will open-source our codes, data, models, and benchmarks to establish a common foundation for ISA-level code translation research.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.PL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-06-17T15:06:54Z</published>
+    <arxiv:comment>Project page: https://ahmedheakl.github.io/Guaranteed-Guess/</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Ahmed Heakl</name>
+    </author>
+    <author>
+      <name>Sarim Hashmi</name>
+    </author>
+    <author>
+      <name>Chaimaa Abi</name>
+    </author>
+    <author>
+      <name>Celine Lee</name>
+    </author>
+    <author>
+      <name>Abdulrahman Mahmoud</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2506.08980v5</id>
+    <title>AdaDec: A Uncertainty-Guided Lookahead Decoding Framework for LLM-Based Code Generation</title>
+    <updated>2026-04-24T10:45:51Z</updated>
+    <link href="https://arxiv.org/abs/2506.08980v5" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2506.08980v5" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Code generation with large language models (LLMs) is highly sensitive to token selection during decoding, particularly at uncertain decision points that influence program logic. While standard strategies such as greedy decoding treat all tokens uniformly, they overlook code-specific uncertainty patterns, leading to suboptimal performance. This paper presents an empirical study revealing that many generation errors stem from token ranking mistakes at high-uncertainty steps, where the correct token is present but not top-ranked.
+  Motivated by these findings, we propose AdaDec, a lookahead-based uncertainty-guided adaptive decoding framework that integrates a token-level pause-then-rerank mechanism driven by token uncertainty. AdaDec learns model-specific uncertainty thresholds and applies a lookahead-based reranking strategy when uncertainty is high. Experiments on HumanEval+, MBPP+, and DevEval benchmarks show that AdaDec improves Pass@1 accuracy by up to 20.9% in absolute terms over greedy decoding. More importantly, it consistently outperforms both competitive baselines like Beam Search and state-of-the-art adaptive decoding methods such as AdapT, while maintaining high efficiency through selective, uncertainty-triggered pausing. Our results highlight the promise of uncertainty-aware adaptive decoding for improving both the reliability and efficiency of LLM-based code generation.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-06-10T16:49:46Z</published>
+    <arxiv:comment>23 pages, 7 figures, FSE 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Kaifeng He</name>
+    </author>
+    <author>
+      <name>Mingwei Liu</name>
+    </author>
+    <author>
+      <name>Chong Wang</name>
+    </author>
+    <author>
+      <name>Zike Li</name>
+    </author>
+    <author>
+      <name>Yanlin Wang</name>
+    </author>
+    <author>
+      <name>Xin Peng</name>
+    </author>
+    <author>
+      <name>Zibin Zheng</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2505.23060v3</id>
+    <title>Self-Correcting Code Generation Using Small Language Models</title>
+    <updated>2025-08-23T09:05:01Z</updated>
+    <link href="https://arxiv.org/abs/2505.23060v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2505.23060v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Self-correction has demonstrated potential in code generation by allowing language models to revise and improve their outputs through successive refinement. Recent studies have explored prompting-based strategies that incorporate verification or feedback loops using proprietary models, as well as training-based methods that leverage their strong reasoning capabilities. However, whether smaller models possess the capacity to effectively guide their outputs through self-reflection remains unexplored. Our findings reveal that smaller models struggle to exhibit reflective revision behavior across both self-correction paradigms. In response, we introduce CoCoS, an approach designed to enhance the ability of small language models for multi-turn code correction. Specifically, we propose an online reinforcement learning objective that trains the model to confidently maintain correct outputs while progressively correcting incorrect outputs as turns proceed. Our approach features an accumulated reward function that aggregates rewards across the entire trajectory and a fine-grained reward better suited to multi-turn correction scenarios. This facilitates the model in enhancing initial response quality while achieving substantial improvements through self-correction. With 1B-scale models, CoCoS achieves improvements of 35.8% on the MBPP and 27.7% on HumanEval compared to the baselines.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-05-29T04:04:44Z</published>
+    <arxiv:comment>Accepted at EMNLP 2025 (Findings, long paper)</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Jeonghun Cho</name>
+    </author>
+    <author>
+      <name>Deokhyung Kang</name>
+    </author>
+    <author>
+      <name>Hyounghun Kim</name>
+    </author>
+    <author>
+      <name>Gary Geunbae Lee</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2505.07768v1</id>
+    <title>Enhancing Code Generation via Bidirectional Comment-Level Mutual Grounding</title>
+    <updated>2025-05-12T17:20:30Z</updated>
+    <link href="https://arxiv.org/abs/2505.07768v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2505.07768v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) have demonstrated unprecedented capability in code generation. However, LLM-generated code is still plagued with a wide range of functional errors, especially for complex programming tasks that LLMs have not seen before. Recent studies have shown that developers often struggle with inspecting and fixing incorrect code generated by LLMs, diminishing their productivity and trust in LLM-based code generation. Inspired by the mutual grounding theory in communication, we propose an interactive approach that leverages code comments as a medium for developers and LLMs to establish a shared understanding. Our approach facilitates iterative grounding by interleaving code generation, inline comment generation, and contextualized user feedback through editable comments to align generated code with developer intent. We evaluated our approach on two popular benchmarks and demonstrated that our approach significantly improved multiple state-of-the-art LLMs, e.g., 17.1% pass@1 improvement for code-davinci-002 on HumanEval. Furthermore, we conducted a user study with 12 participants in comparison to two baselines: (1) interacting with GitHub Copilot, and (2) interacting with a multi-step code generation paradigm called Multi-Turn Program Synthesis. Participants completed the given programming tasks 16.7% faster and with 10.5% improvement in task success rate when using our approach. Both results show that interactively refining code comments enables the collaborative establishment of mutual grounding, leading to more accurate code generation and higher developer confidence.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-05-12T17:20:30Z</published>
+    <arxiv:comment>Accepted to ICSE 2025</arxiv:comment>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Yifeng Di</name>
+    </author>
+    <author>
+      <name>Tianyi Zhang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2505.07270v3</id>
+    <title>Automated Repair of Ambiguous Problem Descriptions for LLM-Based Code Generation</title>
+    <updated>2025-09-24T02:19:16Z</updated>
+    <link href="https://arxiv.org/abs/2505.07270v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2505.07270v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The growing use of large language models (LLMs) has increased the importance of natural language (NL) in software engineering. However, ambiguity of NL can harm software quality, as unclear problem descriptions may lead to incorrect program generation. Detecting and resolving such ambiguity is challenging, motivating our introduction of the automated repair of ambiguous NL descriptions, which we approach by reducing code generation uncertainty and better aligning NL with input-output examples. Ambiguity repair is difficult for LLMs because they must understand how their interpretation of a description changes when the text is altered. We find that directly prompting LLMs to clarify ambiguity often produces irrelevant or inconsistent edits. To address this, we decompose this task into two simpler steps: (1) analyzing and repairing the LLM's interpretation of the description - captured by the distribution of programs it induces - using traditional testing and program repair, and (2) refining the description based on distribution changes via a method we call contrastive specification inference. We implement this approach in a tool called SpecFix and evaluate it using four state-of-the-art LLMs (GPT-4o, GPT-4o-mini, DeepSeek-V3, and Qwen2.5-Coder-32B-Instruct) on three popular code generation benchmarks (HumanEval+, MBPP+ and LiveCodeBench). Without human intervention or external information, SpecFix modified 43.58% of descriptions, improving Pass@1 on the modified set by 30.9%. This yields a 4.09% absolute improvement across the entire benchmark. Repairs also transfer across models: descriptions repaired for one model improve other models' performance by 10.48%.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-05-12T06:47:53Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Haoxiang Jia</name>
+    </author>
+    <author>
+      <name>Robbie Morris</name>
+    </author>
+    <author>
+      <name>He Ye</name>
+    </author>
+    <author>
+      <name>Federica Sarro</name>
+    </author>
+    <author>
+      <name>Sergey Mechtaev</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2505.03804v1</id>
+    <title>MoEQuant: Enhancing Quantization for Mixture-of-Experts Large Language Models via Expert-Balanced Sampling and Affinity Guidance</title>
+    <updated>2025-05-02T08:51:55Z</updated>
+    <link href="https://arxiv.org/abs/2505.03804v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2505.03804v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Mixture-of-Experts (MoE) large language models (LLMs), which leverage dynamic routing and sparse activation to enhance efficiency and scalability, have achieved higher performance while reducing computational costs. However, these models face significant memory overheads, limiting their practical deployment and broader adoption. Post-training quantization (PTQ), a widely used method for compressing LLMs, encounters severe accuracy degradation and diminished generalization performance when applied to MoE models. This paper investigates the impact of MoE's sparse and dynamic characteristics on quantization and identifies two primary challenges: (1) Inter-expert imbalance, referring to the uneven distribution of samples across experts, which leads to insufficient and biased calibration for less frequently utilized experts; (2) Intra-expert imbalance, arising from MoE's unique aggregation mechanism, which leads to varying degrees of correlation between different samples and their assigned experts. To address these challenges, we propose MoEQuant, a novel quantization framework tailored for MoE LLMs. MoE-Quant includes two novel techniques: 1) Expert-Balanced Self-Sampling (EBSS) is an efficient sampling method that efficiently constructs a calibration set with balanced expert distributions by leveraging the cumulative probabilities of tokens and expert balance metrics as guiding factors. 2) Affinity-Guided Quantization (AGQ), which incorporates affinities between experts and samples into the quantization process, thereby accurately assessing the impact of individual samples on different experts within the MoE layer. Experiments demonstrate that MoEQuant achieves substantial performance gains (more than 10 points accuracy gain in the HumanEval for DeepSeekMoE-16B under 4-bit quantization) and boosts efficiency.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-05-02T08:51:55Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Xing Hu</name>
+    </author>
+    <author>
+      <name>Zhixuan Chen</name>
+    </author>
+    <author>
+      <name>Dawei Yang</name>
+    </author>
+    <author>
+      <name>Zukang Xu</name>
+    </author>
+    <author>
+      <name>Chen Xu</name>
+    </author>
+    <author>
+      <name>Zhihang Yuan</name>
+    </author>
+    <author>
+      <name>Sifan Zhou</name>
+    </author>
+    <author>
+      <name>Jiangyong Yu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2502.15835v5</id>
+    <title>Pragmatic Reasoning improves LLM Code Generation</title>
+    <updated>2026-05-24T09:38:49Z</updated>
+    <link href="https://arxiv.org/abs/2502.15835v5" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2502.15835v5" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Pragmatic reasoning helps interlocutors infer intended meaning from ambiguous or underspecified messages by considering shared context and counterfactual alternatives. Similar challenges arise in natural language-to-code generation, where user instructions often admit multiple plausible candidate programs. However, direct RSA-style inference is difficult because it requires probability estimation over large spaces of programs and alternative instructions. We propose CodeRSA, an RSA-motivated reranking method that makes pragmatic reasoning tractable through local pragmatic contests among sampled code candidates. CodeRSA constructs candidate-induced alternative instructions and estimates which candidates are most distinctively supported by the original instruction, avoiding global normalization over the full program-instruction space. We evaluate CodeRSA on HumanEval+, MBPP+, and BigCodeBench using four open-weight instruction-following models. CodeRSA achieves the strongest average accuracy in 10 of 12 model-benchmark settings and remains competitive in the remaining cases. Further analyses show that its gains come from combining local pairwise pragmatic comparison with broader global support, suggesting a scalable direction for language-to-code reranking under natural-language uncertainty.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-02-20T12:44:26Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Zhuchen Cao</name>
+    </author>
+    <author>
+      <name>Sven Apel</name>
+    </author>
+    <author>
+      <name>Adish Singla</name>
+    </author>
+    <author>
+      <name>Vera Demberg</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2501.01054v1</id>
+    <title>Dynamic Scaling of Unit Tests for Code Reward Modeling</title>
+    <updated>2025-01-02T04:33:31Z</updated>
+    <link href="https://arxiv.org/abs/2501.01054v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2501.01054v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Current large language models (LLMs) often struggle to produce accurate responses on the first attempt for complex reasoning tasks like code generation. Prior research tackles this challenge by generating multiple candidate solutions and validating them with LLM-generated unit tests. The execution results of unit tests serve as reward signals to identify correct solutions. As LLMs always confidently make mistakes, these unit tests are not reliable, thereby diminishing the quality of reward signals. Motivated by the observation that scaling the number of solutions improves LLM performance, we explore the impact of scaling unit tests to enhance reward signal quality. Our pioneer experiment reveals a positive correlation between the number of unit tests and reward signal quality, with greater benefits observed in more challenging problems. Based on these insights, we propose CodeRM-8B, a lightweight yet effective unit test generator that enables efficient and high-quality unit test scaling. Additionally, we implement a dynamic scaling mechanism that adapts the number of unit tests based on problem difficulty, further improving efficiency. Experimental results show that our approach significantly improves performance across various models on three benchmarks (e.g., with gains of 18.43% for Llama3-8B and 3.42% for GPT-4o-mini on HumanEval Plus).</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-01-02T04:33:31Z</published>
+    <arxiv:comment>Homepage: https://code-reward-model.github.io/</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Zeyao Ma</name>
+    </author>
+    <author>
+      <name>Xiaokang Zhang</name>
+    </author>
+    <author>
+      <name>Jing Zhang</name>
+    </author>
+    <author>
+      <name>Jifan Yu</name>
+    </author>
+    <author>
+      <name>Sijia Luo</name>
+    </author>
+    <author>
+      <name>Jie Tang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2412.08393v1</id>
+    <title>Learning to Reason via Self-Iterative Process Feedback for Small Language Models</title>
+    <updated>2024-12-11T14:05:04Z</updated>
+    <link href="https://arxiv.org/abs/2412.08393v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2412.08393v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Small language models (SLMs) are more efficient, cost-effective, and customizable than large language models (LLMs), though they often underperform in specific areas like reasoning. Past methods for enhancing SLMs' reasoning, such as supervised fine-tuning and distillation, often depend on costly external signals, resulting in SLMs being overly confident with limited supervision signals, thus limiting their abilities. Therefore, this study enables SLMs to learn to reason from self-iterative feedback. By combining odds ratio preference optimization (ORPO), we fine-tune and align SLMs using positive and negative signals generated by themselves. Additionally, we introduce process supervision for rewards in preference alignment by sampling-based inference simulation and process reward models. Compared to Supervised Fine-Tuning (SFT), our method improves the performance of Gemma-2B by 12.43 (Acc) on GSM8K and 3.95 (Pass@1) on MBPP. Furthermore, the proposed method also demonstrated superior out-of-domain generalization capabilities on MMLU_Math and HumanEval.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-12-11T14:05:04Z</published>
+    <arxiv:comment>Accepted by COLING 2025</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Kaiyuan Chen</name>
+    </author>
+    <author>
+      <name>Jin Wang</name>
+    </author>
+    <author>
+      <name>Xuejie Zhang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2409.05923v1</id>
+    <title>$\mathbb{USCD}$: Improving Code Generation of LLMs by Uncertainty-Aware Selective Contrastive Decoding</title>
+    <updated>2024-09-09T02:07:41Z</updated>
+    <link href="https://arxiv.org/abs/2409.05923v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2409.05923v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) have shown remarkable capabilities in code generation. However, the effects of hallucinations (e.g., output noise) make it particularly challenging for LLMs to generate high-quality code in one pass. In this work, we propose a simple and effective \textbf{u}ncertainty-aware \textbf{s}elective \textbf{c}ontrastive \textbf{d}ecoding ($\mathbb{USCD}$) mechanism to improve the quality of one-pass code generation in LLMs and reduce the impact of output noise. To be specific, we first elaborately designed a negative prompt (namely lame prompt) to output noise by removing input-output examples from the standard few-shot prompt. Our preliminary study shows that the Jensen-Shannon divergence (JS divergence) between token distribution uncertainty and the output noise is relatively low (approximately $0.25$), indicating their high relevance. Then, we selectively eliminate output noise induced by lame prompts based on the uncertainty of the prediction distribution from the standard prompt. Notably, our proposed plug-and-play mechanism is an inference-only method, enjoying appealing flexibility. Extensive experiments on widely used benchmarks, e.g., HumanEval, MBPP, and MultiPL-E, upon several LLMs (i.e., Inocder-6b, CodeLlama-7b, WizardCoder-15b, StarCoder, and Llama2-7b), demonstrate that our proposed USCD significantly improves one-pass code generation, with an average \textit{pass@$1$} scores increase of 16.59\%. We will release code and data on GitHub.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-09-09T02:07:41Z</published>
+    <arxiv:comment>13pages,8 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Shuai Wang</name>
+    </author>
+    <author>
+      <name>Liang Ding</name>
+    </author>
+    <author>
+      <name>Li Shen</name>
+    </author>
+    <author>
+      <name>Yong Luo</name>
+    </author>
+    <author>
+      <name>Zheng He</name>
+    </author>
+    <author>
+      <name>Wei Yu</name>
+    </author>
+    <author>
+      <name>Dacheng Tao</name>
+    </author>
+  </entry>
+</feed>

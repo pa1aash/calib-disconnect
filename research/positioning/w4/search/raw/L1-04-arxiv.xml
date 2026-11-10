@@ -1,0 +1,427 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/xaowoHWH/Q2AXFwoLjV9K7xFwTM</id>
+  <title>arXiv Query: search_query=all:verbalized AND all:confidence AND all:code AND all:generation AND all:calibration&amp;id_list=&amp;start=0&amp;max_results=15</title>
+  <updated>2026-11-09T22:52:59Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=all:verbalized+AND+(all:confidence+AND+(all:code+AND+(all:generation+AND+all:calibration)))&amp;start=0&amp;max_results=15&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>15</opensearch:itemsPerPage>
+  <opensearch:totalResults>19</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2509.25532v2</id>
+    <title>Calibrating Verbalized Confidence with Self-Generated Distractors</title>
+    <updated>2026-02-27T22:10:41Z</updated>
+    <link href="https://arxiv.org/abs/2509.25532v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2509.25532v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Calibrated confidence estimates are necessary for large language model (LLM) outputs to be trusted by human users. While LLMs can express their confidence in human-interpretable ways, verbalized LLM-generated confidence scores have empirically been found to be miscalibrated, reporting high confidence on instances with low accuracy and thereby harming trust and safety. We hypothesize that this overconfidence often stems from a given LLM's heightened suggestibility when faced with claims that it encodes little information about; we empirically validate this hypothesis, finding more suggestibility on lower-accuracy claims. Building on this finding, we introduce Distractor-Normalized Coherence (DINCO), which estimates and accounts for an LLM's suggestibility bias by having the model verbalize its confidence independently across several self-generated distractors (i.e. alternative claims), and normalizes by the total verbalized confidence. To further improve calibration, we leverage generator-validator disagreement, augmenting normalized validator confidence with a consistency-based estimate of generator confidence. Here, we frame the popular approach of self-consistency as leveraging coherence across sampled generations, and normalized verbalized confidence as leveraging coherence across validations on incompatible claims, allowing us to integrate these complementary dimensions of coherence into DINCO. Moreover, our analysis shows that DINCO provides less saturated -- and therefore more usable -- confidence estimates, and that further sampling alone cannot close the gap between DINCO and baselines, with DINCO at 10 inference calls outperforming self-consistency at 100.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-09-29T21:41:22Z</published>
+    <arxiv:comment>ICLR 2026. Code: https://github.com/victorwang37/dinco</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Victor Wang</name>
+    </author>
+    <author>
+      <name>Elias Stengel-Eskin</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.20717v1</id>
+    <title>DirEAG: Dirichlet Evidence Aggregation for Calibrating Verbalized Confidence in Mathematical Reasoning</title>
+    <updated>2026-08-21T03:48:25Z</updated>
+    <link href="https://arxiv.org/abs/2608.20717v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.20717v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Reliable confidence estimation is essential for using large language models in mathematical reasoning, but black-box verbalized confidence is difficult to calibrate. When the same problem is queried under multiple confidence-steering prompts, the resulting answer-confidence observations contain useful uncertainty information, yet their scales may shift across steering levels, models, and datasets. Existing black-box uncertainty methods often rely on answer agreement, sample consistency, or entropy, which describe output variation but do not model the numerical meaning of self-reported confidence. Conversely, direct averaging or heuristic aggregation of elicited confidence cannot learn prompt- and task-dependent bias. We propose DirEAG, a Dirichlet Evidence Aggregation method that converts each elicited answer-confidence observation into calibrated soft evidence over generated candidate answers and an additional null state, allowing the model to represent cases where none of the candidates is correct. Experiments on GSM8K, SVAMP, and GSM-Hard with Qwen, Mistral, and Gemma models show that, compared with direct confidence averaging and heuristic confidence-steering aggregation, DirEAG often achieves better calibration while maintaining competitive answer selection. Ablations further reveal that evidence aggregation and final binary calibration address distinct parts of the calibration problem.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-21T03:48:25Z</published>
+    <arxiv:comment>16 pages, 3 figures. Code is available at https://github.com/horacehsugithub/DirEAG. Accepted by PRICAI 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Haorui Xu</name>
+    </author>
+    <author>
+      <name>Yuzhou Zhu</name>
+    </author>
+    <author>
+      <name>Liyuan Gao</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.32470v1</id>
+    <title>On the Pitfalls of Verbalized Confidence Priors for Calibrating Large Reasoning Models</title>
+    <updated>2026-09-26T11:00:45Z</updated>
+    <link href="https://arxiv.org/abs/2609.32470v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.32470v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large reasoning models (LRMs) often suffer from overconfidence when expressing their uncertainty. Confidence-aware reinforcement learning (RL) offers a promising way to optimize calibration. However, it relies on on-policy rollouts and is thus constrained by the model's pre-RL confidence distribution, which we term confidence prior. In this work, we reveal that off-the-shelf LRMs exhibit a confidence prior heavily concentrated on a few high values, which persists throughout RL. Theoretically, we prove that this concentration suppresses policy gradient updates for rarely sampled confidence values and inflates the lower bound on expected Brier risk. To overcome this exploration bottleneck, we propose CalibSFT, a plug-and-play supervised fine-tuning stage that shapes a calibrated confidence prior with broad support before RL. For each question, CalibSFT constructs confidence targets combining its success rate with response-level correctness, which provably preserves proper-scoring optimality, and then balances training responses across the confidence spectrum to enable diverse confidence exploration during RL. To learn from incorrect responses without imitating their reasoning, CalibSFT introduces correctness-conditional supervision, guiding confidence across all responses while supervising reasoning only on correct ones. Across 16 mathematical and general reasoning benchmarks, incorporating CalibSFT reduces calibration errors and improves discrimination across five representative RL algorithms while preserving comparable accuracy. Furthermore, CalibSFT delivers practical benefits for downstream selective prediction and model routing. Our code is available at https://github.com/ml-stat-Sustech/verbalized-confidence-training.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-26T11:00:45Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Shuoyuan Wang</name>
+    </author>
+    <author>
+      <name>Beier Luo</name>
+    </author>
+    <author>
+      <name>Hao Zeng</name>
+    </author>
+    <author>
+      <name>Chengyao Yu</name>
+    </author>
+    <author>
+      <name>Songxin Zhang</name>
+    </author>
+    <author>
+      <name>Zejian Xie</name>
+    </author>
+    <author>
+      <name>Bingyi Jing</name>
+    </author>
+    <author>
+      <name>Hongxin Wei</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2508.18847v2</id>
+    <title>ConfTuner: Training Large Language Models to Express Their Confidence Verbally</title>
+    <updated>2025-11-25T11:46:58Z</updated>
+    <link href="https://arxiv.org/abs/2508.18847v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2508.18847v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) are increasingly deployed in high-stakes domains such as science, law, and healthcare, where accurate expressions of uncertainty are essential for reliability and trust. However, current LLMs are often observed to generate incorrect answers with high confidence, a phenomenon known as "overconfidence". Recent efforts have focused on calibrating LLMs' verbalized confidence: i.e., their expressions of confidence in text form, such as "I am 80% confident that...". Existing approaches either rely on prompt engineering or fine-tuning with heuristically generated uncertainty estimates, both of which have limited effectiveness and generalizability. Motivated by the notion of proper scoring rules for calibration in classical machine learning models, we introduce ConfTuner, a simple and efficient fine-tuning method that introduces minimal overhead and does not require ground-truth confidence scores or proxy confidence estimates. ConfTuner relies on a new loss function, tokenized Brier score, which we theoretically prove to be a proper scoring rule, intuitively meaning that it "correctly incentivizes the model to report its true probability of being correct". ConfTuner improves calibration across diverse reasoning tasks and generalizes to black-box models such as GPT-4o. Our results further show that better-calibrated confidence enables downstream gains in self-correction and model cascade, advancing the development of trustworthy LLM systems. The code is available at https://github.com/liushiliushi/ConfTuner.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-08-26T09:25:32Z</published>
+    <arxiv:comment>Accepted by NeurIPS 2025</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Yibo Li</name>
+    </author>
+    <author>
+      <name>Miao Xiong</name>
+    </author>
+    <author>
+      <name>Jiaying Wu</name>
+    </author>
+    <author>
+      <name>Bryan Hooi</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.00935v1</id>
+    <title>DualStake: Dual-Path Confidence Calibration in Deep Research Agents</title>
+    <updated>2026-09-01T08:56:01Z</updated>
+    <link href="https://arxiv.org/abs/2609.00935v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.00935v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Deep Research agents tackle knowledge-intensive tasks through multi-round retrieval and decision-oriented generation. However, these agents suffer from severe overconfidence, making their expressed confidence unreliable for user trust and downstream abstention. To address this, we augment the Deep Research pipeline with step confidence elicitation after each retrieval, building on the commonly used post-answer verbalized confidence. Interestingly, we find that Evidence Confidence (E-Conf), elicited after the final retrieval step, provides a stronger uncertainty signal than Answer Confidence (A-Conf), elicited after answer generation, and that A-Conf is largely shaped by E-Conf. Based on these findings, we propose DualStake, a dual-path calibration method that applies margin-clipped, confidence-dependent stake rewards to jointly align E-Conf and A-Conf with answer correctness while limiting extreme confidence optimization. Experiments on Qwen2.5-7B, Qwen2.5-7B-Instruct, and Qwen3-4B across 8 QA benchmarks demonstrate that DualStake consistently improves calibration without sacrificing answer accuracy. The code is available at https://github.com/FloXXXt/DualStake.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-01T08:56:01Z</published>
+    <arxiv:comment>Accepted to EMNLP 2026 Main</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Yinuo Xu</name>
+    </author>
+    <author>
+      <name>Yuwei Liang</name>
+    </author>
+    <author>
+      <name>Jianjie Cheng</name>
+    </author>
+    <author>
+      <name>Meng Wang</name>
+    </author>
+    <author>
+      <name>Yongcan Yu</name>
+    </author>
+    <author>
+      <name>Shuo Lu</name>
+    </author>
+    <author>
+      <name>Jian Liang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.26045v3</id>
+    <title>Confidence and Calibration of Activation Oracles for Reliable Interpretation of Language Model Internals</title>
+    <updated>2026-10-22T12:57:10Z</updated>
+    <link href="https://arxiv.org/abs/2605.26045v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.26045v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>An activation oracle is a language model trained to convert the activations of another model into natural language. However, it is so far unclear to what extent these verbalizations are calibrated. Crucially, the oracle's verbalization come without any measure of confidence. Here, we compare five methods for estimating the confidence of an activation oracle. Our experiments cover four oracles from two model families (Qwen and Gemma, from 8B to 27B parameters), tested on the secret word task, whereby the oracle is supposed to recover a secret word, that has been fine-tuned into a model but does not appear in the model outputs. Our results with $6{,}000$ samples per method/oracle combination show that the best calibration depends on the availability of a hypothesis space or a calibration set: When an assumed auditor can list the possible answers in advance, the oracle should score each candidate answer directly. Scoring the candidates gives a higher accuracy on every oracle and a confidence that separates correct from incorrect answers better than any other method. When the oracle has to write its answer as free text, the agreement over twenty sampled answers gives the best calibrated confidence, which needs only five labeled secret words to be tuned. When a calibration set is available, a rescaled probability of the answer is as good as re-sampling, at the cost of one generation instead of twenty. Asking the oracle to write a number for its confidence, on the other side, gives no useful signal on any oracle. Code and the patched trainer are available at https://github.com/federicotorrielli/probabilistic_activation_oracles.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-25T17:08:47Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Federico Torrielli</name>
+    </author>
+    <author>
+      <name>Peter Schneider-Kamp</name>
+    </author>
+    <author>
+      <name>Lukas Galke Poech</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2404.00474v2</id>
+    <title>Linguistic Calibration of Long-Form Generations</title>
+    <updated>2024-06-04T22:39:58Z</updated>
+    <link href="https://arxiv.org/abs/2404.00474v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2404.00474v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Language models (LMs) may lead their users to make suboptimal downstream decisions when they confidently hallucinate. This issue can be mitigated by having the LM verbally convey the probability that its claims are correct, but existing models cannot produce long-form text with calibrated confidence statements. Through the lens of decision-making, we define linguistic calibration for long-form generations: an LM is linguistically calibrated if its generations enable its users to make calibrated probabilistic predictions. This definition enables a training framework where a supervised finetuning step bootstraps an LM to emit long-form generations with confidence statements such as "I estimate a 30% chance of..." or "I am certain that...", followed by a reinforcement learning step which rewards generations that enable a user to provide calibrated answers to related questions. We linguistically calibrate Llama 2 7B and find in automated and human evaluations of long-form generations that it is significantly more calibrated than strong finetuned factuality baselines with comparable accuracy. These findings generalize under significant domain shifts to scientific and biomedical questions and to an entirely held-out person biography generation task. Our results demonstrate that long-form generations may be calibrated end-to-end by constructing an objective in the space of the predictions that users make in downstream decision-making.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="stat.ML" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-03-30T20:47:55Z</published>
+    <arxiv:comment>ICML 2024. Code available at https://github.com/tatsu-lab/linguistic_calibration</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Neil Band</name>
+    </author>
+    <author>
+      <name>Xuechen Li</name>
+    </author>
+    <author>
+      <name>Tengyu Ma</name>
+    </author>
+    <author>
+      <name>Tatsunori Hashimoto</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.02695v1</id>
+    <title>Test-time Calibration Learning for Large Language Model Reasoning</title>
+    <updated>2026-10-02T02:17:17Z</updated>
+    <link href="https://arxiv.org/abs/2610.02695v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.02695v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Reliable large language models (LLMs) must not only produce accurate answers but also express confidence that faithfully reflects their probability of being correct. Such calibration is essential for identifying uncertain predictions and supporting reliable decision-making in real-world deployment. Recent studies incorporate calibration learning into reinforcement learning (RL), jointly optimizing answer correctness and verbalized confidence using ground-truth correctness supervision. However, their reliance on labeled data limits their applicability in practical test-time settings, where ground-truth labels are unavailable and calibration may need to adapt to newly encountered target tasks. To address this challenge, we propose Test-Time Calibration Learning (TTCL), a label-free framework that jointly adapts reasoning accuracy and verbalized confidence directly on unlabeled target-task data. Specifically, TTCL derives self-supervision signals for both correctness and calibration from multiple model-generated responses, enabling calibration learning at test time without ground-truth labels. Theoretical analysis further establishes TTCL as a bounded surrogate for the ideal calibration objective. Extensive experiments on mathematical reasoning and factual question answering demonstrate that TTCL consistently improves both accuracy and calibration across diverse models and tasks. On base models, TTCL achieves an average relative accuracy improvement of +40.13% and an ECE reduction of +70.80% across eight benchmarks. Moreover, TTCL can further improve both accuracy and calibration for already calibrated models under domain shift, particularly when source-domain calibration transfers poorly to target tasks. In the math-to-factQA setting, TTCL achieves an average relative accuracy gain of +20.35% and reduces ECE by +53.83%. The source code is released at https://github.com/tmlr-group/TTCL.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-02T02:17:17Z</published>
+    <arxiv:comment>34 pages</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Zizhuo Zhang</name>
+    </author>
+    <author>
+      <name>Xiong Peng</name>
+    </author>
+    <author>
+      <name>Jingwei Sun</name>
+    </author>
+    <author>
+      <name>Rong Yao</name>
+    </author>
+    <author>
+      <name>Shixiong Kai</name>
+    </author>
+    <author>
+      <name>Mingxuan Yuan</name>
+    </author>
+    <author>
+      <name>Bo Han</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2306.13063v2</id>
+    <title>Can LLMs Express Their Uncertainty? An Empirical Evaluation of Confidence Elicitation in LLMs</title>
+    <updated>2024-03-17T04:38:48Z</updated>
+    <link href="https://arxiv.org/abs/2306.13063v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2306.13063v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Empowering large language models to accurately express confidence in their answers is essential for trustworthy decision-making. Previous confidence elicitation methods, which primarily rely on white-box access to internal model information or model fine-tuning, have become less suitable for LLMs, especially closed-source commercial APIs. This leads to a growing need to explore the untapped area of black-box approaches for LLM uncertainty estimation. To better break down the problem, we define a systematic framework with three components: prompting strategies for eliciting verbalized confidence, sampling methods for generating multiple responses, and aggregation techniques for computing consistency. We then benchmark these methods on two key tasks-confidence calibration and failure prediction-across five types of datasets (e.g., commonsense and arithmetic reasoning) and five widely-used LLMs including GPT-4 and LLaMA 2 Chat. Our analysis uncovers several key insights: 1) LLMs, when verbalizing their confidence, tend to be overconfident, potentially imitating human patterns of expressing confidence. 2) As model capability scales up, both calibration and failure prediction performance improve. 3) Employing our proposed strategies, such as human-inspired prompts, consistency among multiple responses, and better aggregation strategies can help mitigate this overconfidence from various perspectives. 4) Comparisons with white-box methods indicate that while white-box methods perform better, the gap is narrow, e.g., 0.522 to 0.605 in AUROC. Despite these advancements, none of these techniques consistently outperform others, and all investigated methods struggle in challenging tasks, such as those requiring professional knowledge, indicating significant scope for improvement. We believe this study can serve as a strong baseline and provide insights for eliciting confidence in black-box LLMs.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2023-06-22T17:31:44Z</published>
+    <arxiv:comment>The paper is accepted by ICLR 2024. The code is publicly available at https://github.com/MiaoXiong2320/llm-uncertainty</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Miao Xiong</name>
+    </author>
+    <author>
+      <name>Zhiyuan Hu</name>
+    </author>
+    <author>
+      <name>Xinyang Lu</name>
+    </author>
+    <author>
+      <name>Yifei Li</name>
+    </author>
+    <author>
+      <name>Jie Fu</name>
+    </author>
+    <author>
+      <name>Junxian He</name>
+    </author>
+    <author>
+      <name>Bryan Hooi</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2601.07264v1</id>
+    <title>The Confidence Dichotomy: Analyzing and Mitigating Miscalibration in Tool-Use Agents</title>
+    <updated>2026-01-12T07:10:35Z</updated>
+    <link href="https://arxiv.org/abs/2601.07264v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2601.07264v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Autonomous agents based on large language models (LLMs) are rapidly evolving to handle multi-turn tasks, but ensuring their trustworthiness remains a critical challenge. A fundamental pillar of this trustworthiness is calibration, which refers to an agent's ability to express confidence that reliably reflects its actual performance. While calibration is well-established for static models, its dynamics in tool-integrated agentic workflows remain underexplored. In this work, we systematically investigate verbalized calibration in tool-use agents, revealing a fundamental confidence dichotomy driven by tool type. Specifically, our pilot study identifies that evidence tools (e.g., web search) systematically induce severe overconfidence due to inherent noise in retrieved information, while verification tools (e.g., code interpreters) can ground reasoning through deterministic feedback and mitigate miscalibration. To robustly improve calibration across tool types, we propose a reinforcement learning (RL) fine-tuning framework that jointly optimizes task accuracy and calibration, supported by a holistic benchmark of reward designs. We demonstrate that our trained agents not only achieve superior calibration but also exhibit robust generalization from local training environments to noisy web settings and to distinct domains such as mathematical reasoning. Our results highlight the necessity of domain-specific calibration strategies for tool-use agents. More broadly, this work establishes a foundation for building self-aware agents that can reliably communicate uncertainty in high-stakes, real-world deployments.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-01-12T07:10:35Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Weihao Xuan</name>
+    </author>
+    <author>
+      <name>Qingcheng Zeng</name>
+    </author>
+    <author>
+      <name>Heli Qi</name>
+    </author>
+    <author>
+      <name>Yunze Xiao</name>
+    </author>
+    <author>
+      <name>Junjue Wang</name>
+    </author>
+    <author>
+      <name>Naoto Yokoya</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2512.22245v1</id>
+    <title>Calibrating LLM Judges: Linear Probes for Fast and Reliable Uncertainty Estimation</title>
+    <updated>2025-12-23T22:08:46Z</updated>
+    <link href="https://arxiv.org/abs/2512.22245v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2512.22245v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>As LLM-based judges become integral to industry applications, obtaining well-calibrated uncertainty estimates efficiently has become critical for production deployment. However, existing techniques, such as verbalized confidence and multi-generation methods, are often either poorly calibrated or computationally expensive. We introduce linear probes trained with a Brier score-based loss to provide calibrated uncertainty estimates from reasoning judges' hidden states, requiring no additional model training. We evaluate our approach on both objective tasks (reasoning, mathematics, factuality, coding) and subjective human preference judgments. Our results demonstrate that probes achieve superior calibration compared to existing methods with $\approx10$x computational savings, generalize robustly to unseen evaluation domains, and deliver higher accuracy on high-confidence predictions. However, probes produce conservative estimates that underperform on easier datasets but may benefit safety-critical deployments prioritizing low false-positive rates. Overall, our work demonstrates that interpretability-based uncertainty estimation provides a practical and scalable plug-and-play solution for LLM judges in production.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-12-23T22:08:46Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Bhaktipriya Radharapu</name>
+    </author>
+    <author>
+      <name>Eshika Saxena</name>
+    </author>
+    <author>
+      <name>Kenneth Li</name>
+    </author>
+    <author>
+      <name>Chenxi Whitehouse</name>
+    </author>
+    <author>
+      <name>Adina Williams</name>
+    </author>
+    <author>
+      <name>Nicola Cancedda</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.20417v1</id>
+    <title>From Unreliable to Usable: Decomposing Failure Modes and Confidence Signals in LLM Entity Extraction - Evidence from Cyber Threat Intelligence</title>
+    <updated>2026-10-14T16:13:09Z</updated>
+    <link href="https://arxiv.org/abs/2610.20417v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.20417v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Audits of large language model (LLM) extraction from full-length documents report severe unreliability, leaving two questions open: what the failures actually consist of, and whether confidence signals can turn unreliable output into usable output. We run a preregistered, fully frozen evaluation of two new-generation low-cost LLMs (DeepSeek-V4-Flash, GLM-5.3-Flash) with a flagship-tier control (GPT-6.1-Sol) on a public corpus of 354 incident campaigns (315 unique reports, 630 model-report evaluations), scoring extraction quality against gold, confidence calibration, and robustness to single-sentence perturbations. Three findings emerge. (1) Unreliability persists across tiers: micro precision is 0.03-0.34 and verbalized calibration error (ECE) 0.53-0.94 across both splits; the gap does not close at the flagship tier. (2) The dominant failure is not hallucination: a full mention census plus a three-tier annotation of 360 sampled candidates (two independent LLM annotators from vendors outside the evaluated set, Cohen's kappa = 0.79 on the preregistered acceptance line, fully disclosed) back-projects to 65.6% background mentions and 19.9% gold-scope gaps, with only 1.2% unsupported candidates. (3) Confidence ranks but does not verify: zero-cost self-consistency-frequency tiering passes a preregistered top-30% precision-gain bar in all six test-split model-type cells (4/6 on train), the zero-cost text-frequency x SC frequency combination wins 3, ties 2, loses 1 across cells, yet relation-level counterfactuals on all 45 targets show that a single misattribution sentence flips high-confidence judgments in 95.6-100% of cases, and even a background sentence explicitly marked as unrelated still binds a fake vulnerability in up to 26.7% of them. We conclude with a deployment boundary: confidence tiering may set review priorities, never truth.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-14T16:13:09Z</published>
+    <arxiv:comment>13 pages: 7-page main text within the 8-page limit, plus Limitations, references, and appendices A-J. Code, protocol, and frozen evaluation data will be made public</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Jiahong Qian</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2604.09624v1</id>
+    <title>Self-Calibrating Language Models via Test-Time Discriminative Distillation</title>
+    <updated>2026-03-18T13:28:50Z</updated>
+    <link href="https://arxiv.org/abs/2604.09624v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2604.09624v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) are systematically overconfident: they routinely express high certainty on questions they often answer incorrectly. Existing calibration methods either require labeled validation data, degrade under distribution shifts, or incur substantial inference costs. Recent work has shown that LLMs already contain a better-calibrated signal than the one they verbalize: the token probability of "True" when the model is asked "Is this answer correct?" ($P(\text{True})$) consistently outperforms their stated confidence, a gap that is theoretically grounded as generative error is lower-bounded by roughly twice the corresponding discriminative error. We introduce $\textbf{SECL}$ ($\textbf{SE}$lf-$\textbf{C}$alibrating $\textbf{L}$anguage Models), a test-time training (TTT) pipeline that exploits this gap as label-free self-supervision, requiring no labeled data or human supervision. SECL adapts only when the input distribution shifts, training on just 6--26% of the question stream at lower cost than the baseline it distills from. Across four small language models from three model families and four diverse domains, SECL reduces Expected Calibration Error (ECE) by 56--78%, outperforming its own supervision signal and matching or outperforming recent inference-time methods. SECL is the first method to apply TTT to calibration; seven ablations covering signal quality, gating strategy, weight accumulation, loss design, domain ordering, hyperparameter sensitivity, and layer selection confirm that each component is crucial and robust across configurations. Code: https://anonymous.4open.science/r/secl-emnlp26-submission-C890</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-03-18T13:28:50Z</published>
+    <arxiv:comment>Submitted to ACL March 26</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Mohamed Rissal Hedna</name>
+    </author>
+    <author>
+      <name>Jan Strich</name>
+    </author>
+    <author>
+      <name>Martin Semmann</name>
+    </author>
+    <author>
+      <name>Chris Biemann</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2405.18711v2</id>
+    <title>Calibrating Reasoning in Language Models with Internal Consistency</title>
+    <updated>2024-12-05T04:01:28Z</updated>
+    <link href="https://arxiv.org/abs/2405.18711v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2405.18711v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) have demonstrated impressive capabilities in various reasoning tasks, aided by techniques like chain-of-thought prompting that elicits verbalized reasoning. However, LLMs often generate text with obvious mistakes and contradictions, raising doubts about their ability to robustly process and utilize generated rationales. In this work, we investigate reasoning in LLMs through the lens of internal representations, focusing on how these representations are influenced by generated rationales. Our preliminary analysis reveals that while generated rationales improve answer accuracy, inconsistencies emerge between the model's internal representations in middle layers and those in final layers, potentially undermining the reliability of their reasoning processes. To address this, we propose internal consistency as a measure of the model's confidence by examining the agreement of latent predictions decoded from intermediate layers. Extensive empirical studies across different models and datasets demonstrate that internal consistency effectively distinguishes between correct and incorrect reasoning paths. Motivated by this, we propose a new approach to calibrate reasoning by up-weighting reasoning paths with high internal consistency, resulting in a significant boost in reasoning performance. Further analysis uncovers distinct patterns in attention and feed-forward modules across layers, providing insights into the emergence of internal inconsistency. In summary, our results demonstrate the potential of using internal representations for self-evaluation of LLMs. Our code is available at github.com/zhxieml/internal-consistency.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-05-29T02:44:12Z</published>
+    <arxiv:comment>NeurIPS 2024 camera ready</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Zhihui Xie</name>
+    </author>
+    <author>
+      <name>Jizhou Guo</name>
+    </author>
+    <author>
+      <name>Tong Yu</name>
+    </author>
+    <author>
+      <name>Shuai Li</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.38070v1</id>
+    <title>Probability is Not Enough: Exploring and Counting Divergent Tokens for Reasoning Uncertainty Quantification in LLMs</title>
+    <updated>2026-09-29T17:33:36Z</updated>
+    <link href="https://arxiv.org/abs/2609.38070v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.38070v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>As the chain-of-thought reasoning capabilities of large language models improve, evaluating and calibrating their reasoning confidence is becoming increasingly important for quantifying the uncertainty of their answers. Current methods for estimating the confidence of large language models are generally based on probabilities of selected key tokens, but the underlying mechanism remains unclear. Our pilot study finds that replacing selected token probabilities with coarse substitutes can also improve calibration, motivating us to further explore effective signals of model confidence. We introduce Divergent Token Confidence (DTC), a framework that estimates confidence by counting tokens at which two models strongly disagree during decoding. DTC identifies these divergent tokens using the Jensen-Shannon divergence between next-token distributions evaluated along the same reasoning trajectory. We find that their count is almost negatively associated with answer accuracy, thereby serving as a simple yet effective signal for uncertainty quantification. DTC supports both white-box and black-box evaluation using auxiliary models, without explicit training and affecting the generation process. Experiments across multiple model families and six mathematical benchmarks demonstrate improved calibration over probability-based and verbalized baselines. Under white-box evaluation, the count-only estimator achieves an average expected calibration error of 13.0%, compared with 32.7%-42.4% for standard full-sequence confidence methods. In black-box settings, it also improves calibration over the original verbalized scores. For example, mean expected calibration error falls from 32.1%-40.2% to 13.7%-16.3% on DeepSeek-V3.2. These findings provide new insights for improving reasoning uncertainty quantification in large language models. The code is released at https://github.com/szu-tera/DTC.git.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-29T17:33:36Z</published>
+    <arxiv:comment>25 pages, 16 figures, 8 tables. Under peer review</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Feiyang Li</name>
+    </author>
+    <author>
+      <name>Shengjing Liu</name>
+    </author>
+    <author>
+      <name>Qi Zhan</name>
+    </author>
+    <author>
+      <name>Sijie Cheng</name>
+    </author>
+    <author>
+      <name>Weiqing Wang</name>
+    </author>
+    <author>
+      <name>Hongwen Chen</name>
+    </author>
+    <author>
+      <name>Yuxuan Yang</name>
+    </author>
+    <author>
+      <name>Wen Wang</name>
+    </author>
+    <author>
+      <name>Yile Wang</name>
+    </author>
+    <author>
+      <name>Hui Huang</name>
+    </author>
+  </entry>
+</feed>

@@ -1,0 +1,289 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/ho1dBKVj36FTCpPafsv10l9thuk</id>
+  <title>arXiv Query: search_query=all:partial AND all:correctness AND all:code AND all:generation AND all:test AND all:pass AND all:rate&amp;id_list=&amp;start=0&amp;max_results=15</title>
+  <updated>2026-11-09T23:01:00Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=all:partial+AND+(all:correctness+AND+(all:code+AND+(all:generation+AND+(all:test+AND+(all:pass+AND+all:rate)))))&amp;start=0&amp;max_results=15&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>15</opensearch:itemsPerPage>
+  <opensearch:totalResults>6</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2605.02944v1</id>
+    <title>Exploring Pass-Rate Reward in Reinforcement Learning for Code Generation</title>
+    <updated>2026-05-01T10:26:43Z</updated>
+    <link href="https://arxiv.org/abs/2605.02944v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.02944v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Reinforcement learning (RL) from unit-test feedback has become a standard post-training recipe for improving large language models (LLMs) on code generation. However, the pass-all-tests binary reward can be sparse, yielding no learning signal on challenging problems where none of the sampled solutions passes all tests. A common remedy is to use the test-case pass rate as a surrogate reward.
+  In this work, we study pass-rate rewards in critic-free RL for code generation (e.g., GRPO and RLOO) and report a consistent pattern across base models and algorithms: despite alleviating reward sparsity, pass-rate rewards do not reliably improve final performance over binary rewards in rigorous controlled experiments.
+  To understand this discrepancy, we analyze reward density and the resulting gradient directions. We find that pass-rate rewards are denser, but the induced gradient updates do not consistently move probability mass toward full-pass solutions. This arises because test-case pass rate is a miscalibrated surrogate for progress toward full correctness, and partial-pass solutions within the same group can induce conflicting gradient directions that cancel out.
+  Overall, our results suggest that, in critic-free RL, pass-rate rewards are insufficient to improve code generation and motivate reward designs that better align optimization with the goal of full correctness.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-01T10:26:43Z</published>
+    <arxiv:comment>16 pages, 6 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Xin-Ye Li</name>
+    </author>
+    <author>
+      <name>Ren-Biao Liu</name>
+    </author>
+    <author>
+      <name>Yun-Ji Zhang</name>
+    </author>
+    <author>
+      <name>Hui Sun</name>
+    </author>
+    <author>
+      <name>Zheng Xie</name>
+    </author>
+    <author>
+      <name>Ming Li</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2512.15000v1</id>
+    <title>DreamPRM-Code: Function-as-Step Process Reward Model with Label Correction for LLM Coding</title>
+    <updated>2025-12-17T01:11:35Z</updated>
+    <link href="https://arxiv.org/abs/2512.15000v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2512.15000v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Process Reward Models (PRMs) have become essential for improving Large Language Models (LLMs) via test-time scaling, yet their effectiveness in coding remains limited due to the lack of meaningful step decompositions in code and the noise of Monte-Carlo-generated partial labels. We propose DreamPRM-Code, a coding-focused PRM that treats functions as reasoning steps using a Chain-of-Function prompting strategy to induce modular code generation, enabling PRM training and application analogous to mathematical reasoning tasks. To address label noise, DreamPRM-Code introduces a meta-learning-based correction mechanism that leverages clean final-solution unit-test labels and performs bi-level optimization to refine intermediate labels. Applying on test-time scaling, DreamPRM-Code achieved state-of-the-art performance on LiveCodeBench with 80.9 pass@1 rate, surpassing OpenAI o4-mini.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-12-17T01:11:35Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Ruiyi Zhang</name>
+    </author>
+    <author>
+      <name>Peijia Qin</name>
+    </author>
+    <author>
+      <name>Qi Cao</name>
+    </author>
+    <author>
+      <name>Pengtao Xie</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2509.24507v1</id>
+    <title>SemGuard: Real-Time Semantic Evaluator for Correcting LLM-Generated Code</title>
+    <updated>2025-09-29T09:21:32Z</updated>
+    <link href="https://arxiv.org/abs/2509.24507v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2509.24507v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) can translate natural language requirements into code, yet empirical analyses of representative models reveal that semantic errors-programs that compile but behave incorrectly-constitute the majority of observed faults (e.g., &gt;60% on DeepSeek-Coder-6.7B and QwenCoder-7B). Post-hoc repair pipelines detect such faults only after execution, incurring latency, relying on incomplete test suites, and often mis-localizing the defect. Since semantic drift originates in the autoregressive decoding process, intervening while the code is being generated is a direct way to stop error propagation. Constrained-decoding approaches such as ROCODE attempt this, but still wait until the entire program runs to obtain feedback and use entropy heuristics that do not truly capture semantics. A more effective solution must inject semantic signals-early and precisely-into the decoding process.We present SemGuard, a semantic-evaluator-driven framework that performs real-time, line-level semantic supervision. To train the evaluator, we build SemDiff, the first dataset with fine-grained annotations that mark the exact line where a correct and an incorrect implementation diverge. The evaluator, once embedded in the LLM's decoder, flags deviations on partial code, rolls back to the faulty line, and guides regeneration-without executing the program or requiring test cases. Across four benchmarks, SemGuard consistently outperforms state-of-the-art baselines. It lowers the semantic error rate by 19.86% on SemDiff relative to ROCODE, and lifts Pass@1 by 48.92% on the real-world LiveCodeBench with CodeLlama-7B. Similar gains hold for StarCoder2-7B on MBPP and for DeepSeekCoder-6.7B on the Java benchmark SemDiff-Java, demonstrating model- and language-agnostic effectiveness.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-09-29T09:21:32Z</published>
+    <arxiv:comment>Accepted by the 40th IEEE/ACM Automated Software Engineering Conference (ASE 2025)</arxiv:comment>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Qinglin Wang</name>
+    </author>
+    <author>
+      <name>Zhihong Sun</name>
+    </author>
+    <author>
+      <name>Ruyun Wang</name>
+    </author>
+    <author>
+      <name>Tao Huang</name>
+    </author>
+    <author>
+      <name>Zhi Jin</name>
+    </author>
+    <author>
+      <name>Ge Li</name>
+    </author>
+    <author>
+      <name>Chen Lyu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.21421v1</id>
+    <title>The Role of Agentic Instruction Categories for Code Generation: A Study of Five Python Libraries</title>
+    <updated>2026-10-15T07:32:11Z</updated>
+    <link href="https://arxiv.org/abs/2610.21421v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.21421v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Agentic coding systems increasingly rely on repository-level agent files, such as AGENTS.md, to communicate project knowledge and developer intent. However, it remains unclear which categories of agent instructions enable efficient agent-file generation and accurate code generation. We evaluate five instruction categories: Repository Overview, Function Description, Implementation Detail, Testing, and Reconstruction Steps, across all 31 non-empty combinations using two Large Language Models (LLMs), Gemma 4 and GPT-5.4, and five human-written Python libraries. Our study addresses two research questions, comprising five sub-questions, on agent file generation and code generation. Results show that the number of instructions alone does not determine token usage for agent-file generation, with substantial variation across models and libraries. Although most AI-generated libraries compiled successfully regardless of the instruction combination, functional correctness remained limited. No Gemma 4 variant passed all tests, whereas 12.99% of GPT-5.4 variants did. Function Description achieved Gemma 4's highest partial-pass rate, while Reconstruction Steps achieved GPT-5.4's highest full-pass rate. For structural similarity to human-written code, Reconstruction Steps was most frequently associated with libraries closest to the originals in Lines of File and total Cyclomatic Complexity, while Testing and Reconstruction Steps were jointly most frequent for File Count and Function Count.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-15T07:32:11Z</published>
+    <arxiv:comment>Accepted to APSEC 2026 Technical Track</arxiv:comment>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Warren Gerald Polandra</name>
+    </author>
+    <author>
+      <name>Yoshiki Higo</name>
+    </author>
+    <author>
+      <name>Raula Gaikovina Kula</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.09636v1</id>
+    <title>PDEAgent-Bench: A Multi-Metric, Multi-Library Benchmark for PDE Solver Generation</title>
+    <updated>2026-05-10T16:25:43Z</updated>
+    <link href="https://arxiv.org/abs/2605.09636v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.09636v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>PDE-to-solver code generation aims to automatically synthesize executable numerical solvers from partial differential equation (PDE) specifications. This task requires not only understanding the mathematical structure of PDEs, but also selecting appropriate discretization schemes and solver configurations, and correctly implementing the resulting formulations in finite-element method (FEM) libraries. Existing code generation benchmarks mainly evaluate syntactic correctness, or success on predefined test cases. To our knowledge, there is currently no publicly available benchmark specifically for PDE-to-solver code generation, and general-purpose code benchmarks do not fully capture the unique challenges of numerical PDE solution, such as ensuring solver accuracy, efficiency, and compatibility with professional FEM libraries. We introduce PDEAgent-Bench, to the best of our knowledge, the first multi-metric, multi-library benchmark for PDE-to-solver code generation. PDEAgent-Bench contains 645 instances across 6 mathematical categories and 11 PDE families, with common FEM libraries for DOLFINx, Firedrake, and deal.II. Each instance provides an agent-facing problem specification, a reference solution on a prescribed evaluation grid, and case-specific accuracy and runtime targets. PDEAgent-Bench adopts a staged evaluation framework in which generated solvers must sequentially pass executability, numerical accuracy, and computational efficiency checks. Experiments with representative LLMs and code agents show that models can often produce runnable code, but their pass rate drops substantially once accuracy and efficiency requirements are enforced. These results indicate that current agents remain limited in producing numerically reliable and efficient PDE solvers, and that PDEAgent-Bench provides a reproducible testbed grounded in the practical requirements of numerical PDE solving.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-10T16:25:43Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Zhen Hang</name>
+    </author>
+    <author>
+      <name>Yushan Yashengjiang</name>
+    </author>
+    <author>
+      <name>Junhui Li</name>
+    </author>
+    <author>
+      <name>Huanshuo Dong</name>
+    </author>
+    <author>
+      <name>Yang Wei</name>
+    </author>
+    <author>
+      <name>Zhezheng Hao</name>
+    </author>
+    <author>
+      <name>Jiangtao Ma</name>
+    </author>
+    <author>
+      <name>Songlin Bai</name>
+    </author>
+    <author>
+      <name>Haozhong Kai</name>
+    </author>
+    <author>
+      <name>Xihang Yue</name>
+    </author>
+    <author>
+      <name>Gangzong Si</name>
+    </author>
+    <author>
+      <name>Dongming Jiang</name>
+    </author>
+    <author>
+      <name>Chao Yao</name>
+    </author>
+    <author>
+      <name>Zhanhua Hu</name>
+    </author>
+    <author>
+      <name>Jiangqing Zhang</name>
+    </author>
+    <author>
+      <name>Pengwei Liu</name>
+    </author>
+    <author>
+      <name>Yaomin Shen</name>
+    </author>
+    <author>
+      <name>Xingyu Ren</name>
+    </author>
+    <author>
+      <name>Lei Liu</name>
+    </author>
+    <author>
+      <name>Zikang Xu</name>
+    </author>
+    <author>
+      <name>Han Li</name>
+    </author>
+    <author>
+      <name>Qingsong Yao</name>
+    </author>
+    <author>
+      <name>Hande Dong</name>
+    </author>
+    <author>
+      <name>Hong Wang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.35980v1</id>
+    <title>UnityBench-Mini3D: Evaluating LLM Agents for 3D Game Development in Unity</title>
+    <updated>2026-10-26T10:19:14Z</updated>
+    <link href="https://arxiv.org/abs/2610.35980v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.35980v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Game development stresses coding agents in ways general software engineering does not: correctness depends on how engine APIs, serialized scene state, and runtime behavior interact, not on source code alone. Existing benchmarks mainly target platforms such as Godot and heavily rely on LLM judges or coarse task-level outcomes. We present UnityBench-Mini3D, a benchmark of 77 project-level Unity tasks organized around seven expert-defined skill categories rather than tutorials or genres, with three difficulty tiers. Each task pairs a complete Unity project with natural-language requirements and is evaluated using 1,178 held-out, human-authored milestone tests covering scene structure, component configuration, and runtime behavior. This in-engine evaluation provides deterministic partial credit, localizes failures, and distinguishes partial implementations from complete solutions without relying on subjective judges. Across 21 models and 9 coding harnesses, the average pass rate reaches 80.9% on easy tasks but falls to 35.2% on hard tasks, with just 57.7% overall. UnityBench-Mini3D provides a reproducible, diagnostic testbed distinguishing systems across difficulty levels.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-26T10:19:14Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Yijun Zhou</name>
+    </author>
+    <author>
+      <name>Minghao Shao</name>
+    </author>
+    <author>
+      <name>Ke Zhang</name>
+    </author>
+    <author>
+      <name>Renkai Yuan</name>
+    </author>
+    <author>
+      <name>Hongbo Yuan</name>
+    </author>
+    <author>
+      <name>Bin Hu</name>
+    </author>
+    <author>
+      <name>Bozhao Qian</name>
+    </author>
+    <author>
+      <name>Hongxia Shen</name>
+    </author>
+    <author>
+      <name>Yanhong Liu</name>
+    </author>
+    <author>
+      <name>Yuting Chen</name>
+    </author>
+    <author>
+      <name>Yuntao Shi</name>
+    </author>
+    <author>
+      <name>Zhongxuan Xu</name>
+    </author>
+    <author>
+      <name>Shuo Mao</name>
+    </author>
+    <author>
+      <name>Haijia Zhou</name>
+    </author>
+    <author>
+      <name>Zhendong Li</name>
+    </author>
+    <author>
+      <name>Tao Zhang</name>
+    </author>
+    <author>
+      <name>Chenggang Li</name>
+    </author>
+    <author>
+      <name>Yuxuan Wang</name>
+    </author>
+    <author>
+      <name>Zinan Zheng</name>
+    </author>
+    <author>
+      <name>Calvin Zhang</name>
+    </author>
+    <author>
+      <name>Jia Li</name>
+    </author>
+    <author>
+      <name>Heng Chang</name>
+    </author>
+    <author>
+      <name>Jie Feng</name>
+    </author>
+  </entry>
+</feed>

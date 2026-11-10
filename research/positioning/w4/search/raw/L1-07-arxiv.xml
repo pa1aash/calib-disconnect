@@ -1,0 +1,429 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/v8x8ChA2jJGyT0+ddwYQVf2TqNI</id>
+  <title>arXiv Query: search_query=all:execution-based AND all:uncertainty AND all:code AND all:generation&amp;id_list=&amp;start=0&amp;max_results=15</title>
+  <updated>2026-11-09T22:53:21Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=all:execution-based+AND+(all:uncertainty+AND+(all:code+AND+all:generation))&amp;start=0&amp;max_results=15&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>15</opensearch:itemsPerPage>
+  <opensearch:totalResults>57</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2502.11620v3</id>
+    <title>Assessing Correctness in LLM-Based Code Generation via Uncertainty Estimation</title>
+    <updated>2025-07-01T12:15:44Z</updated>
+    <link href="https://arxiv.org/abs/2502.11620v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2502.11620v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>In this work, we explore uncertainty estimation as a proxy for correctness in LLM-generated code. To this end, we adapt two state-of-the-art techniques from natural language generation -- one based on entropy and another on mutual information -- to the domain of code generation. Given the distinct semantic properties of code, we introduce modifications, including a semantic equivalence check based on symbolic execution. Our findings indicate a strong correlation between the uncertainty computed through these techniques and correctness, highlighting the potential of uncertainty estimation for quality assessment. Additionally, we propose a simplified version of the entropy-based method that assumes a uniform distribution over the LLM's responses, demonstrating comparable effectiveness. Using these techniques, we develop an abstention policy that prevents the model from making predictions when uncertainty is high, reducing incorrect outputs to near zero. Our evaluation on the LiveCodeBench shows that our approach significantly outperforms a baseline relying solely on LLM-reported log-probabilities.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-02-17T10:03:01Z</published>
+    <arxiv:comment>18 pages and 3 References Pages</arxiv:comment>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Arindam Sharma</name>
+    </author>
+    <author>
+      <name>Cristina David</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.11300v1</id>
+    <title>Characterizing Overconfident Failure in LLM-Based Code Generation</title>
+    <updated>2026-10-08T06:07:44Z</updated>
+    <link href="https://arxiv.org/abs/2610.11300v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.11300v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) are increasingly used for automated code generation, but generated programs can appear syntactically plausible while still failing execution-based correctness checks. Existing validation methods, such as testing and program analysis, remain essential but are often incomplete, costly, or applied only after generation. Model-derived uncertainty is therefore a natural early reliability signal. This paper studies the dilemma of overconfidence in code LLMs where incorrect programs are often generated with token-level confidence comparable to correct programs. We study this dilemma across four open-source code models and three execution-based benchmarks. Our analysis begins by investigating whether existing uncertainty metrics provide reliable proxies for execution correctness in code generation. We then characterize overconfidence at both global and local token levels, asking whether incorrect programs remain indistinguishable from correct ones under confidence and entropy summaries, including selective generation and the limits of instruction tuning. Finally, we evaluate whether common mitigation strategies reduce this failure mode. Our study yields four findings. First, existing uncertainty signals provide only partial and model-dependent evidence of execution failure. Second, overconfidence persists at both program and token levels, and uncertainty-based selection does not consistently improve accepted-set accuracy. Third, instruction tuning can increase certainty on failing generations without consistently improving correctness discrimination. Fourth, common mitigation techniques improve specific aspects of reliability but do not reliably resolve overconfident failure. Our exploratory latent analysis suggests that hidden representations may encode correctness-related signals that output confidence does not expose.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-08T06:07:44Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Ravishka Rathnasuriya</name>
+    </author>
+    <author>
+      <name>Wei Yang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.14659v1</id>
+    <title>When Uncertainty Isn't Enough: An Empirical Study of Self-Correction in Code Generation</title>
+    <updated>2026-07-31T21:13:02Z</updated>
+    <link href="https://arxiv.org/abs/2608.14659v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.14659v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models for code generation often produce incorrect solutions without reliable indicators of failure. We study whether uncertainty estimation methods developed for natural language transfer to code generation, and whether such signals can improve code generation via selective self-correction. We evaluate five uncertainty methods: mean token entropy, verbalized confidence, $P(\text{True})$, entropy ensembles, and semantic entropy probes, across three small code LLMs on HumanEval and BigCodeBench. We find that multi-sample $P(\text{True})$ achieves the strongest correlation with correctness, while all the other methods, including semantic entropy probes, yield only weak correlation. We then use these uncertainty signals to drive three self-correction policies: adaptive decoding, uncertainty-based regeneration, and verification-based regeneration. Our results reveal a stronger negative finding than anticipated: uncertainty-based self-correction fails to reliably improve Pass@1, degrading accuracy in 5 of 6 configurations across both benchmarks ($-3$pp to $-10$pp), and adaptive decoding degrades accuracy in 4 of 6 configurations. Only verification-based self-correction reliably improves Pass@1, with gains of $+6$ to $+26$ percentage points on HumanEval and $+8$ to $+20$ percentage points on BigCodeBench, scaling inversely with baseline strength. These findings replicate consistently across both benchmarks and suggest that cheap uncertainty estimators are insufficient on their own to improve code correctness, and that their practical value lies in serving as gating signals for costlier execution-based correction loops rather than as standalone substitutes for verification.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-31T21:13:02Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Pranav Rakasi</name>
+    </author>
+    <author>
+      <name>Maanas Lalwani</name>
+    </author>
+    <author>
+      <name>Arnav Srivastava</name>
+    </author>
+    <author>
+      <name>Arya Palanivel</name>
+    </author>
+    <author>
+      <name>Tinuade Adeleke</name>
+    </author>
+    <author>
+      <name>Ruizhe Li</name>
+    </author>
+    <author>
+      <name>Sean Wu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.09023v1</id>
+    <title>Using Semantic Distance to Estimate Uncertainty in LLM-Based Code Generation</title>
+    <updated>2026-05-09T16:02:54Z</updated>
+    <link href="https://arxiv.org/abs/2605.09023v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.09023v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>LLMs show strong performance in code generation, but their outputs lack correctness guarantees. Sample-based uncertainty estimators address this by generating multiple candidate programs and measuring their disagreement. However, existing estimators make different design choices about how behaviours are identified, aggregated, referenced and compared, making them difficult to assess. We therefore first introduce a taxonomy that disentangles these choices and reveals a missing design point: semantic distance-aware uncertainty estimation, which measures not only whether sampled programs disagree, but how severely their execution behaviours differ. Across LiveCodeBench, MBPP, HumanEval-X and BigCodeBench, spanning Python, Java and C++, our metrics provide strong proxies for correctness, and consistently outperform state-of-the-art sample-based baselines across both closed-source models (GPT-3.5-Turbo, GPT-4o-mini, Gemini-2.5-Flash-Lite, Claude Opus 4.5) and an open-source model (DeepSeek-Coder-V2). The method is practical: it requires neither model internals nor LLM-as-judge calls, remains robust across models, languages, sampling temperatures and fuzzing settings, and reduces runtime by approximately 48-79% relative to existing baselines.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-09T16:02:54Z</published>
+    <arxiv:comment>Preprint. 23 pages, 4 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Weilin He</name>
+    </author>
+    <author>
+      <name>Arindam Sharma</name>
+    </author>
+    <author>
+      <name>Cristina David</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2412.00314v1</id>
+    <title>Human-Like Code Quality Evaluation through LLM-based Recursive Semantic Comprehension</title>
+    <updated>2024-11-30T01:49:25Z</updated>
+    <link href="https://arxiv.org/abs/2412.00314v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2412.00314v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Code quality evaluation involves scoring generated code quality based on a reference code for a specific problem statement. Currently, there are two main forms of evaluating code quality: match-based evaluation and execution-based evaluation. The former requires the collection of a large number of test cases, making a huge cost. The latter relies on superficial code matching as an evaluation metric, which fails to accurately capture code semantics. Moreover, extensive research has demonstrated that match-based evaluations do not truly reflect code quality. With the development of large language models (LLMs) in recent years, studies have proven the feasibility of using LLMs as evaluators for generative tasks. However, due to issues like hallucinations and uncertainty in LLMs, their correlation with human judgment remains at a lower level, making the direct use of LLMs for code quality evaluation challenging. To address these issues, we propose Human-Like Code Quality Evaluation through LLM-based Recursive Semantic Comprehension (HuCoSC). We employ a recursive approach to enable LLMs to comprehend portions of code semantics independently each time, obtaining the code semantics through multiple interactions with LLMs. We designed a Semantic Dependency Decoupling Storage to make independent analysis feasible, allowing LLMs to achieve more accurate semantics by breaking down complex problems. Finally, the generated code is scored based on a semantic comparison between the reference code and itself. Experimental results indicate that HuCoSC surpasses existing state-of-the-art methods in terms of correlation with human experts and correlation with code execution.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-11-30T01:49:25Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Fangzhou Xu</name>
+    </author>
+    <author>
+      <name>Sai Zhang</name>
+    </author>
+    <author>
+      <name>Zhenchang Xing</name>
+    </author>
+    <author>
+      <name>Xiaowang Zhang</name>
+    </author>
+    <author>
+      <name>Yahong Han</name>
+    </author>
+    <author>
+      <name>Zhiyong Feng</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.06673v1</id>
+    <title>Uncertainty-Aware LLM-Guided Policy Shaping for Sparse-Reward Reinforcement Learning</title>
+    <updated>2026-06-04T19:46:45Z</updated>
+    <link href="https://arxiv.org/abs/2606.06673v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.06673v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Sparse rewards and heterogeneous task sequences remain persistent challenges in Reinforcement Learning (RL), often resulting in slow convergence, weak generalization, and inefficient exploration. We propose Uncertainty-Aware LLM-Guided Policy Shaping (ULPS), a novel framework that integrates a calibrated Large Language Model (LLM) into the RL training loop to provide structured, uncertainty-modulated behavioral guidance. ULPS employs an A*-based oracle to synthesize optimal symbolic trajectories, which are used to fine-tune a BERT-based language model. During training, this model supplies action suggestions whose influence is conditioned on epistemic uncertainty estimated via Monte Carlo (MC) dropout. An entropy-based blending mechanism adaptively balances LLM guidance and the learned policy (via Proximal Policy Optimization, PPO), allowing the agent to prioritize reliable priors while preserving adaptability. We evaluate ULPS on the MiniGridUnlockPickup benchmark and observe consistent improvements in success rate, reward efficiency, and sample complexity over unguided, uncalibrated, and standard RL baselines. ULPS achieves more than 9% improvement in execution accuracy after fine-tuning, requires fewer environment interactions, and yields higher reward AUC. Our results demonstrate that integrating symbolic A* trajectories, pretrained language priors, and uncertainty-aware control offers a principled and effective approach to multi-task reinforcement learning in sparse-reward domains, with potential extensibility to partially observable and multi-agent settings.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-04T19:46:45Z</published>
+    <arxiv:comment>Accepted to the 2026 IEEE Conference on Artificial Intelligence (IEEE CAI). 6 pages, 3 figures. Code available at: https://github.com/USD-AI-ResearchLab/uncertainty-aware-llm-rl</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Ujjwal Bhatta</name>
+    </author>
+    <author>
+      <name>Utsabi Dangol</name>
+    </author>
+    <author>
+      <name>Sumaly Bajracharya</name>
+    </author>
+    <author>
+      <name>Rodrigue Rizk</name>
+    </author>
+    <author>
+      <name>KC Santosh</name>
+    </author>
+    <arxiv:doi>10.1109/CAI68641.2026.11536354</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.1109/CAI68641.2026.11536354" title="doi"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2603.27098v2</id>
+    <title>Ensemble-Based Uncertainty Estimation for Code Correctness Estimation</title>
+    <updated>2026-04-04T02:18:57Z</updated>
+    <link href="https://arxiv.org/abs/2603.27098v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2603.27098v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) have demonstrated remarkable capabilities in generating programs from natural language descriptions, yet ensuring their correctness without an external oracle remains a critical challenge. To solve the challenge, existing methods often rely on uncertainty estimation, measuring the consistency of semantics or execution behaviors across multiple samples generated by a single model. However, we observe that a single model can often converge to a consistent but incorrect solution, rendering such consistency-based proxies ineffective. To address this, we propose Ensemble Semantic Entropy (ESE), which estimates uncertainty by evaluating the consistency of samples aggregated across an ensemble of models. Experiments on LiveCodeBench demonstrate that ESE correlates more strongly with program correctness than single-model semantic entropy. Notably, in selective generation tasks with strict false-positive rate constraints, ESE improves prediction accuracy by 53.4%. Furthermore, by leveraging ESE as the decision signal, we propose a cascading test-time scaling framework Cas, which maintains performance while reducing FLOPs by 64.9% compared to single-model scaling, offering a new perspective on balancing parameter and inference scaling.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-03-28T02:37:36Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Yunxiang Wei</name>
+    </author>
+    <author>
+      <name>Tianlin Li</name>
+    </author>
+    <author>
+      <name>Yuwei Zheng</name>
+    </author>
+    <author>
+      <name>Yanni Dong</name>
+    </author>
+    <author>
+      <name>Aishan Liu</name>
+    </author>
+    <author>
+      <name>Qiang Hu</name>
+    </author>
+    <author>
+      <name>Xiaoyu Zhang</name>
+    </author>
+    <author>
+      <name>Mingfei Cheng</name>
+    </author>
+    <author>
+      <name>Jian Yang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2510.00501v3</id>
+    <title>CodeChemist: Test-Time Scaling for Low-Resource Code Generation via Functional Knowledge Transfer</title>
+    <updated>2026-08-05T06:01:15Z</updated>
+    <link href="https://arxiv.org/abs/2510.00501v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2510.00501v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Code Large Language Models (CodeLLMs) have been widely adopted for Natural Language to Programming Language code generation, powering applications with large user bases. Their performance, however, varies sharply across programming languages (PLs) and is particularly suboptimal for low-resource PLs due to data scarcity, limiting their overall usability. In this work, we introduce CodeChemist, a simple yet effective, training-free test-time scaling framework that transfers the model's functional knowledge from high-resource to low-resource PLs via synthesized test cases, without relying on external models. Specifically, CodeChemist first applies multi-temperature hedged sampling to generate a pool of candidate solutions in the low-resource PL and synthesizes a set of test inputs. It then estimates uncertainty: when uncertainty is low, it selects the output via in-language majority voting; otherwise, it constructs cross-lingual I/O test oracles by executing high-resource reference programs and selects the candidate with the highest pass rate. Extensive experiments demonstrate that CodeChemist significantly outperforms existing test-time scaling methods, improving code generation for both low-resource PLs (e.g., Lua) and complex-syntax PLs (e.g., C++, Java) without retraining.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-10-01T04:33:53Z</published>
+    <arxiv:comment>This paper is accepted by ICML 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Kaixin Wang</name>
+    </author>
+    <author>
+      <name>Tianlin Li</name>
+    </author>
+    <author>
+      <name>Xiaoyu Zhang</name>
+    </author>
+    <author>
+      <name>Aishan Liu</name>
+    </author>
+    <author>
+      <name>Xianglong Liu</name>
+    </author>
+    <author>
+      <name>Ziqi Liu</name>
+    </author>
+    <author>
+      <name>Zhiqiang Zhang</name>
+    </author>
+    <author>
+      <name>Jun Zhou</name>
+    </author>
+    <author>
+      <name>and Bin Shi</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.02186v1</id>
+    <title>UA-ChatDev: Uncertainty-Aware Multi-Agent Collaboration for Reliable Software Development</title>
+    <updated>2026-07-02T13:56:57Z</updated>
+    <link href="https://arxiv.org/abs/2607.02186v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.02186v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Software development is a complex task that demands cooperation among agents with diverse roles. Large language models (LLMs) have enabled autonomous multi-agent software development frameworks that leverage role-based collaboration to automate requirements analysis, coding, testing, and refinement. However, existing approaches typically assume that intermediate agent outputs are equally reliable, leaving them vulnerable to hallucination propagation, where incorrect decisions generated in early development phases are transferred to downstream agents and negatively impact final software quality. To address this challenge, we propose UA-ChatDev, an uncertainty-aware multi-agent software development framework that integrates uncertainty quantification into agent interactions. It introduces a lightweight uncertainty estimation mechanism based on token-level log probabilities to assess the confidence of agent responses and employs phase-aware threshold calibration to selectively trigger retrieval-based verification when uncertainty exceeds acceptable levels. Extensive experiments on the SRDD benchmark demonstrate that UA-ChatDev consistently outperforms existing single-agent and multi-agent software development frameworks across completeness, executability, consistency, and overall quality metrics. Further ablation studies and communication analyses verify that uncertainty-aware interactions enhance code execution reliability.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-02T13:56:57Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Temitayo Olamilekan Ogunsusi</name>
+    </author>
+    <author>
+      <name>Lijun Qian</name>
+    </author>
+    <author>
+      <name>Xishuang Dong</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2604.18834v1</id>
+    <title>Structural Verification for Reliable EDA Code Generation without Tool-in-the-Loop Debugging</title>
+    <updated>2026-04-20T20:58:52Z</updated>
+    <link href="https://arxiv.org/abs/2604.18834v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2604.18834v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) have enabled natural-language-driven automation of electronic design automation (EDA) workflows, but reliable execution of generated scripts remains a fundamental challenge. In LLM-based EDA tasks, failures arise not from syntax errors but from violations of implicit structural dependencies over design objects, including invalid acquisition paths, missing prerequisites, and incompatible API usage. Existing approaches address these failures through tool-in-the-loop debugging, repeatedly executing and repairing programs using runtime feedback. While effective, this paradigm couples correctness to repeated tool invocation, leading to high latency and poor scalability in multi-step settings. We propose to eliminate tool-in-the-loop debugging by enforcing structural correctness prior to execution. Each task is represented as a structural dependency graph that serves as an explicit execution contract, and a verifier-guided synthesis framework enforces this contract through graph-conditioned retrieval, constrained generation, and staged pre-execution verification with diagnosis-driven repair. On single-step tasks, our method improves pass rate from 73.0% (LLM+RAG) and 76.0% (tool-in-loop) to 82.5%, while requiring exactly one tool call per task and reducing total tool calls by more than 2x. On multi-step tasks, pass rate improves from 30.0% to 70.0%, and further to 84.0% with trajectory-level reflection. Uncertainty-aware filtering further reduces verifier false positives from 20.0% to 6.7% and improves precision from 80.0% to 93.3%. These results show that enforcing structural consistency prior to execution decouples correctness from tool interaction, improving both reliability and efficiency in long-horizon EDA code generation.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="eess.SY" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-04-20T20:58:52Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Dinithi Jayasuriya</name>
+    </author>
+    <author>
+      <name>Aravind Saravanan</name>
+    </author>
+    <author>
+      <name>Nilesh Ahuja</name>
+    </author>
+    <author>
+      <name>Amanda Rios</name>
+    </author>
+    <author>
+      <name>Amit Trivedi</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2601.22571v2</id>
+    <title>PerfGuard: A Performance-Aware Agent for Visual Content Generation</title>
+    <updated>2026-03-05T02:31:04Z</updated>
+    <link href="https://arxiv.org/abs/2601.22571v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2601.22571v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The advancement of Large Language Model (LLM)-powered agents has enabled automated task processing through reasoning and tool invocation capabilities. However, existing frameworks often operate under the idealized assumption that tool executions are invariably successful, relying solely on textual descriptions that fail to distinguish precise performance boundaries and cannot adapt to iterative tool updates. This gap introduces uncertainty in planning and execution, particularly in domains like visual content generation (AIGC), where nuanced tool performance significantly impacts outcomes. To address this, we propose PerfGuard, a performance-aware agent framework for visual content generation that systematically models tool performance boundaries and integrates them into task planning and scheduling. Our framework introduces three core mechanisms: (1) Performance-Aware Selection Modeling (PASM), which replaces generic tool descriptions with a multi-dimensional scoring system based on fine-grained performance evaluations; (2) Adaptive Preference Update (APU), which dynamically optimizes tool selection by comparing theoretical rankings with actual execution rankings; and (3) Capability-Aligned Planning Optimization (CAPO), which guides the planner to generate subtasks aligned with performance-aware strategies. Experimental comparisons against state-of-the-art methods demonstrate PerfGuard's advantages in tool selection accuracy, execution reliability, and alignment with user intent, validating its robustness and practical utility for complex AIGC tasks. The project code is available at https://github.com/FelixChan9527/PerfGuard.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-01-30T05:12:19Z</published>
+    <arxiv:comment>This paper has been accepted by ICLR 2026. The original paper link is: https://openreview.net/pdf?id=tdN42GTv4S The code repository link is: https://github.com/FelixChan9527/PerfGuard</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Zhipeng Chen</name>
+    </author>
+    <author>
+      <name>Zhongrui Zhang</name>
+    </author>
+    <author>
+      <name>Chao Zhang</name>
+    </author>
+    <author>
+      <name>Yifan Xu</name>
+    </author>
+    <author>
+      <name>Lan Yang</name>
+    </author>
+    <author>
+      <name>Jun Liu</name>
+    </author>
+    <author>
+      <name>Ke Li</name>
+    </author>
+    <author>
+      <name>Yi-Zhe Song</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2603.00532v1</id>
+    <title>DenoiseFlow: Uncertainty-Aware Denoising for Reliable LLM Agentic Workflows</title>
+    <updated>2026-02-28T08:11:38Z</updated>
+    <link href="https://arxiv.org/abs/2603.00532v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2603.00532v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Autonomous agents are increasingly entrusted with complex, long-horizon tasks, ranging from mathematical reasoning to software generation. While agentic workflows facilitate these tasks by decomposing them into multi-step reasoning chains, reliability degrades significantly as the sequence lengthens. Specifically, minor interpretation errors in natural-language instructions tend to compound silently across steps. We term this failure mode accumulated semantic ambiguity. Existing approaches to mitigate this often lack runtime adaptivity, relying instead on static exploration budgets, reactive error recovery, or single-path execution that ignores uncertainty entirely. We formalize the multi-step reasoning process as a Noisy MDP and propose DenoiseFlow, a closed-loop framework that performs progressive denoising through three coordinated stages: (1)Sensing estimates per-step semantic uncertainty; (2)Regulating adaptively allocates computation by routing between fast single-path execution and parallel exploration based on estimated risk; and (3)Correcting performs targeted recovery via influence-based root-cause localization. Online self-calibration continuously aligns decision boundaries with verifier feedback, requiring no ground-truth labels. Experiments on six benchmarks spanning mathematical reasoning, code generation, and multi-hop QA show that DenoiseFlow achieves the highest accuracy on every benchmark (83.3% average, +1.3% over the strongest baseline) while reducing cost by 40--56% through adaptive branching. Detailed ablation studies further confirm framework-level's robustness and generality. Code is available at https://anonymous.4open.science/r/DenoiseFlow-21D3/.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-02-28T08:11:38Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Yandong Yan</name>
+    </author>
+    <author>
+      <name>Junwei Peng</name>
+    </author>
+    <author>
+      <name>Shijie Li</name>
+    </author>
+    <author>
+      <name>Chenxi Li</name>
+    </author>
+    <author>
+      <name>Yifei Shang</name>
+    </author>
+    <author>
+      <name>Can Deng</name>
+    </author>
+    <author>
+      <name>Ruiting Dai</name>
+    </author>
+    <author>
+      <name>Yongqiang Zhao</name>
+    </author>
+    <author>
+      <name>Jiaqi Zhu</name>
+    </author>
+    <author>
+      <name>Yu Huang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.10504v1</id>
+    <title>SUREFlow: State-space Uncertainty-aware REsidual Flow Matching for Robust Robot Manipulation</title>
+    <updated>2026-07-11T23:25:42Z</updated>
+    <link href="https://arxiv.org/abs/2607.10504v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.10504v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Generative vision-language-action policies have advanced robot manipulation, but they often exhibit instability under noise, partial observability, and stochastic initial conditions. During extended rollouts, small velocity errors accumulate, degrading execution reliability. Existing diffusion and flow-based policies typically assume homoscedastic residuals and lack explicit uncertainty modeling within action generation, limiting robustness during iterative rollout. We propose SUREFlow, a state-space uncertainty-aware residual flow matching framework built on a Mamba backbone. The method jointly predicts action velocities and input-dependent residual uncertainty, enabling selective refinement of unreliable action dimensions without environment feedback while preserving computational efficiency. On LIBERO, SUREFlow achieves 92.5% average success rate (SR), outperforming the Mamba-based MaIL by 34.2%. On LIBERO-PRO, it attains around 49% SR using only 179M parameters, achieving performance comparable to large VLAs with 3-7B parameters. SUREFlow source code is available on: https://github.com/tanvirnwu/SUREFlow</summary>
+    <category term="cs.RO" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-11T23:25:42Z</published>
+    <arxiv:comment>Accepted at IEEE/RSJ International Conference on Intelligent Robots &amp; Systems (IROS) 2026, Pittsburgh, PA, USA</arxiv:comment>
+    <arxiv:primary_category term="cs.RO"/>
+    <author>
+      <name>Md Tanvir Islam</name>
+    </author>
+    <author>
+      <name>Sai Navaneet Peddapalli</name>
+    </author>
+    <author>
+      <name>Sangmoon Lee</name>
+    </author>
+    <author>
+      <name>Sangtae Ahn</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.05590v1</id>
+    <title>Uncertainty-Guided Edge Learning for Deep Image Regression in Remote Sensing</title>
+    <updated>2026-05-07T02:17:17Z</updated>
+    <link href="https://arxiv.org/abs/2605.05590v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.05590v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Edge learning refers to training machine learning models deployed on edge platforms, typically using new data accumulated onboard. The computational limitations on edge devices affect not only model optimisation, but also calculation of the predictive uncertainty of the current model on the unlabelled data, which is vital for informing model updating. In this paper, we investigate edge learning in the context of performing deep image regression on a remote sensing satellite, where a deep network is executed by an onboard computer to regress a scalar $y$ from an input image, e.g., $y$ is the percentage of pixels indicating cloud coverage or land use. We propose an uncertainty-guided edge learning (UGEL) algorithm that can accurately prioritise the data to speed up training convergence of the on-board regression model. Underpinning UGEL is the calculation of predictive uncertainty based on deep beta regression, where a deep network is used to estimate the parameters of a beta distribution for which the target $y$ for an input image has a high likelihood. Compared to established methods for uncertainty estimation that are either too costly on edge devices (e.g., require many forward passes per sample) or make strict assumptions on the predictive distribution (e.g., Gaussian), deep beta regression is computable in a single forward pass and allows more general predictive distributions. Results show that UGEL delivers faster-converging edge learning than active or semi-supervised learning. Code and models are publicly available at https://github.com/anh-vunguyen/UGEL.</summary>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-07T02:17:17Z</published>
+    <arxiv:comment>AI4Space @ CVPR 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.CV"/>
+    <author>
+      <name>Anh Vu Nguyen</name>
+    </author>
+    <author>
+      <name>Dino Sejdinovic</name>
+    </author>
+    <author>
+      <name>Tat-Jun Chin</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.03852v2</id>
+    <title>FLARE: Fine-Grained Diagnostic Feedback for LLM Code Refinement</title>
+    <updated>2026-09-16T03:35:02Z</updated>
+    <link href="https://arxiv.org/abs/2606.03852v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.03852v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models often generate code with bugs. Existing methods rely on feedback signals such as test failures and self-critiques to iteratively refine the generated code. Such signals are either too coarse-grained or too high-level, which is not sufficient to inform the model where to fix the bug. In this work, we present Flare, an iterative framework with a lightweight diagnostic model that predicts line-level suspiciousness signals for bug localization and code refinement. Given the inherent uncertainty of diagnostic predictions, Flare searches over the top-k suspicious regions and selects the best candidate according to execution outcomes. Experiments on LiveCodeBench and BigCodeBench with five base LLMs show that, even without candidate search (k=1), Flare outperforms the strongest baseline with an absolute improvement from 1.72% to 7.42%. Furthermore, searching over 10 candidates yields an average improvement of 8.50% compared with no candidate search. When evaluated in isolation, our lightweight diagnostic model achieves the best performance compared with recent fault localization methods, demonstrating that it can provide reliable fine-grained guidance for code refinement.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-02T16:29:17Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Yinsheng Yao</name>
+    </author>
+    <author>
+      <name>Hongxiang Zhang</name>
+    </author>
+    <author>
+      <name>Weixi Tong</name>
+    </author>
+    <author>
+      <name>Tianyi Zhang</name>
+    </author>
+  </entry>
+</feed>

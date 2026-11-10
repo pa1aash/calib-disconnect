@@ -1,0 +1,333 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/c9D64GKY/+osHdhZC2qtmiMlvyg</id>
+  <title>arXiv Query: search_query=abs:"MBPP+" AND abs:"calibration"&amp;id_list=&amp;start=0&amp;max_results=40</title>
+  <updated>2026-11-10T09:06:28Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=abs:%22MBPP%2B%22+AND+abs:%22calibration%22&amp;start=0&amp;max_results=40&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>40</opensearch:itemsPerPage>
+  <opensearch:totalResults>14</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2607.26865v3</id>
+    <title>Think Short, Defer Smart, Act, and Repeat: Calibrated Reasoning and Uncertainty-Aware Deferral for Edge LLM Agents</title>
+    <updated>2026-09-25T15:00:53Z</updated>
+    <link href="https://arxiv.org/abs/2607.26865v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.26865v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>LLM agents following the ReAct paradigm are promising enablers of complex multi-step tasks, including multi-hop question answering, code generation, and control of physical AI systems. Yet, when deployed at the edge, they must tightly manage their reasoning budget while remaining reliable and deferring to a cloud-side model only when local uncertainty is too high to act safely. We propose Think Short, Defer Smart (TSDS), a framework that synergistically integrates a lightweight convergence probe, which halts on-device reasoning once the intended action has stabilized, with a perplexity-based deferral rule that escalates uncertain actions to a cloud-side model. Both mechanisms are jointly calibrated on end-to-end episode trajectories via a multi-objective Learn-Then-Test (LTT) procedure, providing simultaneous finite-sample guarantees on expected episode reward and cloud-call rate. We evaluate TSDS on four ReAct benchmarks spanning arithmetic reasoning (GSM8K), multi-hop question answering (HotpotQA), code generation (MBPP), and multi-step embodied planning (household robot), and compare against thought-calibration-only and calibrated-deferral-only standalone baselines. TSDS reduces per-episode thinking compute by 43%-65% over deferral-only baselines across HotpotQA, MBPP, and the household robot task, while maintaining certified reward and cloud-call rate guarantees.</summary>
+    <category term="stat.ML" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.IT" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-29T12:47:05Z</published>
+    <arxiv:primary_category term="stat.ML"/>
+    <author>
+      <name>Amirmohammad Farzaneh</name>
+    </author>
+    <author>
+      <name>Osvaldo Simeone</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2601.06786v1</id>
+    <title>EpiCaR: Knowing What You Don't Know Matters for Better Reasoning in LLMs</title>
+    <updated>2026-01-11T06:21:13Z</updated>
+    <link href="https://arxiv.org/abs/2601.06786v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2601.06786v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Improving the reasoning abilities of large language models (LLMs) has largely relied on iterative self-training with model-generated data. While effective at boosting accuracy, existing approaches primarily reinforce successful reasoning paths, incurring a substantial calibration cost: models become overconfident and lose the ability to represent uncertainty. This failure has been characterized as a form of model collapse in alignment, where predictive distributions degenerate toward low-variance point estimates. We address this issue by reframing reasoning training as an epistemic learning problem, in which models must learn not only how to reason, but also when their reasoning should be trusted. We propose epistemically-calibrated reasoning (EpiCaR) as a training objective that jointly optimizes reasoning performance and calibration, and instantiate it within an iterative supervised fine-tuning framework using explicit self-evaluation signals. Experiments on Llama-3 and Qwen-3 families demonstrate that our approach achieves Pareto-superiority over standard baselines in both accuracy and calibration, particularly in models with sufficient reasoning capacity (e.g., 3B+). This framework generalizes effectively to OOD mathematical reasoning (GSM8K) and code generation (MBPP). Ultimately, our approach enables a 3X reduction in inference compute, matching the K=30 performance of STaR with only K=10 samples in capable models.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-01-11T06:21:13Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Jewon Yeom</name>
+    </author>
+    <author>
+      <name>Jaewon Sok</name>
+    </author>
+    <author>
+      <name>Seonghyeon Park</name>
+    </author>
+    <author>
+      <name>Jeongjae Park</name>
+    </author>
+    <author>
+      <name>Taesup Kim</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2611.02852v1</id>
+    <title>Value-Conditioned Proposal Acquisition for Test-Time Reasoning</title>
+    <updated>2026-11-02T09:53:39Z</updated>
+    <link href="https://arxiv.org/abs/2611.02852v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2611.02852v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Sampling and selection spend test-time compute inside a candidate pool, but they cannot recover a correct answer that never enters it. We introduce ValueFormation, a test-time policy that decides after each primary-model draw whether to stop, continue sampling, or acquire one proposal from a heterogeneous reasoning specialist. The three actions are compared on one cost-regularized value scale learned from vote-state features; the calibration is frozen across tasks and primary models, and acquired proposals are accepted only through a frozen posterior comparison. On held-out MATH-500, one Llama-fitted calibration improves over the strongest of eight identically evaluated baselines by more than fifteen points for each of three 8B primaries and transfers unchanged to Qwen3-14B. Removing acquisition lowers Llama MATH accuracy by 20.43 points, while same-trace and same-access replays attribute the gain to state-conditioned acquisition rather than specialist access alone. Where primary coverage is high, as on GSM8K, acquisition is rare and gains mainly come from cheaper allocation; on MBPP, a fixed code route attains the top accuracy at the lowest interaction cost. Varying the token price monotonically reduces calls without retraining.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-11-02T09:53:39Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Zeyan Li</name>
+    </author>
+    <author>
+      <name>Jianfeng Xu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.16727v1</id>
+    <title>PopuLoRA: Co-Evolving LLM Populations for Reasoning Self-Play</title>
+    <updated>2026-05-16T00:29:35Z</updated>
+    <link href="https://arxiv.org/abs/2605.16727v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.16727v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We introduce PopuLoRA, a population-based asymmetric self-play framework for reinforcement learning with verifiable rewards (RLVR) post-training of LLMs. Teachers and students are specialised LoRA adapters on a shared frozen base: teachers propose problems, matched students solve them under a programmatic verifier, and cross-evaluation between sub-populations replaces the self-calibration that limits single-agent self-play. A family of LoRA weight-space evolution operators (mutations and crossovers that produce same-rank population members in seconds) serves as the replacement step of a population-based training loop at 7B scale. We instantiate PopuLoRA on top of Absolute Zero Reasoner and compare it against a per-adapter compute-matched single-agent baseline. Where the single agent self-calibrates to generating easy problems it can reliably solve, the population enters a co-evolutionary arms race: teachers produce increasingly complex problems, student solve rates oscillate, and problem-space coverage keeps expanding throughout training. Despite lower training-time reward, the population mean outperforms the baseline on three code benchmarks (HumanEval+, MBPP+, LiveCodeBench) and seven math benchmarks (AIME 24/25, AMC 23, MATH-500, Minerva, GSM8K, OlympiadBench), and even the weakest member of the population beats the baseline on aggregate.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-16T00:29:35Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Roger Creus Castanyer</name>
+    </author>
+    <author>
+      <name>Geoffrey Bradway</name>
+    </author>
+    <author>
+      <name>Lorenz Wolf</name>
+    </author>
+    <author>
+      <name>Maxwill Lin</name>
+    </author>
+    <author>
+      <name>Augustine N. Mavor-Parker</name>
+    </author>
+    <author>
+      <name>Matthew James Sargent</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.12947v1</id>
+    <title>When Should an AI Workflow Release? Always-Valid Inference for Black-Box Generate-Verify Systems</title>
+    <updated>2026-05-13T03:30:39Z</updated>
+    <link href="https://arxiv.org/abs/2605.12947v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.12947v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>LLM-enabled AI workflows increasingly produce outputs through iterative generate-evaluate-revise loops. Each iteration can improve the candidate, but it also creates a release decision: when to stop and output the current result? This raises a statistical challenge because deployment-time evaluator scores are adaptively generated and repeatedly monitored, yet the likelihood models or exchangeability assumptions typically used for calibration are unavailable. We propose an always-valid release wrapper for existing generator-evaluator pipelines. The wrapper builds a hard-negative reference pool of high-scoring failures, calibrates deployment-time evaluator scores against this pool, and accumulates the resulting evidence with an e-process. This separates two roles: the reference pool turns black-box scores into conservative evidence, while the e-process provides validity under optional stopping. In theory, we show that a conservative reference pool yields finite-sample control of the probability of releasing on infeasible tasks, that is, tasks for which the given workflow is not capable of producing a reliable solution. We also characterize conditions under which the same conservative rule still achieves nontrivial release on feasible tasks. In an MBPP+ coding-agent case study, the wrapper reduces premature incorrect release relative to baseline stopping rules while still releasing on tasks for which the workflow repeatedly accumulates moderate supporting evidence.</summary>
+    <category term="stat.ML" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="stat.ME" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-13T03:30:39Z</published>
+    <arxiv:primary_category term="stat.ML"/>
+    <author>
+      <name>Young Hyun Cho</name>
+    </author>
+    <author>
+      <name>Will Wei Sun</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.24087v1</id>
+    <title>Knowing When to Ask for Help: Bayesian Self-Escalation in Hierarchical LLM Agents</title>
+    <updated>2026-08-25T05:35:07Z</updated>
+    <link href="https://arxiv.org/abs/2608.24087v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.24087v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Current LLM agent systems decide delegation before reasoning begins (a router picks a model) or after a response is complete (a verifier scores it and may retry). We study a third regime: an agent that recognises, during its own reasoning, that it is unlikely to succeed and transfers control to a stronger model. We formulate intra-generation delegation as a Bayesian optimal-stopping problem over a learned competence posterior -- an online estimate of the agent's eventual task success whose sufficient statistics are learned from labelled trajectories, not read off raw entropy. We derive the myopic escalation threshold in closed form, characterise the optimal policy via dynamic programming, and prove that the optimal policy is a time-varying threshold with no shape assumption on the raw signal. We further prove exponential separation of the oracle belief at the Chernoff-information rate of the signal, a regret bound governed by the calibration of the posterior, and a finite-sample guarantee: with n labelled calibration trajectories the deployed plug-in policy's regret decays as 1/sqrt(n). A controlled simulation study confirms each prediction of the theory, including the predicted 1/sqrt(n) rate. We additionally report a real-model validation on a Qwen2.5-Coder 1.5B-&gt;7B code cascade (MBPP, 257 tasks), confirming two of three pre-registered predictions: the escalation frontier dominates post-hoc routing at equal cost, and the cumulative competence belief's discrimination rises over generation.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="stat.ML" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-25T05:35:07Z</published>
+    <arxiv:comment>21 pages, 5 figures. Code and data: https://github.com/nadeem-shaikh/llm-self-escalation . Associated record: https://doi.org/10.5281/zenodo.21330787</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Nadeem Shaikh</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.39853v1</id>
+    <title>KV Cache Quantization for Diffusion Language Models</title>
+    <updated>2026-10-29T11:31:41Z</updated>
+    <link href="https://arxiv.org/abs/2610.39853v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.39853v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>KV cache quantization is well studied for autoregressive language models, where cached prefix states are exact under causal attention and quantization is mainly a cache reconstruction problem. Diffusion language models (dLLMs) break this assumption. Fast dLLM inference reuses KV states across denoising steps, but bidirectional token representations can change as masked tokens are revealed, so the reused cache may already differ from full recomputation before quantization is applied. We study KV cache quantization under this cache-reuse error. We adapt KIVI and KVQuant to Fast-dLLM-style prefix and dual cache reuse, and introduce TRACE and dLLM-KVQ. TRACE reconstructs feasible dLLM reveal trajectories from prompt-answer pairs, providing calibration states that match iterative masked decoding. dLLM-KVQ uses these trajectories to choose per-layer K-cache entries that remain in high precision according to output- and attention-level behavior metrics, while applying standard low-bit value quantization. Across LLaDA and Dream evaluations on GSM8K, HumanEval, MATH, and MBPP, dLLM-KVQ achieves the highest average score among quantized methods across the reported 4-bit and 2-bit prefix/dual cache settings.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-29T11:31:41Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Yan Tai</name>
+    </author>
+    <author>
+      <name>Yunan Ding</name>
+    </author>
+    <author>
+      <name>Guangzhao Li</name>
+    </author>
+    <author>
+      <name>Siqi Luo</name>
+    </author>
+    <author>
+      <name>Chaoyang Zhang</name>
+    </author>
+    <author>
+      <name>Guangtao Zhai</name>
+    </author>
+    <author>
+      <name>Guodong Guo</name>
+    </author>
+    <author>
+      <name>Xiaohong Liu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.36734v1</id>
+    <title>Distilling What Matters: Confidence-Aware Selective Distillation for Large Language Models</title>
+    <updated>2026-09-29T05:07:47Z</updated>
+    <link href="https://arxiv.org/abs/2609.36734v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.36734v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Knowledge Distillation (KD) trains a smaller-capacity student model to imitate a larger-capacity teacher model by matching output distributions, implicitly assuming the teacher to be a reliable oracle. In large language models (LLMs), this assumption often fails: teacher predictions can exhibit high entropy and hallucinations, causing standard KD to degrade well-calibrated student priors. We propose CaRE-KD, a confidence-gated distillation framework that replaces static objectives with uncertainty-adaptive optimization. CaRE-KD has two components: a token-level loss (CaRE-Divergence) that adaptively switches between Forward and Reverse KL divergence based on teacher--student confidence, and a batch-level epistemic rejection mechanism (Revival) that suppresses updates when the teacher is more uncertain than the student. We provide a gradient-level analysis showing how this dual-granularity design induces a conditional calibration mechanism that prior static divergences cannot reproduce. Empirically, across eight teacher--student pairs and eleven benchmarks spanning instruction following, chat alignment, code generation, and mathematical reasoning, CaRE-KD delivers consistent gains over strong baselines (Skewed-KL, $α$--$β$ divergence). Highlights include up to $+3.2$ average ROUGE-L on instruction-following tasks, $+2.1$ pass@1 on MBPP, $+1.7$ accuracy on GSM8k, and $+1.8$ accuracy on CollegeMath over the strongest baseline, with consistent gains in LLM-as-a-judge factuality (up to $+2.5$ per task over Skewed-RKL). Revival further acts as a principled, loss-agnostic plug-in that systematically strengthens existing distillation objectives by filtering epistemically unreliable teacher supervision.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-29T05:07:47Z</published>
+    <arxiv:comment>Accepted at NeurIPS 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Ayan Sengupta</name>
+    </author>
+    <author>
+      <name>Vaibhav Seth</name>
+    </author>
+    <author>
+      <name>Tanmoy Chakraborty</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2604.18245v3</id>
+    <title>Correction and Corruption: A Two-Rate View of Error Flow in LLM Protocols</title>
+    <updated>2026-08-10T22:15:29Z</updated>
+    <link href="https://arxiv.org/abs/2604.18245v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2604.18245v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models operate in protocols containing multiple calls, yet added calls are usually evaluated only by their net effect. That summary cannot distinguish correcting unsuccessful outputs from corrupting initially successful ones. We develop a paired audit recording success before and after a specified operation on the same tasks under one binary rule. Correction and corruption rates exactly account for the net change: gains come from corrected failures and losses from corrupted successes. The break-even correction requirement rises sharply with baseline success, so the same behavior can improve a moderate-baseline population but harm a high-baseline one. Applied to published GPT-4 GSM8K results, the framework bounds within-sample correction and corruption counts from aggregate accuracies. We ask if calibration estimates predict unobserved outcomes, how rates change with information supplied to an operation, and whether successive measurements combine. Calibration estimates track accuracy on a disjoint sample from the same generator. Under reweighting of generator-defined groups, pooled estimates can fail while group-specific estimates reduce average prediction error. On GSM8K, observable features capture limited variation at these sample sizes, so the group-level application rule remains exploratory. Reordering a fixed four-candidate set changes both rates, with the accuracy effect depending on whether a correct alternative is available; on MBPP, adding a helper artifact raises corruptions among 357 initially passing programs from 28 to 100. Direct and composed transition estimates are close on average within samples; weighting initial-success rows by support substantially reduces held-out discrepancy. Correction and corruption are measurements of specified operations, not model constants, and can guide input choices, application decisions, and composition tests.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-04-20T13:25:40Z</published>
+    <arxiv:comment>16 pages main paper, 19 pages supplementary material included as ancillary file. Major revision with substantially reorganized and streamlined presentation; expanded held-out prediction, population-composition, input-sensitivity, and composition analyses; includes an MBPP corruption audit and updated related work</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Fernando Reitich</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2603.23528v1</id>
+    <title>The Compression Paradox in LLM Inference: Provider-Dependent Energy Effects of Prompt Compression</title>
+    <updated>2026-03-06T23:31:00Z</updated>
+    <link href="https://arxiv.org/abs/2603.23528v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2603.23528v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The rapid proliferation of Large Language Models has created an environmental paradox: the very technology that could help solve climate challenges is itself becoming a significant contributor to global carbon emissions. We test whether prompt compression improves inference energy efficiency in 28,421 successful API trials (28,428 planned) across three providers (OpenAI GPT-4o-mini, Anthropic Claude-3.5-Sonnet, and DeepSeek-Chat), five benchmarks (HumanEval, MBPP, GSM8K, MATH, MMLU), and four compression ratios (r in {1.0, 0.7, 0.5, 0.3}). Energy is estimated with a token-based proxy calibrated against local direct measurements, and quality is tracked with benchmark pass rates. Compression produced substantial quality loss (overall pass rate 26.0% at baseline vs. 1.5% at r=0.7) and strongly provider-dependent energy behavior. DeepSeek exhibited output expansion under compression (21 to 798 tokens at r=0.3), corresponding to energy increases up to +2,140%, while GPT-4o-mini showed mixed effects including a reduction at r=0.5. These results indicate that input-token reduction alone is not a reliable energy optimization strategy in production inference. For the evaluated settings, model selection and output-length control provided more consistent energy-quality tradeoffs than prompt compression.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-03-06T23:31:00Z</published>
+    <arxiv:comment>16 pages, 5 figures, 5 tables. Includes data/code availability, ethics statement, and competing interests</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Warren Johnson</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.22511v1</id>
+    <title>Identity or Prompt Noise? A Calibrated Invariance Audit of LLM Code Generation</title>
+    <updated>2026-09-18T19:20:12Z</updated>
+    <link href="https://arxiv.org/abs/2609.22511v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.22511v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Identity cues are irrelevant to a fixed programming specification, but raw counterfactual differences can arise from unequal samples and prompt wording. We audit 30.73 million executed Python generations from seven checkpoints on HumanEval+ and MBPP+, supplemented by an exploratory 550B slice, under model-assigned gender, country, and occupation personas. Within-task randomization and false-discovery-rate control identify occupation as the most consistent structural axis: CodeBLEU dispersion exceeds its exchangeability null in 10/14 model--benchmark cells, remains significant in 8/12 full-coverage cells, and exceeds the country ratio in every paired cell, although the median excess is only 0.141 points. In six high-pass-rate cells, occupation dispersion replicates across token similarity, length, comments, reference similarity, and complexity, while pass-rate dispersion is significant in none. Country leads raw dispersion in 12/14 cells but has a median calibrated ratio of 1.00. Gender-associated variation cannot be separated from persona wording in this design. Thus, the evidence supports small, reproducible occupation-conditioned changes in code form, not stable disadvantage to named identities or demonstrated downstream harm. We use this finding to motivate a broader commentary on the potential impacts of bias in code generation, including the possibility that models may condition their outputs on identity information available from prior conversational context.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-18T19:20:12Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Maksim E. Eren</name>
+    </author>
+    <author>
+      <name>Ryan Barron</name>
+    </author>
+    <author>
+      <name>Eric Michalak</name>
+    </author>
+    <author>
+      <name>Charles Nicholas</name>
+    </author>
+    <author>
+      <name>Manish Bhattarai</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.15058v1</id>
+    <title>The Optimal Decoder is Tilted Temperature</title>
+    <updated>2026-10-10T16:49:38Z</updated>
+    <link href="https://arxiv.org/abs/2610.15058v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.15058v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Larger sample budgets benefit from higher sampling temperatures in LLMs, but what temperature tuning optimizes and why it works remain poorly understood. We seek to answer these questions: we pose decoding as pass@$k$ maximization subject to two constraints that encode critical decoding failure modes: an entropy floor preventing diversity collapse, and a cross-entropy ceiling preventing implausibility. We prove that this maximization takes the form of a single closed-form conditional sampling rule, the \emph{tilted temperature} $q^\star \propto \bigl(p e^{ηV}\bigr)^{1/T}$. Here, the tilt comes from a verifier potential $V$ that quantifies how likely a partial generation is to eventually pass. Ordinary temperature sampling, verifier-greedy decoding, and reward-tilted policies represent special cases. We further show that, under a natural rule for scaling the diversity budget with sample size $k$, the resulting optimal temperature increases with $k$, turning empirical choice into a theorem. The optimum still needs the unknown verifier potential, which we estimate using two design approaches. In the online setting, our J-EOS algorithm jointly tracks the two constraint multipliers and learns the verifier potential from binary pass/ fail feedback alone. In the offline setting, we show that when the model is calibrated, its log-probability tracks correctness up to an affine map. Under this condition, the tilt collapses into the exponent and the optimum reduces to ordinary temperature sampling. Calibrated Temperature Decoding (CTD) then fits one scalar offline and samples with zero additional inference-time overhead relative to temperature sampling. Building on these decision rules, we design a practical decoding algorithm for code generation and evaluate it alongside CTD on benchmarks including HumanEval and MBPP, showing improvements over standard and adaptive decoding baselines.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-10T16:49:38Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Nikolaos Papagiannis</name>
+    </author>
+    <author>
+      <name>Ananth Grama</name>
+    </author>
+    <author>
+      <name>Wojciech Szpankowski</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.10333v1</id>
+    <title>MERA: Model Evolution and Routing with Skill Adaptation for Agentic Systems at Scale</title>
+    <updated>2026-08-11T00:28:02Z</updated>
+    <link href="https://arxiv.org/abs/2608.10333v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.10333v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>LLM agents execute heterogeneous sequences of model calls within a single task: some invocations require careful reasoning, while others are structured steps such as formatting or tool-argument construction. Prior routing methods exploit this asymmetry by assigning easy invocations to a cheaper small model and difficult ones to a large model. Such policies reduce inference cost, but they leave the small model's capability unchanged, so attainable savings remain bounded by the work the student can already solve. MERA instead improves the small model itself, using a single model invocation as the unit of adaptation. In each cycle, MERA replays failed student invocations to obtain execution-verified teacher demonstrations, distills recurring procedures into an iteratively updated SkillBook, and fine-tunes a student LoRA adapter via supervised learning and optional GRPO. Routing serves as supporting machinery for deployment: the improved student is served behind a cost-calibrated router with verifier-backed fallback, and a candidate SkillBook, adapter, or router is admitted only when joint replay preserves task quality. Empirically, four-cycle adaptation raises Qwen2.5-Coder-1.5B from 28.7% to 49.7% pass on held-out HumanEval+MBPP. Under verifier-backed fallback, the deployed policy retains 88.3% pass at 60.8% of always-Luna cost. On TAU-2, a fine-tuned Qwen3.5-2B improves from 14/35 to 18/35 and matches an unadapted 4B model. These results indicate that verifier-backed multi-cycle adaptation can increase small-model capability, rather than only routing around a fixed student.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-11T00:28:02Z</published>
+    <arxiv:comment>Preliminary version in CAIS RL-Eval</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Yuhang Yao</name>
+    </author>
+    <author>
+      <name>Zeyu Wang</name>
+    </author>
+    <author>
+      <name>Wanyi Chen</name>
+    </author>
+    <author>
+      <name>Tongyun Yang</name>
+    </author>
+    <author>
+      <name>Yuhang Han</name>
+    </author>
+    <author>
+      <name>Jie Xiao</name>
+    </author>
+    <author>
+      <name>Chengke Bao</name>
+    </author>
+    <author>
+      <name>Tianyi Zhao</name>
+    </author>
+    <author>
+      <name>Lynn Ai</name>
+    </author>
+    <author>
+      <name>Eric Yang</name>
+    </author>
+    <author>
+      <name>Tianyu Shi</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.16999v1</id>
+    <title>Selection Without Signal, Recovery Through Expression: A Measurement Study of Post-Hoc Falsification Operators for Frozen Small Code Models</title>
+    <updated>2026-06-15T17:36:23Z</updated>
+    <link href="https://arxiv.org/abs/2606.16999v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.16999v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Frozen small code models (&lt;=1.5B parameters, run locally without fine-tuning) suit offline and privacy-constrained use, but often emit plausible-but-wrong programs. A natural remedy is a post-hoc operator that selects, verifies, repairs, or re-processes the model's samples without retraining; in principled form it is Popperian: attack each candidate with a severe test, keep what survives. We measure whether such operators help. Under one deterministic execution oracle and a leakage-free, matched-compute protocol, 26 semantic post-hoc operators (selection, verification, repair, elimination, portfolios, sound vetoes, generation conditioning) are evaluated against Best-of-N (BoN); on the cells and benchmarks tested, none improves held-out accuracy over BoN. The negative is mechanistic: a coverage wall (systematic hard-task failures deeper sampling does not rescue), a capability scissors (a competent generator leaves almost no discriminable error among visible-test passers), and a near-empty consensus trap (the visible-pass-but-hidden-wrong majority a leakage-free selector needs rarely co-occurs with a correct alternative). A distribution-free do-no-harm bound cannot certify a harm rate &lt;=alpha at zero observed harm unless n&gt;=45. Two operators help on a different axis, outside the semantic output space. An expression-layer recovery (M1), the only accuracy gain here, recovers correct programs the standard extractor discards (robust extraction and public-test signature alignment); it does no harm (b10=0), is leakage-free, and lifts DeepSeek-Coder-1.3B by +12 tasks on HumanEval+ (p=2.4e-4). An adaptive consensus early-stop (ACE) is a calibrated compute-saving control (~19% saving, zero harm). M1 and the selection negative replicate on HumanEval+ and MBPP+ across three model cells. The lesson: fix the harness and measure coverage before blaming semantic post-hoc reasoning.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-15T17:36:23Z</published>
+    <arxiv:comment>33 pages, 4 figures, 8 tables</arxiv:comment>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Mehmet Iscan</name>
+    </author>
+  </entry>
+</feed>

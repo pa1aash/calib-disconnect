@@ -1,0 +1,266 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/Gre8DCrYTEge123Pw+oGOnVLvjU</id>
+  <title>arXiv Query: search_query=abs:"verbalized confidence" AND abs:"code" AND (abs:"reinforcement learning" OR abs:"fine-tuning" OR abs:"training")&amp;id_list=&amp;start=0&amp;max_results=50</title>
+  <updated>2026-11-10T08:53:12Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=abs:%22verbalized+confidence%22+AND+(abs:%22code%22+AND+(abs:%22reinforcement+learning%22+OR+(abs:%22fine-tuning%22+OR+abs:%22training%22)))&amp;start=0&amp;max_results=50&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>50</opensearch:itemsPerPage>
+  <opensearch:totalResults>9</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2606.17056v1</id>
+    <title>The Value Axis: Language Models Encode Whether They're on the Right Track</title>
+    <updated>2026-06-15T17:59:58Z</updated>
+    <link href="https://arxiv.org/abs/2606.17056v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.17056v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We investigate whether language models internally track the value of their current trajectory, defined as the likelihood that their ongoing strategy will achieve their goals. Using synthetic, in-context reinforcement learning data, we construct a "value" axis for Qwen3-8B. We find that activations along this axis distinguish between high vs. low verbalized confidence, rollouts without and with backtracking, and correct vs. corrupted code. Steering towards high value causally suppresses self-correction and reduces explanatory verbosity, while steering towards low value induces backtracking and exploration. We demonstrate that direct preference optimization (DPO) can increase the internal value of rewarded behaviors (e.g. use a certain word), causing the model to act more confidently after exhibiting them. Finally, we apply the value axis to study in-the-wild settings. For example, we find that Qwen assigns low value to politically sensitive chat queries after post-training and that supervised fine-tuning increases internal confidence within the training domain. Our results suggest that language models linearly encode an estimate of expected goal success that modulates their confidence in pursuing a direction.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-15T17:59:58Z</published>
+    <arxiv:comment>Code repository: https://github.com/nickjiang2378/value-axis</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Nick Jiang</name>
+    </author>
+    <author>
+      <name>Isaac Kauvar</name>
+    </author>
+    <author>
+      <name>Jack Lindsey</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.32470v1</id>
+    <title>On the Pitfalls of Verbalized Confidence Priors for Calibrating Large Reasoning Models</title>
+    <updated>2026-09-26T11:00:45Z</updated>
+    <link href="https://arxiv.org/abs/2609.32470v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.32470v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large reasoning models (LRMs) often suffer from overconfidence when expressing their uncertainty. Confidence-aware reinforcement learning (RL) offers a promising way to optimize calibration. However, it relies on on-policy rollouts and is thus constrained by the model's pre-RL confidence distribution, which we term confidence prior. In this work, we reveal that off-the-shelf LRMs exhibit a confidence prior heavily concentrated on a few high values, which persists throughout RL. Theoretically, we prove that this concentration suppresses policy gradient updates for rarely sampled confidence values and inflates the lower bound on expected Brier risk. To overcome this exploration bottleneck, we propose CalibSFT, a plug-and-play supervised fine-tuning stage that shapes a calibrated confidence prior with broad support before RL. For each question, CalibSFT constructs confidence targets combining its success rate with response-level correctness, which provably preserves proper-scoring optimality, and then balances training responses across the confidence spectrum to enable diverse confidence exploration during RL. To learn from incorrect responses without imitating their reasoning, CalibSFT introduces correctness-conditional supervision, guiding confidence across all responses while supervising reasoning only on correct ones. Across 16 mathematical and general reasoning benchmarks, incorporating CalibSFT reduces calibration errors and improves discrimination across five representative RL algorithms while preserving comparable accuracy. Furthermore, CalibSFT delivers practical benefits for downstream selective prediction and model routing. Our code is available at https://github.com/ml-stat-Sustech/verbalized-confidence-training.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-26T11:00:45Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Shuoyuan Wang</name>
+    </author>
+    <author>
+      <name>Beier Luo</name>
+    </author>
+    <author>
+      <name>Hao Zeng</name>
+    </author>
+    <author>
+      <name>Chengyao Yu</name>
+    </author>
+    <author>
+      <name>Songxin Zhang</name>
+    </author>
+    <author>
+      <name>Zejian Xie</name>
+    </author>
+    <author>
+      <name>Bingyi Jing</name>
+    </author>
+    <author>
+      <name>Hongxin Wei</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2507.16806v2</id>
+    <title>Beyond Binary Rewards: Training LMs to Reason About Their Uncertainty</title>
+    <updated>2026-05-15T00:00:51Z</updated>
+    <link href="https://arxiv.org/abs/2507.16806v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2507.16806v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>When language models (LMs) are trained via reinforcement learning (RL) to generate natural language "reasoning chains", their performance improves on a variety of difficult question answering tasks. Today, almost all successful applications of RL for reasoning use binary reward functions that evaluate the correctness of LM outputs. Because such reward functions do not penalize guessing or low-confidence outputs, they often have the unintended side-effect of degrading calibration and increasing the rate at which LMs generate incorrect responses (or "hallucinate") in other problem domains. This paper describes RLCR (Reinforcement Learning with Calibration Rewards), an approach to training reasoning models that jointly improves accuracy and calibrated confidence estimation. During RLCR, LMs generate both predictions and numerical confidence estimates after reasoning. They are trained to optimize a reward function that augments a binary correctness score with a Brier score -- a scoring rule for confidence estimates that incentivizes calibrated prediction. We first prove that this reward function (or any reward function that uses a bounded, proper scoring rule) yields models whose predictions are both accurate and well-calibrated. We next show that across diverse datasets, RLCR substantially improves calibration with no loss in accuracy, on both in-domain and out-of-domain evaluations -- outperforming both ordinary RL training and classifiers trained to assign post-hoc confidence scores. While ordinary RL hurts calibration, RLCR improves it. Finally, we demonstrate that verbalized confidence can be leveraged at test time to improve accuracy and calibration via confidence-weighted scaling methods. Our results show that explicitly optimizing for calibration can produce more generally reliable reasoning models. Code, models, and further info is available at https://rl-calibration.github.io/.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-07-22T17:56:01Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Mehul Damani</name>
+    </author>
+    <author>
+      <name>Isha Puri</name>
+    </author>
+    <author>
+      <name>Stewart Slocum</name>
+    </author>
+    <author>
+      <name>Idan Shenfeld</name>
+    </author>
+    <author>
+      <name>Leshem Choshen</name>
+    </author>
+    <author>
+      <name>Yoon Kim</name>
+    </author>
+    <author>
+      <name>Jacob Andreas</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.02695v1</id>
+    <title>Test-time Calibration Learning for Large Language Model Reasoning</title>
+    <updated>2026-10-02T02:17:17Z</updated>
+    <link href="https://arxiv.org/abs/2610.02695v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.02695v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Reliable large language models (LLMs) must not only produce accurate answers but also express confidence that faithfully reflects their probability of being correct. Such calibration is essential for identifying uncertain predictions and supporting reliable decision-making in real-world deployment. Recent studies incorporate calibration learning into reinforcement learning (RL), jointly optimizing answer correctness and verbalized confidence using ground-truth correctness supervision. However, their reliance on labeled data limits their applicability in practical test-time settings, where ground-truth labels are unavailable and calibration may need to adapt to newly encountered target tasks. To address this challenge, we propose Test-Time Calibration Learning (TTCL), a label-free framework that jointly adapts reasoning accuracy and verbalized confidence directly on unlabeled target-task data. Specifically, TTCL derives self-supervision signals for both correctness and calibration from multiple model-generated responses, enabling calibration learning at test time without ground-truth labels. Theoretical analysis further establishes TTCL as a bounded surrogate for the ideal calibration objective. Extensive experiments on mathematical reasoning and factual question answering demonstrate that TTCL consistently improves both accuracy and calibration across diverse models and tasks. On base models, TTCL achieves an average relative accuracy improvement of +40.13% and an ECE reduction of +70.80% across eight benchmarks. Moreover, TTCL can further improve both accuracy and calibration for already calibrated models under domain shift, particularly when source-domain calibration transfers poorly to target tasks. In the math-to-factQA setting, TTCL achieves an average relative accuracy gain of +20.35% and reduces ECE by +53.83%. The source code is released at https://github.com/tmlr-group/TTCL.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-02T02:17:17Z</published>
+    <arxiv:comment>34 pages</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Zizhuo Zhang</name>
+    </author>
+    <author>
+      <name>Xiong Peng</name>
+    </author>
+    <author>
+      <name>Jingwei Sun</name>
+    </author>
+    <author>
+      <name>Rong Yao</name>
+    </author>
+    <author>
+      <name>Shixiong Kai</name>
+    </author>
+    <author>
+      <name>Mingxuan Yuan</name>
+    </author>
+    <author>
+      <name>Bo Han</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2508.18847v2</id>
+    <title>ConfTuner: Training Large Language Models to Express Their Confidence Verbally</title>
+    <updated>2025-11-25T11:46:58Z</updated>
+    <link href="https://arxiv.org/abs/2508.18847v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2508.18847v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) are increasingly deployed in high-stakes domains such as science, law, and healthcare, where accurate expressions of uncertainty are essential for reliability and trust. However, current LLMs are often observed to generate incorrect answers with high confidence, a phenomenon known as "overconfidence". Recent efforts have focused on calibrating LLMs' verbalized confidence: i.e., their expressions of confidence in text form, such as "I am 80% confident that...". Existing approaches either rely on prompt engineering or fine-tuning with heuristically generated uncertainty estimates, both of which have limited effectiveness and generalizability. Motivated by the notion of proper scoring rules for calibration in classical machine learning models, we introduce ConfTuner, a simple and efficient fine-tuning method that introduces minimal overhead and does not require ground-truth confidence scores or proxy confidence estimates. ConfTuner relies on a new loss function, tokenized Brier score, which we theoretically prove to be a proper scoring rule, intuitively meaning that it "correctly incentivizes the model to report its true probability of being correct". ConfTuner improves calibration across diverse reasoning tasks and generalizes to black-box models such as GPT-4o. Our results further show that better-calibrated confidence enables downstream gains in self-correction and model cascade, advancing the development of trustworthy LLM systems. The code is available at https://github.com/liushiliushi/ConfTuner.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-08-26T09:25:32Z</published>
+    <arxiv:comment>Accepted by NeurIPS 2025</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Yibo Li</name>
+    </author>
+    <author>
+      <name>Miao Xiong</name>
+    </author>
+    <author>
+      <name>Jiaying Wu</name>
+    </author>
+    <author>
+      <name>Bryan Hooi</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.01612v1</id>
+    <title>Scaling with Confidence: Calibrating Confidence of LLMs for Adaptive Test Time Scaling</title>
+    <updated>2026-07-02T02:29:33Z</updated>
+    <link href="https://arxiv.org/abs/2607.01612v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.01612v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Training large language models (LLMs) with reinforcement learning (RL) has significantly advanced their performance on reasoning and question-answering tasks. However, prevailing RL reward designs typically prioritize response correctness, neglecting to incentivize models to express their confidence accurately. This leads to a critical problem: performance gains are often accompanied by poor calibration between confidence and accuracy, misleading models to overconfidently hallucinate when uncertain. To address this limitation, we propose $\textbf{C}$orrectness and $\textbf{C}$onfidence $\textbf{C}$alibration $\textbf{R}$einforcement $\textbf{L}$earning ($\textbf{C3RL}$), a novel RL algorithm integrating correctness, calibration and dataset-informed reference accuracy rewards together. Comprehensive evaluation across 8 text and multimodal datasets demonstrates that C3RL enhances calibration without sacrificing accuracy, outperforming the current state-of-the-art method in both performance and calibration metrics. Utilizing the well-calibrated verbalized confidence from C3RL, we further introduce $\textbf{C}$onfidence-based $\textbf{A}$daptive Test Time $\textbf{S}$caling ($\textbf{CAS}$), an adjustable inference-time strategy that allocates computational resources based on response confidence. Experiments show that CAS surpasses majority voting on both in-domain and out-of-domain datasets while reducing the inference budget by up to 12.33 times. We believe the synergy of C3RL and CAS paves the way for deploying more reliable and resource-efficient LLMs. The code, data and models will be released.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-02T02:29:33Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Xuqing Yang</name>
+    </author>
+    <author>
+      <name>Yi Yuan</name>
+    </author>
+    <author>
+      <name>Shanzhe Lei</name>
+    </author>
+    <author>
+      <name>Xuhong Wang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2512.22245v1</id>
+    <title>Calibrating LLM Judges: Linear Probes for Fast and Reliable Uncertainty Estimation</title>
+    <updated>2025-12-23T22:08:46Z</updated>
+    <link href="https://arxiv.org/abs/2512.22245v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2512.22245v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>As LLM-based judges become integral to industry applications, obtaining well-calibrated uncertainty estimates efficiently has become critical for production deployment. However, existing techniques, such as verbalized confidence and multi-generation methods, are often either poorly calibrated or computationally expensive. We introduce linear probes trained with a Brier score-based loss to provide calibrated uncertainty estimates from reasoning judges' hidden states, requiring no additional model training. We evaluate our approach on both objective tasks (reasoning, mathematics, factuality, coding) and subjective human preference judgments. Our results demonstrate that probes achieve superior calibration compared to existing methods with $\approx10$x computational savings, generalize robustly to unseen evaluation domains, and deliver higher accuracy on high-confidence predictions. However, probes produce conservative estimates that underperform on easier datasets but may benefit safety-critical deployments prioritizing low false-positive rates. Overall, our work demonstrates that interpretability-based uncertainty estimation provides a practical and scalable plug-and-play solution for LLM judges in production.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-12-23T22:08:46Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Bhaktipriya Radharapu</name>
+    </author>
+    <author>
+      <name>Eshika Saxena</name>
+    </author>
+    <author>
+      <name>Kenneth Li</name>
+    </author>
+    <author>
+      <name>Chenxi Whitehouse</name>
+    </author>
+    <author>
+      <name>Adina Williams</name>
+    </author>
+    <author>
+      <name>Nicola Cancedda</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.27023v1</id>
+    <title>Just how sure are you? Improving Verbalized Uncertainty Calibration in Medical VQA</title>
+    <updated>2026-06-25T13:33:58Z</updated>
+    <link href="https://arxiv.org/abs/2606.27023v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.27023v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Multimodal large language models (MLLMs) applied to Medical Visual Question Answering (VQA) tend to produce overconfident outputs regardless of actual correctness, and existing verbalized confidence calibration methods, developed primarily for text only LLMs, do not account for the multimodal nature of medical image understanding.
+  This work proposes a training based framework that finetunes MLLMs to improve their calibration using a composite loss function combining a Brier style calibration term, an anchor regularizer that prevents confidence collapse toward extreme values, a contrastive image text alignment term, and a KL based model stabilization term. The alignment signal is derived from a $2 \times 2$ factorial perturbation design that crosses image presence with text integrity, probing the reliance of the model on visual modality input versus language priors. Finally, a top K KL divergence regularizer is used to protect the answering ability of the model during finetuning.
+  Across three Medical VQA benchmarks and two architectures (MedGemma 4B IT and Qwen2 VL 7B Instruct), our method reduces calibration error by 60% or more, and improves discrimination by 26% or more, while preserving predictive accuracy. On average across benchmarks, the technique outperforms prompting based, sampling based, and training based approaches, and ablation experiments confirm that each component of the loss function is indeed necessary for improving the calibration. All code for the experiments is publicly available.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-25T13:33:58Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Eren Senoglu</name>
+    </author>
+    <author>
+      <name>Federico Toschi</name>
+    </author>
+    <author>
+      <name>Nicolo Brunello</name>
+    </author>
+    <author>
+      <name>Andrea Sassella</name>
+    </author>
+    <author>
+      <name>Mark James Carman</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2508.14390v2</id>
+    <title>REHEARSE: Experiential Rehearsal for Verbal Confidence Calibration in Large Language Models</title>
+    <updated>2026-08-13T01:37:05Z</updated>
+    <link href="https://arxiv.org/abs/2508.14390v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2508.14390v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) often express verbal confidence that is poorly aligned with actual correctness, limiting their reliability in safety-critical applications. Existing prompt-based methods treat calibration largely as a one-shot inference problem, relying on either instance-level reasoning or post-hoc self-assessment. We introduce Rehearse (Experiential Rehearsal), a training-free method that instead enables models to adapt from their own scored confidence experience. In a credence-calibration game grounded in a strictly proper scoring rule, the model receives feedback on prior confidence decisions; this experience is summarized in a post-game trajectory prefix that captures systematic over- or under-confidence. At inference time, the model applies this cross-instance calibration signal to the chain-of-thought reasoning trace for each new question. Across four LLMs, three benchmarks, and five random seeds, Rehearse achieves the lowest average ECE among training-free methods with improved accuracy, reducing average ECE by 58% relative to the uncalibrated baseline. Code is available at https://anonymous.4open.science/r/Experiential-Rehearsal-7C77/.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-08-20T03:33:38Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Ke Fang</name>
+    </author>
+    <author>
+      <name>Tianyi Zhao</name>
+    </author>
+    <author>
+      <name>Qianwen Wang</name>
+    </author>
+    <author>
+      <name>Lu Cheng</name>
+    </author>
+  </entry>
+</feed>

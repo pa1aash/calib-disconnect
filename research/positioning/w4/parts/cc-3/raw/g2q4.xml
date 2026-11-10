@@ -1,0 +1,280 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/91dC6c331ue/iCz7tdHiUiLZ9SU</id>
+  <title>arXiv Query: search_query=abs:calibration AND abs:"code" AND (abs:"HumanEval+" OR abs:EvalPlus OR abs:"stronger tests" OR abs:"augmented tests")&amp;id_list=&amp;start=0&amp;max_results=100</title>
+  <updated>2026-11-10T08:54:09Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=abs:calibration+AND+(abs:%22code%22+AND+(abs:%22HumanEval%2B%22+OR+(abs:EvalPlus+OR+(abs:%22stronger+tests%22+OR+abs:%22augmented+tests%22))))&amp;start=0&amp;max_results=100&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>100</opensearch:itemsPerPage>
+  <opensearch:totalResults>12</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2610.29121v1</id>
+    <title>Recursive Self-Improvement on a Budget: Scoring Code Edits Before They Run</title>
+    <updated>2026-10-21T03:04:25Z</updated>
+    <link href="https://arxiv.org/abs/2610.29121v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.29121v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>A coding agent that rewrites its own scaffold has to choose which proposed edit to expand before that edit has been evaluated, and the search then has to return one agent. Each run fits one linear readout on the parent's steering-split solve rate and eight coordinates of the proposed diff, from 96 scaffold edits labeled by four evaluations of a 16-instance fit split, and then freezes the coefficients. HumanEval+ reserves 48 instances as the steering split and Polyglot reserves 64. That split scores parents and keeps an archive of four nodes. Huxley-Gödel Machine selection draws a parent by Thompson sampling on the steering counts of nodes that have already been evaluated, and it expands the child that parent proposes. Every method then returns the earliest evaluated node whose steering-split solve count is maximal. The tables report the held-out score of that node on the other 100 HumanEval+ instances and the other 145 Polyglot instances, next to the root scaffold and the calibration edit with the highest fit-split label. Twelve runs of GPT-4o return a node at 87.0% on held-out HumanEval+, against 84.2% for the parent-rate ablation. On that split Huxley-Gödel Machine selection returns 85.1%, the root is at 81.2%, and the calibration-best edit is at 82.8%. On the same split Claude Sonnet 4.5 returns 86.6%, beside 86.5% for Huxley-Gödel Machine selection, 85.3% for the parent-rate ablation, and 85.1% for the calibration-best edit.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-21T03:04:25Z</published>
+    <arxiv:comment>9 pages, 3 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Erfan Darzi</name>
+    </author>
+    <author>
+      <name>Sree Bhargavi Balija</name>
+    </author>
+    <author>
+      <name>Sheng He</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.15159v1</id>
+    <title>Beyond Adjacent Layers: Graph-Guided Layer Fusion for Compressing Large Language Models</title>
+    <updated>2026-10-10T20:16:30Z</updated>
+    <link href="https://arxiv.org/abs/2610.15159v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.15159v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Existing depth-compression methods for large language models (LLMs) score layers individually or group only adjacent or contiguous layers, implicitly assuming that functional redundancy is local. We test this assumption by computing full pairwise Centered Kernel Alignment (CKA) similarity matrices for thirteen LLMs from six architecture families (1.6B-14B parameters). Non-adjacent layers have 3.6-15.9x more high-similarity pairs than adjacent ones, a structure that prior similarity-based layer merging has not systematically exploited. We propose Fusion via Community Mining (FCM), which builds the full L x L similarity graph, uses spectral community detection to find clusters of functionally equivalent layers, keeps the highest-Block-Influence layer in each cluster, and applies LoRA recovery; a pre-specified rule computed only on calibration data chooses between cosine and CKA similarity. At 2x compression, FCM lowers mean perplexity below ShortGPT on twelve of thirteen models, significantly on ten (Welch's t-test with Holm-Bonferroni correction; up to 50% on Qwen3-4B), with Mistral-7B the only loss (+13.4%). Against FlattenGPT, SWM, and DeltaLLM under matched calibration and recovery, FCM gives the best perplexity on ten of thirteen models (mean rank 1.15), and it also outperforms MKA on three anchor models. FCM matches or exceeds ShortGPT on 15 of 20 zero-shot reasoning cells and also improves MMLU, LAMBADA, HumanEval pass@1, and free-form generation quality. The 2x-compressed Qwen2.5-7B has 46% fewer parameters, 42% lower peak VRAM, and 84% higher decode throughput on a single A100. Spectral grouping outperforms Fisher contiguous segmentation by 41% and uniform partitioning by 51%, and FCM's advantage grows beyond a 2x crossover up to 3x and persists at the 14B scale. Code: https://github.com/Usama1002/fcm-layer-fusion</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-10T20:16:30Z</published>
+    <arxiv:comment>Accepted at NeurIPS 2026. Code: https://github.com/Usama1002/fcm-layer-fusion</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Muhammad Usama</name>
+    </author>
+    <author>
+      <name>Yeoreum Jung</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.15058v1</id>
+    <title>The Optimal Decoder is Tilted Temperature</title>
+    <updated>2026-10-10T16:49:38Z</updated>
+    <link href="https://arxiv.org/abs/2610.15058v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.15058v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Larger sample budgets benefit from higher sampling temperatures in LLMs, but what temperature tuning optimizes and why it works remain poorly understood. We seek to answer these questions: we pose decoding as pass@$k$ maximization subject to two constraints that encode critical decoding failure modes: an entropy floor preventing diversity collapse, and a cross-entropy ceiling preventing implausibility. We prove that this maximization takes the form of a single closed-form conditional sampling rule, the \emph{tilted temperature} $q^\star \propto \bigl(p e^{ηV}\bigr)^{1/T}$. Here, the tilt comes from a verifier potential $V$ that quantifies how likely a partial generation is to eventually pass. Ordinary temperature sampling, verifier-greedy decoding, and reward-tilted policies represent special cases. We further show that, under a natural rule for scaling the diversity budget with sample size $k$, the resulting optimal temperature increases with $k$, turning empirical choice into a theorem. The optimum still needs the unknown verifier potential, which we estimate using two design approaches. In the online setting, our J-EOS algorithm jointly tracks the two constraint multipliers and learns the verifier potential from binary pass/ fail feedback alone. In the offline setting, we show that when the model is calibrated, its log-probability tracks correctness up to an affine map. Under this condition, the tilt collapses into the exponent and the optimum reduces to ordinary temperature sampling. Calibrated Temperature Decoding (CTD) then fits one scalar offline and samples with zero additional inference-time overhead relative to temperature sampling. Building on these decision rules, we design a practical decoding algorithm for code generation and evaluate it alongside CTD on benchmarks including HumanEval and MBPP, showing improvements over standard and adaptive decoding baselines.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-10T16:49:38Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Nikolaos Papagiannis</name>
+    </author>
+    <author>
+      <name>Ananth Grama</name>
+    </author>
+    <author>
+      <name>Wojciech Szpankowski</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.22511v1</id>
+    <title>Identity or Prompt Noise? A Calibrated Invariance Audit of LLM Code Generation</title>
+    <updated>2026-09-18T19:20:12Z</updated>
+    <link href="https://arxiv.org/abs/2609.22511v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.22511v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Identity cues are irrelevant to a fixed programming specification, but raw counterfactual differences can arise from unequal samples and prompt wording. We audit 30.73 million executed Python generations from seven checkpoints on HumanEval+ and MBPP+, supplemented by an exploratory 550B slice, under model-assigned gender, country, and occupation personas. Within-task randomization and false-discovery-rate control identify occupation as the most consistent structural axis: CodeBLEU dispersion exceeds its exchangeability null in 10/14 model--benchmark cells, remains significant in 8/12 full-coverage cells, and exceeds the country ratio in every paired cell, although the median excess is only 0.141 points. In six high-pass-rate cells, occupation dispersion replicates across token similarity, length, comments, reference similarity, and complexity, while pass-rate dispersion is significant in none. Country leads raw dispersion in 12/14 cells but has a median calibrated ratio of 1.00. Gender-associated variation cannot be separated from persona wording in this design. Thus, the evidence supports small, reproducible occupation-conditioned changes in code form, not stable disadvantage to named identities or demonstrated downstream harm. We use this finding to motivate a broader commentary on the potential impacts of bias in code generation, including the possibility that models may condition their outputs on identity information available from prior conversational context.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-18T19:20:12Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Maksim E. Eren</name>
+    </author>
+    <author>
+      <name>Ryan Barron</name>
+    </author>
+    <author>
+      <name>Eric Michalak</name>
+    </author>
+    <author>
+      <name>Charles Nicholas</name>
+    </author>
+    <author>
+      <name>Manish Bhattarai</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.13890v2</id>
+    <title>Learning How Much to Collaborate: Difficulty-Aware Topology Selection for Multi-Agent Code Generation</title>
+    <updated>2026-11-01T22:26:48Z</updated>
+    <link href="https://arxiv.org/abs/2609.13890v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.13890v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Multi-agent code-generation systems often use one communication topology for every problem. Across five topologies and 614 problems from APPS, HumanEval+ and LiveCodeBench, the advantage of hierarchical collaboration over a single agent grows from 2.4 points of pass@1 on the easiest third to 21.1 points on the hardest third, at about ten times the token cost. We propose the Difficulty-Aware Topology Selector (DATS), which predicts each topology's success probability and maximises predicted success minus cost. Its graph predictor treats topologies as nodes of a connectivity order. The complete graph-head comparison reports a 1.7-point advantage over a flat multi-label head while changing several mechanisms; capacity-matched adjacency controls show smaller descriptive differences. A scalar cost penalty can be recalibrated without retraining for approximately matched-spend comparisons when targets are attained. With a shared penalty, six methods span 21.6 percentage points of spend; two leading baselines fall behind DATS after method-specific calibration near the common target. At 40% of always-hierarchical cost, DATS reaches 77.7% pass@1 versus 73.6% for always-hierarchical and 74.3% for the strongest learned competitor. The main comparison includes Holm--Bonferroni-adjusted McNemar tests; unequal-cost differences do not imply matched-budget superiority. Backbone-specific gains are 4.07--4.23 points across four backbones. Alternatives to the 39 interpretable features, including a hybrid encoder, yield a largest observed gain of 1.3 points, with no significant pairwise improvement; this establishes neither equivalence nor an upper bound. A study on 400 mathematical reasoning problems reproduces difficulty-dependent collaboration gains, widening from 2.5 to 20.9 points.</summary>
+    <category term="cs.MA" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-12T11:28:16Z</published>
+    <arxiv:comment>Accepted for publication in Neurocomputing. Revised manuscript incorporating peer-review revisions. 23 pages, 11 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.MA"/>
+    <author>
+      <name>Yunsong Hong</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.05881v3</id>
+    <title>Broken on Arrival: Non-Functional Quantized LLM Artifacts in Public Model Registries and How to Catch Them</title>
+    <updated>2026-10-29T03:12:13Z</updated>
+    <link href="https://arxiv.org/abs/2609.05881v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.05881v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Developers download quantized large language models (LLMs) from public registries to run them locally. None of the registries we examined documented functional testing of their files. We tested all 305 eligible code-capable GGUF tags (the llama.cpp format) across 15 model lines in the official Ollama library, plus 22 popular Hugging Face community files. A 15-task code screen identified suspects, which we retested on all 164 HumanEval+ tasks. Seven official tags (2.3%) solved at most six of them. All were low-bit quantizations of models with at most four billion parameters. We rebuilt five suspect files from the original weights. All five registry files matched our uncalibrated rebuilds tensor for tensor, so none was corrupted. Exact reproducibility did not imply function. With the weights, toolchain and tensor mix held fixed, adding an importance matrix raised Qwen2.5-Coder-3B scores at three quantization levels from zero to 76-113 of 164 tasks. The same uncalibrated recipe left the smaller Qwen2.5-Coder-1.5B functional, showing that the recipe alone does not predict failure. None of 66 sampled tags that passed the screen was non-functional. We release the audit data and the quantcheck tool and recommend screening low-bit tags before publication, then calibrating or withholding failures.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-05T05:05:51Z</published>
+    <arxiv:comment>v3 revises the diagnosis of one community file pair (Sec. V, RQ2): a template test on the same hardware shows the two deepseek-coder-6.7B community files fail for lack of a chat template, not by backend; release v3.4 adds the test. All other results unchanged. Code and data: https://github.com/aditi-p31/quantcheck (release v3.4)</arxiv:comment>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Aditi Patodiya</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.24604v3</id>
+    <title>Looping Is Not Reliability: State-Bound Evidence and Typed Revision Contracts for Agentic Code Repair</title>
+    <updated>2026-10-04T08:12:24Z</updated>
+    <link href="https://arxiv.org/abs/2607.24604v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.24604v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Generate--test--revise loops are common in coding agents, but repetition alone provides no reliability guarantee. We study the gap between finding a correct patch and retaining, verifying, and submitting it. A sealed five-seed study over 30 HumanEval repairs produces 900 three-revision trajectories. Under forced revision, current correctness with current traces falls from 0.820 after one revision to 0.673 after two, although ever-correct rises to 0.847. Two common-state studies use 2,430 branches from identical frozen programs to remove post-treatment risk-set bias. In a prespecified 14B replication, stale traces harm 34/135 correct starts versus 4/135 with current traces, a 22.2-point increase (task-cluster 95\% CI $[8.9,37.0]$, exact Holm $p=0.0337$). A prospective 540-rollout policy eliminates observed correct-start harm but reduces wrong-start repair and fails its joint criterion. Repository experiments over 24 bugs and four coder stacks expose floor effects and component heterogeneity without Holm-significant effects. We therefore separate admission, preservation, grounded certification, competence, and liveness. We derive an evidence-bound typed loop contract and instantiate its mechanically enforceable subset in a reference implementation that binds verifier evidence to exact code states, preserves verified checkpoints, and emits auditable admission receipts. The implementation is an executable specification and conformance artifact, not evidence of improved repair competence or calibrated verifier dependence.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-27T16:05:23Z</published>
+    <arxiv:comment>11 pages, 5 figures, 8 tables. Accepted at AgenticDev 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Xueping Gao</name>
+    </author>
+    <author>
+      <name>Jianwei Yang</name>
+    </author>
+    <author>
+      <name>Qiang Yang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.16999v1</id>
+    <title>Selection Without Signal, Recovery Through Expression: A Measurement Study of Post-Hoc Falsification Operators for Frozen Small Code Models</title>
+    <updated>2026-06-15T17:36:23Z</updated>
+    <link href="https://arxiv.org/abs/2606.16999v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.16999v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Frozen small code models (&lt;=1.5B parameters, run locally without fine-tuning) suit offline and privacy-constrained use, but often emit plausible-but-wrong programs. A natural remedy is a post-hoc operator that selects, verifies, repairs, or re-processes the model's samples without retraining; in principled form it is Popperian: attack each candidate with a severe test, keep what survives. We measure whether such operators help. Under one deterministic execution oracle and a leakage-free, matched-compute protocol, 26 semantic post-hoc operators (selection, verification, repair, elimination, portfolios, sound vetoes, generation conditioning) are evaluated against Best-of-N (BoN); on the cells and benchmarks tested, none improves held-out accuracy over BoN. The negative is mechanistic: a coverage wall (systematic hard-task failures deeper sampling does not rescue), a capability scissors (a competent generator leaves almost no discriminable error among visible-test passers), and a near-empty consensus trap (the visible-pass-but-hidden-wrong majority a leakage-free selector needs rarely co-occurs with a correct alternative). A distribution-free do-no-harm bound cannot certify a harm rate &lt;=alpha at zero observed harm unless n&gt;=45. Two operators help on a different axis, outside the semantic output space. An expression-layer recovery (M1), the only accuracy gain here, recovers correct programs the standard extractor discards (robust extraction and public-test signature alignment); it does no harm (b10=0), is leakage-free, and lifts DeepSeek-Coder-1.3B by +12 tasks on HumanEval+ (p=2.4e-4). An adaptive consensus early-stop (ACE) is a calibrated compute-saving control (~19% saving, zero harm). M1 and the selection negative replicate on HumanEval+ and MBPP+ across three model cells. The lesson: fix the harness and measure coverage before blaming semantic post-hoc reasoning.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-15T17:36:23Z</published>
+    <arxiv:comment>33 pages, 4 figures, 8 tables</arxiv:comment>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Mehmet Iscan</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.11863v1</id>
+    <title>Enhancing LLM-Based Code Translation with Verified Multi-Semantic Representations</title>
+    <updated>2026-06-10T09:38:40Z</updated>
+    <link href="https://arxiv.org/abs/2606.11863v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.11863v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) have shown great promise for automated code translation, yet existing approaches often rely on token-level statistical patterns rather than sufficient understanding of program semantics. As a result, translated programs may still contain logical and semantic errors. Although high-quality semantic guidance, such as functional descriptions and test cases, can help mitigate these errors, such resources are often unavailable in real-world scenarios. This raises two key challenges: how to construct rich semantic information directly from source code, and how to ensure that such semantics are accurate and reliable enough to guide translation.To address these challenges, we propose Multisage, a multi-semantic augmentation and self-calibration framework for LLM-based code translation. Multisage consists of three modules. First, a semantic representation parsing module extracts structured base semantics from source code, including data-flow graphs, type constraints, and external API information. Second, a multi-semantic augmentation module builds on these representations to generate diverse augmented semantics, including code summaries, function-level test cases, and API-oriented descriptions and tests. Third, a semantic consistency calibration module uses semantics-preserving mutations and cross-semantic consistency verification to filter, calibrate, and refine the generated semantics.Experiments on the HumanEval-X code translation benchmark show that Multisage improves translation success rates by up to 2.22 times across diverse backbone models. It consistently outperforms vanilla prompting, instruction-tuned LLMs, and Chain-of-Thought reasoning, with the largest gains observed on smaller models. These results demonstrate that explicit semantic augmentation can substantially improve the reliability of LLM-based code translation.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-10T09:38:40Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Yufu Wang</name>
+    </author>
+    <author>
+      <name>He Jiang</name>
+    </author>
+    <author>
+      <name>Hao Lin</name>
+    </author>
+    <author>
+      <name>Peiyu Zou</name>
+    </author>
+    <author>
+      <name>Ang Jia</name>
+    </author>
+    <author>
+      <name>Xiaochen Li</name>
+    </author>
+    <author>
+      <name>Zhilei Ren</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.06454v1</id>
+    <title>Scaffold, Not Vocabulary? A Controlled, Two-Tier, Pre-Registered Study of a Popperian Code-Generation Skill</title>
+    <updated>2026-06-04T17:49:00Z</updated>
+    <link href="https://arxiv.org/abs/2606.06454v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.06454v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models increasingly write, review, and judge code, and a fast-growing practice equips them with prompt 'skills' that ask the model to reason like a scientist. A prominent example tells the model to act as a Popperian falsificationist, and such skills are reported to improve generated code. But these gains are almost always read off an LLM-as-a-judge, an instrument with documented positional, self-preference, and stylistic biases. We ask: if it appears to help, is the gain from the skill's Popperian content, or from the structure any scaffold imposes? We pre-register a two-tier ablation with three controls: a length-matched placebo, a labels-only scaffold that keeps the Popperian headers but strips the procedure, and an execution oracle (HumanEval+ unit tests), plus a vocabulary-halo sentinel and a same-model self-judge audit. On a frontier model (Claude Sonnet 4.6, N=163) all conditions sit near the benchmark ceiling and do not separate, so the pre-registered +5-point improvement is not supported (a ceiling-limited non-detection). On a small model (Qwen2.5-Coder-0.5B, N=164) structured arms lift best-of-eight correctness by 20-22 points, but the full skill shows no separable benefit over a labels-only scaffold (aggregate F@8=L@8 vs V@8=34.8%), and the placebo trails by only 2.4 points. A 0.5B self-judge applying the Popperian rubric does not beat random selection and concentrates 60% of its picks on one index. In the two settings tested, the skill's Popperian procedural content adds no separable execution-correctness benefit beyond a labels-only scaffold, so the gains track scaffold structure. We contribute a calibrated negative result and a reusable disambiguation protocol; the finding bounds an engineering claim about one prompt-skill family and is not an evaluation of Popperian methodology in general.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-04T17:49:00Z</published>
+    <arxiv:comment>34 pages, 5 figures, 8 tables</arxiv:comment>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Mehmet Iscan</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.26120v1</id>
+    <title>Dynamic-dLLM: Dynamic Cache-Budget and Adaptive Parallel Decoding for Training-Free Acceleration of Diffusion LLM</title>
+    <updated>2026-05-27T02:47:50Z</updated>
+    <link href="https://arxiv.org/abs/2606.26120v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.26120v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Diffusion Large Language Models (dLLMs) offer a promising alternative to autoregressive models, excelling in text generation tasks due to their bidirectional attention mechanisms. However, their computational complexity scales on the order of L cubed with the sequence length L. This poses significant challenges for long-sequence and real-time applications, primarily due to the lack of compatibility with key-value caching and the non-autoregressive nature of denoising steps. Existing acceleration methods rely on static caching or parallel decoding strategies, which fail to account for the dynamic behavior of token properties across layers and decoding steps. We propose Dynamic-dLLM, a training-free framework that enhances dLLM inference efficiency through two components: Dynamic Cache Updating (DCU), which adaptively allocates cache-update budgets based on layer-wise token dynamics, and Adaptive Parallel Decoding (APD), which dynamically calibrates decoding thresholds to balance generation quality and efficiency. Extensive experiments on models like LLaDA-8B-Instruct, LLaDA-1.5, and Dream-v0-7B-Instruct across benchmarks such as MMLU, GSM8K, and HumanEval demonstrate that Dynamic-dLLM significantly improves inference speed. It attains an average speedup exceeding 3 times while maintaining performance. Dynamic-dLLM outperforms state-of-the-art acceleration methods and provides a plug-and-play solution for efficient dLLM deployment without compromising performance. The code is available at https://github.com/TianyiWu233/DYNAMIC-DLLM.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-27T02:47:50Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Tianyi Wu</name>
+    </author>
+    <author>
+      <name>Xiaoxi Sun</name>
+    </author>
+    <author>
+      <name>Yanhua Jiao</name>
+    </author>
+    <author>
+      <name>Yulin Li</name>
+    </author>
+    <author>
+      <name>Yixin Chen</name>
+    </author>
+    <author>
+      <name>YunHao Cao</name>
+    </author>
+    <author>
+      <name>YiQi Hu</name>
+    </author>
+    <author>
+      <name>Zhuotao Tian</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.16727v1</id>
+    <title>PopuLoRA: Co-Evolving LLM Populations for Reasoning Self-Play</title>
+    <updated>2026-05-16T00:29:35Z</updated>
+    <link href="https://arxiv.org/abs/2605.16727v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.16727v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We introduce PopuLoRA, a population-based asymmetric self-play framework for reinforcement learning with verifiable rewards (RLVR) post-training of LLMs. Teachers and students are specialised LoRA adapters on a shared frozen base: teachers propose problems, matched students solve them under a programmatic verifier, and cross-evaluation between sub-populations replaces the self-calibration that limits single-agent self-play. A family of LoRA weight-space evolution operators (mutations and crossovers that produce same-rank population members in seconds) serves as the replacement step of a population-based training loop at 7B scale. We instantiate PopuLoRA on top of Absolute Zero Reasoner and compare it against a per-adapter compute-matched single-agent baseline. Where the single agent self-calibrates to generating easy problems it can reliably solve, the population enters a co-evolutionary arms race: teachers produce increasingly complex problems, student solve rates oscillate, and problem-space coverage keeps expanding throughout training. Despite lower training-time reward, the population mean outperforms the baseline on three code benchmarks (HumanEval+, MBPP+, LiveCodeBench) and seven math benchmarks (AIME 24/25, AMC 23, MATH-500, Minerva, GSM8K, OlympiadBench), and even the weakest member of the population beats the baseline on aggregate.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-16T00:29:35Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Roger Creus Castanyer</name>
+    </author>
+    <author>
+      <name>Geoffrey Bradway</name>
+    </author>
+    <author>
+      <name>Lorenz Wolf</name>
+    </author>
+    <author>
+      <name>Maxwill Lin</name>
+    </author>
+    <author>
+      <name>Augustine N. Mavor-Parker</name>
+    </author>
+    <author>
+      <name>Matthew James Sargent</name>
+    </author>
+  </entry>
+</feed>

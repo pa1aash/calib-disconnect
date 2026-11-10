@@ -1,0 +1,73 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/HSXmujlamhI05hsWY3kzH2eV2Xs</id>
+  <title>arXiv Query: search_query=all:self-debugging AND all:confidence&amp;id_list=&amp;start=0&amp;max_results=15</title>
+  <updated>2026-11-09T22:59:09Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=all:self-debugging+AND+all:confidence&amp;start=0&amp;max_results=15&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>15</opensearch:itemsPerPage>
+  <opensearch:totalResults>3</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2605.25181v1</id>
+    <title>SpecAlign: A Semantic Alignment Framework for SystemVerilog Assertion Generation</title>
+    <updated>2026-05-24T17:22:09Z</updated>
+    <link href="https://arxiv.org/abs/2605.25181v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.25181v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Existing Large Language Model (LLM) approaches to SystemVerilog Assertion (SVA) generation primarily focus on syntactic validity and formal verification outcomes, while semantic alignment between generated assertions and natural language specifications remains difficult to quantify. As a result, hallucinated or misaligned SVAs can reduce confidence and increase debugging efforts in the absence of golden RTL. This paper presents SpecAlign, a framework for semantic evaluation and refinement of LLM-generated SVAs. SpecAlign introduces two iterative alignment loops that assess both natural language properties and SVAs against the design specification using entailment-based classification. We improve alignment decisions by generating multiple reasoning paths using chain-of-thought prompting and aggregating them via a self-consistency voting mechanism. Misaligned assertions are analyzed to generate actionable feedback for refinement. We further define a quantitative alignment score to measure semantic consistency across iterations. Experimental results demonstrate that SpecAlign effectively detects semantic inconsistencies and improves assertion alignment without relying on golden RTL, providing a scalable complement to traditional formal verification evaluation metrics.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-24T17:22:09Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Jaime Rafael Imperial</name>
+    </author>
+    <author>
+      <name>Hao Zheng</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.31630v1</id>
+    <title>Calibration, Not Compilation: Detecting and Repairing Misspecified Probabilistic Programs Written by Language Models</title>
+    <updated>2026-06-30T13:16:39Z</updated>
+    <link href="https://arxiv.org/abs/2606.31630v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.31630v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Language models increasingly write probabilistic programs (in NumPyro, Stan, or Pyro), but a program that compiles, runs, and passes every unit test can still be \emph{statistically} wrong -- a Gaussian likelihood for heavy-tailed data, a Poisson for over-dispersed counts, an invalid prior support, or a pathological parameterization. The right verifier is therefore not a test suite but the Bayesian workflow itself: posterior predictive checks, simulation-based calibration, sampler diagnostics ($\hat R$, divergences, ESS), and held-out predictive density. We study this calibration oracle along three axes. \textbf{Detection:} on a benchmark of $14$ misspecification types across $10$ model families ($200$ instances), it flags the bug with AUC $0.97$ ($88\%$ at $2\%$ FPR \emph{when handed the correct reference program, an upper bound}) -- and a fully \emph{reference-free} version that uses no correct program reaches $62$--$78\%$ (the upper figure from a small automated model search), versus $0\%$ for a unit-test oracle. \textbf{Repair:} used as feedback in an LLM repair loop across fifteen models, calibration significantly outperforms unit-test feedback -- which is itself \emph{significantly worse than no feedback at all}, a passing test inducing false confidence that suppresses repair -- and improves over no feedback on strong-but-unsaturated models (GPT-5.1 $33{\to}92\%$, Claude $75{\to}100\%$; paired McNemar, $n{=}228$). \textbf{Reality:} on programs LLMs write from scratch for neutral briefs, $15$--$47\%$ of runnable ones are statistically misspecified (unit tests catch none), and calibration-guided repair significantly beats LLM-as-judge review, a Bayesian-workflow checklist, and data-summary self-debug. Across all three, the lesson is the same: for probabilistic programs, correctness is calibration, not compilation.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-30T13:16:39Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Jian Xu</name>
+    </author>
+    <author>
+      <name>Delu Zeng</name>
+    </author>
+    <author>
+      <name>John Paisley</name>
+    </author>
+    <author>
+      <name>Qibin Zhao</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2611.02644v1</id>
+    <title>Coati: Host-Grounded Execution for Installable Mobile GUI Agents</title>
+    <updated>2026-11-02T07:06:26Z</updated>
+    <link href="https://arxiv.org/abs/2611.02644v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2611.02644v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Mobile GUI agents can carry out tasks across apps, yet most run on a separate computer that drives a phone over the Android Debug Bridge (ADB), out of reach of ordinary users and of the apps through which most people reach Web services. We present Coati, a source-available agent that users install as an Android app. Its runtime on the phone, the host, records what a model alone cannot see: the effect of each action at its target, result screens across apps, and the progress of repeated steps. VerifyLoop checks action outcomes and completion claims against host evidence and reports a completion it cannot audit as unverified. AppMemory builds per-app procedural memory from observations that the interface supports and reuses it on later visits. A routed fast executor lets a lightweight selection model take simple, confident steps and lets the host repeat loops of simple steps that the large model plans once. On all 116 AndroidWorld tasks, with Gemini 3.8 Flash as every agent's backbone, Coati succeeds on 86.5% of the tasks over three trials, ahead of the strongest open-source agent Artemis (77.6% with the same accessibility-only access, 76.5% even when allowed ADB) and far ahead of FinalRun and Midscene (about 59%), and VerifyLoop cuts false completion claims by about a third at comparable success. In everyday use, the fast executor cuts the median time of phone tasks by 39% at comparable success and runs three of four loop tasks 2.8-5.4x faster with 6-9x fewer model tokens, while AppMemory shortens a repeated deep route in an unfamiliar app from 18.5 steps to 6-7. On an Android 16 phone, routed execution completes all 27 benchmark runs with 76% fewer Reasoning calls on the critical path. Host evidence, not model self-assessment, makes an installable agent reliable and fast.</summary>
+    <category term="cs.MA" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-11-02T07:06:26Z</published>
+    <arxiv:primary_category term="cs.MA"/>
+    <author>
+      <name>Yudou Ying</name>
+    </author>
+    <author>
+      <name>Pu Shi</name>
+    </author>
+    <author>
+      <name>Hanlei Shi</name>
+    </author>
+    <author>
+      <name>Yuhua Zheng</name>
+    </author>
+  </entry>
+</feed>

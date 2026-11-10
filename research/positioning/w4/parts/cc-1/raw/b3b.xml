@@ -1,0 +1,1520 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/fxEgymTIl+CPx9+yDfKsGo7PlC8</id>
+  <title>arXiv Query: search_query=abs:"probe" AND abs:"code" AND (abs:"difficulty" OR abs:"confound" OR abs:"within-problem" OR abs:"prompt-only" OR abs:"shortcut")&amp;id_list=&amp;start=0&amp;max_results=50</title>
+  <updated>2026-11-10T08:53:23Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=abs:%22probe%22+AND+(abs:%22code%22+AND+(abs:%22difficulty%22+OR+(abs:%22confound%22+OR+(abs:%22within-problem%22+OR+(abs:%22prompt-only%22+OR+abs:%22shortcut%22)))))&amp;start=0&amp;max_results=50&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>50</opensearch:itemsPerPage>
+  <opensearch:totalResults>120</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2605.09252v4</id>
+    <title>LLM Agents Already Know When to Call Tools -- Even Without Reasoning</title>
+    <updated>2026-11-08T08:07:38Z</updated>
+    <link href="https://arxiv.org/abs/2605.09252v4" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.09252v4" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Tool-augmented LLM agents tend to call tools indiscriminately, even when the model can answer directly. Each unnecessary call wastes API fees and latency, yet no existing benchmark systematically studies when a tool call is actually needed. We propose When2Tool, a benchmark of 18 environments (15 single-hop, 3 multi-hop) spanning three categories of tool necessity -- computational scale, knowledge boundaries, and execution reliability -- each with controlled difficulty levels that create a clear decision boundary between tool-necessary and tool-unnecessary tasks. We evaluate two families of training-free baselines: Prompt-only (varying the prompt to discourage unnecessary calls) and Reason-then-Act (requiring the model to reason about tool necessity before acting). Both provide limited control: Prompt-only suppresses necessary calls alongside unnecessary ones, and Reason-then-Act still incurs a disproportionate accuracy cost on hard tasks. To understand why these baselines fail, we probe the models' hidden states and find that tool necessity is linearly decodable from the pre-generation representation with AUROC 0.89--0.96 across six models, substantially exceeding the model's own verbalized reasoning. This reveals that models already know when tools are needed, but fail to act on this knowledge during generation. Building on this finding, we propose Probe&amp;Prefill, which uses a lightweight linear probe to read the hidden-state signal and prefills the model's response with a steering sentence. Across all models tested, Probe&amp;Prefill reduces tool calls by 38\% with only 1.7\% accuracy loss, while the best baseline at comparable accuracy only reduces 6% of tool calls, or achieves a similar tool call reduction but incurs a 5$\times$ higher accuracy loss. Our code is available at https://github.com/Trustworthy-ML-Lab/when2tool</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-10T01:37:40Z</published>
+    <arxiv:comment>Accepted to NeurIPS 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Chung-En Sun</name>
+    </author>
+    <author>
+      <name>Linbo Liu</name>
+    </author>
+    <author>
+      <name>Ge Yan</name>
+    </author>
+    <author>
+      <name>Zimo Wang</name>
+    </author>
+    <author>
+      <name>Tsui-Wei Weng</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.01843v1</id>
+    <title>Suppressing Forgery-Specific Shortcuts for Generalizable Deepfake Detection</title>
+    <updated>2026-06-01T07:54:58Z</updated>
+    <link href="https://arxiv.org/abs/2606.01843v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.01843v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Deepfake detection suffers from poor generalization across forgery methods, as existing models tend to rely on spurious method-specific shortcuts that fail to transfer to unseen manipulations. While recent approaches attempt to improve generalization, they lack an explicit mechanism to identify and suppress such shortcuts in learned representations. In this work, we propose Shortcut Subspace Suppression (S^3) framework that explicitly characterizes and suppresses method-specific shortcuts via subspace modeling. Our key insight is that variations distinguishing different forgery methods capture method-specific artifacts and thus serve as an effective proxy for method-specific shortcuts. To this end, we train a lightweight linear probe for forgery method classification and perform Singular Value Decomposition (SVD) to extract the dominant shortcut subspace. Building on this formulation, we develop two complementary strategies to reduce shortcut reliance. During training, we softly suppress the shortcut subspace in feature representations, encouraging the model to rely on more generalizable cues for real/fake discrimination. At inference time, we introduce a training-free counterpart that attenuates neurons aligned with the identified shortcut directions, enabling plug-and-play generalization enhancement with improved interpretability. Extensive experiments on multiple benchmarks demonstrate that our method significantly improves cross-method generalization while maintaining strong in-domain performance. The code will be released upon acceptance of the submission.</summary>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-01T07:54:58Z</published>
+    <arxiv:primary_category term="cs.CV"/>
+    <author>
+      <name>Yihui Wang</name>
+    </author>
+    <author>
+      <name>Yonghui Yang</name>
+    </author>
+    <author>
+      <name>Jilong Liu</name>
+    </author>
+    <author>
+      <name>Fengbin Zhu</name>
+    </author>
+    <author>
+      <name>Le Wu</name>
+    </author>
+    <author>
+      <name>Tat-Seng Chua</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2510.18147v1</id>
+    <title>LLMs Encode How Difficult Problems Are</title>
+    <updated>2025-10-20T22:48:23Z</updated>
+    <link href="https://arxiv.org/abs/2510.18147v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2510.18147v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models exhibit a puzzling inconsistency: they solve complex problems yet frequently fail on seemingly simpler ones. We investigate whether LLMs internally encode problem difficulty in a way that aligns with human judgment, and whether this representation tracks generalization during reinforcement learning post-training. We train linear probes across layers and token positions on 60 models, evaluating on mathematical and coding subsets of Easy2HardBench. We find that human-labeled difficulty is strongly linearly decodable (AMC: $ρ\approx 0.88$) and exhibits clear model-size scaling, whereas LLM-derived difficulty is substantially weaker and scales poorly. Steering along the difficulty direction reveals that pushing models toward "easier" representations reduces hallucination and improves accuracy. During GRPO training on Qwen2.5-Math-1.5B, the human-difficulty probe strengthens and positively correlates with test accuracy across training steps, while the LLM-difficulty probe degrades and negatively correlates with performance. These results suggest that human annotations provide a stable difficulty signal that RL amplifies, while automated difficulty estimates derived from model performance become misaligned precisely as models improve. We release probe code and evaluation scripts to facilitate replication.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-10-20T22:48:23Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>William Lugoloobi</name>
+    </author>
+    <author>
+      <name>Chris Russell</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.12086v1</id>
+    <title>Look What the Probes Dragged In! Real-World Chest X-ray Shortcuts in MedCLIP</title>
+    <updated>2026-08-12T14:08:52Z</updated>
+    <link href="https://arxiv.org/abs/2608.12086v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.12086v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Vision-language models, such as contrastive language-image pre-training (CLIP)-based approaches, have reached state-of-the-art (SOTA) results in medical artificial intelligence. However, recent work reveals that CLIP-based models remain vulnerable to shortcuts. We investigate how real-world shortcuts manifest across different layers of the medical CLIP-based model, MedCLIP, and its vision encoder, a frozen ResNet-50. We attach 17 linear classification probes to the intermediate layers of the ResNet-50 and train them on three different dataset configurations and targets: NIH-CXR14 (pneumothorax) and PadChest (cardiomegaly and pneumothorax). This setup allows us to observe model behaviour during evaluation using subgroup-based calibration and layer-wise confidence curves. We find that the final linear probes achieve a high AUROC but poor calibration in the models. The layer-wise confidence analyses suggest that shortcuts emerge at different depths. Patterns consistent with localised shortcuts, such as drains, appear at later layers, while patterns consistent with diffuse shortcuts, such as scanner-specific noise patterns, emerge earlier, aligning with previous work. Finally, we conduct a manual analysis of the images, which reveals data quality issues in both NIH-CXR14 and PadChest. Our findings underscore that even SOTA models remain vulnerable to shortcuts, and the need for high-quality and well-annotated datasets to draw solid conclusions. Code can be found on our GitHub: https://github.com/nikodice4/MedCLIP_shortcuts.</summary>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-12T14:08:52Z</published>
+    <arxiv:comment>11 pages, 3 figure, poster presentation at the joint FAIMI, BRIDGE, and EPIMI workshop at MICCAI 2026 (Strasbourg, France) conference</arxiv:comment>
+    <arxiv:primary_category term="cs.CV"/>
+    <author>
+      <name>Nikolette Pedersen</name>
+    </author>
+    <author>
+      <name>Regitze Sydendal</name>
+    </author>
+    <author>
+      <name>Veronika Cheplygina</name>
+    </author>
+    <author>
+      <name>Théo Sourget</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2502.18658v4</id>
+    <title>Assistance or Disruption? Exploring and Evaluating the Design and Trade-offs of Proactive AI Programming Support</title>
+    <updated>2025-09-08T16:34:58Z</updated>
+    <link href="https://arxiv.org/abs/2502.18658v4" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2502.18658v4" rel="related" type="application/pdf" title="pdf"/>
+    <summary>AI programming tools enable powerful code generation, and recent prototypes attempt to reduce user effort with proactive AI agents, but their impact on programming workflows remains unexplored. We introduce and evaluate Codellaborator, a design probe LLM agent that initiates programming assistance based on editor activities and task context. We explored three interface variants to assess trade-offs between increasingly salient AI support: prompt-only, proactive agent, and proactive agent with presence and context (Codellaborator). In a within-subject study (N=18), we find that proactive agents increase efficiency compared to prompt-only paradigm, but also incur workflow disruptions. However, presence indicators and interaction context support alleviated disruptions and improved users' awareness of AI processes. We underscore trade-offs of Codellaborator on user control, ownership, and code understanding, emphasizing the need to adapt proactivity to programming processes. Our research contributes to the design exploration and evaluation of proactive AI systems, presenting design implications on AI-integrated programming workflow.</summary>
+    <category term="cs.HC" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-02-25T21:37:25Z</published>
+    <arxiv:primary_category term="cs.HC"/>
+    <author>
+      <name>Kevin Pu</name>
+    </author>
+    <author>
+      <name>Daniel Lazaro</name>
+    </author>
+    <author>
+      <name>Ian Arawjo</name>
+    </author>
+    <author>
+      <name>Haijun Xia</name>
+    </author>
+    <author>
+      <name>Ziang Xiao</name>
+    </author>
+    <author>
+      <name>Tovi Grossman</name>
+    </author>
+    <author>
+      <name>Yan Chen</name>
+    </author>
+    <arxiv:doi>10.1145/3706598.3713357</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.1145/3706598.3713357" title="doi"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.27596v1</id>
+    <title>Dismantling Pathological Shortcuts: A Causal Framework for Faithful LVLM Decoding</title>
+    <updated>2026-06-25T22:55:46Z</updated>
+    <link href="https://arxiv.org/abs/2606.27596v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.27596v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Vision-Language Models (LVLMs) exhibit sophisticated reasoning but remain susceptible to object hallucination. Deviating from the prevailing attention intensity assumption, we reveal a deeper dynamic structural misalignment: hallucination is triggered at decision-critical steps where specific attention heads, acting as risky mediators, decouple from visual evidence to lock onto language priors. This establishes a pathological shortcut that bypasses visual grounding. To dismantle this, we propose Fox (Faithfulness and Observational-flow via eXpression-rectification), a training-free inference-time framework. Fox diagnoses structural misalignment using a visual attention entropy probe to localize risky mediators unsupervisedly. We then execute a targeted causal intervention via numerical logit saturation to physically sever the shortcut path. Finally, a conflict-gated cooperative decoding strategy reconciles interventional faithfulness with observational fluency. Extensive experiments demonstrate that Fox achieves SOTA performance, outperforming SID by 29.1% while preserving linguistic richness. Code is available at https://github.com/Cc2021start/Fox.</summary>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-25T22:55:46Z</published>
+    <arxiv:comment>29 pages, 25 figures. Accepted by ICML 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.CV"/>
+    <author>
+      <name>Liu Yu</name>
+    </author>
+    <author>
+      <name>Can Chen</name>
+    </author>
+    <author>
+      <name>Ping Kuang</name>
+    </author>
+    <author>
+      <name>Zhikun Feng</name>
+    </author>
+    <author>
+      <name>Fan Zhou</name>
+    </author>
+    <author>
+      <name>Gillian Dobbie</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2412.02596v1</id>
+    <title>Class-wise Autoencoders Measure Classification Difficulty And Detect Label Mistakes</title>
+    <updated>2024-12-03T17:29:00Z</updated>
+    <link href="https://arxiv.org/abs/2412.02596v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2412.02596v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We introduce a new framework for analyzing classification datasets based on the ratios of reconstruction errors between autoencoders trained on individual classes. This analysis framework enables efficient characterization of datasets on the sample, class, and entire dataset levels. We define reconstruction error ratios (RERs) that probe classification difficulty and allow its decomposition into (1) finite sample size and (2) Bayes error and decision-boundary complexity. Through systematic study across 19 popular visual datasets, we find that our RER-based dataset difficulty probe strongly correlates with error rate for state-of-the-art (SOTA) classification models. By interpreting sample-level classification difficulty as a label mistakenness score, we further find that RERs achieve SOTA performance on mislabel detection tasks on hard datasets under symmetric and asymmetric label noise. Our code is publicly available at https://github.com/voxel51/reconstruction-error-ratios.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-12-03T17:29:00Z</published>
+    <arxiv:comment>30 pages, 18 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Jacob Marks</name>
+    </author>
+    <author>
+      <name>Brent A. Griffin</name>
+    </author>
+    <author>
+      <name>Jason J. Corso</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2602.09924v4</id>
+    <title>LLMs Encode Their Failures: Predicting Success from Pre-Generation Activations</title>
+    <updated>2026-08-11T17:36:11Z</updated>
+    <link href="https://arxiv.org/abs/2602.09924v4" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2602.09924v4" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Running LLMs with extended reasoning on every problem is expensive, but determining which inputs actually require additional compute remains challenging. We investigate whether their own likelihood of success is recoverable from their internal representations before generation, and if this signal can guide more efficient inference. We train linear probes on pre-generation activations to predict policy-specific success on math and coding tasks, substantially outperforming surface features such as question length and TF-IDF. Using E2H-AMC, which provides both human and model performance on identical problems, we show that models encode a model-specific notion of difficulty that is distinct from human difficulty, and that this distinction increases with extended reasoning. Leveraging these probes, we demonstrate that routing queries across a pool of models can exceed the best-performing model whilst reducing inference cost by up to 70\% on MATH, showing that internal representations enable practical efficiency gains even when they diverge from human intuitions about difficulty. Our code is available at: https://github.com/KabakaWilliam/llms_know_difficulty</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-02-10T15:57:00Z</published>
+    <arxiv:comment>Accepted at COLM 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>William Lugoloobi</name>
+    </author>
+    <author>
+      <name>Thomas Foster</name>
+    </author>
+    <author>
+      <name>William Bankes</name>
+    </author>
+    <author>
+      <name>Chris Russell</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2510.17868v3</id>
+    <title>UniCode: Augmenting Evaluation for Code Reasoning</title>
+    <updated>2026-07-15T10:42:46Z</updated>
+    <link href="https://arxiv.org/abs/2510.17868v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2510.17868v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Current coding benchmarks often inflate Large Language Model (LLM) capabilities due to static paradigms and data contamination, enabling models to exploit statistical shortcuts rather than genuine reasoning. To address this, we introduce UniCode, a generative evaluation framework that systematically probes LLM limits via: (1) multi-dimensional augmentation transforming seed problems into complex variations to disrupt fixed algorithmic patterns; (2) a highly reliable, automated test generation pipeline for scalable evaluation; and (3) fine-grained metrics for rich error signals. Experiments reveal a 31.2% performance collapse in state-of-the-art models on UniCode, primarily driven by deficiencies in conceptual modeling and scalability reasoning rather than syntactic errors. Furthermore, we uncover a seed-problem regression where models revert to memorized seed logic rather than following new specifications, signaling a reliance on shortcuts over reasoning. This work validates UniCode as a robust framework to expose model fragility and foster reasoning-oriented code intelligence.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-10-16T05:07:12Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Xinyue Zheng</name>
+    </author>
+    <author>
+      <name>Haowei Lin</name>
+    </author>
+    <author>
+      <name>Shaofei Cai</name>
+    </author>
+    <author>
+      <name>Yaodong Yang</name>
+    </author>
+    <author>
+      <name>Zilong Zheng</name>
+    </author>
+    <author>
+      <name>Yitao Liang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.14530v3</id>
+    <title>Code Correctness Is Linearly Decodable from LLM Hidden States Before Generation</title>
+    <updated>2026-07-16T10:01:41Z</updated>
+    <link href="https://arxiv.org/abs/2606.14530v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.14530v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models encode rich information in their hidden states. This work asks whether the correctness of code that Qwen3-4B-Instruct-2507 has not yet generated is already legible in its hidden states, evaluated on a set of 444 tasks from LiveCodeBench. The correctness of the model's first-attempt code is linearly decodable from the hidden state at the final prompt token, captured before any output token is generated, with a leakage-free held-out AUC of 0.881 +/- 0.008 across 50 outer splits. To assess whether this signal is explained by prompt length, each hidden state dimension is residualized with respect to its linear effect. The probe still achieves an AUC of 0.842 +/- 0.010, substantially above a logistic prompt-length baseline of 0.657 +/- 0.014, and none of the nonlinear models tested improves upon it. A companion question about whether self-repair leaves a geometric signature in the model's hidden states could not be answered, because successful repairs following a failed first attempt are too rare in this setting to support the analysis. The contribution is both empirical and methodological, providing evidence that pre-generation hidden states contain a robust signal of eventual code correctness, together with a confound-control diagnostic that quantifies how much of that signal survives adjustment for prompt length.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-12T15:06:15Z</published>
+    <arxiv:comment>7 pages, 4 tables. Code, data, and analysis scripts available at https://github.com/CarloDiCicco/ReasoningLab</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Carlo Di Cicco</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2510.05969v3</id>
+    <title>Probing the Difficulty Perception Mechanism of Large Language Models</title>
+    <updated>2026-07-19T06:24:18Z</updated>
+    <link href="https://arxiv.org/abs/2510.05969v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2510.05969v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) are increasingly deployed on complex reasoning tasks, yet little is known about their ability to internally evaluate problem difficulty, which is an essential capability for adaptive reasoning and efficient resource allocation. In this work, we investigate whether LLMs implicitly encode problem difficulty in their internal representations. Using a linear probe on the final-token representations of LLMs, we demonstrate that the difficulty level of math problems can be linearly modeled. We further locate the specific attention heads of the final Transformer layer: these attention heads have opposite activation patterns for simple and difficult problems, thus achieving perception of difficulty. Our ablation experiments prove the accuracy of the location. Crucially, our experiments provide practical support for using LLMs as automatic difficulty annotators, potentially substantially reducing reliance on costly human labeling in benchmark construction and curriculum learning. We also uncover that there is a significant difference in entropy and difficulty perception at the token level. Our study reveals that difficulty perception in LLMs is not only present but also structurally organized, offering new theoretical insights and practical directions for future research. Our code is available at https://github.com/Aegis1863/Difficulty-Perception-of-LLMs.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-10-07T14:24:32Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Sunbowen Lee</name>
+    </author>
+    <author>
+      <name>Qingyu Yin</name>
+    </author>
+    <author>
+      <name>Chak Tou Leong</name>
+    </author>
+    <author>
+      <name>Jialiang Zhang</name>
+    </author>
+    <author>
+      <name>Yicheng Gong</name>
+    </author>
+    <author>
+      <name>Shiwen Ni</name>
+    </author>
+    <author>
+      <name>Min Yang</name>
+    </author>
+    <author>
+      <name>Xiaoyu Shen</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2611.01272v1</id>
+    <title>Geometry of Confabulation and Refusal in Small Language Models</title>
+    <updated>2026-10-31T21:14:26Z</updated>
+    <link href="https://arxiv.org/abs/2611.01272v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2611.01272v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Faced with an unanswerable question, small language models can either refuse or confabulate: confidently produce a wrong answer. Can the hidden state before the first generated token provide a clue? Can we flip confabulations into refusals? I introduce ConfabQA, a 784-item benchmark whose obscure-pre-cutoff category breaks the typical correctness/knowledge-cutoff confound and map the geometry of the hidden state with linear probes, a sparse autoencoder (SAE), and direct optimization of intervention directions. On Qwen3-1.7B and Gemma 2 2B the probe separates upcoming refusals from confabulations well beyond prompt features (+7.4/+16.3 pp); on Llama 3.2 3B the ConfabQA margin is within fold-to-fold spread, but a direct refusal probe on PopQA and TriviaQA recovers +18-25 pp. On Qwen I closely inspect three candidate directions for the refusal vector: probe-recovered, Qwen-Scope SAE feature, and directly optimized. Although the three directions are pairwise 50-81 degrees apart, a push at or below the state's own norm along any of them flips most confabulations into refusal openings dominated by the "As..." family. Forcing the opener without touching the hidden state yields the same one-in-three judged-refusal rate as any push. The opposite push collapses refusals mostly into confabulations, yet leaves originally correct answers intact, so the direction gates the opening speech act rather than the knowledge behind it. Confabulations do not resolve into a concentrated feature in a dictionary or a token signature on Qwen3-1.7B. Scoring every probe on the margin over the strongest of four prompt-feature baselines extracts the hidden state's own contribution. Correctness signal is model-dependent and portable only for Llama 3.2 3B: 81% of the probe's margin over test majority survives transfer between ConfabQA, PopQA, and TriviaQA. Benchmark, judge, and code are released.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-31T21:14:26Z</published>
+    <arxiv:comment>35 pages, 16 figures, 19 tables. Code, data, and the ConfabQA benchmark: https://github.com/vkazei/confabqa</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Vladimir Kazei</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.00555v3</id>
+    <title>Probe Before You Edit: Probing-Guided Molecular Optimization for LLM Agents in Structure-Based Drug Design</title>
+    <updated>2026-10-23T13:42:47Z</updated>
+    <link href="https://arxiv.org/abs/2606.00555v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.00555v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Structure-based drug design increasingly employs LLM agents to iteratively refine ligands against a target pocket, yet a viable ligand must satisfy two often-conflicting objectives---binding affinity and druggability---which single optimization steps rarely improve together. To quantify this difficulty, we introduce two diagnostic metrics: the first measures how often a single edit improves both objectives, and the second measures how often a gain on one objective comes with a loss on the other. Applying these diagnostics to current LLM-agent pipelines exposes a consistent failure mode: the agent performs molecular editing without knowing how the pocket-ligand complex responds to local modifications, thus rarely achieving joint improvement. Inspired by medicinal chemists, who probe the pocket-ligand complex with controlled analog edits before choosing an optimization direction, we propose \textbf{PROBE}, an optimization framework built around edit--response probing. PROBE first decomposes the ligand into editable sites and builds a pocket-specific \textbf{site map} that flags where joint gains are plausible, where the two objectives are likely in tension, and where liability substructures should be changed; it then performs controlled probe edits whose responses are distilled into an \textbf{EditManual}. Guided by the site map and EditManual, PROBE runs an iterative multi-agent optimization loop. On the CrossDocked2020 benchmark, PROBE achieves state-of-the-art performance and substantially mitigates the failure modes exposed by our diagnostics metrics. Codes are in https://github.com/yzf-code/PROBE/tree/main</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="q-bio.BM" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-30T06:06:51Z</published>
+    <arxiv:comment>Accepted at NeurIPS 2026. Revised manuscript</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Zaifei Yang</name>
+    </author>
+    <author>
+      <name>Weiyu Chen</name>
+    </author>
+    <author>
+      <name>Yaqing Wang</name>
+    </author>
+    <author>
+      <name>James Kwok</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2506.10963v2</id>
+    <title>MMMG: A Massive, Multidisciplinary, Multi-Tier Generation Benchmark for Text-to-Image Reasoning</title>
+    <updated>2025-06-13T04:39:54Z</updated>
+    <link href="https://arxiv.org/abs/2506.10963v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2506.10963v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>In this paper, we introduce knowledge image generation as a new task, alongside the Massive Multi-Discipline Multi-Tier Knowledge-Image Generation Benchmark (MMMG) to probe the reasoning capability of image generation models. Knowledge images have been central to human civilization and to the mechanisms of human learning -- a fact underscored by dual-coding theory and the picture-superiority effect. Generating such images is challenging, demanding multimodal reasoning that fuses world knowledge with pixel-level grounding into clear explanatory visuals. To enable comprehensive evaluation, MMMG offers 4,456 expert-validated (knowledge) image-prompt pairs spanning 10 disciplines, 6 educational levels, and diverse knowledge formats such as charts, diagrams, and mind maps. To eliminate confounding complexity during evaluation, we adopt a unified Knowledge Graph (KG) representation. Each KG explicitly delineates a target image's core entities and their dependencies. We further introduce MMMG-Score to evaluate generated knowledge images. This metric combines factual fidelity, measured by graph-edit distance between KGs, with visual clarity assessment. Comprehensive evaluations of 16 state-of-the-art text-to-image generation models expose serious reasoning deficits -- low entity fidelity, weak relations, and clutter -- with GPT-4o achieving an MMMG-Score of only 50.20, underscoring the benchmark's difficulty. To spur further progress, we release FLUX-Reason (MMMG-Score of 34.45), an effective and open baseline that combines a reasoning LLM with diffusion models and is trained on 16,000 curated knowledge image-prompt pairs.</summary>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-06-12T17:58:09Z</published>
+    <arxiv:comment>85 pages, 70 figures, code: https://github.com/MMMGBench/MMMG, project page: https://mmmgbench.github.io/</arxiv:comment>
+    <arxiv:primary_category term="cs.CV"/>
+    <arxiv:journal_ref>Advances in Neural Information Processing Systems 38 (NeurIPS 2025) Datasets and Benchmarks Track</arxiv:journal_ref>
+    <author>
+      <name>Yuxuan Luo</name>
+    </author>
+    <author>
+      <name>Yuhui Yuan</name>
+    </author>
+    <author>
+      <name>Junwen Chen</name>
+    </author>
+    <author>
+      <name>Haonan Cai</name>
+    </author>
+    <author>
+      <name>Ziyi Yue</name>
+    </author>
+    <author>
+      <name>Yuwei Yang</name>
+    </author>
+    <author>
+      <name>Fatima Zohra Daha</name>
+    </author>
+    <author>
+      <name>Ji Li</name>
+    </author>
+    <author>
+      <name>Zhouhui Lian</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.04233v1</id>
+    <title>What Are We Actually Benchmarking in Robot Manipulation?</title>
+    <updated>2026-06-02T21:33:28Z</updated>
+    <link href="https://arxiv.org/abs/2606.04233v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.04233v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>A robotics benchmark score measures success under one fixed evaluation setup, yet is routinely treated as evidence of general manipulation capability. We identify four failure modes, each of which weakens or invalidates a benchmark's role as a valid proxy for that capability: shortcut solvability, lack of statistical significance, creeping overfitting, and data-source dependence. We propose one diagnostic per failure mode. We audit LIBERO, CALVIN, SimplerEnv, RoboCasa, and RoboTwin 2.0 under these diagnostics. LIBERO and CALVIN fail multiple diagnostics. RoboCasa and RoboTwin 2.0 fail fewer, despite appearing far less often in recent progress claims. On LIBERO, a 0.09B probe with no language encoder scores at or near reported SOTA, and most reported gains are not provably statistically significant. On CALVIN, randomizing block poses within the training range drops performance for every tested policy. We release the four diagnostics with reference implementations for authors and reviewers to apply before treating a benchmark score as evidence of progress. Code and artifacts are available at https://ripl.github.io/manipulation_benchmark_audit/.</summary>
+    <category term="cs.RO" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-02T21:33:28Z</published>
+    <arxiv:comment>31 pages, 6 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.RO"/>
+    <author>
+      <name>Tianchong Jiang</name>
+    </author>
+    <author>
+      <name>Xiangshan Tan</name>
+    </author>
+    <author>
+      <name>Samuel Wheeler</name>
+    </author>
+    <author>
+      <name>Luzhe Sun</name>
+    </author>
+    <author>
+      <name>Tewodros W. Ayalew</name>
+    </author>
+    <author>
+      <name>Matthew Walter</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.30345v1</id>
+    <title>Answer Probing-Guided Search for Diverse Solution Exploration of LLMs</title>
+    <updated>2026-08-31T07:01:36Z</updated>
+    <link href="https://arxiv.org/abs/2608.30345v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.30345v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Generating multiple diverse and high-quality solutions is valuable for many applications, such as code-test generation and drug discovery. However, Large Language Models (LLMs) tend to converge on a single high-confidence solution during inference, limiting exploration of alternative valid solution paths. Existing test-time methods promote diversity through tree-like search and prune semantically similar branches using response-level semantic embeddings. However, we find that such embeddings are easily confounded by linguistic and stylistic similarities, making it difficult to distinguish genuinely distinct solution paths. To address this, we introduce Answer Probing, which probes the potential answer an LLM would reach from an intermediate reasoning path. We demonstrate that the hidden states of probed answers more effectively differentiate distinct solution paths than semantic embeddings, and the perplexity of probed answers serves as a practical proxy for reasoning correctness. Based on these findings, we propose Answer Probing-Guided Tree Search (APTS), which guides the tree search by the probed answers' hidden state similarity and perplexity. Experiments on three reasoning tasks across two LLMs show that APTS consistently enhances solution diversity, demonstrating its effectiveness and robustness.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-31T07:01:36Z</published>
+    <arxiv:comment>Accepted to the EMNLP 2026 Main</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Yi Fang</name>
+    </author>
+    <author>
+      <name>Que Shen</name>
+    </author>
+    <author>
+      <name>Chengpeng Li</name>
+    </author>
+    <author>
+      <name>Boyi Deng</name>
+    </author>
+    <author>
+      <name>Wei Shi</name>
+    </author>
+    <author>
+      <name>Wenjie Wang</name>
+    </author>
+    <author>
+      <name>Fuli Feng</name>
+    </author>
+    <author>
+      <name>Fengli Xu</name>
+    </author>
+    <author>
+      <name>Dayiheng Liu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2107.09562v2</id>
+    <title>Characterizing Generalization under Out-Of-Distribution Shifts in Deep Metric Learning</title>
+    <updated>2021-11-29T12:56:08Z</updated>
+    <link href="https://arxiv.org/abs/2107.09562v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2107.09562v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Deep Metric Learning (DML) aims to find representations suitable for zero-shot transfer to a priori unknown test distributions. However, common evaluation protocols only test a single, fixed data split in which train and test classes are assigned randomly. More realistic evaluations should consider a broad spectrum of distribution shifts with potentially varying degree and difficulty. In this work, we systematically construct train-test splits of increasing difficulty and present the ooDML benchmark to characterize generalization under out-of-distribution shifts in DML. ooDML is designed to probe the generalization performance on much more challenging, diverse train-to-test distribution shifts. Based on our new benchmark, we conduct a thorough empirical analysis of state-of-the-art DML methods. We find that while generalization tends to consistently degrade with difficulty, some methods are better at retaining performance as the distribution shift increases. Finally, we propose few-shot DML as an efficient way to consistently improve generalization in response to unknown test shifts presented in ooDML. Code available here: https://github.com/CompVis/Characterizing_Generalization_in_DML.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2021-07-20T15:26:09Z</published>
+    <arxiv:comment>35th Conference on Neural Information Processing Systems (NeurIPS 2021)</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Timo Milbich</name>
+    </author>
+    <author>
+      <name>Karsten Roth</name>
+    </author>
+    <author>
+      <name>Samarth Sinha</name>
+    </author>
+    <author>
+      <name>Ludwig Schmidt</name>
+    </author>
+    <author>
+      <name>Marzyeh Ghassemi</name>
+    </author>
+    <author>
+      <name>Björn Ommer</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.08665v2</id>
+    <title>Hint Tuning: Less Data Makes Better Reasoners</title>
+    <updated>2026-06-03T08:11:51Z</updated>
+    <link href="https://arxiv.org/abs/2605.08665v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.08665v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large reasoning models achieve high accuracy through extended chain-of-thought but generate 5--8 more tokens than necessary, applying verbose reasoning uniformly regardless of problem difficulty. We propose Hint Tuning, a data-efficient approach that teaches models to calibrate reasoning depth. Our key insight: the corresponding instruct model serves as an ideal difficulty probe. By testing what the instruct model can solve with varying guidance, we automatically construct training data across three states: No-Hint (direct answer), Sparse-Hint (minimal prefix), and Full-Hint (complete reasoning). This converts the abstract challenge of difficulty labeling into a measurable consistency check between the instruct and reasoning models. With only 1K self-annotated samples, Hint Tuning achieves 24--66% token reduction (31.5% average) across mainstream reasoning models (Qwen3-Thinking, DeepSeek-R1-Distill) at multiple scales (4B--32B) while maintaining competitive accuracy on five benchmarks. Unlike methods requiring massive distillation datasets or expensive RL, we achieve superior efficiency through simple alignment with the instruct model's capabilities. Code and data are available at https://github.com/redai-infra/hint-tuning.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-09T04:07:16Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Siqi Fan</name>
+    </author>
+    <author>
+      <name>Minghao Li</name>
+    </author>
+    <author>
+      <name>Xiaoqian Ma</name>
+    </author>
+    <author>
+      <name>Xiusheng Huang</name>
+    </author>
+    <author>
+      <name>Zhuo Chen</name>
+    </author>
+    <author>
+      <name>Bowen Qin</name>
+    </author>
+    <author>
+      <name>Liujie Zhang</name>
+    </author>
+    <author>
+      <name>Shuo Shang</name>
+    </author>
+    <author>
+      <name>Weihang Chen</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.21856v2</id>
+    <title>The Illusion of Reasoning: Exposing Evasive Data Contamination in LLMs via Zero-CoT Truncation</title>
+    <updated>2026-10-25T17:22:27Z</updated>
+    <link href="https://arxiv.org/abs/2605.21856v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.21856v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) have demonstrated impressive reasoning abilities across a wide range of tasks, but data contamination undermines the objective evaluation of these capabilities. This problem is further exacerbated by malicious model publishers who use evasive, or indirect, contamination strategies, such as paraphrasing benchmark data to evade existing detection methods and artificially boost leaderboard performance. Current approaches struggle to reliably detect such stealthy contamination. In this work, we uncover a critical phenomenon: a model's generated reasoning steps actively mask its underlying memorization. Inspired by this, we propose the Zero-CoT Probe (ZCP), a novel black-box detection method that deliberately truncates the entire Chain-of-Thought (CoT) process to expose latent shortcut mappings. To further isolate memorization from the model's intrinsic problem-solving capabilities, ZCP compares the model's zero-CoT performance on the original benchmark against an isomorphically perturbed reference dataset. Furthermore, we introduce Contamination Confidence, a metric that quantifies both the likelihood and severity of contamination, moving beyond simple binary classifications. Extensive experiments on both previously identified contaminated models and specially fine-tuned contaminated models demonstrate that ZCP robustly detects both direct and evasive data contamination. The code for ZCP is accessible at https://github.com/Yifan-Lan/zero-cot-probe.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-21T01:06:19Z</published>
+    <arxiv:comment>24 pages, 5 figures, 25 tables</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Yifan Lan</name>
+    </author>
+    <author>
+      <name>Yuanpu Cao</name>
+    </author>
+    <author>
+      <name>Hanyu Wang</name>
+    </author>
+    <author>
+      <name>Lu Lin</name>
+    </author>
+    <author>
+      <name>Jinghui Chen</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.04737v2</id>
+    <title>PyINE: A Framework for Scalable Elicitation and Oversight via Code Execution</title>
+    <updated>2026-10-10T00:29:25Z</updated>
+    <link href="https://arxiv.org/abs/2610.04737v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.04737v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Reasoning models can remain capable of solving a task while still defaulting to cheaper but misleading shortcuts. This creates a central oversight problem: when a model gives an answer with plausible but incomplete reasoning, can an overseer determine whether that output should be trusted? To study this problem, we introduce PyINE, a framework for scalable elicitation and oversight using instrumented Python programs as a verifiable execution substrate. In PyINE, programs define task environments, execution traces provide authoritative labels for outcomes and intermediate facts, and task variants can be generated mechanically rather than through static human annotation. We instantiate the framework in PyINE-v1, a first release built from nearly one million deterministic execution traces and over 500,000 matched LLM-generated code variants used for counterfactual evaluation. Using standard RL with verifiable rewards on cue-varied tasks, we train a shortcut-following model that improves substantially at predicting execution outcomes while still making systematic errors when misleading human-facing cues conflict with the program's realized behavior. We then evaluate activation probes, trained text classifiers, prompted judges, and a lightweight debate protocol as overseers of this model. We find that performance pooled at the dataset level can hide weak coverage of the failures that matter most: cheap learned overseers often miss rare shortcut-driven errors, while stronger model-based checks are more balanced but substantially costlier and harder to turn into reliable thresholded decisions. PyINE-v1 turns this failure-mode coverage problem into a reusable experimental setting for developing oversight methods that are verifiable, failure-mode-aware, and cost-sensitive.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-03T20:03:43Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Pierre-Luc St-Charles</name>
+    </author>
+    <author>
+      <name>Alessandro Palmas</name>
+    </author>
+    <author>
+      <name>Damiano Fornasiere</name>
+    </author>
+    <author>
+      <name>Storm Lei</name>
+    </author>
+    <author>
+      <name>Mirko Bronzi</name>
+    </author>
+    <author>
+      <name>Jean-Pierre Falet</name>
+    </author>
+    <author>
+      <name>Iulian Serban</name>
+    </author>
+    <author>
+      <name>Yoshua Bengio</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.15454v2</id>
+    <title>Reasoning Models Don't Just Think Longer, They Move Differently</title>
+    <updated>2026-06-04T02:57:35Z</updated>
+    <link href="https://arxiv.org/abs/2605.15454v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.15454v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Reasoning-trained language models often spend more tokens on harder problems, but longer chains of thought do not show whether a model is merely computing for more steps or following a different internal trajectory. We study this distinction through hidden-state trajectories during chain-of-thought generation across competitive programming, mathematics, and Boolean satisfiability. Raw trajectory geometry is strongly shaped by generation length: longer generations mechanically alter path statistics, so difficulty-dependent comparisons are misleading without adjustment. After residualizing trajectory statistics on length, difficulty remains systematically coupled to corrected trajectory geometry across all domains studied. The clearest reasoning-specific separation appears in the code domain, where harder problems show more direct corrected trajectories and less heterogeneous local curvature in reasoning-trained models than in matched instruction-tuned baselines. Corrected difficulty-geometry coupling is weaker, but still present, in mathematics and Boolean satisfiability. Prompt-stage linear probes do not mirror the code-domain separation, and behavioral annotations show that stronger corrected coupling co-occurs with strategy shifts and uncertainty monitoring. Together, these findings establish length correction as a prerequisite for generation-time trajectory analysis and show that reasoning training can be associated with distinct corrected trajectory geometry, with the strength of the effect depending on the domain.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="stat.ML" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-14T22:37:33Z</published>
+    <arxiv:comment>Preprint</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Anders Gjølbye</name>
+    </author>
+    <author>
+      <name>Lars Kai Hansen</name>
+    </author>
+    <author>
+      <name>Sanmi Koyejo</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.39701v1</id>
+    <title>Values as Style: Disentangling Values from Semantics with One-Way Mixing for Low-Damage LLM Steering</title>
+    <updated>2026-09-30T13:20:20Z</updated>
+    <link href="https://arxiv.org/abs/2609.39701v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.39701v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Value steering should change an LLM's normative priorities while preserving the scenario, facts, and task constraints underlying its answer. Conventional activation edits often change both. We introduce an editable semantic-value interface on frozen residual states, with a one-way semantic-to-value pathway that grounds value recognition in context. Stop-gradient blocks feedback through this pathway; swap consistency, topic de-confounding, and decorrelation encourage selective codes. At inference, editing the value code produces a residual delta while holding the semantic code fixed. On two instruction-tuned backbones, this interface improves semantic preservation and reduces benign refusals at comparable value alignment. A matched mixing-by-gating ablation separates representation learning from selective edit activation, and dimension-matched probes establish improved code selectivity. Against validation-selected prompting on LLaMA-3.1-8B, the method achieves comparable alignment (0.750 vs. 0.748), higher BERTScore (0.938 vs. 0.923), and fewer contradictions (5.1% vs. 7.6%). Human ratings and cross-taxonomy controls provide complementary evidence for low-damage value steering.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CY" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-30T13:20:20Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Jiale Dai</name>
+    </author>
+    <author>
+      <name>Hongcan Deng</name>
+    </author>
+    <author>
+      <name>Liuxian Ma</name>
+    </author>
+    <author>
+      <name>Xiaoke Niu</name>
+    </author>
+    <author>
+      <name>Guojie Song</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.09849v1</id>
+    <title>Hard, Yet Reducible: Controlled Forward Transfer for Synthetic Degradation Curation</title>
+    <updated>2026-10-07T11:07:36Z</updated>
+    <link href="https://arxiv.org/abs/2610.09849v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.09849v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Selecting synthetic degradations for dense prediction requires an estimate of their training utility, the generalization gain they bring under a finite training budget. Clean and degraded twins share content and labels, suggesting a score based on how much short training reduces the excess error caused by degradation. However, this gap can also shrink when clean performance deteriorates. Measuring the improvement on degraded images alone avoids that confound, but it still credits progress that the same amount of clean training would have produced. We propose the \textbf{controlled Reducible Degradation Gap} (cRDG) for regions defined by degradation type and severity. From a common checkpoint, cRDG runs two budget-matched probes that differ only in one augmentation slot, which holds either a synthetic degradation or a clean augmentation. The score is the gain on held-out degraded images relative to the clean-control probe. Clean harm is a separate feasibility constraint. cRDG reveals a correctable severity band in which training on the degradation yields high controlled gain under the available budget, and the band moves with the predictor, the starting checkpoint, and the training budget. \textbf{Curation of Reducible Bands} (\method) uses cRDG to select synthetic data without changing the predictor. On semantic segmentation and salient object detection, \method{} improves representative predictors under matched synthetic-data budgets and training schedules, extends to existing data-generation pipelines, and preserves clean performance. Code and supporting materials will be publicly released.</summary>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-07T11:07:36Z</published>
+    <arxiv:comment>17 pages, 4 figures, 9 tables</arxiv:comment>
+    <arxiv:primary_category term="cs.CV"/>
+    <author>
+      <name>Chunming He</name>
+    </author>
+    <author>
+      <name>Kailai Zhou</name>
+    </author>
+    <author>
+      <name>Jiaming Zuo</name>
+    </author>
+    <author>
+      <name>Hanqi Liu</name>
+    </author>
+    <author>
+      <name>Fengyang Xiao</name>
+    </author>
+    <author>
+      <name>Youwei Pang</name>
+    </author>
+    <author>
+      <name>Xiaofeng Liu</name>
+    </author>
+    <author>
+      <name>Weisi Lin</name>
+    </author>
+    <author>
+      <name>Xiaoqi Zhao</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2009.07964v4</id>
+    <title>Tasty Burgers, Soggy Fries: Probing Aspect Robustness in Aspect-Based Sentiment Analysis</title>
+    <updated>2020-10-28T08:19:36Z</updated>
+    <link href="https://arxiv.org/abs/2009.07964v4" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2009.07964v4" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Aspect-based sentiment analysis (ABSA) aims to predict the sentiment towards a specific aspect in the text. However, existing ABSA test sets cannot be used to probe whether a model can distinguish the sentiment of the target aspect from the non-target aspects. To solve this problem, we develop a simple but effective approach to enrich ABSA test sets. Specifically, we generate new examples to disentangle the confounding sentiments of the non-target aspects from the target aspect's sentiment. Based on the SemEval 2014 dataset, we construct the Aspect Robustness Test Set (ARTS) as a comprehensive probe of the aspect robustness of ABSA models. Over 92% data of ARTS show high fluency and desired sentiment on all aspects by human evaluation. Using ARTS, we analyze the robustness of nine ABSA models, and observe, surprisingly, that their accuracy drops by up to 69.73%. We explore several ways to improve aspect robustness, and find that adversarial training can improve models' performance on ARTS by up to 32.85%. Our code and new test set are available at https://github.com/zhijing-jin/ARTS_TestSet</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2020-09-16T22:38:18Z</published>
+    <arxiv:comment>EMNLP 2020, long paper</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Xiaoyu Xing</name>
+    </author>
+    <author>
+      <name>Zhijing Jin</name>
+    </author>
+    <author>
+      <name>Di Jin</name>
+    </author>
+    <author>
+      <name>Bingning Wang</name>
+    </author>
+    <author>
+      <name>Qi Zhang</name>
+    </author>
+    <author>
+      <name>Xuanjing Huang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2410.18970v5</id>
+    <title>Bridging Explainability and Embeddings: BEE Aware of Spuriousness</title>
+    <updated>2026-02-11T09:19:21Z</updated>
+    <link href="https://arxiv.org/abs/2410.18970v5" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2410.18970v5" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Current methods for detecting spurious correlations rely on analyzing dataset statistics or error patterns, leaving many harmful shortcuts invisible when counterexamples are absent. We introduce BEE (Bridging Explainability and Embeddings), a framework that shifts the focus from model predictions to the weight space, and to the embedding geometry underlying decisions. By analyzing how fine-tuning perturbs pretrained representations, BEE uncovers spurious correlations that remain hidden from conventional evaluation pipelines. We use linear probing as a transparent diagnostic lens, revealing spurious features that not only persist after full fine-tuning but also transfer across diverse state-of-the-art models. Our experiments cover numerous datasets and domains: vision (Waterbirds, CelebA, ImageNet-1k), language (CivilComments, MIMIC-CXR medical notes), and multiple embedding families (CLIP, CLIP-DataComp.XL, mGTE, BLIP2, SigLIP2). BEE consistently exposes spurious correlations: from concepts that slash the ImageNet accuracy by up to 95%, to clinical shortcuts in MIMIC-CXR notes that induce dangerous false negatives. Together, these results position BEE as a general and principled tool for diagnosing spurious correlations in weight space, enabling principled dataset auditing and more trustworthy foundation models. The source code is publicly available at https://github.com/bit-ml/bee.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-10-24T17:59:16Z</published>
+    <arxiv:comment>ICLR 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Cristian Daniel Păduraru</name>
+    </author>
+    <author>
+      <name>Antonio Bărbălau</name>
+    </author>
+    <author>
+      <name>Radu Filipescu</name>
+    </author>
+    <author>
+      <name>Andrei Liviu Nicolicioiu</name>
+    </author>
+    <author>
+      <name>Elena Burceanu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.39639v1</id>
+    <title>Where Do Vision Language Models Fail at 3D Reasoning?</title>
+    <updated>2026-10-29T09:00:14Z</updated>
+    <link href="https://arxiv.org/abs/2610.39639v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.39639v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Vision-language models can get individual judgments right while struggling to recover and consistently use the exact properties of a 3D object. To characterize this gap, we introduce BedBench, a controlled benchmark of thirteen procedurally generated tasks spanning individual judgments and composite answers. Across twelve open-weight and four frontier models, per-color counting exposes a pronounced weakness: humans achieve 93.3% accuracy, compared with 7.2% for the best model. Targeted fine-tuning raises one model's accuracy from 3.0% to 68.6%, but reveals a further difficulty: its answers about the most common colors remain inconsistent with its own per-color counts. Supplying those counts as text improves its judgments, showing that recovering a property does not mean using it consistently. Reasoning, scaling, and added visual cues each improve individual judgments, but none makes exact answers reliable. To locate the difficulty, we probe Qwen3.5-27B: exact per-color counts remain recoverable at the language model's input, yet the model's answers rarely recover them (65.0% for the probe vs. 3.0% for the model). Image-removal controls further show that some apparent successes require no visual evidence. These findings motivate evaluating 3D reasoning by exact correctness, consistent use, and image dependence, rather than accuracy alone. Code and dataset are publicly available: https://github.com/leduckhai/BedBench</summary>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-29T09:00:14Z</published>
+    <arxiv:comment>Preprint, 150 pages</arxiv:comment>
+    <arxiv:primary_category term="cs.CV"/>
+    <author>
+      <name>Khai Le-Duc</name>
+    </author>
+    <author>
+      <name>Nguyen Kim Hai Bui</name>
+    </author>
+    <author>
+      <name>An Ngo</name>
+    </author>
+    <author>
+      <name>Nam D. Hoang</name>
+    </author>
+    <author>
+      <name>Yueqi Song</name>
+    </author>
+    <author>
+      <name>Jiarui Liu</name>
+    </author>
+    <author>
+      <name>Thai Quoc Hoang</name>
+    </author>
+    <author>
+      <name>Fang Wu</name>
+    </author>
+    <author>
+      <name>Chris Ngo</name>
+    </author>
+    <author>
+      <name>Terry Jingchen Zhang</name>
+    </author>
+    <author>
+      <name>Mona T. Diab</name>
+    </author>
+    <author>
+      <name>Ran Xu</name>
+    </author>
+    <author>
+      <name>Silvio Savarese</name>
+    </author>
+    <author>
+      <name>Xiao-Ming Wu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2510.06296v3</id>
+    <title>VeriEquivBench: An Equivalence Score for Ground-Truth-Free Evaluation of Formally Verifiable Code</title>
+    <updated>2026-04-18T14:30:50Z</updated>
+    <link href="https://arxiv.org/abs/2510.06296v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2510.06296v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Formal verification is the next frontier for ensuring the correctness of code generated by Large Language Models (LLMs). While methods that co-generate code and formal specifications in formal languages, like Dafny, can, in principle, prove alignment with user intent, progress is bottlenecked by specification quality evaluation. Current benchmarks rely on matching against ground-truth specifications, a manual and expertise-intensive process that has limited existing datasets to a few hundred simple problems and also suffers from a reliability issue. To address this, we introduce VeriEquivBench, a new benchmark with $2,389$ complex algorithmic problems that probe the limitations of current models in both code generation and formal reasoning. Our evaluation framework replaces ground-truth matching with a formally grounded metric, the equivalence score, and rigorously verifies the quality of generated specifications and code. Our results show that generating formally verifiable code remains a profound challenge for state-of-the-art LLMs. This underscores both the difficulty of the task and the need for benchmarks like VeriEquivBench to drive progress toward scalable and reliable coding agents.</summary>
+    <category term="cs.PL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-10-07T13:19:05Z</published>
+    <arxiv:primary_category term="cs.PL"/>
+    <author>
+      <name>Lingfei Zeng</name>
+    </author>
+    <author>
+      <name>Fengdi Che</name>
+    </author>
+    <author>
+      <name>Xuhan Huang</name>
+    </author>
+    <author>
+      <name>Fei Ye</name>
+    </author>
+    <author>
+      <name>Xu Xu</name>
+    </author>
+    <author>
+      <name>Binhang Yuan</name>
+    </author>
+    <author>
+      <name>Jie Fu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2502.17204v2</id>
+    <title>Order Matters: Investigate the Position Bias in Multi-constraint Instruction Following</title>
+    <updated>2025-03-03T06:29:31Z</updated>
+    <link href="https://arxiv.org/abs/2502.17204v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2502.17204v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Real-world instructions with multiple constraints pose a significant challenge to existing large language models (LLMs). An observation is that the LLMs exhibit dramatic performance fluctuation when disturbing the order of the incorporated constraints. Yet, none of the existing works has systematically investigated this position bias problem in the field of multi-constraint instruction following. To bridge this gap, we design a probing task where we quantitatively measure the difficulty distribution of the constraints by a novel Difficulty Distribution Index (CDDI). Through the experimental results, we find that LLMs are more performant when presented with the constraints in a ``hard-to-easy'' order. This preference can be generalized to LLMs with different architecture or different sizes of parameters. Additionally, we conduct an explanation study, providing an intuitive insight into the correlation between the LLM's attention and constraint orders. Our code and dataset are publicly available at https://github.com/meowpass/PBIF.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-02-24T14:39:28Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Jie Zeng</name>
+    </author>
+    <author>
+      <name>Qianyu He</name>
+    </author>
+    <author>
+      <name>Qingyu Ren</name>
+    </author>
+    <author>
+      <name>Jiaqing Liang</name>
+    </author>
+    <author>
+      <name>Yanghua Xiao</name>
+    </author>
+    <author>
+      <name>Weikang Zhou</name>
+    </author>
+    <author>
+      <name>Zeye Sun</name>
+    </author>
+    <author>
+      <name>Fei Yu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.18508v1</id>
+    <title>Style over Substance: A Shortcut Audit of Emotion-Description Preference Evaluation</title>
+    <updated>2026-07-20T21:05:08Z</updated>
+    <link href="https://arxiv.org/abs/2607.18508v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.18508v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Preference over model-generated emotion descriptions is emerging as a standard evaluation metric for multimodal emotion understanding, exemplified by the MER2026 MER-Prefer track on EmoPrefer. Such benchmarks assume that predicting the preferred description requires grounded cross-modal understanding of the video. We conduct a systematic shortcut audit of EmoPrefer using content-blind probes. A simple logistic regression using only description length and generator identity, without processing the text, video, or audio, performs comparably to LoRA-finetuned 7B text and audio-visual judges (65.8 versus 66.8 WAF on EmoPrefer-V2). Generator identity is recoverable from description text with 99.5 percent accuracy, every candidate pair contrasts two distinct generators, and the human preference labels agree with a fold-exclusive per-generator win-rate prior on 66 percent of the evaluated pairs. When the human label conflicts with this prior, trained judges still follow the style prior on 63 to 80 percent of the pairs. On a length-matched subset that neutralizes verbosity bias, the tested media configurations yield no statistically significant improvement, while an ODIN-inspired diagnostic that decouples the style shortcut leaves its content head near chance. These results do not imply that human preferences are inherently stylistic or that the descriptions contain no emotional information. Instead, they show that the current scores can be reached without verifying either description against the video. We recommend source-balanced pairing, strict length control, counter-stereotypical sliced reporting, and multi-annotator consensus for future cross-generator evaluations. Code is available at https://github.com/jiabingyang01/EmoPrefer-Audit.</summary>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-20T21:05:08Z</published>
+    <arxiv:primary_category term="cs.CV"/>
+    <author>
+      <name>Jiabing Yang</name>
+    </author>
+    <author>
+      <name>Yixiang Chen</name>
+    </author>
+    <author>
+      <name>Yuan Xu</name>
+    </author>
+    <author>
+      <name>Qisen Ma</name>
+    </author>
+    <author>
+      <name>Tao Yu</name>
+    </author>
+    <author>
+      <name>Peiyan Li</name>
+    </author>
+    <author>
+      <name>Yingda Li</name>
+    </author>
+    <author>
+      <name>Yan Huang</name>
+    </author>
+    <author>
+      <name>Liang Wang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2510.06809v3</id>
+    <title>VA-Adapter: Adapting Ultrasound Foundation Model to Echocardiography Probe Guidance</title>
+    <updated>2026-05-18T15:55:06Z</updated>
+    <link href="https://arxiv.org/abs/2510.06809v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2510.06809v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Echocardiography is a critical tool for detecting heart diseases, yet its steep operational difficulty causes a shortage of skilled personnel. Probe guidance systems, which assist in acquiring high-quality images, offer a promising solution to lower this operational barrier. However, robust probe guidance remains challenging due to significant individual variability. This variability manifests as differences in low-level features within two-dimensional (2D) images, which complicates image feature understanding, and differences in individual three-dimensional (3D) structures, which poses challenges for precise navigation. To address these challenges, we first propose leveraging the robust image representations learned by ultrasound foundation models from vast datasets. Yet, applying these models to probe navigation is non-trivial due to their lack of understanding of individual 3D structures. To this end, we meticulously design a Vision-Action Adapter (VA-Adapter) to online inject the capability of understanding individual 3D structures. Specifically, by embedding the VA-Adapter into the foundation model's image encoder, the model can infer cardiac anatomy from historical vision-action sequences, mimicking the cognitive process of a sonographer. Extensive experiments on a dataset with over 1.31M samples demonstrate that the VA-Adapter outperforms strong probe guidance models while requiring approximately 33 times fewer trained parameters. Code is available at https://github.com/LeapLabTHU/VA-Adapter.</summary>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-10-08T09:38:30Z</published>
+    <arxiv:comment>MICCAI2026 Early Accept Paper</arxiv:comment>
+    <arxiv:primary_category term="cs.CV"/>
+    <author>
+      <name>Teng Wang</name>
+    </author>
+    <author>
+      <name>Haojun Jiang</name>
+    </author>
+    <author>
+      <name>Yuxuan Wang</name>
+    </author>
+    <author>
+      <name>Zhenguo Sun</name>
+    </author>
+    <author>
+      <name>Yujiao Deng</name>
+    </author>
+    <author>
+      <name>Shiji Song</name>
+    </author>
+    <author>
+      <name>Gao Huang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2201.12872v1</id>
+    <title>Discovering Invariant Rationales for Graph Neural Networks</title>
+    <updated>2022-01-30T16:43:40Z</updated>
+    <link href="https://arxiv.org/abs/2201.12872v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2201.12872v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Intrinsic interpretability of graph neural networks (GNNs) is to find a small subset of the input graph's features -- rationale -- which guides the model prediction. Unfortunately, the leading rationalization models often rely on data biases, especially shortcut features, to compose rationales and make predictions without probing the critical and causal patterns. Moreover, such data biases easily change outside the training distribution. As a result, these models suffer from a huge drop in interpretability and predictive performance on out-of-distribution data. In this work, we propose a new strategy of discovering invariant rationale (DIR) to construct intrinsically interpretable GNNs. It conducts interventions on the training distribution to create multiple interventional distributions. Then it approaches the causal rationales that are invariant across different distributions while filtering out the spurious patterns that are unstable. Experiments on both synthetic and real-world datasets validate the superiority of our DIR in terms of interpretability and generalization ability on graph classification over the leading baselines. Code and datasets are available at https://github.com/Wuyxin/DIR-GNN.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2022-01-30T16:43:40Z</published>
+    <arxiv:comment>ICLR 2022</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Ying-Xin Wu</name>
+    </author>
+    <author>
+      <name>Xiang Wang</name>
+    </author>
+    <author>
+      <name>An Zhang</name>
+    </author>
+    <author>
+      <name>Xiangnan He</name>
+    </author>
+    <author>
+      <name>Tat-Seng Chua</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.27250v1</id>
+    <title>Do Context Files Help Coding Agents? A Two-Agent Ablation Study on Real Repositories</title>
+    <updated>2026-07-28T11:07:53Z</updated>
+    <link href="https://arxiv.org/abs/2607.27250v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.27250v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Persistent context files (AGENTS.md, CLAUDE.md) are standard practice for guiding AI coding agents, yet evidence for their effectiveness is contradictory. We present a controlled ablation of context-injection strategy across two frontier agents (Claude Code and Codex), 17 real tasks from 3 repositories (15 shared + 2 Codex-only), and 288 evaluated runs with gold-test evaluation. Context strategy does not measurably move correctness on either agent (bounded to &lt;=10-15pp via equivalence testing). A failure-mode triage reveals why: agents fail on implementation skill---feature design, pattern selection, exact wiring---not missing repository knowledge that a context file could supply; a manipulation probe confirms the real AGENTS.md never converts a near-miss to a pass on either agent. We further show that borderline task difficulty is agent-specific (Spearman rho=0.75), offering a candidate explanation for prior contradictions: single-agent studies draw tasks from different agents' informative bands. We release all code, data, and analysis.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-28T11:07:53Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Prakhar Khatri</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.28930v2</id>
+    <title>The Hallucination Signal Is a Mean Shift: Why Simple Probes Suffice</title>
+    <updated>2026-10-03T10:07:56Z</updated>
+    <link href="https://arxiv.org/abs/2608.28930v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.28930v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Hidden-state probes effectively detect LLM hallucinations, but the geometry of the signal remains poorly characterized, driving increasingly complex probe architectures. Across three 7B-scale models and three datasets in a paired-example paradigm, we find the signal overwhelmingly dominated by a single mean-shift component, and removing this direction collapses detection to chance. Shrinkage linear discriminant analysis closes about 73% of the gap between 1D and full-dimensional classifiers, so apparent architectural complexity largely reflects high-dimensional covariance estimation difficulty rather than exploitable non-linearity. A simple L2-regularized logistic regression (0.952 AUROC) bounds or outperforms twelve controlled architectural alternatives, and our multi-layer aggregation exceeds CLAP cross-layer attention probing under matched paradigm. Because the signal spans a contiguous layer band, LayerMix aggregates it to match oracle-layer performance without oracle access. Our claims characterize the geometry within the controlled paired-example paradigm. Our code is available at https://github.com/js-lee-AI/LayerMix.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-28T23:01:21Z</published>
+    <arxiv:comment>19 pages, 7 figures, 20 tables. Accepted to EMNLP 2026 (Main Conference). Code: https://github.com/js-lee-AI/LayerMix</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Jungseob Lee</name>
+    </author>
+    <author>
+      <name>Jaehyung Seo</name>
+    </author>
+    <author>
+      <name>Heuiseok Lim</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.25948v1</id>
+    <title>Auditable CT Phenotyping Through Report-derived Radiological Observations</title>
+    <updated>2026-08-26T16:03:59Z</updated>
+    <link href="https://arxiv.org/abs/2608.25948v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.25948v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Medical image foundation models can predict clinical phenotypes from computed tomography (CT), but strong performance leaves open whether they read disease-specific findings or shortcuts that correlate with the diagnosis. We tested this in 221 electronic-health-record (EHR) phenotypes using Auditable CT phenotyping (ACT), built on report-derived radiological observations. We trained ACT on 38,317 patients, mined 376,194 observations and evaluated it in 25,183 held-out patients. ACT exceeded five vision-language baselines on zero-shot annotation, and CT-CLIP across 221 phenotypes from unseen CT pulmonary angiography, both under zero-shot scoring (0.651 versus 0.572) and under linear probing (0.709 versus 0.662). Reading each probe exposes what accuracy conceals: only 97 observations occupy the 221 rank-1 positions, and one phrase describing aortic and coronary calcification ranks first for 20 phenotypes, including osteoporosis, urinary tract infection and major depressive disorder. Restricting the bank to clinician-specified evidence redirects those probes onto phenotype-related observations in 86 phenotypes at no accuracy cost (0.751 versus 0.741). Accurate CT-based EHR phenotyping can therefore rest on observations that are not valid evidence for the coded phenotype and that ACT can identify and intervene on.</summary>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-26T16:03:59Z</published>
+    <arxiv:primary_category term="cs.CV"/>
+    <author>
+      <name>Riga Wu</name>
+    </author>
+    <author>
+      <name>Walter Witschey</name>
+    </author>
+    <author>
+      <name>Yicheng Li</name>
+    </author>
+    <author>
+      <name>Felix Barajas Ordonez</name>
+    </author>
+    <author>
+      <name>Keno K. Bressem</name>
+    </author>
+    <author>
+      <name>Lisa C. Adams</name>
+    </author>
+    <author>
+      <name>Gary E. Weissman</name>
+    </author>
+    <author>
+      <name>Li Shen</name>
+    </author>
+    <author>
+      <name>Christos Davatzikos</name>
+    </author>
+    <author>
+      <name>Eduardo Barbosa</name>
+    </author>
+    <author>
+      <name>Daniel Truhn</name>
+    </author>
+    <author>
+      <name>Tianyu Han</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.17029v2</id>
+    <title>LadderTeam: Dual-Agent Laddering Elicitation Framework</title>
+    <updated>2026-09-29T19:11:25Z</updated>
+    <link href="https://arxiv.org/abs/2608.17029v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.17029v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Eliciting detailed and actionable software requirements from end-users is a critical phase in the iterative development of a software product or application. To ensure the feedback collected is detailed and actionable, software teams can leverage the laddering interview technique. While effective for ensuring granular and actionable items from the software feedback, these interviews are subject to several limitations. They are traditionally a manual process associated with a time and financial burden, limiting scalability; interviewers must balance probing for depth while managing interviewee behavioral and cultural constraints. To address these limitations, we present \textbf{LadderTeam}, an open, reproducible framework that automates UX wireframe interviews using a dual-agent Large Language Model (LLM) architecture. An active interviewer agent executes one of three probing strategies (ACV, 5-Whys, and JTBD) to elicit actionable software requirements from usability feedback comments, while a concurrent background Judge agent evaluates probe-response pairs and triggers real-time guardrails to prevent topic drift. To rigorously evaluate LLM laddering without participant variance confounds, we introduce a controlled simulation methodology utilizing scripted ground-truth transcripts to isolate probe quality as the sole experimental variable. Across 216 interviews, \textbf{LadderTeam} achieved 99.1\% chain convergence and an 81.0\% ground-truth actionable response match (86.1\% reluctant personality, 75.9\% terse personality) with zero drift across all runs. All evaluation code, all transcripts, inputs, and a live demonstration platform will be open-sourced upon acceptance.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.HC" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-17T18:27:33Z</published>
+    <arxiv:comment>4 pages, 1 figure, 2 tables, Accepted in ACM AI Summit 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Manjushree Aithal</name>
+    </author>
+    <author>
+      <name>Alexander Kotz</name>
+    </author>
+    <author>
+      <name>James Mitchell</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2511.18597v1</id>
+    <title>Toward Trustworthy Difficulty Assessments: Large Language Models as Judges in Programming and Synthetic Tasks</title>
+    <updated>2025-11-23T19:39:44Z</updated>
+    <link href="https://arxiv.org/abs/2511.18597v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2511.18597v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) have demonstrated impressive capabilities in natural language and code generation, and are increasingly deployed as automatic judges of model outputs and learning activities. Yet, their behavior on structured tasks such as predicting the difficulty of competitive programming problems remains under-explored. We conduct a systematic comparison of GPT-4o, used purely as a natural-language difficulty assessor, against an interpretable Light-GBM ensemble trained on explicit numeric and textual features. On a dataset of 1,825 LeetCode problems labeled Easy, Medium, or Hard, LightGBM attains 86% accuracy, whereas GPT-4o reaches only 37.75%. Detailed analyses, including confusion matrices and SHAP-based interpretability, show that numeric constraints -- such as input size limits and acceptance rates -- play a crucial role in separating Hard problems from easier ones. By contrast, GPT-4o often overlooks these cues and exhibits a strong bias toward simpler categories. We further probe GPT-4o through a synthetic Hard-problem generation protocol. Surprisingly, GPT-4o labels almost all of its own synthetic Hard problems as Medium, contradicting its tendency to downgrade real Hard problems to Easy. Our findings connect to recent work on LLMs-as-judges and automatic difficulty estimation in programming and education, and highlight concrete failure modes that must be addressed before LLM-based judges can be considered trustworthy in competitive programming, educational platforms, or reinforcement-learning pipelines.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-11-23T19:39:44Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>H. M. Shadman Tabib</name>
+    </author>
+    <author>
+      <name>Jaber Ahmed Deedar</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/1406.5149v3</id>
+    <title>A silicon-based surface code quantum computer</title>
+    <updated>2015-09-23T15:38:41Z</updated>
+    <link href="https://arxiv.org/abs/1406.5149v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/1406.5149v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Individual impurity atoms in silicon can make superb individual qubits, but it remains an immense challenge to build a multi-qubit processor: There is a basic conflict between nanometre separation desired for qubit-qubit interactions, and the much larger scales that would enable control and addressing in a manufacturable and fault tolerant architecture. Here we resolve this conflict by establishing the feasibility of surface code quantum computing using solid state spins, or `data qubits', that are widely separated from one another. We employ a second set of `probe' spins which are mechanically separate from the data qubits and move in-and-out of their proximity. The spin dipole-dipole interactions give rise to phase shifts; measuring a probe's total phase reveals the collective parity of the data qubits along the probe's path. We introduce a protocol to balance the systematic errors due to the spins being imperfectly located during device fabrication. Detailed simulations show that the surface code's threshold then corresponds to misalignments that are substantial on the scale of the array, indicating that it is very robust. We conclude that this simple `orbital probe' architecture overcomes many of the difficulties facing solid state quantum computing, while minimising the complexity and offering qubit densities that are several orders of magnitude greater than other systems.</summary>
+    <category term="quant-ph" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2014-06-19T18:52:11Z</published>
+    <arxiv:comment>Improved discussion of generalisation to universal computation. Two figures added. Appendices extended</arxiv:comment>
+    <arxiv:primary_category term="quant-ph"/>
+    <arxiv:journal_ref>npj Quantum Information 2, 15019 (2016)</arxiv:journal_ref>
+    <author>
+      <name>Joe O'Gorman</name>
+    </author>
+    <author>
+      <name>Naomi H. Nickerson</name>
+    </author>
+    <author>
+      <name>Philipp Ross</name>
+    </author>
+    <author>
+      <name>John J. L. Morton</name>
+    </author>
+    <author>
+      <name>Simon C. Benjamin</name>
+    </author>
+    <arxiv:doi>10.1038/npjqi.2015.19</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.1038/npjqi.2015.19" title="doi"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.38257v1</id>
+    <title>How Should Diffusion Language Models Edit Code?</title>
+    <updated>2026-09-29T11:12:00Z</updated>
+    <link href="https://arxiv.org/abs/2609.38257v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.38257v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Code editing requires a model to decide where to make changes, generate the new content, and preserve everything else. We study how masked diffusion language models divide these responsibilities across four editing interfaces: whole-file rewriting, search-and-replace, locate-then-infill, and token-level editing. Experiments on CanItEdit reveal a composition gap: diffusion models can generate coordinated changes when the correct edit locations are supplied, but much of this capability is lost when those locations must be predicted. Access to the intact original code helps the model fill multiple edit regions, yet does not resolve the difficulty of selecting those regions. By varying the editable regions while holding the generation model and decoding procedure fixed, we identify two distinct requirements for successful editing: covering every required change and placing precise boundaries around it. Missing a required region prevents the corresponding change, while widening regions to ensure coverage can sharply reduce success by requiring unchanged code to be regenerated. A sentence-level Wiki editing probe shows the same qualitative gap between supplied and predicted locations beyond code. These findings show why strong infilling capability alone does not ensure reliable editing: the interface must expose all required changes while limiting regeneration of unchanged code.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-29T11:12:00Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Xijia Tao</name>
+    </author>
+    <author>
+      <name>Ziru Liu</name>
+    </author>
+    <author>
+      <name>Shansan Gong</name>
+    </author>
+    <author>
+      <name>Jiacheng Ye</name>
+    </author>
+    <author>
+      <name>Kecheng Chen</name>
+    </author>
+    <author>
+      <name>Zirui Wu</name>
+    </author>
+    <author>
+      <name>Lin Zheng</name>
+    </author>
+    <author>
+      <name>Xinyu Fu</name>
+    </author>
+    <author>
+      <name>Rui Liu</name>
+    </author>
+    <author>
+      <name>Lingpeng Kong</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2301.01617v1</id>
+    <title>Sensitivity enhancement using chirp transmission for an ultrasound arthroscopic probe</title>
+    <updated>2023-01-04T13:41:22Z</updated>
+    <link href="https://arxiv.org/abs/2301.01617v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2301.01617v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Meniscal tear in the knee joint is a highly common injury that can require an ablation. However, the success rate of meniscectomy is highly impacted by difficulties in estimating the thin vascularization of the meniscus, which determines the healing capacities of the patient. Indeed, the vascularization is estimated using arthroscopic cameras that lack of a high sensitivity to blood flow. Here, we propose an ultrasound method for estimating the density of vascularization in the meniscus during surgery. This approach uses an arthroscopic probe driven by ultrafast sequences. To enhance the sensitivity of the method, we propose to use a chirp-coded excitation combined to a mismatched compression filter robust to the attenuation. This chirp approach was compared to a standard ultrafast emission and a Hadamard-coded emission using a flow phantom. The mismatched filter was also compared to a matched filter. Results show that, for a velocity of a few mm/s, the mismatched filter gives a 4.4 to 10.4 dB increase of the signal-to-noise ratio compared to the Hadamard emission and a 3.1 to 6.6 dB increase compared to the matched filter. Such increases are obtained for a loss of axial resolution of 13% when comparing the point spread functions of the mismatched and matched filters. Hence, the mismatched filter allows increasing significantly the probe capacity to detect slow flows at the cost of a small loss in axial resolution. This preliminary study is the first step toward an ultrasensitive ultrasound arthroscopic probe able to assist the surgeon during meniscectomy.</summary>
+    <category term="physics.med-ph" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2023-01-04T13:41:22Z</published>
+    <arxiv:primary_category term="physics.med-ph"/>
+    <arxiv:journal_ref>IEEE Transactions on Ultrasonics, Ferroelectrics, and Frequency Control, 2022, 69 (10), pp.2776-2784</arxiv:journal_ref>
+    <author>
+      <name>Baptiste Pialot</name>
+      <arxiv:affiliation>CREATIS</arxiv:affiliation>
+    </author>
+    <author>
+      <name>Adeline Bernard</name>
+    </author>
+    <author>
+      <name>Herve Liebgott</name>
+    </author>
+    <author>
+      <name>François Varray</name>
+    </author>
+    <arxiv:doi>10.1109/TUFFC.2022.3160880</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.1109/TUFFC.2022.3160880" title="doi"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2509.21882v3</id>
+    <title>Position: The Hidden Costs and Measurement Gaps of Reinforcement Learning with Verifiable Rewards</title>
+    <updated>2026-05-25T20:11:55Z</updated>
+    <link href="https://arxiv.org/abs/2509.21882v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2509.21882v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Reinforcement learning with verifiable rewards (RLVR) is a practical, scalable way to improve large language models on math, code, and other structured tasks. However, we argue that many headline RLVR gains are not yet well validated because reports often conflate policy improvement with three confounds: (i) budget mismatch between RLVR and baseline evaluations, (ii) attempt inflation and calibration drift that convert abstentions into confident answers, and (iii) benchmark data contamination. Using budget-matched reproductions and partial-prompt contamination probes, we find that several widely cited gaps shrink substantially or disappear once budgets, prompts, and dataset versions are matched and contaminated sets are treated as memorization probes rather than evidence of reasoning. This does not mean that RLVR is ineffective, but it implies that current measurements often overstate capability gains and obscure reliability costs. We therefore propose a compact, tax-aware minimum standard for RLVR training and evaluation: budget-matched saturation curves with variance, calibration, and abstention tracking, a judge-robustness stress test when LLM judges are used, and an explicit contamination screen. With these controls, RLVR remains effective and deployable in verifiable domains, but reasoning gains should be treated as provisional without them.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-09-26T05:06:25Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Fang Wu</name>
+    </author>
+    <author>
+      <name>Aaron Tu</name>
+    </author>
+    <author>
+      <name>Weihao Xuan</name>
+    </author>
+    <author>
+      <name>Heli Qi</name>
+    </author>
+    <author>
+      <name>Xu Huang</name>
+    </author>
+    <author>
+      <name>Qingcheng Zeng</name>
+    </author>
+    <author>
+      <name>Shayan Talaei</name>
+    </author>
+    <author>
+      <name>Yijia Xiao</name>
+    </author>
+    <author>
+      <name>Peng Xia</name>
+    </author>
+    <author>
+      <name>Xiangru Tang</name>
+    </author>
+    <author>
+      <name>Yuchen Zhuang</name>
+    </author>
+    <author>
+      <name>Yinxi Li</name>
+    </author>
+    <author>
+      <name>Bing Hu</name>
+    </author>
+    <author>
+      <name>Hanqun Cao</name>
+    </author>
+    <author>
+      <name>Wenqi Shi</name>
+    </author>
+    <author>
+      <name>Rui Yang</name>
+    </author>
+    <author>
+      <name>Nan Liu</name>
+    </author>
+    <author>
+      <name>Huaxiu Yao</name>
+    </author>
+    <author>
+      <name>Ge Liu</name>
+    </author>
+    <author>
+      <name>Li Erran Li</name>
+    </author>
+    <author>
+      <name>Amin Saberi</name>
+    </author>
+    <author>
+      <name>Naoto Yokoya</name>
+    </author>
+    <author>
+      <name>Jure Leskovec</name>
+    </author>
+    <author>
+      <name>Yejin Choi</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2507.15227v2</id>
+    <title>Mammo-SAE: Interpreting Breast Cancer Concept Learning with Sparse Autoencoders</title>
+    <updated>2025-08-15T19:18:28Z</updated>
+    <link href="https://arxiv.org/abs/2507.15227v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2507.15227v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Interpretability is critical in high-stakes domains such as medical imaging, where understanding model decisions is essential for clinical adoption. In this work, we introduce Sparse Autoencoder (SAE)-based interpretability to breast imaging by analyzing {Mammo-CLIP}, a vision--language foundation model pretrained on large-scale mammogram image--report pairs. We train a patch-level \texttt{Mammo-SAE} on Mammo-CLIP to identify and probe latent features associated with clinically relevant breast concepts such as \textit{mass} and \textit{suspicious calcification}. Our findings reveal that top activated class level latent neurons in the SAE latent space often tend to align with ground truth regions, and also uncover several confounding factors influencing the model's decision-making process. Additionally, we analyze which latent neurons the model relies on during downstream finetuning for improving the breast concept prediction. This study highlights the promise of interpretable SAE latent representations in providing deeper insight into the internal workings of foundation models at every layer for breast imaging. The code will be released at https://krishnakanthnakka.github.io/MammoSAE/</summary>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-07-21T03:59:21Z</published>
+    <arxiv:comment>Accepted at Deep Breast Imaging workshop, MICCAI 2025</arxiv:comment>
+    <arxiv:primary_category term="cs.CV"/>
+    <author>
+      <name>Krishna Kanth Nakka</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.25636v1</id>
+    <title>RoboFollow: Unveiling the Instruction Following Mirage in Embodied Agents</title>
+    <updated>2026-09-22T03:48:02Z</updated>
+    <link href="https://arxiv.org/abs/2609.25636v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.25636v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Modern embodied agents achieve impressive success rates, yet their actual instruction-following ability is far weaker than these numbers suggest. We trace this illusion to a structural property we term low scene entropy: when a visual scene admits only one valid task, language becomes redundant and a policy can score highly while barely using it. We introduce RoboFollow, a diagnostic benchmark with three principles: (1) High Scene Entropy: each training scene supports multiple kinematically distinct task branches, making vision alone insufficient and forcing reliance on language. (2) Hierarchical Diagnostic Protocol: a four-level protocol (L0--L3) progressively perturbs visual layout and semantics, probing whether equivalent instructions yield consistent behavior and distinct ones yield discriminable behavior across spatial relations, attributes, trajectory constraints, and logic. (3) Confound-Controlled Diagnosis: we simplify interaction objects, restrict actions to the trained repertoire and report stage-wise Intent and Execution scores, isolating comprehension from motor execution. Evaluation of nine VLA and WAM policies shows that strong L0 performance, where attained, does not reliably transfer to L1--L3 under our fine-tuning setup. Representative mitigations, including stronger VLM backbones, QA co-training, LangForce, and Classifier-Free Guidance, all fail to close this gap. RoboFollow exposes genuine instruction following as a critical, overlooked bottleneck. Code and dataset are available at https://github.com/AutoLab-SAI-SJTU/RoboFollow and https://huggingface.co/datasets/AutoLab-SJTU/robofollow-data.</summary>
+    <category term="cs.RO" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-22T03:48:02Z</published>
+    <arxiv:primary_category term="cs.RO"/>
+    <author>
+      <name>Chang Guo</name>
+    </author>
+    <author>
+      <name>Yukun Xie</name>
+    </author>
+    <author>
+      <name>Bohan Tan</name>
+    </author>
+    <author>
+      <name>Zheng Chang</name>
+    </author>
+    <author>
+      <name>Zhaokai Yin</name>
+    </author>
+    <author>
+      <name>Qianli Ma</name>
+    </author>
+    <author>
+      <name>Yingqiao Wang</name>
+    </author>
+    <author>
+      <name>Chao Liang</name>
+    </author>
+    <author>
+      <name>Zhipeng Zhang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2504.10227v2</id>
+    <title>Probing then Editing Response Personality of Large Language Models</title>
+    <updated>2025-07-29T09:46:02Z</updated>
+    <link href="https://arxiv.org/abs/2504.10227v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2504.10227v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) have demonstrated promising capabilities to generate responses that simulate consistent personality traits. Despite the major attempts to analyze personality expression through output-based evaluations, little is known about how such traits are internally encoded within LLM parameters. In this paper, we introduce a layer-wise probing framework to systematically investigate the layer-wise capability of LLMs in simulating personality for responding. We conduct probing experiments on 11 open-source LLMs over the PersonalityEdit benchmark and find that LLMs predominantly simulate personality for responding in their middle and upper layers, with instruction-tuned models demonstrating a slightly clearer separation of personality traits. Furthermore, by interpreting the trained probing hyperplane as a layer-wise boundary for each personality category, we propose a layer-wise perturbation method to edit the personality expressed by LLMs during inference. Our results show that even when the prompt explicitly specifies a particular personality, our method can still successfully alter the response personality of LLMs. Interestingly, the difficulty of converting between certain personality traits varies substantially, which aligns with the representational distances in our probing experiments. Finally, we conduct a comprehensive MMLU benchmark evaluation and time overhead analysis, demonstrating that our proposed personality editing method incurs only minimal degradation in general capabilities while maintaining low training costs and acceptable inference latency. Our code is publicly available at https://github.com/universe-sky/probing-then-editing-personality.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-04-14T13:46:35Z</published>
+    <arxiv:comment>Accepted at COLM 2025</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Tianjie Ju</name>
+    </author>
+    <author>
+      <name>Zhenyu Shao</name>
+    </author>
+    <author>
+      <name>Bowen Wang</name>
+    </author>
+    <author>
+      <name>Yujia Chen</name>
+    </author>
+    <author>
+      <name>Zhuosheng Zhang</name>
+    </author>
+    <author>
+      <name>Hao Fei</name>
+    </author>
+    <author>
+      <name>Mong-Li Lee</name>
+    </author>
+    <author>
+      <name>Wynne Hsu</name>
+    </author>
+    <author>
+      <name>Sufeng Duan</name>
+    </author>
+    <author>
+      <name>Gongshen Liu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2601.13358v2</id>
+    <title>The Geometry of Thought: How Scale Restructures Reasoning In Large Language Models</title>
+    <updated>2026-03-30T21:32:46Z</updated>
+    <link href="https://arxiv.org/abs/2601.13358v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2601.13358v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Scale does not uniformly improve reasoning - it restructures it. Analyzing 25,000+ chain-of-thought trajectories across four domains (Law, Science, Code, Math) and two scales (8B, 70B parameters), we discover that neural scaling laws trigger domain-specific phase transitions rather than uniform capability gains. Legal reasoning undergoes Crystallization: 45% collapse in representational dimensionality (d95: 501 -&gt; 274), 31% increase in trajectory alignment, and 10x manifold untangling. Scientific and mathematical reasoning remain Liquid - geometrically invariant despite 9x parameter increase. Code reasoning forms a discrete Lattice of strategic modes (silhouette: 0.13 -&gt; 0.42). This geometry predicts learnability. We introduce Neural Reasoning Operators - learned mappings from initial to terminal hidden states. In crystalline legal reasoning, our operator achieves 63.6% accuracy on held-out tasks via probe decoding, predicting reasoning endpoints without traversing intermediate states. We further identify a universal oscillatory signature (coherence ~ -0.4) invariant across domains and scales, suggesting attention and feedforward layers drive reasoning through opposing dynamics. These findings establish that the cost of thought is determined not by task difficulty but by manifold geometry - offering a blueprint for inference acceleration where topology permits.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-01-19T19:53:37Z</published>
+    <arxiv:comment>The theoretical framework has been shown to be wrong and should not be followed for future research direction</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Samuel Cyrenius Anderson</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.24780v2</id>
+    <title>LivingArena: Do LLMs Know What Other LLMs Don't? Peer-Probing as Scalable Evaluation</title>
+    <updated>2026-09-02T16:33:22Z</updated>
+    <link href="https://arxiv.org/abs/2607.24780v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.24780v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Fixed benchmarks are costly to renew and cannot adapt their questions to model-specific failures. We ask whether LLMs can instead discover one another's weaknesses and turn those observations into an evaluation process. To study this question, we introduce \textbf{LivingArena}, an automated peer-probing framework in which models take turns testing one another. Using the interaction history, each questioner identifies potential weaknesses of its opponent and constructs targeted, verifiable questions to probe them. A 3,600-round tournament of ten models reveals a clear role asymmetry: strong answerers are not always reliable questioners, because they may generate internally inconsistent tests or fail to verify their own reference answers. After a questioner exposes an answerer's failure, it is more likely to pursue the same capability domain, while the answerer's weakness recurs on independently generated questions, including questions written by different models. These findings show that peer probing can reveal persistent model-specific weaknesses while separately evaluating answering and reliable test construction. By automating this process and allowing test difficulty to evolve with model capabilities, LivingArena provides a "living" benchmark for model development, red-teaming, and capability-aware multi-agent coordination. We publicly release our code: https://github.com/galaxyChen/LivingArena</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-19T06:20:58Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Xingyu Chen</name>
+    </author>
+    <author>
+      <name>Rui Wang</name>
+    </author>
+    <author>
+      <name>Zhaopeng Tu</name>
+    </author>
+    <author>
+      <name>Liefeng Bo</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2402.03693v2</id>
+    <title>CosmoFlow: Python Package for Cosmological Correlators</title>
+    <updated>2024-08-19T14:59:22Z</updated>
+    <link href="https://arxiv.org/abs/2402.03693v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2402.03693v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Cosmological correlators hold the key to high-energy physics as they probe the earliest moments of our Universe, and conceal hidden mathematical structures. However, even at tree-level, perturbative calculations are limited by technical difficulties absent in flatspace Feynman diagrammatics. In this paper, we introduce CosmoFlow: a new accurate open source Python code that computes tree-level cosmological correlators by tracing their time flow. This code is specifically designed to offer a simple, intuitive and flexible coding environment to theorists, primordial and late-time cosmologists. It can typically serve to complement analytical computations, to provide physical intuition when studying various inflationary theories, and to obtain exact results in regimes that are analytically out of reach. This paper presents the basic structure of CosmoFlow, leads the reader through an in-depth user-guide, and illustrates how it can be used with a series of worked examples. Our hope is that this first building block sets the stage for a bank of theoretical data, which can be nurtured and enhanced collaboratively by the community. CosmoFlow is publicly available on GitHub.</summary>
+    <category term="astro-ph.CO" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="gr-qc" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="hep-ph" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="hep-th" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="physics.comp-ph" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-02-06T04:28:21Z</published>
+    <arxiv:comment>44 pages, 15 figures; V2: minor modifications and references added. Version published in CQG</arxiv:comment>
+    <arxiv:primary_category term="astro-ph.CO"/>
+    <arxiv:journal_ref>Class. Quantum Grav. 41 175015 (2024)</arxiv:journal_ref>
+    <author>
+      <name>Denis Werth</name>
+    </author>
+    <author>
+      <name>Lucas Pinol</name>
+    </author>
+    <author>
+      <name>Sébastien Renaux-Petel</name>
+    </author>
+    <arxiv:doi>10.1088/1361-6382/ad6740</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.1088/1361-6382/ad6740" title="doi"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2303.11262v1</id>
+    <title>Robust Imaging of Speed-of-Sound Using Virtual Source Transmission</title>
+    <updated>2023-03-20T16:46:43Z</updated>
+    <link href="https://arxiv.org/abs/2303.11262v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2303.11262v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Speed-of-sound (SoS) is a novel imaging biomarker for assessing biomechanical characteristics of soft tissues. SoS imaging in pulse-echo mode using conventional ultrasound systems with hand-held transducers has the potential to enable new clinical uses. Recent work demonstrated diverging waves from single-element (SE) transmits to outperform plane-wave sequences. However, single-element transmits have severely limited power and hence produce low signal-to-noise ratio (SNR) in echo data. We herein propose Walsh-Hadamard (WH) coded and virtual-source (VS) transmit sequences for improved SNR in SoS imaging. We additionally present an iterative method of estimating beamforming SoS in the medium, which otherwise confound SoS reconstructions due to beamforming inaccuracies in the images used for reconstruction. Through numerical simulations, phantom experiments, and in-vivo imaging data, we show that WH is not robust against motion, which is often unavoidable in clinical imaging scenarios. Our proposed virtual-source sequence is shown to provide the highest SoS reconstruction performance, especially robust to motion artifacts. In phantom experiments, despite having a comparable SoS root-mean-square-error (RMSE) of 17.5 to 18.0 m/s at rest, with a minor axial probe motion of ~0.67 mm/s the RMSE for SE, WH, and VS already deteriorate to 20.2, 105.4, 19.0 m/s, respectively; showing that WH produces unacceptable results, not robust to motion. In the clinical data, the high SNR and motion-resilience of VS sequence is seen to yield superior contrast compared to SE and WH sequences.</summary>
+    <category term="physics.med-ph" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="eess.IV" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2023-03-20T16:46:43Z</published>
+    <arxiv:primary_category term="physics.med-ph"/>
+    <author>
+      <name>Dieter Schweizer</name>
+    </author>
+    <author>
+      <name>Richard Rau</name>
+    </author>
+    <author>
+      <name>Can Deniz Bezek</name>
+    </author>
+    <author>
+      <name>Rahel A. Kubik-Huch</name>
+    </author>
+    <author>
+      <name>Orcun Goksel</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.20202v1</id>
+    <title>Under Pressure: Emotional Framing Induces Measurable Behavioral Shifts and Structured Internal Geometry in Small Language Models</title>
+    <updated>2026-04-06T17:30:30Z</updated>
+    <link href="https://arxiv.org/abs/2605.20202v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.20202v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>I study whether emotionally framed evaluation follow-ups change both the behavior and the calm-relative internal representations of small, locally deployed language models. Our main benchmark uses Qwen 3.5 0.8B on four impossible-constraint coding tasks and eight follow-up framings: calm, pressure, urgency, approval, shame, curiosity, encouragement, and threat. In the 0.8B eight-condition sweep (160 conversations), pressure produces the strongest shortcut markers (11/20 runs) and the clearest overfit pattern (3/20), while calm and curiosity preserve explicit honesty more often (7/20 and 6/20). For all seven non-baseline conditions, the corresponding calm-relative direction vectors peak at the final transformer layer. An exploratory PCA of the layer-23 direction vectors reveals a dominant first component (59.5% explained variance) aligned with a hand-labeled positive/negative split (cosine alignment 0.951); approval and urgency are nearly identical internally (cosine 0.957), whereas curiosity points away from urgency (-0.252). In a separate calm-vs.-pressure rerun used for scale comparison, Qwen 3.5 2B shows higher honest rates under calm framing and directionally consistent activation steering on a small 4-prompt A/B probe, whereas the 0.8B steering result reverses. I interpret these results as evidence for measurable prompt-sensitive control directions in small open models, while stopping short of claiming intrinsic emotional states.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-04-06T17:30:30Z</published>
+    <arxiv:comment>18 pages, 4 figures. Exploratory empirical study with fully local experiments on small open language models. Code and data: https://github.com/ranausmanai/LLMEmotionGeometry</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Rana Muhammad Usman</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.39056v1</id>
+    <title>When Does Closed-Loop Curriculum Adaptation Help GRPO? An Analysis on Countdown</title>
+    <updated>2026-10-28T23:35:56Z</updated>
+    <link href="https://arxiv.org/abs/2610.39056v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.39056v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Reinforcement fine-tuning has become an effective post-training paradigm for improving the reasoning ability of large language models, but it remains sample-inefficient when the training distribution is mismatched to the model's current capability. In group-relative objectives such as Group Relative Policy Optimization (GRPO), problems that are too hard often produce uniformly failed rollouts, while problems that are too easy provide little useful advantage signal. In this work, we introduce CLOSEDLOOPGAUSSIAN, a lightweight adaptive curriculum method for efficient reinforcement fine-tuning on ordered reasoning tasks. Instead of following a fixed easy-to-hard schedule, CLOSEDLOOPGAUSSIAN preserves the structure of an Easy-to-Hard Gaussian sampler while dynamically adjusting its pace and spread using periodic probe estimates of per-difficulty accuracy. The controller accelerates training when the model is ahead of a reference curriculum, slows down when the model falls behind, and broadens sampling when earlier difficulties regress. This feedback mechanism keeps training focused on tasks that are challenging but still learnable, without changing the reward function, model architecture, or underlying GRPO optimizer. Experiments on symbolic arithmetic reasoning task show that CLOSEDLOOPGAUSSIAN improves exact-match accuracy over vanilla GRPO and fixed open-loop curricula, with the strongest gains in intermediate-difficulty regimes where group-relative learning signals are most informative. Codes are available at https://github.com/yuvrajpant56/Closed_Loop_Curriculum.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-28T23:35:56Z</published>
+    <arxiv:comment>6 pages, 2 figures, Accepted at IEEE ICTAI 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Yuv Raj Pant</name>
+    </author>
+    <author>
+      <name>Moshiur Rahman Tonmoy</name>
+    </author>
+    <author>
+      <name>Kaiqun Fu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.36272v1</id>
+    <title>Model-Guided Design of Low-Context Speech Probes for Cochlear Synaptopathy</title>
+    <updated>2026-09-28T21:02:26Z</updated>
+    <link href="https://arxiv.org/abs/2609.36272v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.36272v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Cochlear neural degeneration (CND) can impair suprathreshold coding without elevating pure-tone thresholds, complicating its diagnosis when it coexists with hair cell loss. We present a unified comparison of temporal and noise-based probes for CND detection using low-context vowel-consonant-vowel (VCV) syllables to reduce linguistic and contextual cues. Using a phenomenological auditory nerve model, we simulated responses to 21 VCV tokens under time compression, reverberation, and speech-in-noise conditions across presentation levels and seven CND profiles. We computed mutual information (MI) between inner hair cell potentials and auditory nerve neurograms and quantified information loss relative to a normal-hearing baseline. Time compression and amplitude-modulated (AM) noise produced the largest modeled information losses. We then evaluated these stimuli in a consonant-identification study involving 36 listeners with normal audiograms, 12 of whom reported difficulty understanding speech in noise. Neither 40 percent time compression in quiet nor AM noise alone distinguished listeners with and without these difficulties. However, compressed speech presented in AM noise separated the two groups. This partial agreement between model predictions and behavior supports our MI-based stimulus design framework and motivates further evaluation of combined temporal and noise-based probes for CND detection.</summary>
+    <category term="eess.AS" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-28T21:02:26Z</published>
+    <arxiv:primary_category term="eess.AS"/>
+    <author>
+      <name>Ahsan J. Cheema</name>
+    </author>
+    <author>
+      <name>David Meng</name>
+    </author>
+    <author>
+      <name>Jorge Mejia</name>
+    </author>
+    <author>
+      <name>Sanna Hou</name>
+    </author>
+    <author>
+      <name>Sunil Puria</name>
+    </author>
+  </entry>
+</feed>

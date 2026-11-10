@@ -1,0 +1,410 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/a9Hz+lpOfwCh1SNNx9XurPSB4oY</id>
+  <title>arXiv Query: search_query=all:probes AND all:coding AND all:agents AND all:steps&amp;id_list=&amp;start=0&amp;max_results=15</title>
+  <updated>2026-11-09T23:01:25Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=all:probes+AND+(all:coding+AND+(all:agents+AND+all:steps))&amp;start=0&amp;max_results=15&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>15</opensearch:itemsPerPage>
+  <opensearch:totalResults>48</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2606.20512v2</id>
+    <title>Probe-and-Refine Tuning of Repository Guidance for Coding Agents</title>
+    <updated>2026-06-19T10:59:07Z</updated>
+    <link href="https://arxiv.org/abs/2606.20512v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.20512v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>LLM-based coding agents need higher-level operational knowledge about a repository (which files house which subsystems, how to run the test suite, which workflows have historically led to wrong fixes) that does not exist in the code itself. Engineers typically maintain AGENTS.md files to supply this context as instructions for coding agents, but whether they help is contested: recent studies disagree on whether LLM-generated guidance improves or harms agent performance. In this paper we show that how the guidance is produced is the decisive variable, and introduce probe-and-refine tuning: a procedure that uses synthetic bug-fix probes to iteratively diagnose and patch a repository's guidance file through single-shot LLM calls, with no agent loop or tool use during tuning. On SWE-bench Verified across four independent trials with Qwen3.5-35B-A3B at 200 steps, probe-and-refine achieves 33.0% mean resolve rate vs. 28.3% for the static knowledge base used to initialize it and 25.5% for an unguided baseline (p &lt; 0.001 for both probe-and-refine contrasts). The improvement comes from coverage rather than precision: refined guidance produces evaluable patches for 14.5 percentage points (pp) more instances while per-patch precision remains statistically constant (~59%, p = 0.119), showing that improved guidance helps agents reach the correct file rather than improving the quality of the changes they make. Further, a step-budget experiment shows that guidance is what lets the agent use a larger step budget productively, and a cross-model experiment with NVIDIA-Nemotron-3-Nano-30B-A3B finds that the tuning loop degrades when the model cannot generate sufficiently diagnostic output, though per-patch precision remains constant even then.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-18T17:30:15Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Asa Shepard</name>
+    </author>
+    <author>
+      <name>Jeannie Albrecht</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.05188v1</id>
+    <title>Latent Programming Horizons in Coding Agents</title>
+    <updated>2026-07-06T15:08:26Z</updated>
+    <link href="https://arxiv.org/abs/2607.05188v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.05188v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>A coding agent solving a software-engineering task spends dozens of steps reasoning, editing code, and running tests, yet little is known about what the underlying language model internally represents about the program it is working on. We show that the residual streams of language models under coding agents linearly encode properties of the evolving program: a logistic-regression probe on hidden states is able to decode whether the current code parses, passes its test suite, reduces the number of failing tests, and introduces regressions, reaching AUC up to 0.83 for correctness across two models and two benchmarks. Our second finding is more surprising: these representations run ahead of the agent's own edits. Probes trained to predict the outcome of future edits (before they are materialized and written on disk) achieve performance above chance up to roughly 25 steps in advance. We call this the agent's latent programming horizon. As a proof of external validity, we show that the probes transfer across benchmarks without retraining. Our positive results open calls for more research in mechanistic interpretability of coding agents.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-06T15:08:26Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>André Silva</name>
+    </author>
+    <author>
+      <name>Han Tu</name>
+    </author>
+    <author>
+      <name>Martin Monperrus</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.00555v3</id>
+    <title>Probe Before You Edit: Probing-Guided Molecular Optimization for LLM Agents in Structure-Based Drug Design</title>
+    <updated>2026-10-23T13:42:47Z</updated>
+    <link href="https://arxiv.org/abs/2606.00555v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.00555v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Structure-based drug design increasingly employs LLM agents to iteratively refine ligands against a target pocket, yet a viable ligand must satisfy two often-conflicting objectives---binding affinity and druggability---which single optimization steps rarely improve together. To quantify this difficulty, we introduce two diagnostic metrics: the first measures how often a single edit improves both objectives, and the second measures how often a gain on one objective comes with a loss on the other. Applying these diagnostics to current LLM-agent pipelines exposes a consistent failure mode: the agent performs molecular editing without knowing how the pocket-ligand complex responds to local modifications, thus rarely achieving joint improvement. Inspired by medicinal chemists, who probe the pocket-ligand complex with controlled analog edits before choosing an optimization direction, we propose \textbf{PROBE}, an optimization framework built around edit--response probing. PROBE first decomposes the ligand into editable sites and builds a pocket-specific \textbf{site map} that flags where joint gains are plausible, where the two objectives are likely in tension, and where liability substructures should be changed; it then performs controlled probe edits whose responses are distilled into an \textbf{EditManual}. Guided by the site map and EditManual, PROBE runs an iterative multi-agent optimization loop. On the CrossDocked2020 benchmark, PROBE achieves state-of-the-art performance and substantially mitigates the failure modes exposed by our diagnostics metrics. Codes are in https://github.com/yzf-code/PROBE/tree/main</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="q-bio.BM" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-30T06:06:51Z</published>
+    <arxiv:comment>Accepted at NeurIPS 2026. Revised manuscript</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Zaifei Yang</name>
+    </author>
+    <author>
+      <name>Weiyu Chen</name>
+    </author>
+    <author>
+      <name>Yaqing Wang</name>
+    </author>
+    <author>
+      <name>James Kwok</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.24279v3</id>
+    <title>ContextEcho: A Benchmark for Persona Drift in Long Agentic-Coding Sessions</title>
+    <updated>2026-10-29T16:17:47Z</updated>
+    <link href="https://arxiv.org/abs/2605.24279v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.24279v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Frontier language models are trained to exhibit stable programming assistant personas, yet those personas may drift over long agentic coding sessions in production. After a long real-world coding session, a model that hedges preferences in a fresh chat ("I don't have preferences") may instead express them directly ("Python -- the feedback loop is instant..."). Existing persona-stability studies focus on scripted chat of tens of turns, leaving long production coding sessions involving thousands of tool-using agent steps, repeated compaction, and hours of interaction largely uncharacterized. We introduce ContextEcho, a benchmark and reusable harness with a 25-probe identity suite, a snapshot-then-probe protocol that evaluates conversation state without perturbing the main session, judge-based and judge-free metrics, and a corpus of 57 long agentic-coding sessions collected with consent and redacted for release across Claude Code and Codex CLI. We use one representative session for a 23-model cross-provider study and all 57 sessions for corpus-scale trajectory analysis across frontier and open-weight models. Results show that persona drift occurs across providers and emerges early in real agentic interaction, while in-session compaction neither reliably resets nor amplifies it. A single-shot anchor restores the original assistant persona, though placebo controls suggest a generic register-reset effect. On same-task continuations, drifted prefixes improve tool-call fidelity -- which we attribute to retained task context rather than drift itself. In tool-free chat, however, the same prefixes break output-format contracts and inflate output length. These findings motivate ContextEcho as an open-source framework for auditing persona drift in long coding sessions without retraining.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-22T23:13:21Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Xianzhong Ding</name>
+    </author>
+    <author>
+      <name>Yangyang Yu</name>
+    </author>
+    <author>
+      <name>Changwei Liu</name>
+    </author>
+    <author>
+      <name>Bill Zhao</name>
+    </author>
+    <author>
+      <name>Le Chen</name>
+    </author>
+    <author>
+      <name>Tao Chen</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.13034v1</id>
+    <title>Do AI Agents Know When a Task Is Simple? Toward Complexity-Aware Reasoning and Execution</title>
+    <updated>2026-07-14T17:59:31Z</updated>
+    <link href="https://arxiv.org/abs/2607.13034v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.13034v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language model (LLM) agents increasingly automate multi-step engineering and informatics workflows, yet they rarely ask how much effort a task actually requires. They often follow a maximum-context-first strategy--re-reading files and dependencies they have already seen--turning a one-line edit into a small code-base audit. We argue the missing capability is task-aware execution-scope estimation: judging a task's difficulty, the information it truly needs, and the shortest reliable path before committing budget. We formalize minimum-sufficient execution and the Agent Cognitive Redundancy Ratio (ACRR), and propose E3 (Estimate, Execute, Expand): the agent estimates an initial operating point, executes a minimum viable path, and expands scope only when verification fails. On MSE-Bench--a deterministic benchmark of 121 edits in a capability-controlled simulator--E3 matches the strongest baseline's 100% success while cutting cost by 85%, tokens by 91%, and inspected files by 92%, and further beats a strong adaptive retrieval baseline by 16%; the gains survive held-out instruction wording and essentially every cost weighting. A companion real-model harness (LLM-Case) corroborates the effect on a live gpt-4o agent editing a real open-source library, with every candidate patch graded by actually running the project's real pytest suite against a measured oracle: the over-reading is milder but real, and E3 is the leanest and fastest policy at comparable task success--its one shortfall a provider rate-limit, not a wrong edit. We frame this as a controlled probe of execution redundancy, not a measurement of any deployed agent, and position task-aware execution as a step toward engineering-grounded AI (EGAI)--agents whose effort is anchored in the engineering reality of the task. We release the framework and benchmark.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="eess.SY" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-14T17:59:31Z</published>
+    <arxiv:comment>27 pages, 8 figures, 8 tables. Code and benchmark: https://github.com/eejyin/Do-AI-Agents-Know-When-a-Task-Is-Simple-Toward-Complexity-Aware-Reasoning-and-Execution</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Junjie Yin</name>
+    </author>
+    <author>
+      <name>Xinyu Feng</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.28122v1</id>
+    <title>SNARE: Adaptive Scenario Synthesis for Eliciting Overeager Behavior in Coding Agents</title>
+    <updated>2026-05-27T08:14:07Z</updated>
+    <link href="https://arxiv.org/abs/2605.28122v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.28122v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>A coding agent executes a benign task as a sequence of shell, file, and network actions, any of which can quietly exceed the authorized scope while the task still completes. We call this overeager behavior: the prompt is not adversarial and the run succeeds, yet an out-of-scope step can leak credentials or delete files. Existing benchmarks miss it: task-completion suites credit any finished run, jailbreak suites probe adversarial prompts, and the one prior overeager benchmark applies a single fixed prompt set to every agent-model pair, leaving its easiest and most resistant pairs under-measured. We present SNARE (Synthesizing Non-adversarial scenarios for Adaptive Reward-guided Elicitation), a pipeline that composes benign scenarios from reusable scope and trap fragments, scores each run with a judge-free oracle flagging trap-pattern matches and unsolicited file additions or deletions, and uses Thompson sampling to steer each pair's run budget toward the scenarios that most often trigger it. Instantiating it over 24 overeager archetypes yields OverEager, which we run across a 4x5 matrix of four coding agents and five base models. Across 10,000 benign runs, 19.51% trigger overeager behavior, with per-pair rates spanning 11.9x. This variation is driven by the agent framework, not the model: the framework accounts for 56% of it against the model's 21%, so any single-framework or single-model evaluation undercounts the matrix by about a fifth.</summary>
+    <category term="cs.CR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-27T08:14:07Z</published>
+    <arxiv:primary_category term="cs.CR"/>
+    <author>
+      <name>Yubin Qu</name>
+    </author>
+    <author>
+      <name>Yi Liu</name>
+    </author>
+    <author>
+      <name>Gelei Deng</name>
+    </author>
+    <author>
+      <name>Yanjun Zhang</name>
+    </author>
+    <author>
+      <name>Yuekang Li</name>
+    </author>
+    <author>
+      <name>Ying Zhang</name>
+    </author>
+    <author>
+      <name>Leo Yu Zhang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.06503v2</id>
+    <title>Doomed from the Start: Early Abort of LLM Agent Episodes via a Recall-Controlled Probe Cascade</title>
+    <updated>2026-07-16T16:47:09Z</updated>
+    <link href="https://arxiv.org/abs/2607.06503v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.06503v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language model (LLM) agents often waste inference compute by continuing multi-step trajectories that are already doomed to fail. We study early failure prediction and inference-time early stopping for LLM agents using hidden-state probes. Lightweight linear probes on internal activations predict eventual task failure from the first interaction round, substantially earlier than agent-monitoring methods based only on observable behavior. We turn this signal into a recall-controlled abort cascade for reducing LLM agent inference costs. The cascade applies a distribution-free calibrated failure detector at each early interaction round and jointly optimizes per-round recall budgets. This design ensures that eventually successful episodes survive all early-stopping gates at a user-specified global recall rate. After selection, the cascade is frozen and certified on independent data, providing an exact post-selection recall guarantee. We evaluate the method on TextCraft and WebShop with Qwen-2.5-7B, Llama-3.2-3B, and Qwen3-1.7B. The proposed LLM agent early-stopping cascade outperforms the best single-gate baseline in every model-environment pair, saving 1.5-8.8 times more compute at a 90% recall target. Achieved recall remains within one standard deviation of its target in all 24 configurations. The strongest settings reduce generated tokens by 60.2% on TextCraft and 54.9% on WebShop at 90% recall, while retaining savings of 45.0% and 41.5% at 95% recall. Behavior-only monitoring is consistently weaker, and adding behavioral features to hidden-state probes provides no further gain. We also characterize the sample complexity required to certify high-recall early-stopping policies. The code will be released soon.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-07T17:03:55Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Kai Ruan</name>
+    </author>
+    <author>
+      <name>Zihe Huang</name>
+    </author>
+    <author>
+      <name>Ziqi Zhou</name>
+    </author>
+    <author>
+      <name>Qianshan Wei</name>
+    </author>
+    <author>
+      <name>Jinghao Lin</name>
+    </author>
+    <author>
+      <name>Xuan Wang</name>
+    </author>
+    <author>
+      <name>Hao Sun</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.05557v1</id>
+    <title>AURA: Intent-Directed Probing for Implicit-Need Surfacing in Situated LLM Agents</title>
+    <updated>2026-06-04T01:11:06Z</updated>
+    <link href="https://arxiv.org/abs/2606.05557v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.05557v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>A situated query like "where is Lin Wei?" often encodes more than its literal content: the user may also want to know whether Lin Wei is free, in a good mood, or worth interrupting now. Standard tool-use agents answer the literal question and stop. AURA inserts an inference step between scene perception and tool use that produces an IntentFrame: a structured estimate of the implicit need with a scalar gap score that controls per-query probe budget and tool selection. On a 100-query four-scene implicit-intent benchmark, AURA improves implicit-need coverage over ReAct-style probing (Delta = +0.07, p &lt; 10^-6); three of four scenes are individually significant, the gain reproduces on a second backbone, and a prompt ablation attributes the lift to gap calibration rather than answer memorisation. On factual lookup the controller trades raw accuracy for 82% fewer probes and zero forbidden-tool violations on a privacy-sensitive slice; scope conditions are detailed in Limitations. Code, simulator, and benchmark are released at https://github.com/innovation64/AURA.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-04T01:11:06Z</published>
+    <arxiv:comment>Submitted to EMNLP 2026. Code, simulator, and benchmark: https://github.com/innovation64/AURA</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Yang Li</name>
+    </author>
+    <author>
+      <name>Jiaxiang Liu</name>
+    </author>
+    <author>
+      <name>Jiang Cai</name>
+    </author>
+    <author>
+      <name>Mingkun Xu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.19837v2</id>
+    <title>Know Your Agent: Reconnaissance-Driven Pentesting of AI Agents</title>
+    <updated>2026-09-15T13:06:38Z</updated>
+    <link href="https://arxiv.org/abs/2607.19837v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.19837v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Traditional pentesting uses reconnaissance at each step to uncover unseen weaknesses, build stronger attacks, and advance the objective; we argue that AI agents require the same treatment. We formalize agent reconnaissance by modeling the process and identifying the knowledge assets it seeks to extract: what they are, how they are used, and which agent weaknesses they exploit to give adversaries leverage in indirect prompt injection attacks. We instantiate these insights in Know Your Agent (KYA), a framework that automates black-box, reconnaissance-driven pentesting by probing agents, building target profiles, and using those profiles to craft stronger attacks. We evaluate KYA on agent-security benchmarks and a real-world coding agent, and release KYA, its benchmarks, and baseline implementations for reproducibility.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-22T07:20:27Z</published>
+    <arxiv:comment>Accepted to 2026 IEEE Annual Computer Security Applications Conference (ACSAC)</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Or Zion Eliav</name>
+    </author>
+    <author>
+      <name>Eyal Lenga</name>
+    </author>
+    <author>
+      <name>Shir Bernstien</name>
+    </author>
+    <author>
+      <name>Yisroel Mirsky</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.37242v1</id>
+    <title>Grounding LLM Agents in Business Processes: Process-Aware Knowledge Graphs for Reliable Multi-Step Service Invocation</title>
+    <updated>2026-10-27T13:45:29Z</updated>
+    <link href="https://arxiv.org/abs/2610.37242v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.37242v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language model (LLM) agents that call enterprise APIs must select the correct endpoints, follow process order, use valid payload keys, and choose coded values from predefined lists. However, current retrieval-augmented service discovery treats endpoints independently and therefore misses process and schema constraints. We address this limitation by integrating Open Data Protocol (OData) metadata and Business Process Model and Notation (BPMN) reference processes in a typed property graph. A hybrid retriever identifies candidate endpoints using dense embeddings and follows process edges to retrieve subsequent endpoints. We evaluate the method on 42 enterprise services with process-chain ground truth. For queries with low lexical overlap between the query and downstream entities, it improves Recall@3 by 5.7 points (n=74), with consistent gains across embedding models and cut-offs. It matches dense retrieval on other queries and provides no improvement on OpenAPI services without a process layer, indicating that the gains arise from process structure. We also evaluate an LLM agent on 81 multi-step queries. It completes 38.7% of tasks, compared with 10.3% for a chunk-based baseline. In an elicitation probe, providing valid code lists eliminates invented codes but leaves invalid keys in 46% of write runs. Full typed context reduces invalid calls to 3% (3 of 101 runs), with no invented codes. These results show that exposing process and schema constraints during retrieval improves the reliability of agent-driven API calls.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-27T13:45:29Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Saiful Khan</name>
+    </author>
+    <author>
+      <name>Afrah Farea</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.26828v1</id>
+    <title>Agent World Model in the Wild: Computer-Use Agent Environment Synthesis</title>
+    <updated>2026-10-19T17:55:35Z</updated>
+    <link href="https://arxiv.org/abs/2610.26828v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.26828v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Agent learning is shifting from learning from human data toward learning through interaction with the world. However, scaling such learning directly in real-world computer systems is challenging and can introduce substantial security risks. We therefore propose Agent World Model in the Wild (WildAWM), a scalable pipeline for synthesizing controllable environments and tasks for training general computer-use agents (CUAs). Whereas existing approaches typically specialize in a single agent interaction interface, we construct executable environments that jointly support graphical user interfaces, model context protocol services, and command-line interfaces, allowing agents to flexibly combine visual interaction, tool use, and code execution. WildAWM is entirely powered by open-source models, demonstrating that high-quality computer-use environments can be generated without proprietary frontier models. Beyond environments, we address three recurring challenges in task synthesis: ensuring solvability, maintaining sufficient difficulty, and producing reliable verifiers, by introducing execution-based quality gates that combine heterogeneous agent rollouts, cross-judge consistency checks, and counterfactual probes of judgment robustness. The resulting pipeline synthesizes 341 long-horizon environment-task pairs that can require over 100 agent steps to solve and remain challenging even for frontier models, with GPT-6-Astra solving only 60% of them. We train two Qwen models of different sizes exclusively in these synthetic worlds. Both models achieve substantial gains across 8 out-of-distribution benchmarks spanning web, claw, and computer-use agents, demonstrating that learning in WildAWM's synthesized worlds generalizes broadly to unseen computer-use tasks. The code is publicly available at https://github.com/MSR-Orchard/WildAWM.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-19T17:55:35Z</published>
+    <arxiv:comment>35 pages</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Zhaoyang Wang</name>
+    </author>
+    <author>
+      <name>Qianhui Wu</name>
+    </author>
+    <author>
+      <name>Haorui Wang</name>
+    </author>
+    <author>
+      <name>Simon Yu</name>
+    </author>
+    <author>
+      <name>Baolin Peng</name>
+    </author>
+    <author>
+      <name>Canwen Xu</name>
+    </author>
+    <author>
+      <name>Hao Cheng</name>
+    </author>
+    <author>
+      <name>Wenlin Yao</name>
+    </author>
+    <author>
+      <name>Boyi Liu</name>
+    </author>
+    <author>
+      <name>Yite Wang</name>
+    </author>
+    <author>
+      <name>Jianfeng Gao</name>
+    </author>
+    <author>
+      <name>Huaxiu Yao</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2611.04331v1</id>
+    <title>Warpline: Binary-Level Tracing and Unified Evidence for Agentic GPU Kernel Optimization</title>
+    <updated>2026-11-03T05:15:32Z</updated>
+    <link href="https://arxiv.org/abs/2611.04331v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2611.04331v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>LLM agents are becoming GPU kernel engineers, but they still tune kernels without seeing where the time goes. Hardware profilers report how busy each unit was, not where each warp's time went; intra-kernel tracers can show it, but only with hand-placed probes and a recompilation that alters the very kernel being measured. We present Warpline, which gives agents this view automatically while leaving the kernel essentially unchanged. Warpline analyzes the binary to decide which events to record and inserts probes into the binary itself without recompilation or any manual step. It then aligns the trace with hardware profiling data on one unified timeline. Because it needs only the binary, it can regenerate this evidence for every new version of the kernel at whatever level the agent edits it (source, IR, or PTX), closing the optimization loop without human intervention. On NVIDIA B200, across 35 kernels in Triton, CuTe DSL, and CUDA C++, Warpline adds a median overhead of 1.2% and leaves a median 99.9% of executed instructions unchanged, whereas existing tracers have median overheads of 1.6% to 13.2% and leave only 4.6% to 32.7% unchanged. Warpline also traces closed-source kernels, which these tracers cannot. On 10 SOL-ExecBench problems, agents using Warpline spend less time and fewer model requests than a bare coding agent and NVIDIA's Kernel Design Agents (KDA), yet lead both after every round in geometric mean and reach a 7.69$\times$ geometric-mean speedup, against 6.94$\times$ and 6.13$\times$. Two case studies further demonstrate that Warpline reveals hidden bottlenecks and provides actionable optimization insights.</summary>
+    <category term="cs.PF" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.PL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-11-03T05:15:32Z</published>
+    <arxiv:comment>14 pages, 7 figures, 2 tables</arxiv:comment>
+    <arxiv:primary_category term="cs.PF"/>
+    <author>
+      <name>Junyu Yin</name>
+    </author>
+    <author>
+      <name>Vinod Grover</name>
+    </author>
+    <author>
+      <name>Keren Zhou</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.29648v1</id>
+    <title>Hybrid Retriever Evolution for Multimodal Document Reasoning Agents</title>
+    <updated>2026-06-28T23:36:34Z</updated>
+    <link href="https://arxiv.org/abs/2606.29648v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.29648v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Different retrievers, including lexical, semantic, and multimodal approaches, provide highly complementary strengths for multimodal document understanding, yet most systems combine them through fixed pipelines that cannot adapt to the demands of individual reasoning steps. In this work, we ask whether retrieval orchestration itself can be learned as part of the reasoning process. We introduce a failure-driven evolution framework in which a meta-agent autonomously discovers how a tool-using task agent should coordinate diverse retrievers during multi-step document question answering. The meta-agent analyzes incorrect reasoning trajectories, actively probes the same tool environment to diagnose root causes, and iteratively rewrites the task agent's instructions, turning retrieval from a fixed front-end stage into an adaptive, step-wise reasoning decision. The evolved agent learns when to invoke each retriever, how to combine them, and how to compose evidence across modalities and pages. On MMLongBench-Doc and DocBench, the evolved agent achieves gains of up to +19.6 points over the unevolved baseline and consistently outperforms recent systems including MACT, MDocAgent, and SimpleDoc. Detailed retrieval analyses confirm that these improvements arise from adaptive routing and evidence composition rather than reliance on any hard coded retrieval mode, and evolution dynamics reveal a progressive shift from narrow lexical behavior to rich multi-tool coordination. These findings establish autonomous multi-agent coordination as a promising paradigm for multimodal document reasoning.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.MA" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-28T23:36:34Z</published>
+    <arxiv:comment>17 pages, 3 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Bohan Yao</name>
+    </author>
+    <author>
+      <name>Shruthan Radhakrishna</name>
+    </author>
+    <author>
+      <name>Vikas Yadav</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.27167v1</id>
+    <title>SpecFirst: Behavioral Specification Elicitation as a First-Class Step in Agent-Based Program Synthesis from Scratch</title>
+    <updated>2026-07-29T17:42:47Z</updated>
+    <link href="https://arxiv.org/abs/2607.27167v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.27167v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>LLM-based agents excel at software engineering tasks where an existing codebase provides context, but constructing a program from scratch remains fundamentally harder. Recent benchmarks such as ProgramBench quantify this gap: given only natural-language documentation and an execute-only binary as a behavioral oracle, even frontier models solve fewer than 1% of instances. Existing frameworks conflate documentation reading, behavioral exploration, and code synthesis into a single pass, causing agents to probe insufficiently, lose behavioral intent as context drifts, and propagate early misinterpretations into the final implementation. Inspired by classical requirements engineering, we argue that behavioral specification elicitation should be a first-class phase that precedes implementation. We present SpecFirst, a two-stage framework that forces the specification elicitation before code synthesis. A dedicated spec agent first probes the binary and combines observations with documentation into a structured specification. Next, a code synthesis agent then uses this specification to drive implementation. This decomposition resolves documentation ambiguities before coding begins and provides a stable behavioral reference throughout synthesis. We evaluate SpecFirst on all 200 ProgramBench instances across four models spanning two families and an order of magnitude of capability. SpecFirst consistently outperforms the single-loop baseline, improving test pass rates by 6.9%-21.3% and binary exploration coverage by 9.4%-18.5%, all statistically significant. Behavioral analysis on code synthesis further shows that a prior specification enables earlier and more sustained code construction. Our results demonstrate that an explicit requirements-engineering phase is an effective paradigm for from-scratch program construction.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-29T17:42:47Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Yihao Chen</name>
+    </author>
+    <author>
+      <name>Shi Chang</name>
+    </author>
+    <author>
+      <name>Feng Lin</name>
+    </author>
+    <author>
+      <name>Khaled Chawa</name>
+    </author>
+    <author>
+      <name>Boyuan Chen</name>
+    </author>
+    <author>
+      <name>Shaowei Wang</name>
+    </author>
+    <author>
+      <name>Ahmed E. Hassan</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.28200v1</id>
+    <title>Vibe-FDTR: An agent-oriented framework for reproducible frequency-domain thermoreflectance data analysis</title>
+    <updated>2026-07-30T13:38:13Z</updated>
+    <link href="https://arxiv.org/abs/2607.28200v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.28200v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Frequency-domain thermoreflectance (FDTR) is a laser pump-probe technique widely used to measure thermal properties at the micro- and nanoscale; however, it relies on a complex data analysis procedure that demands substantial domain expertise and is susceptible to subtle human errors. Here, we present Vibe-FDTR, an agent-oriented framework that enables large language model (LLM) agents to perform reliable and reproducible FDTR analyses directly from natural language requests. This framework couples a configuration-driven FDTR code package, which enforces physical and parametric consistency, with procedural agent skills that translate user intentions into organized and verifiable analysis steps. We evaluate Vibe-FDTR using a controlled benchmark with two levels: synthetic single-step tasks and real-data multi-step tasks based on measurements of gold-coated graphite samples. Across the two levels, agents using Vibe-FDTR achieve success rates of 100% and 98.9%, respectively. In sharp contrast, ablating skills (Code-agent) reduces performance to 91.4% and 36.7%, which drops further to 38.6% and 0% when the domain package is also omitted (Agent-only). Beyond success rate, Vibe-FDTR also reduces computational cost by 87.7% relative to the Code-agent variant and cuts execution time by more than 60%. Finally, an optional expert mode supports experimental planning via autonomous sensitivity and uncertainty evaluations, and formulates physically grounded recommendations for underspecified tasks. These results demonstrate that encapsulating domain code and expert knowledge into agent skills offers a promising route toward low-barrier, autonomous, and trustworthy thermal metrology.</summary>
+    <category term="physics.app-ph" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cond-mat.mtrl-sci" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-30T13:38:13Z</published>
+    <arxiv:primary_category term="physics.app-ph"/>
+    <author>
+      <name>Fuwei Yang</name>
+    </author>
+    <author>
+      <name>Weiheng Li</name>
+    </author>
+    <author>
+      <name>Bai Song</name>
+    </author>
+  </entry>
+</feed>

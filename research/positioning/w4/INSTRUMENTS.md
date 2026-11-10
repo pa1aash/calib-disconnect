@@ -87,3 +87,8 @@ Scholar only for lookups and citation screens, with backoff.
 4. **Recording negatives.** A negative that would need body-text search is recorded as an instrument
    gap. So is a negative from Semantic Scholar keyword search. No CLEAN verdict rests on such a
    negative.
+
+## 6. Later instrument events during the run
+
+- **OpenAlex daily budget exhausted (about 05:05 IST).** The forward-citation screen G4 received HTTP 429 from OpenAlex for its last three seeds. OpenAlex's unauthenticated tier shares a small daily budget per IP. Every later OpenAlex-dependent negative in this wave is therefore an instrument gap. Semantic Scholar lookups and citations remain available.
+- **arXiv PDF ingestion.** The literature tool's builtin fetcher rejects arXiv PDFs as "JUNK_CONTENT". Fetchers used `arxiv.org/html/<id>` renders, or curl plus local text extraction, so full texts were still obtained.

@@ -1,0 +1,424 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/Uk+5ubNcZQEVP+9BmBJru8hVsYs</id>
+  <title>arXiv Query: search_query=all:expected AND all:calibration AND all:error AND all:estimator AND all:bias&amp;id_list=&amp;start=0&amp;max_results=15</title>
+  <updated>2026-11-09T22:54:24Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=all:expected+AND+(all:calibration+AND+(all:error+AND+(all:estimator+AND+all:bias)))&amp;start=0&amp;max_results=15&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>15</opensearch:itemsPerPage>
+  <opensearch:totalResults>48</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2602.24230v2</id>
+    <title>V-ECE: Estimating General Expected Calibration Errors</title>
+    <updated>2026-10-08T16:04:35Z</updated>
+    <link href="https://arxiv.org/abs/2602.24230v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2602.24230v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>In probabilistic classification, calibration error (CE) measures the average divergence of predicted probabilities $f(X)$ from $\mathbb{P}(Y|f(X))$, the true class distribution for that predicted probability. While being a useful diagnostic tool, it is hard to estimate: popular binning-based estimators are often inconsistent and scale poorly beyond two classes. Recent work rewrites the CE as the excess risk of a model compared to the best recalibration of its own predictions, measured with a proper loss. However, this only works for Bregman-divergence-based calibration errors like the squared error, excluding the more popular $L_1$-distance-based CE. We show that using prediction-dependent proper scores can alleviate this restriction, allowing us to estimate CEs with general convex divergences, including $L_p$ distances with closed-form losses in the binary and multiclass settings. To estimate the excess risk, we introduce a more accurate recalibrator that fits a residual to temperature scaling with gradient boosting. The resulting variational estimator, V-ECE, needs no bins or clusters and lower-bounds the true calibration error in expectation. On a benchmark of semi-synthetic tasks built from real classifiers, with known true CE, V-ECE is among the most accurate binary estimators for every calibration error and significantly outperforms all multiclass estimators. Our results are accompanied by additional theory on $L_p$ CE, estimator bias, and over- or under-confidence estimation.</summary>
+    <category term="stat.ML" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-02-27T17:56:52Z</published>
+    <arxiv:comment>Re-worked version with a new metric benchmark and new mathematical results on the bias of the estimator</arxiv:comment>
+    <arxiv:primary_category term="stat.ML"/>
+    <author>
+      <name>Eugène Berta</name>
+    </author>
+    <author>
+      <name>Sacha Braun</name>
+    </author>
+    <author>
+      <name>Francis Bach</name>
+    </author>
+    <author>
+      <name>Michael I. Jordan</name>
+    </author>
+    <author>
+      <name>David Holzmüller</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2405.15709v2</id>
+    <title>Information-theoretic Generalization Analysis for Expected Calibration Error</title>
+    <updated>2025-05-26T11:48:51Z</updated>
+    <link href="https://arxiv.org/abs/2405.15709v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2405.15709v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>While the expected calibration error (ECE), which employs binning, is widely adopted to evaluate the calibration performance of machine learning models, theoretical understanding of its estimation bias is limited. In this paper, we present the first comprehensive analysis of the estimation bias in the two common binning strategies, uniform mass and uniform width binning. Our analysis establishes upper bounds on the bias, achieving an improved convergence rate. Moreover, our bounds reveal, for the first time, the optimal number of bins to minimize the estimation bias. We further extend our bias analysis to generalization error analysis based on the information-theoretic approach, deriving upper bounds that enable the numerical evaluation of how small the ECE is for unknown data. Experiments using deep learning models show that our bounds are nonvacuous thanks to this information-theoretic generalization analysis approach.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="math.ST" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="stat.ML" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-05-24T16:59:29Z</published>
+    <arxiv:comment>Accepted by the 38th Conference on Neural Information Processing Systems (NeurIPS2024), 52 pages, 6 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Futoshi Futami</name>
+    </author>
+    <author>
+      <name>Masahiro Fujisawa</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2210.07810v1</id>
+    <title>A Consistent and Differentiable Lp Canonical Calibration Error Estimator</title>
+    <updated>2022-10-13T15:11:11Z</updated>
+    <link href="https://arxiv.org/abs/2210.07810v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2210.07810v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Calibrated probabilistic classifiers are models whose predicted probabilities can directly be interpreted as uncertainty estimates. It has been shown recently that deep neural networks are poorly calibrated and tend to output overconfident predictions. As a remedy, we propose a low-bias, trainable calibration error estimator based on Dirichlet kernel density estimates, which asymptotically converges to the true $L_p$ calibration error. This novel estimator enables us to tackle the strongest notion of multiclass calibration, called canonical (or distribution) calibration, while other common calibration methods are tractable only for top-label and marginal calibration. The computational complexity of our estimator is $\mathcal{O}(n^2)$, the convergence rate is $\mathcal{O}(n^{-1/2})$, and it is unbiased up to $\mathcal{O}(n^{-2})$, achieved by a geometric series debiasing scheme. In practice, this means that the estimator can be applied to small subsets of data, enabling efficient estimation and mini-batch updates. The proposed method has a natural choice of kernel, and can be used to generate consistent estimates of other quantities based on conditional expectation, such as the sharpness of a probabilistic classifier. Empirical results validate the correctness of our estimator, and demonstrate its utility in canonical calibration error estimation and calibration error regularized risk minimization.</summary>
+    <category term="stat.ML" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2022-10-13T15:11:11Z</published>
+    <arxiv:comment>To appear at NeurIPS 2022</arxiv:comment>
+    <arxiv:primary_category term="stat.ML"/>
+    <author>
+      <name>Teodora Popordanoska</name>
+    </author>
+    <author>
+      <name>Raphael Sayer</name>
+    </author>
+    <author>
+      <name>Matthew B. Blaschko</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2306.04590v2</id>
+    <title>Proximity-Informed Calibration for Deep Neural Networks</title>
+    <updated>2024-03-17T06:43:38Z</updated>
+    <link href="https://arxiv.org/abs/2306.04590v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2306.04590v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Confidence calibration is central to providing accurate and interpretable uncertainty estimates, especially under safety-critical scenarios. However, we find that existing calibration algorithms often overlook the issue of *proximity bias*, a phenomenon where models tend to be more overconfident in low proximity data (i.e., data lying in the sparse region of the data distribution) compared to high proximity samples, and thus suffer from inconsistent miscalibration across different proximity samples. We examine the problem over 504 pretrained ImageNet models and observe that: 1) Proximity bias exists across a wide variety of model architectures and sizes; 2) Transformer-based models are relatively more susceptible to proximity bias than CNN-based models; 3) Proximity bias persists even after performing popular calibration algorithms like temperature scaling; 4) Models tend to overfit more heavily on low proximity samples than on high proximity samples. Motivated by the empirical findings, we propose ProCal, a plug-and-play algorithm with a theoretical guarantee to adjust sample confidence based on proximity. To further quantify the effectiveness of calibration algorithms in mitigating proximity bias, we introduce proximity-informed expected calibration error (PIECE) with theoretical analysis. We show that ProCal is effective in addressing proximity bias and improving calibration on balanced, long-tail, and distribution-shift settings under four metrics over various model architectures. We believe our findings on proximity bias will guide the development of *fairer and better-calibrated* models, contributing to the broader pursuit of trustworthy AI. Our code is available at: https://github.com/MiaoXiong2320/ProximityBias-Calibration.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2023-06-07T16:40:51Z</published>
+    <arxiv:comment>The paper is accepted by NeurIPS 2023. The code is available at: https://github.com/MiaoXiong2320/ProximityBias-Calibration</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Miao Xiong</name>
+    </author>
+    <author>
+      <name>Ailin Deng</name>
+    </author>
+    <author>
+      <name>Pang Wei Koh</name>
+    </author>
+    <author>
+      <name>Jiaying Wu</name>
+    </author>
+    <author>
+      <name>Shen Li</name>
+    </author>
+    <author>
+      <name>Jianqing Xu</name>
+    </author>
+    <author>
+      <name>Bryan Hooi</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2303.12973v3</id>
+    <title>Uncertainty Calibration for Counterfactual Propensity Estimation in Recommendation</title>
+    <updated>2025-04-17T05:48:09Z</updated>
+    <link href="https://arxiv.org/abs/2303.12973v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2303.12973v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Post-click conversion rate (CVR) is a reliable indicator of online customers' preferences, making it crucial for developing recommender systems. A major challenge in predicting CVR is severe selection bias, arising from users' inherent self-selection behavior and the system's item selection process. To mitigate this issue, the inverse propensity score (IPS) is employed to weight the prediction error of each observed instance. However, current propensity score estimations are unreliable due to the lack of a quality measure. To address this, we evaluate the quality of propensity scores from the perspective of uncertainty calibration, proposing the use of Expected Calibration Error (ECE) as a measure of propensity-score quality, which quantifies the extent to which predicted probabilities are overconfident by assessing the difference between predicted probabilities and actual observed frequencies. Miscalibrated propensity scores can lead to distorted IPS weights, thereby compromising the debiasing process in CVR prediction. In this paper, we introduce a model-agnostic calibration framework for propensity-based debiasing of CVR predictions. Theoretical analysis on bias and generalization bounds demonstrates the superiority of calibrated propensity estimates over uncalibrated ones. Experiments conducted on the Coat, Yahoo and KuaiRand datasets show improved uncertainty calibration, as evidenced by lower ECE values, leading to enhanced CVR prediction outcomes.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2023-03-23T00:42:48Z</published>
+    <arxiv:comment>This is the accepted manuscript version of the IEEE TKDE paper. The final published version will be available at: https://doi.ieeecomputersociety.org/10.1109/TKDE.2025.3552658</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <arxiv:journal_ref>IEEE Trans. Knowl. Data Eng. 37(6): 3781-3793, 2025</arxiv:journal_ref>
+    <author>
+      <name>Wenbo Hu</name>
+    </author>
+    <author>
+      <name>Xin Sun</name>
+    </author>
+    <author>
+      <name>Qiang liu</name>
+    </author>
+    <author>
+      <name>Le Wu</name>
+    </author>
+    <author>
+      <name>Liang Wang</name>
+    </author>
+    <arxiv:doi>10.1109/TKDE.2025.3552658</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.1109/TKDE.2025.3552658" title="doi"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2503.23825v3</id>
+    <title>Calibration requirements for Epoch of Reionization 21-cm signal observations -- IV. Bias and variance with time and frequency correlated residual gains</title>
+    <updated>2025-05-27T10:43:27Z</updated>
+    <link href="https://arxiv.org/abs/2503.23825v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2503.23825v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Observation of multifrequency angular power spectrum of the redshifted 21-cm brightness temperature fluctuation from the neutral hydrogen holds the key to understand the structure formation and its evolution during the reionization and post-reionization era. A major challenge in observing the neutral hydrogen arises from presence of strong foreground signals in the frequency range of interest. Mitigating the direct effect of foregrounds are being addressed through various techniques in literature. An additional second order effect arises, in presence of foreground, with limited accuracy in time and frequency dependent gain calibrations. This manifests as the residual gain and bandpass error in the observed data, introduces bias and increases uncertainty in the estimates of multifrequency angular power spectrum. In this work, we present an analytic method to estimate the bias and excess uncertainty in the estimates of multifrequency angular power spectrum in presence of residual gain and bandpass errors. We use this framework to estimate the effect of these errors for detection of redshifted 21-cm emission from a redshift of $\sim 8$ with the upcoming SKA1-Low. Due to the high baseline density at the required range of angular multipoles, the SKA1-Low is found to be a tuned instrument for the redshifted 21-cm signal detection. We find that, there are scenario with residual gain and bandpass errors where there can be significant bias in these estimates. Certain foreground mitigation strategies, is expected to reduce a part of the bias. The detailed study of different aspects of gain and bandpass errors and their relative effects are discussed. We find, with assumed models of gain and bandpass errors, signal detection is possible at this redshift with $128$ hours of observations. However, to achieve this one needs to have better calibration accuracy than present day interferometers.</summary>
+    <category term="astro-ph.CO" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="astro-ph.IM" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-03-31T08:19:59Z</published>
+    <arxiv:comment>29 pages, 8 figures, 1 table, Accepted for publication in JCAP on 20 May 2025</arxiv:comment>
+    <arxiv:primary_category term="astro-ph.CO"/>
+    <author>
+      <name>Saikat Gayen</name>
+    </author>
+    <author>
+      <name>Jais Kumar</name>
+    </author>
+    <author>
+      <name>Prasun Dutta</name>
+    </author>
+    <author>
+      <name>Khandakar Md Asif Elahi</name>
+    </author>
+    <author>
+      <name>Samir Choudhuri</name>
+    </author>
+    <author>
+      <name>Nirupam Roy</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2409.07568v1</id>
+    <title>Debiased high-dimensional regression calibration for errors-in-variables log-contrast models</title>
+    <updated>2024-09-11T18:47:28Z</updated>
+    <link href="https://arxiv.org/abs/2409.07568v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2409.07568v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Motivated by the challenges in analyzing gut microbiome and metagenomic data, this work aims to tackle the issue of measurement errors in high-dimensional regression models that involve compositional covariates. This paper marks a pioneering effort in conducting statistical inference on high-dimensional compositional data affected by mismeasured or contaminated data. We introduce a calibration approach tailored for the linear log-contrast model. Under relatively lenient conditions regarding the sparsity level of the parameter, we have established the asymptotic normality of the estimator for inference. Numerical experiments and an application in microbiome study have demonstrated the efficacy of our high-dimensional calibration strategy in minimizing bias and achieving the expected coverage rates for confidence intervals. Moreover, the potential application of our proposed methodology extends well beyond compositional data, suggesting its adaptability for a wide range of research contexts.</summary>
+    <category term="stat.ME" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="stat.ML" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-09-11T18:47:28Z</published>
+    <arxiv:primary_category term="stat.ME"/>
+    <author>
+      <name>Huali Zhao</name>
+    </author>
+    <author>
+      <name>Tianying Wang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.35046v1</id>
+    <title>Calibration requirements for Epoch of Reionization 21-cm signal observations - V. Bias and variance in the cylindrical power spectrum from uGMRT Band 3 observations of the ELAIS-N1 field</title>
+    <updated>2026-10-26T08:58:36Z</updated>
+    <link href="https://arxiv.org/abs/2610.35046v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.35046v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Detection of the redshifted 21-cm signal from neutral hydrogen requires precise control of systematic effects arising from instrumental calibration. In this work, we investigate the impact of both time- and frequency-dependent residual gain and bandpass errors on the estimation of the multifrequency angular power spectrum (MAPS) using radio interferometric observations. We discuss our previously developed analytical framework for estimating bias and excess variance in 21-cm signal MAPS in the presence of these residual errors and apply it to uGMRT Band-3 observations. The statistical properties of the residual gains are derived from the data themselves, including their temporal and spectral correlations. We introduce a robust technique for additionally flagging poor-quality data. Our results show that the excess variance induced by residual gain and bandpass errors dominates over the bias across the range of angular multipoles considered. The amplitude of this variance is comparable to the expected power spectrum upper limit at redshift $z \sim 2.2$, indicating that residual calibration errors can significantly affect the detectability of the 21-cm signal. We further transform the estimated MAPS into ($k_{\perp}, k_{ll}$) space and find the expected foreground wedge structure. Importantly, we observe a significant power leakage into the nominal EoR window, which we attribute to residual calibration systematics. This highlights that even after standard foreground mitigation, time- and frequency-correlated gain errors can introduce mode-mixing and contaminate the EoR window. Our results emphasise the necessity of improved calibration accuracy and robust characterisation of residual gain statistics for current and upcoming interferometric experiments such as the uGMRT and SKA, to enable reliable detection of the cosmological 21-cm signal.</summary>
+    <category term="astro-ph.CO" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="astro-ph.IM" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-26T08:58:36Z</published>
+    <arxiv:comment>36 Pages, 23 figures, 1 table, 1 appendix</arxiv:comment>
+    <arxiv:primary_category term="astro-ph.CO"/>
+    <author>
+      <name>Saikat Gayen</name>
+    </author>
+    <author>
+      <name>Suvam Tripathy</name>
+    </author>
+    <author>
+      <name>Saqueb Tanveer</name>
+    </author>
+    <author>
+      <name>Prasun Dutta</name>
+    </author>
+    <author>
+      <name>Abhik Ghosh</name>
+    </author>
+    <author>
+      <name>Khandakar Md Asif Elahi</name>
+    </author>
+    <author>
+      <name>Sarvesh Mangla</name>
+    </author>
+    <author>
+      <name>Nirupam Roy</name>
+    </author>
+    <author>
+      <name>Samir Choudhuri</name>
+    </author>
+    <author>
+      <name>Somnath Bharadwaj</name>
+    </author>
+    <author>
+      <name>Sk Saiyad Ali</name>
+    </author>
+    <author>
+      <name>Jais Kumar</name>
+    </author>
+    <author>
+      <name>Srijita Pal</name>
+    </author>
+    <author>
+      <name>Arnab Chaktaborty</name>
+    </author>
+    <author>
+      <name>Rashmi Sagar</name>
+    </author>
+    <author>
+      <name>Abhirup Datta</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/1911.13088v3</id>
+    <title>Calibration and 21-cm Power Spectrum Estimation in the Presence of Antenna Beam Variations</title>
+    <updated>2020-02-26T03:18:25Z</updated>
+    <link href="https://arxiv.org/abs/1911.13088v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/1911.13088v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Detecting a signal from the Epoch of Reionisation (EoR) requires an exquisite understanding of galactic and extra-galactic foregrounds, low frequency radio instruments, instrumental calibration, and data analysis pipelines. In this work we build upon existing work that aims to understand the impact of calibration errors on 21-cm power spectrum (PS) measurements. It is well established that calibration errors have the potential to inhibit EoR detections by introducing additional spectral features that mimic the structure of EoR signals. We present a straightforward way to estimate the impact of a wide variety of modelling residuals in EoR PS estimation. We apply this framework to the specific case of broken dipoles in Murchison Widefield Array (MWA) to understand its effect and estimate its impact on PS estimation. Combining an estimate of the percentage of MWA tiles that have at least one broken dipole (15%-40%) with an analytic description of beam errors induced by such dipoles, we compute the residuals of the foregrounds after calibration and source subtraction. We find that that incorrect beam modelling introduces bias in the 2D-PS on the order of $\sim 10^3\, \mathrm{mK}^2 \,h^{-3}\, \mathrm{Mpc}^{3}$. Although this is three orders of magnitude lower than current lowest limits, it is two orders of magnitude higher than the expected signal. Determining the accuracy of both current beam models and direction dependent calibration pipelines is therefore crucial in our search for an EoR signal.</summary>
+    <category term="astro-ph.IM" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="astro-ph.CO" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2019-11-29T12:56:37Z</published>
+    <arxiv:comment>14 pages, 8 figures. Accepted for publication in MNRAS December 2019. Erratum submitted on 20 February 2020</arxiv:comment>
+    <arxiv:primary_category term="astro-ph.IM"/>
+    <author>
+      <name>Ronniy C. Joseph</name>
+    </author>
+    <author>
+      <name>C. M. Trott</name>
+    </author>
+    <author>
+      <name>R. B. Wayth</name>
+    </author>
+    <author>
+      <name>A. Nasirudin</name>
+    </author>
+    <arxiv:doi>10.1093/mnras/stz3375</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.1093/mnras/stz3375" title="doi"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/1502.01024v3</id>
+    <title>Weak lensing calibration of mass bias in the REFLEX+BCS X-ray galaxy cluster catalogue</title>
+    <updated>2017-04-03T18:27:36Z</updated>
+    <link href="https://arxiv.org/abs/1502.01024v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/1502.01024v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The use of large, X-ray selected galaxy cluster catalogues for cosmological analyses requires a thorough understanding of the X-ray mass estimates. Weak gravitational lensing is an ideal method to shed light on such issues, due to its insensitivity to the cluster dynamical state. We perform a weak lensing calibration of 166 galaxy clusters from the REFLEX and BCS cluster catalogue and compare our results to the X-ray masses based on scaled luminosities from that catalogue. To interpret the weak lensing signal in terms of cluster masses, we compare the lensing signal to simple theoretical Navarro-Frenk-White models and to simulated cluster lensing profiles, including complications such as cluster substructure, projected large-scale structure, and Eddington bias. We find evidence of underestimation in the X-ray masses, as expected, with $\langle M_{\mathrm{X}}/M_{\mathrm{WL}}\rangle = 0.75 \pm 0.07$ stat. $\pm 0.05$ sys. for our best-fit model. The biases in cosmological parameters in a typical cluster abundance measurement that ignores this mass bias will typically exceed the statistical errors.</summary>
+    <category term="astro-ph.CO" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2015-02-03T21:01:01Z</published>
+    <arxiv:comment>13 pages, 5 figures. Revised to address referee comments</arxiv:comment>
+    <arxiv:primary_category term="astro-ph.CO"/>
+    <author>
+      <name>Melanie Simet</name>
+    </author>
+    <author>
+      <name>Nicholas Battaglia</name>
+    </author>
+    <author>
+      <name>Rachel Mandelbaum</name>
+    </author>
+    <author>
+      <name>Uroš Seljak</name>
+    </author>
+    <arxiv:doi>10.1093/mnras/stw3322</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.1093/mnras/stw3322" title="doi"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/1901.03939v1</id>
+    <title>Bias detection of $PM_{2.5}$ monitor readings using hidden dynamic geostatistical calibration model</title>
+    <updated>2019-01-13T06:36:10Z</updated>
+    <link href="https://arxiv.org/abs/1901.03939v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/1901.03939v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Accurate and reliable data stream plays an important role in air quality assessment. Air pollution data collected from monitoring networks, however, could be biased due to instrumental error or other interventions, which covers up the real pollution status and misleads policy making. In this study, motivated by the needs for objective bias detection, we propose a hidden dynamic geostatistical calibration (HDGC) model to automatically identify monitoring stations with constantly biased readings. The HDGC model is a two-level hierarchical model whose parameters are estimated through an efficient Expectation-Maximization algorithm. Effectiveness of the proposed model is demonstrated by a simple numerical study. Our method is applied to hourly $PM_{2.5}$ data from 36 stations in Hebei province, China, over the period from March 2014 to February 2017. Significantly abnormal readings are detected from stations in two cities.</summary>
+    <category term="stat.AP" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2019-01-13T06:36:10Z</published>
+    <arxiv:primary_category term="stat.AP"/>
+    <author>
+      <name>Yaqiong Wang</name>
+    </author>
+    <author>
+      <name>Minya Xu</name>
+    </author>
+    <author>
+      <name>Hui Huang</name>
+    </author>
+    <author>
+      <name>Songxi Chen</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.19543v1</id>
+    <title>Noisy-Label Calibration with Multiple Unreliable Labels</title>
+    <updated>2026-10-14T04:02:37Z</updated>
+    <link href="https://arxiv.org/abs/2610.19543v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.19543v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>In medical annotation and crowdsourcing, multiple annotators assign labels to each example, but these labels may be incorrect. Treating such noisy labels as ground truth can bias calibration evaluation. To address this problem, we propose methods for evaluating and recalibrating a fixed binary predictor under the underlying clean-label distribution, using only noisy annotations. First, given annotator-specific noise probabilities, we propose Noise Corrected ECE (NC-ECE), a binned estimator of expected calibration error (ECE) under class-conditional noise. We derive non-asymptotic bounds on the estimator's bias. Then, we propose practical algorithms for estimating unknown noise probabilities under conditional independence and label-orientation assumptions. We also develop loss-based and histogram post-hoc recalibration with clean-risk and calibration guarantees, respectively. Experiments on semi-synthetic benchmarks show that the proposed ECE estimator closely tracks its clean-label oracle counterpart and that the recalibration methods substantially improve latent-label calibration, whereas uncorrected recalibration against noisy annotations can degrade it.</summary>
+    <category term="stat.ML" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-14T04:02:37Z</published>
+    <arxiv:comment>43 pages, 2 figures</arxiv:comment>
+    <arxiv:primary_category term="stat.ML"/>
+    <author>
+      <name>Keisuke Hanada</name>
+    </author>
+    <author>
+      <name>Futoshi Futami</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.21109v2</id>
+    <title>Anomaly-Informed Confidence Calibration for Vision-Based Safety Prediction</title>
+    <updated>2026-08-08T23:23:54Z</updated>
+    <link href="https://arxiv.org/abs/2605.21109v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.21109v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Reliable confidence estimates are important for safely deploying vision-based controllers in autonomous racing, where safety predictions must be derived from camera images, yet modern predictors become dangerously overconfident under test-time distribution shifts. A commonly assumed perception-dynamics gap holds that observation-space anomaly signals, such as autoencoder reconstruction error, should miss dynamics anomalies (e.g., actuation bias, latency) that originate outside the image. We interrogate this gap with an Anomaly-Informed Test-Time Calibration approach that, without retraining any model component, fuses a perceptual score (reconstruction error) and a disentangled dynamics score (epistemic uncertainty and control-stream statistics) from a world model to condition a lightweight temperature-scaling calibrator, aided by test-time augmentation. On a physical DonkeyCar under four real-world anomaly protocols unseen during training (darkness, blur, actuation bias, processing latency), it cuts average expected calibration error from 0.184 to 0.116, a 37% improvement over the best baseline, without modifying the base predictor. Our central finding is that in a tightly coupled closed loop, the perception-dynamics gap is not prominent. Specifically, a dynamics fault degrades the trajectory until the observation is itself out-of-distribution, so the perceptual score alone already captures most dynamics anomalies and accounts for the calibration gains. As a result, the disentangled dynamics score adds little further calibration but remains a direct, interpretable signal that aids out-of-distribution detection of dynamics and control faults.</summary>
+    <category term="cs.RO" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-20T12:43:09Z</published>
+    <arxiv:primary_category term="cs.RO"/>
+    <author>
+      <name>Zhenjiang Mao</name>
+    </author>
+    <author>
+      <name>Jiawen Wu</name>
+    </author>
+    <author>
+      <name>Gabriel Wagner</name>
+    </author>
+    <author>
+      <name>Zhongzheng Zhang</name>
+    </author>
+    <author>
+      <name>Ivan Ruchkin</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2206.10566v1</id>
+    <title>Ensembling over Classifiers: a Bias-Variance Perspective</title>
+    <updated>2022-06-21T17:46:35Z</updated>
+    <link href="https://arxiv.org/abs/2206.10566v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2206.10566v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Ensembles are a straightforward, remarkably effective method for improving the accuracy,calibration, and robustness of models on classification tasks; yet, the reasons that underlie their success remain an active area of research. We build upon the extension to the bias-variance decomposition by Pfau (2013) in order to gain crucial insights into the behavior of ensembles of classifiers. Introducing a dual reparameterization of the bias-variance tradeoff, we first derive generalized laws of total expectation and variance for nonsymmetric losses typical of classification tasks. Comparing conditional and bootstrap bias/variance estimates, we then show that conditional estimates necessarily incur an irreducible error. Next, we show that ensembling in dual space reduces the variance and leaves the bias unchanged, whereas standard ensembling can arbitrarily affect the bias. Empirically, standard ensembling reducesthe bias, leading us to hypothesize that ensembles of classifiers may perform well in part because of this unexpected reduction.We conclude by an empirical analysis of recent deep learning methods that ensemble over hyperparameters, revealing that these techniques indeed favor bias reduction. This suggests that, contrary to classical wisdom, targeting bias reduction may be a promising direction for classifier ensembles.</summary>
+    <category term="stat.ML" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2022-06-21T17:46:35Z</published>
+    <arxiv:primary_category term="stat.ML"/>
+    <author>
+      <name>Neha Gupta</name>
+    </author>
+    <author>
+      <name>Jamie Smith</name>
+    </author>
+    <author>
+      <name>Ben Adlam</name>
+    </author>
+    <author>
+      <name>Zelda Mariet</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2504.02902v1</id>
+    <title>Beyond Accuracy: The Role of Calibration in Self-Improving Large Language Models</title>
+    <updated>2025-04-03T04:39:54Z</updated>
+    <link href="https://arxiv.org/abs/2504.02902v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2504.02902v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) have demonstrated remarkable self-improvement capabilities, whereby models iteratively revise their outputs through self-generated feedback. While this reflective mechanism has shown promise in enhancing task performance, recent studies suggest that it may also introduce undesirable biases-most notably, self-bias, or the tendency of LLMs to favor their own prior outputs. In this work, we extend this line of inquiry by investigating the impact on confidence estimation. We evaluate three representative self-improvement paradigms-basic prompting, Chain-of-Thought (CoT) prompting, and tuning-based methods and find that iterative self-improvement can lead to systematic overconfidence, as evidenced by a steadily increasing Expected Calibration Error (ECE) and lower accuracy with high confidence. We then further explore the integration of confidence calibration techniques with self-improvement. Specifically, we compare three strategies: (1) applying calibration after multiple rounds of self-improvement, (2) calibrating before self-improvement, and (3) applying calibration iteratively at each self-improvement step. Our results show that iterative calibration is most effective in reducing ECE, yielding improved calibration. Our work pioneers the study of self-improving LLMs from a calibration perspective, offering valuable insights into balancing model performance and reliability.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-04-03T04:39:54Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Liangjie Huang</name>
+    </author>
+    <author>
+      <name>Dawei Li</name>
+    </author>
+    <author>
+      <name>Huan Liu</name>
+    </author>
+    <author>
+      <name>Lu Cheng</name>
+    </author>
+  </entry>
+</feed>

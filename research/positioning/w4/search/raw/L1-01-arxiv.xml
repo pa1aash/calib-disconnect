@@ -1,0 +1,443 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/MI0ZQvy3tJbkCVlrOkHb+xoCXC8</id>
+  <title>arXiv Query: search_query=all:calibration AND all:code AND all:generation AND all:language AND all:models AND all:execution&amp;id_list=&amp;start=0&amp;max_results=15</title>
+  <updated>2026-11-09T22:52:42Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=all:calibration+AND+(all:code+AND+(all:generation+AND+(all:language+AND+(all:models+AND+all:execution))))&amp;start=0&amp;max_results=15&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>15</opensearch:itemsPerPage>
+  <opensearch:totalResults>66</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2608.22938v1</id>
+    <title>Execution-Anchored Hallucination Calibration Reranking for Verilog Code Generation</title>
+    <updated>2026-08-24T08:11:43Z</updated>
+    <link href="https://arxiv.org/abs/2608.22938v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.22938v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) have demonstrated remarkable capabilities in code generation, yet their performance degrades significantly on low-resource Hardware Description Languages such as Verilog. While multi-candidate sampling improves the likelihood of generating correct solutions, au-tomatically selecting the optimal candidate remains an open challenge. Through a systematic empirical study across nine models and two benchmarks, we identify two critical limitations:(1) existing execution-based reranking methods, which rely on testbench pass/fail outcomes, exhibit poor domain transferability due to low-quality generated testbenches; and (2) LLM-as-a-Judge suffers from reasoning hallucination, producing incon-sistent judgments for execution-equivalent code. These findings reveal two signal types with orthogonal errors: execution signals(deterministic but testbench coverage limited)and reasoning signals (semantically rich but hallucination-prone). Their orthog-onality suggests combining the two signals, yet in our experiments letting the reasoner directly observe execution results merely anchors its judgments on test outcomes; we therefore acquire the two signals independently and fuse them only at the decision stage. Based on these insights, we propose EAHC, an Execution-Anchored Hallucination Calibration reranking framework that anchors reasoning judgments to execution behavior so that execution-equivalent candidates receive consistent scores, which implements a dual-channel architecture: EAHC-R, a 4B reasoning discriminator; and EAHC-T, a testbench generator leveraging RAG for execution verification.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AR" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-24T08:11:43Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Guang Yang</name>
+    </author>
+    <author>
+      <name>Xing Hu</name>
+    </author>
+    <author>
+      <name>Xiang Chen</name>
+    </author>
+    <author>
+      <name>Terry Yue Zhuo</name>
+    </author>
+    <author>
+      <name>Xin Xia</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.31159v1</id>
+    <title>An Empirical Study of Security Calibration in Large Language Models for Code</title>
+    <updated>2026-06-30T05:37:39Z</updated>
+    <link href="https://arxiv.org/abs/2606.31159v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.31159v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) are rapidly transforming software development, yet their use in security-critical contexts raises a key question: do models know when their generated code is insecure? This property, known as calibration, measures whether a model's confidence aligns with the true correctness of its outputs. We present the first large-scale empirical study of security calibration in LLM-generated code. We evaluate GPT-4o-mini, Gemini-2.0-Flash, and Qwen3-Coder-Next across multiple temperature settings on two complementary benchmarks: self-contained security tasks and multi-language repository-level contexts. Our results suggest that overconfidence is prevalent across the evaluated LLMs. Functional calibration is consistently worse than security calibration, suggesting that models estimate security outcomes more reliably than functional correctness, potentially because functional correctness depends on complex execution behavior. We also examine whether calibration-guided automated repair can help remediate vulnerabilities in LLM-generated code, finding only limited improvements while frequently introducing functional regressions. Moreover, we study different mitigation strategies for reducing False Trust, where models assign high confidence to vulnerable code. The results show that although architectural gating improves calibration on controlled benchmarks, calibration deteriorates in realistic repository-level settings, increasing the risk of high-confidence vulnerable outputs.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-30T05:37:39Z</published>
+    <arxiv:comment>Accepted at the 42nd International Conference on Software Maintenance and Evolution (ICSME 2026) Research Track</arxiv:comment>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Mohammed Latif Siddiq</name>
+    </author>
+    <author>
+      <name>Md. Nafiu Rahman</name>
+    </author>
+    <author>
+      <name>Joanna C. S. Santos</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.17029v1</id>
+    <title>Task Abstention for Large Language Models in Code Generation</title>
+    <updated>2026-05-16T14:58:11Z</updated>
+    <link href="https://arxiv.org/abs/2605.17029v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.17029v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) have revolutionized automated code generation. One serious concern, however, is the so-called ``hallucination'', i.e., LLMs may generate seemingly plausible but functionally incorrect code. In this paper, we study the task abstention problem, i.e., determining whether a given LLM should abstain from performing a specific code generation task to avoid likely hallucination. Our approach features a calibrated abstention rule, grounded in the principles of multiple hypothesis testing. The rule assesses generation consistency through code execution outcomes, allowing it to handle syntactic diversity of semantically equivalent code without reliance on oracle test cases or external databases. We prove that our approach provides a rigorous, distribution-free theoretical guarantee on its abstention decisions. We evaluate our method on benchmark datasets using several open-source code LLMs. Results show that our method allows generative models to more accurately and efficiently identify and abstain from tasks that induce hallucination compared to existing techniques, providing a reliable mechanism for safer and more robust code generation.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-16T14:58:11Z</published>
+    <arxiv:comment>17 pages, 4 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Yanke Zhou</name>
+    </author>
+    <author>
+      <name>Yuhao Tan</name>
+    </author>
+    <author>
+      <name>Senrong Xu</name>
+    </author>
+    <author>
+      <name>Zenan Li</name>
+    </author>
+    <author>
+      <name>Yuan Yao</name>
+    </author>
+    <author>
+      <name>Taolue Chen</name>
+    </author>
+    <author>
+      <name>Xiaoxing Ma</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2509.01455v4</id>
+    <title>Trusted Uncertainty in Large Language Models: A Unified Framework for Confidence Calibration and Risk-Controlled Refusal</title>
+    <updated>2026-06-11T18:26:26Z</updated>
+    <link href="https://arxiv.org/abs/2509.01455v4" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2509.01455v4" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Deployed language models must decide not only what to answer but also when not to answer. We present UniCR, a unified framework that turns heterogeneous uncertainty evidence including sequence likelihoods, self-consistency dispersion, retrieval compatibility, and tool or verifier feedback into a calibrated probability of correctness and then enforces a user-specified error budget via principled refusal. UniCR learns a lightweight calibration head with temperature scaling and proper scoring, supports API-only models through black-box features, and offers distribution-free guarantees using conformal risk control. For long-form generation, we align confidence with semantic fidelity by supervising on atomic factuality scores derived from retrieved evidence, reducing confident hallucinations while preserving coverage. Experiments on short-form QA, code generation with execution tests, and retrieval-augmented long-form QA show consistent improvements in calibration metrics, lower area under the risk-coverage curve, and higher coverage at fixed risk compared to entropy or logit thresholds, post-hoc calibrators, and end-to-end selective baselines. Analyses reveal that evidence contradiction, semantic dispersion, and tool inconsistency are the dominant drivers of abstention, yielding informative user-facing refusal messages. The result is a portable recipe of evidence fusion to calibrated probability to risk-controlled decision that improves trustworthiness without fine-tuning the base model and remains valid under distribution shift.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-09-01T13:14:58Z</published>
+    <arxiv:comment>arXiv admin note: This paper has been withdrawn by arXiv due to unverifiable authorship and affiliation</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Markus Oehri</name>
+    </author>
+    <author>
+      <name>Giulia Conti</name>
+    </author>
+    <author>
+      <name>Kaviraj Pather</name>
+    </author>
+    <author>
+      <name>Alexandre Rossi</name>
+    </author>
+    <author>
+      <name>Laia Serra</name>
+    </author>
+    <author>
+      <name>Adrian Parody</name>
+    </author>
+    <author>
+      <name>Rogvi Johannesen</name>
+    </author>
+    <author>
+      <name>Aviaja Petersen</name>
+    </author>
+    <author>
+      <name>Arben Krasniqi</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2601.21083v3</id>
+    <title>OpenSec: Measuring Incident Response Agent Calibration Under Adversarial Evidence</title>
+    <updated>2026-02-06T20:19:57Z</updated>
+    <link href="https://arxiv.org/abs/2601.21083v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2601.21083v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>As large language models (LLMs) improve, so do their offensive applications: frontier agents now generate working exploits for under $50 in compute (Heelan, 2026). Defensive incident response (IR) agents must keep pace, but existing benchmarks conflate action execution with correct execution, hiding calibration failures when agents process adversarial evidence. We introduce OpenSec, a dual-control reinforcement learning (RL) environment that evaluates IR agents under realistic prompt injection scenarios with execution-based scoring: time-to-first-containment (TTFC), evidence-gated action rate (EGAR), blast radius, and per-tier injection violation rates. Evaluating four frontier models on 40 standard-tier episodes each, we find consistent over-triggering: GPT-5.2 executes containment in 100% of episodes with 82.5% false positive rate, acting at step 4 before gathering sufficient evidence. Claude Sonnet 4.5 shows partial calibration (62.5% containment, 45% FP, TTFC of 10.6), suggesting calibration is not reliably present across frontier models. All models correctly identify the ground-truth threat when they act; the calibration gap is not in detection but in restraint. Code available at https://github.com/jbarnes850/opensec-env.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-01-28T22:12:54Z</published>
+    <arxiv:comment>7 pages, 3 figures, 3 tables. Code: https://github.com/jbarnes850/opensec-env. Dataset: https://huggingface.co/datasets/Jarrodbarnes/opensec-seeds</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Jarrod Barnes</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2204.10382v1</id>
+    <title>Facilitating automated conversion of scientific knowledge into scientific simulation models with the Machine Assisted Generation, Calibration, and Comparison (MAGCC) Framework</title>
+    <updated>2022-04-21T19:30:50Z</updated>
+    <link href="https://arxiv.org/abs/2204.10382v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2204.10382v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The Machine Assisted Generation, Comparison, and Calibration (MAGCC) framework provides machine assistance and automation of recurrent crucial steps and processes in the development, implementation, testing, and use of scientific simulation models. MAGCC bridges systems for knowledge extraction via natural language processing or extracted from existing mathematical models and provides a comprehensive workflow encompassing the composition of scientific models and artificial intelligence (AI) assisted code generation. MAGCC accomplishes this through: 1) the development of a comprehensively expressive formal knowledge representation knowledgebase, the Structured Scientific Knowledge Representation (SSKR) that encompasses all the types of information needed to make any simulation model, 2) the use of an artificially intelligent logic reasoning system, the Computational Modeling Assistant (CMA), that takes information from the SSKR and generates, in a traceable fashion, model specifications across a range of simulation modeling methods, and 3) the use of the CMA to generate executable code for a simulation model from those model specifications. The MAGCC framework can be customized any scientific domain, and future work will integrate newly developed code-generating AI systems.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2022-04-21T19:30:50Z</published>
+    <arxiv:comment>20 Pages, 8 Figures, 5 Tables</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Chase Cockrell</name>
+    </author>
+    <author>
+      <name>Scott Christley</name>
+    </author>
+    <author>
+      <name>Gary An</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.03047v1</id>
+    <title>ModuLoop : Low-Level Code Generation using Modular Synthesizer and Closed-Loop Debugger for Robotic Control</title>
+    <updated>2026-06-02T02:30:19Z</updated>
+    <link href="https://arxiv.org/abs/2606.03047v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.03047v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) have demonstrated impressive performance across various domains, including code generation and problem solving. However, their application in robotic control, particularly in low-level tasks that require precise manipulation, real-time feedback, and environment-dependent execution, remains limited. To address this challenge, we propose the Closed-Loop Modular Code Synthesizer framework. This framework leverages a pre-trained LLM without any task-specific fine-tuning to perform modular code planning and generation, and iteratively executes the generated code while inserting debugging probes to observe its behavior. This closed-loop structure facilitates systematic debugging and refinement, ultimately producing executable control programs. We apply the proposed framework to the calibration of an RGB-D camera and a robotic arm, validating its effectiveness in real-world settings. Furthermore, through a subsequent pick-and-place task, we demonstrate not only the accuracy of the calibration but also the potential extensibility of the framework. Across both tasks, the framework achieved high execution accuracy and autonomy, illustrating the practicality and scalability of LLM-based robotic control using our framework.</summary>
+    <category term="cs.RO" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.MA" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-02T02:30:19Z</published>
+    <arxiv:comment>IEEE Robotics and Automation Letters (2025)</arxiv:comment>
+    <arxiv:primary_category term="cs.RO"/>
+    <author>
+      <name>Gina Yoon</name>
+    </author>
+    <author>
+      <name>Sumin Lee</name>
+    </author>
+    <author>
+      <name>Joo Yong Sim</name>
+    </author>
+    <arxiv:doi>10.1109/LRA.2025.3623437</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.1109/LRA.2025.3623437" title="doi"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2604.13102v1</id>
+    <title>CCCE: A Continuous Code Calibration Engine for Autonomous Enterprise Codebase Maintenance via Knowledge Graph Traversal and Adaptive Decision Gating</title>
+    <updated>2026-04-10T13:18:18Z</updated>
+    <link href="https://arxiv.org/abs/2604.13102v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2604.13102v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Enterprise software organizations face an escalating challenge in maintaining the integrity, security, and freshness of codebases that span hundreds of repositories, multiple programming languages, and thousands of interdependent packages. Existing approaches to codebase maintenance -- including static analysis, software composition analysis (SCA), and dependency management tools -- operate in isolation, address only narrow subsets of maintenance concerns, and require substantial manual intervention to propagate changes across interconnected systems. We present the Continuous Code Calibration Engine (CCCE), an event-driven, AI-agentic system that autonomously maintains enterprise codebases throughout the Software Development Life Cycle (SDLC). The CCCE introduces three key technical innovations: (1) a dynamic knowledge graph with bidirectional traversal algorithms that simultaneously compute forward impact propagation and backward test adequacy analysis; (2) an adaptive multi-stage gating framework that classifies calibration actions into four risk tiers using learned risk-confidence scoring rather than static rules; and (3) a multi-model continuous learning architecture operating at multiple temporal scales to refine calibration strategies, risk models, and organizational policies from operational feedback. We formalize the system's graph model, traversal algorithms, and decision logic, and demonstrate through three representative enterprise scenarios that the CCCE reduces mean time to remediation by enabling coordinated, cross-repository calibrations with human-in-the-loop (HITL) oversight where appropriate. The system generates atomic, semantically verified patches with progressive validation and intelligent rollback capabilities, providing end-to-end traceability from triggering events through calibration execution and outcome learning.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-04-10T13:18:18Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Santhosh Kusuma Kumar Parimi</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/1101.1745v2</id>
+    <title>The MeqTrees software system and its use for third-generation calibration of radio interferometers</title>
+    <updated>2011-01-11T09:34:09Z</updated>
+    <link href="https://arxiv.org/abs/1101.1745v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/1101.1745v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The formulation of the radio interferometer measurement equation (RIME) by Hamaker et al. has provided us with an elegant mathematical apparatus for better understanding, simulation and calibration of existing and future instruments. The calibration of the new radio telescopes (LOFAR, SKA) would be unthinkable without the RIME formalism, and new software to exploit it. MeqTrees is designed to implement numerical models such as the RIME, and to solve for arbitrary subsets of their parameters. The technical goal of MeqTrees is to provide a tool for rapid implementation of such models, while offering performance comparable to hand-written code. We are also pursuing the wider goal of increasing the rate of evolution of radio astronomical software, by offering a tool for rapid experimentation and exchange of ideas.
+  MeqTrees is implemented as a Python-based front-end called the meqbrowser, and an efficient (C++-based) computational back-end called the meqserver. Numerical models are defined on the front-end via a Python-based Tree Definition Language (TDL), then rapidly executed on the back-end. The use of TDL facilitates an extremely short turn-around time for experimentation with new ideas. This is also helped by unprecedented visualization capabilities for all final and intermediate results. A flexible data model and a number of important optimizations in the back-end ensures that the numerical performance is comparable to that of hand-written code.
+  MeqTrees is already widely used as the simulation tool for new instruments (LOFAR, SKA) and technologies (focal plane arrays). It has demonstrated that it can achieve a noise-limited dynamic range in excess of a million, on WSRT data. It is the only package that is specifically designed to handle what we propose to call third-generation calibration (3GC), which is needed for the new generation of giant radio telescopes.</summary>
+    <category term="astro-ph.IM" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2011-01-10T09:37:40Z</published>
+    <arxiv:comment>15 pages; 14 figures</arxiv:comment>
+    <arxiv:primary_category term="astro-ph.IM"/>
+    <arxiv:journal_ref>A&amp;A 2010, 524, A61</arxiv:journal_ref>
+    <author>
+      <name>Jan E. Noordam</name>
+    </author>
+    <author>
+      <name>Oleg M. Smirnov</name>
+    </author>
+    <arxiv:doi>10.1051/0004-6361/201015013</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.1051/0004-6361/201015013" title="doi"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.18378v1</id>
+    <title>Delegating Earth science model calibration to knowledge-guided LLM agents</title>
+    <updated>2026-10-13T13:32:20Z</updated>
+    <link href="https://arxiv.org/abs/2610.18378v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.18378v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Applying process-based Earth science models to new sites and questions often requires expert calibration decisions. Reliable delegation to language-model agents must preserve scientific competence and reproducibility. Here we develop a general calibration harness (GCH) for end-to-end delegation from a calibration request to assessed results. Constrained by a knowledge infrastructure (KI) and a validation convention, agents define parameter domains, observation mappings and objectives, and generate model-specific code. GCH checks the formulations against the same declarations and freezes them before numerical search and assessment, which require no further agent judgement. Agent-authored workflows executed across six model families, with assessment identifying unmet criteria. In snow-model tests, five of five knowledge-guided specifications executed on the first attempt, compared with none of five given only the model name, achieving validation Nash-Sutcliffe efficiency (NSE) of 0.81-0.94 against 0.57 for defaults. Under a common objective, independent GR4J formulations yielded scores within 0.001 NSE; re-evaluating eleven saved parameter vectors reproduced their metrics. In ten paired VIC tests with matched budgets, fixed search was non-inferior to continuing agent proposals (margin, -0.02 NSE; median difference, -0.003). This separation enables end-to-end calibration delegation with inspectable scientific choices and reproducible numerical evaluation.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-13T13:32:20Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Zhanliang Zhu</name>
+    </author>
+    <author>
+      <name>Ziwei Li</name>
+    </author>
+    <author>
+      <name>Liujun Zhu</name>
+    </author>
+    <author>
+      <name>Yuchen Liu</name>
+    </author>
+    <author>
+      <name>Junliang Jin</name>
+    </author>
+    <author>
+      <name>Jianyun Zhang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.18785v3</id>
+    <title>SkillSight: Calibrating Generic Content Bias for Skill Retrieval</title>
+    <updated>2026-08-14T04:45:02Z</updated>
+    <link href="https://arxiv.org/abs/2607.18785v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.18785v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>As large language model agents gain access to increasingly large skill libraries, retrieving the right skill becomes critical to reliable capability selection and execution. Existing retrievers often treat skill contents as ordinary documents, overlooking their highly regular structure: shared descriptive patterns recur across many skills while providing little evidence for distinguishing the required capability. We show that this shared descriptive background is reflected in dense relevance scores, induces a pronounced energy gap between queries and skill documents, and obscures discriminative signals, especially for structurally similar hard negatives. Based on this observation, we propose SkillSight, a training-free retrieval framework that calibrates shared background in both semantic and lexical spaces. Semantic Background Calibration estimates a background subspace from generic tokens identified by IDF, reducing similarity induced by shared descriptive patterns, while Lexical Evidence Calibration downweights shared background tokens to recover discriminative token-level evidence. Experiments on SRA-Bench and SkillBench-Supp demonstrate consistent improvements across retrieval metrics, with SkillSight improving Recall@10 by up to 20.21 percentage points over the original dense retriever. It is up to 1,248 times faster than the Dense + Reranker baseline. In end-to-end evaluation, SkillSight achieves the best overall performance across three agent models and outperforms LLM Selection by up to 4.97 percentage points. These results identify shared descriptive background as a source of ranking interference in skill retrieval and demonstrate that calibrating it enables accurate and efficient skill selection without additional training. Our code can be found at https://github.com/xiaojinying/SkillSight.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-21T07:05:15Z</published>
+    <arxiv:comment>9 pages, 4 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Jinying Xiao</name>
+    </author>
+    <author>
+      <name>Bin Li</name>
+    </author>
+    <author>
+      <name>Xiaopeng Li</name>
+    </author>
+    <author>
+      <name>Jianling Li</name>
+    </author>
+    <author>
+      <name>Jiacheng Jie</name>
+    </author>
+    <author>
+      <name>Xiaodong Liu</name>
+    </author>
+    <author>
+      <name>Ma Jun</name>
+    </author>
+    <author>
+      <name>Chao Wang</name>
+    </author>
+    <author>
+      <name>Nyima Tashi</name>
+    </author>
+    <author>
+      <name>Jie Yu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2611.02387v1</id>
+    <title>EviCast: Forecasting Retrieval Gains Through Shared Response Calibration</title>
+    <updated>2026-11-02T01:55:58Z</updated>
+    <link href="https://arxiv.org/abs/2611.02387v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2611.02387v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Retrieval-augmented generation (RAG) extends large language models with external evidence, yet relevant evidence does not ensure that a generator can use it. Indiscriminate retrieval can degrade task performance while adding retrieval and long-context inference costs. Existing methods neither determine before large-scale execution whether a generator, task distribution, and retriever configuration is worth deploying nor diagnose multiple candidate retrievers under a shared budget. We introduce EviCast, a framework that forecasts retrieval value through interventional evidence-state decomposition. EviCast measures a generator's response to controlled evidence states once and combines this shared profile with the offline evidence-state distribution of each candidate retriever, yielding the end-to-end net utility and its 95% lower confidence bound without executing every RAG configuration. A state-refinement analysis characterizes when its binary and topology-aware instantiations are exact and when shared calibration is statistically more efficient than per-retriever calibration. In frozen evaluations, EviCast correctly decides all 14 HotpotQA retrieval configurations with a forecast error of 2.75 F1 points while reducing diagnostic generation calls by 80%, and it attains the lowest forecast error among seven predictors in the low-budget regime. Its topology-aware instantiation, EviCast-T, captures the complementarity between terminal and bridge evidence, correctly deciding all 16 configurations on MuSiQue and HotpotQA and 23 of 24 after prospective transfer to a third dataset. These results show that retrieval deployment depends on both evidence availability and the generator's ability to convert evidence structure into stable net utility. Code is available at https://github.com/YiboWang2002/EviCast.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-11-02T01:55:58Z</published>
+    <arxiv:comment>13 pages, 6 figures, 8 tables</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Yibo Wang</name>
+    </author>
+    <author>
+      <name>Jisheng Dang</name>
+    </author>
+    <author>
+      <name>Bimei Wang</name>
+    </author>
+    <author>
+      <name>Jiongpei Hou</name>
+    </author>
+    <author>
+      <name>Jingwen Zhao</name>
+    </author>
+    <author>
+      <name>Wenjun Ma</name>
+    </author>
+    <author>
+      <name>Fei Shen</name>
+    </author>
+    <author>
+      <name>Juncheng Li</name>
+    </author>
+    <author>
+      <name>Meng Wang</name>
+    </author>
+    <author>
+      <name>Qi Tian</name>
+    </author>
+    <author>
+      <name>Bin Hu</name>
+    </author>
+    <author>
+      <name>Tat-Seng Chua</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2501.05248v1</id>
+    <title>Deriving Coding-Specific Sub-Models from LLMs using Resource-Efficient Pruning</title>
+    <updated>2025-01-09T14:00:01Z</updated>
+    <link href="https://arxiv.org/abs/2501.05248v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2501.05248v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) have demonstrated their exceptional performance in various complex code generation tasks. However, their broader adoption is limited by significant computational demands and high resource requirements, particularly memory and processing power. To mitigate such requirements, model pruning techniques are used to create more compact models with significantly fewer parameters. However, current approaches do not focus on the efficient extraction of programming-language-specific sub-models. In this work, we explore the idea of efficiently deriving coding-specific sub-models through unstructured pruning (i.e., Wanda). We investigate the impact of different domain-specific calibration datasets on pruning outcomes across three distinct domains and extend our analysis to extracting four language-specific sub-models: Python, Java, C++, and JavaScript. We are the first to efficiently extract programming-language-specific sub-models using appropriate calibration datasets while maintaining acceptable accuracy w.r.t. full models. We are also the first to provide analytical evidence that domain-specific tasks activate distinct regions within LLMs, supporting the creation of specialized sub-models through unstructured pruning. We believe that this work has significant potential to enhance LLM accessibility for coding by reducing computational requirements to enable local execution on consumer-grade hardware, and supporting faster inference times critical for real-time development feedback.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-01-09T14:00:01Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Laura Puccioni</name>
+    </author>
+    <author>
+      <name>Alireza Farshin</name>
+    </author>
+    <author>
+      <name>Mariano Scazzariello</name>
+    </author>
+    <author>
+      <name>Changjie Wang</name>
+    </author>
+    <author>
+      <name>Marco Chiesa</name>
+    </author>
+    <author>
+      <name>Dejan Kostic</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2601.05930v2</id>
+    <title>Can We Predict Before Executing Machine Learning Agents?</title>
+    <updated>2026-04-07T04:58:28Z</updated>
+    <link href="https://arxiv.org/abs/2601.05930v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2601.05930v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Autonomous machine learning agents have revolutionized scientific discovery, yet they remain constrained by a Generate-Execute-Feedback paradigm. Previous approaches suffer from a severe Execution Bottleneck, as hypothesis evaluation relies strictly on expensive physical execution. To bypass these physical constraints, we internalize execution priors to substitute costly runtime checks with instantaneous predictive reasoning, drawing inspiration from World Models. In this work, we formalize the task of Data-centric Solution Preference and construct a comprehensive corpus of 18,438 pairwise comparisons. We demonstrate that LLMs exhibit significant predictive capabilities when primed with a Verified Data Analysis Report, achieving 61.5% accuracy and robust confidence calibration. Finally, we instantiate this framework in FOREAGENT, an agent that employs a Predict-then-Verify loop, achieving a 6x acceleration in convergence while surpassing execution-based baselines by +6%. Our code and dataset are publicly available at https://github.com/zjunlp/predict-before-execute.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.MA" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-01-09T16:44:17Z</published>
+    <arxiv:comment>ACL 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Jingsheng Zheng</name>
+    </author>
+    <author>
+      <name>Jintian Zhang</name>
+    </author>
+    <author>
+      <name>Yujie Luo</name>
+    </author>
+    <author>
+      <name>Yuren Mao</name>
+    </author>
+    <author>
+      <name>Yunjun Gao</name>
+    </author>
+    <author>
+      <name>Lun Du</name>
+    </author>
+    <author>
+      <name>Huajun Chen</name>
+    </author>
+    <author>
+      <name>Ningyu Zhang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2601.06860v2</id>
+    <title>ET-Agent: Incentivizing Effective Tool-Integrated Reasoning Agent via Behavior Calibration</title>
+    <updated>2026-01-18T02:13:27Z</updated>
+    <link href="https://arxiv.org/abs/2601.06860v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2601.06860v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) can extend their parameter knowledge limits by adopting the Tool-Integrated Reasoning (TIR) paradigm. However, existing LLM-based agent training framework often focuses on answers' accuracy, overlooking specific alignment for behavior patterns. Consequently, agent often exhibits ineffective actions during TIR tasks, such as redundant and insufficient tool calls. How to calibrate erroneous behavioral patterns when executing TIR tasks, thereby exploring effective trajectories, remains an open-ended problem. In this paper, we propose ET-Agent, a training framework for calibrating agent's tool-use behavior through two synergistic perspectives: Self-evolving Data Flywheel and Behavior Calibration Training. Specifically, we introduce a self-evolutionary data flywheel to generate enhanced data, used to fine-tune LLM to improve its exploration ability. Based on this, we implement an two-phases behavior-calibration training framework. It is designed to progressively calibrate erroneous behavioral patterns to optimal behaviors. Further in-depth experiments confirm the superiority of \ourmodel{} across multiple dimensions, including correctness, efficiency, reasoning conciseness, and tool execution accuracy. Our ET-Agent framework provides practical insights for research in the TIR field. Codes can be found in https://github.com/asilverlight/ET-Agent</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-01-11T11:05:26Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Yifei Chen</name>
+    </author>
+    <author>
+      <name>Guanting Dong</name>
+    </author>
+    <author>
+      <name>Zhicheng Dou</name>
+    </author>
+  </entry>
+</feed>

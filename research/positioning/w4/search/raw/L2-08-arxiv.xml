@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/PI6Fsh0Nhyx09lO+dVw08Lvo3XA</id>
+  <title>arXiv Query: search_query=all:DPO AND all:preference AND all:optimization AND all:calibration AND all:overconfidence&amp;id_list=&amp;start=0&amp;max_results=15</title>
+  <updated>2026-11-09T22:56:08Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=all:DPO+AND+(all:preference+AND+(all:optimization+AND+(all:calibration+AND+all:overconfidence)))&amp;start=0&amp;max_results=15&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>15</opensearch:itemsPerPage>
+  <opensearch:totalResults>2</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2605.21266v1</id>
+    <title>How Much Online RL is Enough? Informative Rollouts for Offline Preference Optimization in RLVR</title>
+    <updated>2026-05-20T14:53:43Z</updated>
+    <link href="https://arxiv.org/abs/2605.21266v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.21266v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Reinforcement Learning from Verifiable Rewards (RLVR) has emerged as a powerful paradigm for reasoning in language models, with GRPO as its primary example. However, GRPO requires continuous online rollout generation, making it computationally expensive and difficult to scale. While Direct Preference Optimization (DPO) offers a stable and efficient offline alternative, it is typically expected to underperform w.r.t. online RL methods such as GRPO when trained on rollouts from a cold supervised fine-tuned (SFT) policy. We introduce G2D (GRPO to DPO)}, a three-stage pipeline that performs a short GRPO warm-up, constructs a static preference dataset, and fine-tunes a model offline with DPO. Across a set of values of the number of online steps (K) in GRPO on Qwen2.5-7B and Llama-3.1-8B, we find that offline DPO with moderate warm-up matches or outperforms GRPO at substantially lower compute cost in our setting. On Qwen2.5-7B, G2D at K=150 achieves 62.4% on MATH-500, outperforming GRPO (51.6%) by 10.8% at ~4x lower compute. On Llama-3.1-8B, G2D at K=500 achieves 49.4%, surpassing GRPO in our experimental setting. We show that performance is not governed by the number of preference pairs, which does not vary much w.r.t. K, but by their informativeness. Moderate warm-up produces rollouts with calibrated uncertainty, yielding stronger contrastive signal, while excessive warm-up leads to overconfident policies and less informative data. Our results recast the offline-online gap in RLVR as primarily a data informativeness problem, and identify short online RL warm-up with appropriate difficulty calibration of the fine-tuning dataset as a compute-efficient alternative to online RL.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-20T14:53:43Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Richa Verma</name>
+    </author>
+    <author>
+      <name>Balaraman Ravindran</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2510.11978v1</id>
+    <title>Learning Dynamics of VLM Finetuning</title>
+    <updated>2025-10-13T22:22:49Z</updated>
+    <link href="https://arxiv.org/abs/2510.11978v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2510.11978v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Preference-based finetuning of vision--language models (VLMs) is brittle: trivially wrong negatives inject uninformative gradients that destabilize training. We recast alignment as \textbf{learning-dynamics--aware optimization} and introduce \textbf{Cooling-Weighted DPO (CW-DPO)}, a two-stage recipe that explicitly models and exploits the training trajectory. \textbf{Stage 1} performs supervised finetuning with \textbf{gentle negatives}: \textbf{low-weight smoothed supervision} that regularizes the base policy and curbs overconfidence without explicit penalties. \textbf{Stage 2} applies a DPO objective in which the \textbf{negative term is scaled by a cooling weight} computed from the model's \textbf{average token log-probability} on each negative, suppressing uninformative gradients from easy or off-distribution samples while preserving signal from hard negatives. In practice, we emphasize \textbf{on-policy negatives} and allow \textbf{mixed negatives} by blending a controllable fraction of dataset negatives to maintain contrast freshness. Throughout, we instrument training with $Δ\!\log p$ probes on positives and negatives as first-class signals for early stopping, curriculum design, and failure diagnosis. Across diverse VLM tasks, CW-DPO yields \textbf{more stable optimization}, \textbf{better calibration}, and \textbf{higher pairwise win-rates} than SFT-only and vanilla DPO, while \textbf{converging in fewer steps}. Ablations isolate the \textbf{cooling-weight mechanism} as the primary driver of these gains and show complementary benefits from mixing on-policy and dataset negatives. Taken together, our results show that \textbf{smoothing learning dynamics before cooling preferences} is a simple, general principle for robust VLM alignment.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-10-13T22:22:49Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Jusheng Zhang</name>
+    </author>
+    <author>
+      <name>Kaitong Cai</name>
+    </author>
+    <author>
+      <name>Jing Yang</name>
+    </author>
+    <author>
+      <name>Keze Wang</name>
+    </author>
+  </entry>
+</feed>

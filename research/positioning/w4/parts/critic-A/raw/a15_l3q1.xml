@@ -1,0 +1,217 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/0l/Ovb+ZojoMVf8GCyap+iUm83o</id>
+  <title>arXiv Query: search_query=abs:"probe" AND abs:"compute allocation"&amp;id_list=&amp;start=0&amp;max_results=40</title>
+  <updated>2026-11-10T09:04:21Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=abs:%22probe%22+AND+abs:%22compute+allocation%22&amp;start=0&amp;max_results=40&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>40</opensearch:itemsPerPage>
+  <opensearch:totalResults>7</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2610.19975v1</id>
+    <title>LatentLoop: Scaling Looped MoE Models with Asymmetric Compute Allocation</title>
+    <updated>2026-10-14T10:57:55Z</updated>
+    <link href="https://arxiv.org/abs/2610.19975v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.19975v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Looped Mixture-of-Experts (MoE) models combine parameter reuse with sparse computation to improve performance under matched budgets. Prior work demonstrates that different loop visits can play different roles even when they share parameters. To probe the contributions of different loop visits, we learn separate residual coefficients in a model that applies a shared block twice, observing a smaller scale in the first visit. Fixed coefficient experiments show that reducing the first visit's scale preserves or improves performance, whereas the same reductions to the second hurt it. This asymmetry motivates us to explore asymmetric compute allocation. We propose \textbf{LatentLoop}, which compresses the first visit's sequence, retains full resolution in the second, and reallocates saved computation to increase the hidden size. We further learn how strongly the first visit updates the full sequence, and share MoE weights across visits while using separate attention parameters to accommodate their different sequence resolutions. Across 15 configurations spanning 1.3B--7B parameters, with the largest budget exceeding $10^{21}$ FLOPs, LatentLoop consistently lowers validation NLL. At a fitted NLL of 1.988, predicted compute savings are 19.0\% and 7.9\% relative to vanilla MoE and the looped baseline. It also improves average scores on nine benchmarks at all sizes in 0-shot and 5-shot settings. These results suggest asymmetric compute allocation is a promising direction for looped MoE models.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-14T10:57:55Z</published>
+    <arxiv:comment>24 pages, 8 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Zefeng He</name>
+    </author>
+    <author>
+      <name>Yunkai Chai</name>
+    </author>
+    <author>
+      <name>Xiaoyang Chen</name>
+    </author>
+    <author>
+      <name>Tong Zhu</name>
+    </author>
+    <author>
+      <name>Zongliang Wu</name>
+    </author>
+    <author>
+      <name>Yun Luo</name>
+    </author>
+    <author>
+      <name>Yafu Li</name>
+    </author>
+    <author>
+      <name>Yu Cheng</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.21433v1</id>
+    <title>Token Budget Saturation and Mechanistic Early Detection of Reasoning Non-Convergence in Chain-of-Thought Models</title>
+    <updated>2026-07-23T15:37:04Z</updated>
+    <link href="https://arxiv.org/abs/2607.21433v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.21433v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Chain-of-thought reasoning models such as DeepSeek-R1-Distill-Qwen-7B exhibit a bimodal convergence pattern: generations either terminate within a token budget (converged) or exhaust it without reaching a conclusion (non-converged). We characterize this phenomenon empirically, showing that converged generations achieve 90.3% accuracy on AIME 1983-2024 while non-converged ones achieve only 6.6%, with an overall convergence rate of 62.0%. We then ask whether this outcome is detectable early in the thinking chain using internal model representations. Training linear probes on hidden-state activations at token positions 50-300, we find that layer-20 activations at token 150 achieve AUC 0.608 (+-0.080, 5-fold CV), reliably above chance even at token 50. Activation probes consistently outperform behavioral baselines derived from token entropy and repetition statistics. A sweep-level permutation test yields p=0.063 (100,000 permutations), consistent with a modest signal that our sample size cannot confirm at conventional thresholds. These findings suggest that convergence fate is partially encoded in intermediate representations well before the generation ends, opening a path toward early-exit inference and adaptive compute allocation.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-23T15:37:04Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Renuka Oladri</name>
+    </author>
+    <author>
+      <name>Niveda Jawahar</name>
+    </author>
+    <author>
+      <name>Abdirisak Mohamed</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.00422v2</id>
+    <title>TrAC: Trace-Conditioned Answer Consistency for Efficient Uncertainty Quantification in LLMs</title>
+    <updated>2026-08-11T11:25:58Z</updated>
+    <link href="https://arxiv.org/abs/2608.00422v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.00422v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) can generate fluent reasoning traces that nevertheless lead to incorrect answers, making response-level uncertainty estimation important for abstention, human review, and adaptive compute allocation. Existing approaches generally fall into three categories: passive single-trace methods use token-level confidence signals, sampling-based methods compare multiple complete traces at higher generation cost, and active prefix-based methods probe partial traces to study answer stabilization or preference transitions. However, none actively re-elicits an answer from a completed reasoning trace to measure its consistency with and support for the original answer. To address this gap, we introduce Trace-Conditioned Answer Consistency (TrAC), a correctness-supervised uncertainty quantification framework that combines active and passive signals anchored to one completed reasoning trace. Its active component, Prefix-Conditioned Elicitation (PCE), re-elicits a short answer conditioned on the completed trace and represents both its consistency with the original answer and its token-level probabilistic support. Its passive component, Trace Uncertainty Profile (TUP), summarizes how token-level uncertainty evolves throughout the original generation without additional decoding. A lightweight head then integrates the two representations into a response-correctness score. Across five mathematical reasoning benchmarks and three LLM families, TrAC improves macro AUROC by 1.8% and reduces AURC by 3.4% relative to eight-sample self-consistency, while using one complete reasoning trace and a short cached answer probe. When eight samples are already available, augmenting sample consensus with re-elicitation further improves macro AUROC by 4.3% and reduces AURC by 8.3%, without additional full-trace generation.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-01T03:43:31Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Dahai Yu</name>
+    </author>
+    <author>
+      <name>Lin Jiang</name>
+    </author>
+    <author>
+      <name>Rongchao Xu</name>
+    </author>
+    <author>
+      <name>Guang Wang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.08083v2</id>
+    <title>LLMs Improving LLMs: Agentic Discovery for Test-Time Scaling</title>
+    <updated>2026-05-12T03:46:05Z</updated>
+    <link href="https://arxiv.org/abs/2605.08083v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.08083v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Test-time scaling (TTS) has become an effective approach for improving large language model performance by allocating additional computation during inference. However, existing TTS strategies are largely hand-crafted: researchers manually design reasoning patterns and tune heuristics by intuition, leaving much of the computation-allocation space unexplored. We propose an environment-driven framework, AutoTTS, that changes what researchers design: from individual TTS heuristics to environments where TTS strategies can be discovered automatically. The key to AutoTTS lies in environment construction: the discovery environment must make the control space tractable and provide cheap, frequent feedback for TTS search. As a concrete instantiation, we formulate width--depth TTS as controller synthesis over pre-collected reasoning trajectories and probe signals, where controllers decide when to branch, continue, probe, prune, or stop and can be evaluated cheaply without repeated LLM calls. We further introduce beta parameterization to make the search tractable and fine-grained execution trace feedback to improve discovery efficiency by helping the agent diagnose why a TTS program fails. Experiments on mathematical reasoning benchmarks show that the discovered strategies improve the overall accuracy--cost tradeoff over strong manually designed baselines. The discovered strategies generalize to held-out benchmarks and model scales, while the entire discovery costs only $39.9 and 160 minutes. Our data, and code will be open-source at https://github.com/zhengkid/AutoTTS.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-08T17:59:40Z</published>
+    <arxiv:comment>25 pages</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Tong Zheng</name>
+    </author>
+    <author>
+      <name>Haolin Liu</name>
+    </author>
+    <author>
+      <name>Chengsong Huang</name>
+    </author>
+    <author>
+      <name>Huiwen Bao</name>
+    </author>
+    <author>
+      <name>Sheng Zhang</name>
+    </author>
+    <author>
+      <name>Rui Liu</name>
+    </author>
+    <author>
+      <name>Runpeng Dai</name>
+    </author>
+    <author>
+      <name>Ruibo Chen</name>
+    </author>
+    <author>
+      <name>Chenxi Liu</name>
+    </author>
+    <author>
+      <name>Tianyi Xiong</name>
+    </author>
+    <author>
+      <name>Xidong Wu</name>
+    </author>
+    <author>
+      <name>Hongming Zhang</name>
+    </author>
+    <author>
+      <name>Heng Huang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.08020v2</id>
+    <title>Thought-Level Beam Search for Reasoning</title>
+    <updated>2026-08-11T04:35:54Z</updated>
+    <link href="https://arxiv.org/abs/2608.08020v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.08020v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Test-time compute scaling is a primary driver of performance in large reasoning models (LRMs), but extreme inefficiency bounds current approaches, shifting the critical question from \emph{how much} compute to spend, to \emph{where} to allocate it. We formalize test-time reasoning as a constrained compute allocation problem over partial trajectories. Under a fixed hardware budget, existing paradigms fail to actively allocate the compute to the most promising partial progress: traditional parallel sampling treats traces independently and induces severe memory bottlenecks, while subtractive pruning starves hardware and fails to actively and sufficiently shift the output distribution. To overcome this dichotomy, we introduce Gambit, an inference algorithm that executes \emph{thought-level beam search}. By periodically pruning unpromising trajectories and immediately branching from high-quality prefixes, Gambit dynamically concentrates compute onto the most promising reasoning traces via a light-weight scorer probing hidden states while maintaining continuous high hardware utilization. Extensive evaluations across multiple models and benchmarks demonstrate that Gambit strictly dominates existing baselines. Under identical hardware constraints, our method yields up to a +6.7\% absolute accuracy gain on HMMT-24 and +3.3\% on AIME-25 over pruning baselines, delivers $&gt;2\times$ higher throughput on trace completion, and reduces total token consumption by up to 68.5\% relative to standard parallel sampling.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-08T09:00:01Z</published>
+    <arxiv:comment>Add the author Jiawei Zhao in Meta Data</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Lijie Yang</name>
+    </author>
+    <author>
+      <name>Hongyin Luo</name>
+    </author>
+    <author>
+      <name>Jiawei Zhao</name>
+    </author>
+    <author>
+      <name>Tri Dao</name>
+    </author>
+    <author>
+      <name>Ravi Netravali</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.26119v1</id>
+    <title>Probing the Origins of Reasoning Performance: Representational Quality for Mathematical Problem-Solving in RL vs. SFT Fine-Tuned Models</title>
+    <updated>2026-07-28T17:42:42Z</updated>
+    <link href="https://arxiv.org/abs/2607.26119v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.26119v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large reasoning models trained via reinforcement learning (RL) have been increasingly shown to outperform their supervised fine-tuned (SFT) counterparts on mathematical reasoning tasks; Yet the mechanistic basis for this advantage remains unclear. We therefore ask, what internal representational differences enable RL models' superior performance? Our work presents two converging lines of evidence: First, linear probes trained on layer-wise hidden states reveal that RL models tend to achieve higher accuracy in predicting answer correctness compared to SFT models, indicating more linearly separable and structured representations. Second, mean ablation studies show that RL models develop a hierarchical architecture where deeper layers become progressively more critical, whereas SFT models distribute importance uniformly across layers. Together, these findings demonstrate that RL training fundamentally restructures how models represent and process reasoning problems. Finally, we analyze token-count variability under repeated sampling across problems to assess adaptive compute allocation. While we observe higher variability in some RL-tuned models than in their SFT counterparts, we see strong consistency in others, suggesting that token allocation may depend more on the overall training pipeline than on RL versus SFT alone. We believe this token-allocation variability reveals the spread of plausible on-policy reasoning, highlighting which models exhibit stable policies versus those that are under-determined, potentially non-identifiable solution behaviour.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-28T17:42:42Z</published>
+    <arxiv:comment>Second Workshop on XAI4Science, AAAI 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Antyabha Rahman</name>
+    </author>
+    <author>
+      <name>Akshaj Gurugubelli</name>
+    </author>
+    <author>
+      <name>Omar Ankit</name>
+    </author>
+    <author>
+      <name>Kevin Zhu</name>
+    </author>
+    <author>
+      <name>Aishwarya Balwani</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.04341v1</id>
+    <title>Budgeted LoRA: Distillation as Structured Compute Allocation for Efficient Inference</title>
+    <updated>2026-05-05T22:59:14Z</updated>
+    <link href="https://arxiv.org/abs/2605.04341v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.04341v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We study distillation for large language models under explicit compute constraints, with the goal of producing student models that are not only cheaper to train, but structurally efficient at inference time. While prior approaches to parameter-efficient distillation, such as LoRA, reduce adaptation cost, they leave the dense backbone unchanged and therefore fail to deliver meaningful inference savings. We propose Budgeted LoRA, a distillation framework that treats model compression as a structured compute allocation problem. Instead of using a fixed student architecture, we introduce a global compute budget that sets the final target fraction of dense computation retained. Under this constraint, the model redistributes capacity across dense and low-rank pathways via (i) module-level dense retention coefficients, (ii) adaptive low-rank allocation, and (iii) post-training compression that selectively removes, approximates, or preserves dense components. This formulation yields a family of students controlled by a single budget dial. Empirically, Budgeted LoRA matches standard LoRA perplexity at a moderate budget with a 1.74x compressed-module speedup; at an aggressive budget it achieves a 4.05x speedup with moderate perplexity degradation, and it preserves higher accuracy on function-style in-context learning probes. These results suggest that, under compute-constrained distillation, retaining behavior is less about matching perplexity or removing more parameters than it is about controlling how dense computation is transferred to low-rank pathways.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-05T22:59:14Z</published>
+    <arxiv:comment>Preprint. 9 pages main text, 18 pages total, 2 figures, 9 tables</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Mohammed Sabry</name>
+    </author>
+    <author>
+      <name>Anya Belz</name>
+    </author>
+  </entry>
+</feed>

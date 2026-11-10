@@ -1,0 +1,339 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/H9F2AOEKa0qkPjGI0bWvM81snck</id>
+  <title>arXiv Query: search_query=all:token AND all:probability AND all:confidence AND all:code AND all:correctness&amp;id_list=&amp;start=0&amp;max_results=15</title>
+  <updated>2026-11-09T22:54:54Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=all:token+AND+(all:probability+AND+(all:confidence+AND+(all:code+AND+all:correctness)))&amp;start=0&amp;max_results=15&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>15</opensearch:itemsPerPage>
+  <opensearch:totalResults>23</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2611.02093v1</id>
+    <title>Bernoulli On-Policy Distillation: Don't Ignore High-Confidence Student Tokens</title>
+    <updated>2026-11-01T18:06:42Z</updated>
+    <link href="https://arxiv.org/abs/2611.02093v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2611.02093v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>On-policy distillation (OPD) trains a student language model on its own trajectories using token-level supervision from a stronger teacher. We show that standard sampled reverse-KL OPD systematically suppresses updates to high-confidence tokens, such that their weak gradient contribution does not necessarily imply weak or uninformative teacher supervision. We introduce Bernoulli On-Policy Distillation (Bernoulli OPD), which directly matches the teacher and student probabilities for that token. This yields a bounded probability space correction that preserves teacher-student disagreement while avoiding the additional confidence-dependent suppression induced by vanilla OPD. Fixed-rollout analyses show that Bernoulli OPD substantially restores optimization signal to high-confidence tokens while remaining sensitive to teacher-student disagreement. We further analyze the resulting model behavior through confidence distributions, answer calibration, policy movement, and training dynamics, showing that Bernoulli OPD's gains cannot be explained simply by longer reasoning, larger optimization steps, or more uniform imitation of the teacher. Code is available at https://github.com/duterscmy/Bernoulli-OPD.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-11-01T18:06:42Z</published>
+    <arxiv:comment>14 pages, 7 figures, Code: https://github.com/duterscmy/Bernoulli-OPD</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Mingyu Cao</name>
+    </author>
+    <author>
+      <name>Yaokai Jin</name>
+    </author>
+    <author>
+      <name>Shiwei Liu</name>
+    </author>
+    <author>
+      <name>Lu Yin</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.17708v1</id>
+    <title>Confidence Comes from Experience: Experiential Confidence Estimation from Reasoning to Agents</title>
+    <updated>2026-09-15T18:19:48Z</updated>
+    <link href="https://arxiv.org/abs/2609.17708v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.17708v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Reliable confidence estimation is increasingly central to the trustworthy deployment of language models: a calibrated estimate of the probability that an output is correct decides what to ship, what to escalate, and what to retry. Existing confidence estimators, however, share one design premise: they only read the current inference process, either by introspecting on it, scoring its token probabilities, or resampling it. We argue that the current inference is not a sufficient basis for confidence. We propose XConf (eXperiential Confidence): estimating confidence together with the model's accumulated experience. The experience is stored as a record of the model's own graded past episodes, each holding the task, the model's reflection, its stated confidence, the outcome, and a lesson written once the grade arrived. Given a new task, XConf's Recall stage retrieves past episodes on similar tasks met with a similar stated confidence, and reads off their historical success rate; its Reflect stage shows the model this record, has it name its recurring failure mode, and restate a confidence now informed by its own track records. Our estimator is format-general, requiring no logit access or weight updates, and costs only one answer generation. Across nine benchmarks spanning reasoning, coding, multimodal QA, and interactive agents, and four models from three families, XConf beats or matches ten-sample self-consistency in discrimination (AUROC) on 23 of 24 comparisons, with much lower calibration error (ECE), at a tenth of the generation cost. Used for selective prediction, abstaining on the 10% least-confident episodes raises the delivered success rate by up to 8.7 points on agent tasks. We therefore see experiential confidence estimation as a new paradigm for future general-purpose confidence estimation.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-15T18:19:48Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Caiqi Zhang</name>
+    </author>
+    <author>
+      <name>Xiaochen Zhu</name>
+    </author>
+    <author>
+      <name>Chengzu Li</name>
+    </author>
+    <author>
+      <name>Yulong Chen</name>
+    </author>
+    <author>
+      <name>Dharshan Kumaran</name>
+    </author>
+    <author>
+      <name>Nigel Collier</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2508.18847v2</id>
+    <title>ConfTuner: Training Large Language Models to Express Their Confidence Verbally</title>
+    <updated>2025-11-25T11:46:58Z</updated>
+    <link href="https://arxiv.org/abs/2508.18847v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2508.18847v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) are increasingly deployed in high-stakes domains such as science, law, and healthcare, where accurate expressions of uncertainty are essential for reliability and trust. However, current LLMs are often observed to generate incorrect answers with high confidence, a phenomenon known as "overconfidence". Recent efforts have focused on calibrating LLMs' verbalized confidence: i.e., their expressions of confidence in text form, such as "I am 80% confident that...". Existing approaches either rely on prompt engineering or fine-tuning with heuristically generated uncertainty estimates, both of which have limited effectiveness and generalizability. Motivated by the notion of proper scoring rules for calibration in classical machine learning models, we introduce ConfTuner, a simple and efficient fine-tuning method that introduces minimal overhead and does not require ground-truth confidence scores or proxy confidence estimates. ConfTuner relies on a new loss function, tokenized Brier score, which we theoretically prove to be a proper scoring rule, intuitively meaning that it "correctly incentivizes the model to report its true probability of being correct". ConfTuner improves calibration across diverse reasoning tasks and generalizes to black-box models such as GPT-4o. Our results further show that better-calibrated confidence enables downstream gains in self-correction and model cascade, advancing the development of trustworthy LLM systems. The code is available at https://github.com/liushiliushi/ConfTuner.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-08-26T09:25:32Z</published>
+    <arxiv:comment>Accepted by NeurIPS 2025</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Yibo Li</name>
+    </author>
+    <author>
+      <name>Miao Xiong</name>
+    </author>
+    <author>
+      <name>Jiaying Wu</name>
+    </author>
+    <author>
+      <name>Bryan Hooi</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2603.29559v1</id>
+    <title>When Can We Trust LLM Graders? Calibrating Confidence for Automated Assessment</title>
+    <updated>2026-03-31T10:38:22Z</updated>
+    <link href="https://arxiv.org/abs/2603.29559v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2603.29559v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) show promise for automated grading, but their outputs can be unreliable. Rather than improving grading accuracy directly, we address a complementary problem: \textit{predicting when an LLM grader is likely to be correct}. This enables selective automation where high-confidence predictions are processed automatically while uncertain cases are flagged for human review. We compare three confidence estimation methods (self-reported confidence, self-consistency voting, and token probability) across seven LLMs of varying scale (4B to 120B parameters) on three educational datasets: RiceChem (long-answer chemistry), SciEntsBank, and Beetle (short-answer science). Our experiments reveal that self-reported confidence consistently achieves the best calibration across all conditions (avg ECE 0.166 vs 0.229 for self-consistency). Surprisingly, self-consistency remains 38\% worse despite requiring 5$\times$ the inference cost. Larger models exhibit substantially better calibration though gains vary by dataset and method (e.g., a 28\% ECE reduction for self-reported), with GPT-OSS-120B achieving the best calibration (avg ECE 0.100) and strong discrimination (avg AUC 0.668). We also observe that confidence is strongly top-skewed across methods, creating a ``confidence floor'' that practitioners must account for when setting thresholds. These findings suggest that simply asking LLMs to report their confidence provides a practical approach for identifying reliable grading predictions. Code is available \href{https://github.com/sonkar-lab/llm_grading_calibration}{here}.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CY" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-03-31T10:38:22Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Robinson Ferrer</name>
+    </author>
+    <author>
+      <name>Damla Turgut</name>
+    </author>
+    <author>
+      <name>Zhongzhou Chen</name>
+    </author>
+    <author>
+      <name>Shashank Sonkar</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.00381v1</id>
+    <title>OmniMed-Jev: Calibrating LVLM Confidence for Trustworthy Medical Multimodal Decisions via System One</title>
+    <updated>2026-09-30T08:53:54Z</updated>
+    <link href="https://arxiv.org/abs/2610.00381v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.00381v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Medical models are judged not only on correctness, but on whether reported confidence matches actual accuracy. Generalist multimodal medical models have expanded what a single model can perceive, yet they still express bounded decisions such as diagnoses, findings or cell counts as generated text, so the reported probability reflects the next token rather than the decision itself. Motivated by decision-native interfaces such as Jev, we introduce OmniMed-Jev, which represents each medical decision as a Choice, Noul or Score decision over a runtime-supplied candidate set and returns a full distribution over that set: mutually exclusive classes, binary presence of a finding, or a bounded ordered value. The design is omni in three respects: it accepts diverse imaging modalities, covers different prediction tasks, and expresses them through one candidate-conditioned probability model, so heterogeneous outputs become comparable probabilities rather than task-specific strings. In an interface-controlled comparison against a generative baseline trained on the same backbone, data and schedule, OmniMed-Jev's reported probabilities track observed correctness far more closely, reducing calibration error by up to an order of magnitude and reliability error by up to two, while point-prediction performance remains comparable; counting is the one family where the generative baseline stays ahead. Making the decision distribution the model's output is not a format change but what turns reported numbers into probabilities that mean what they say. These results support explicit decision modeling as a way to make reported confidence meaningful within the evaluated tasks, and they are not evidence of clinical readiness: the comparison cannot separate the interface from associated training differences, which we state alongside the results. Code is available at github.com/lytang63/OmniMed-Jev.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-30T08:53:54Z</published>
+    <arxiv:comment>We introduce OmniMed-Jev, a decision-native interface based on Jev that outputs Choice, Noul or Score decisions with calibrated probabilities</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Luyao Tang</name>
+    </author>
+    <author>
+      <name>Cheng Chen</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2307.04401v1</id>
+    <title>Ethicist: Targeted Training Data Extraction Through Loss Smoothed Soft Prompting and Calibrated Confidence Estimation</title>
+    <updated>2023-07-10T08:03:41Z</updated>
+    <link href="https://arxiv.org/abs/2307.04401v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2307.04401v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large pre-trained language models achieve impressive results across many tasks. However, recent works point out that pre-trained language models may memorize a considerable fraction of their training data, leading to the privacy risk of information leakage. In this paper, we propose a method named Ethicist for targeted training data extraction through loss smoothed soft prompting and calibrated confidence estimation, investigating how to recover the suffix in the training data when given a prefix. To elicit memorization in the attacked model, we tune soft prompt embeddings while keeping the model fixed. We further propose a smoothing loss that smooths the loss distribution of the suffix tokens to make it easier to sample the correct suffix. In order to select the most probable suffix from a collection of sampled suffixes and estimate the prediction confidence, we propose a calibrated confidence estimation method, which normalizes the confidence of the generated suffixes with a local estimation. We show that Ethicist significantly improves the extraction performance on a recently proposed public benchmark. We also investigate several factors influencing the data extraction performance, including decoding strategy, model scale, prefix length, and suffix length. Our code is available at https://github.com/thu-coai/Targeted-Data-Extraction.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2023-07-10T08:03:41Z</published>
+    <arxiv:comment>ACL 2023 Long Paper (Main Conference)</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Zhexin Zhang</name>
+    </author>
+    <author>
+      <name>Jiaxin Wen</name>
+    </author>
+    <author>
+      <name>Minlie Huang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2604.15376v1</id>
+    <title>Zoom Consistency: A Free Confidence Signal in Multi-Step Visual Grounding Pipelines</title>
+    <updated>2026-04-15T20:47:08Z</updated>
+    <link href="https://arxiv.org/abs/2604.15376v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2604.15376v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Multi-step zoom-in pipelines are widely used for GUI grounding, yet the intermediate predictions they produce are typically discarded after coordinate remapping. We observe that these intermediate outputs contain a useful confidence signal for free: zoom consistency, the distance between a model's step-2 prediction and the crop center. Unlike log-probabilities or token-level uncertainty, zoom consistency is a geometric quantity in a shared coordinate space, making it directly comparable across architecturally different VLMs without calibration. We prove this quantity is a linear estimator of step-1 spatial error under idealized conditions (perfect step-2, target within crop) and show it correlates with prediction correctness across two VLMs (AUC = 0.60; Spearman rho = -0.14, p &lt; 10^{-6} for KV-Ground-8B; rho = -0.11, p = 0.0003 for Qwen3.5-27B). The correlation is small but consistent across models, application categories, and operating systems. As a proof-of-concept, we use zoom consistency to route between a specialist and generalist model, capturing 16.5% of the oracle headroom between them (+0.8%, McNemar p = 0.19). Code is available at https://github.com/omxyz/zoom-consistency-routing.</summary>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-04-15T20:47:08Z</published>
+    <arxiv:primary_category term="cs.CV"/>
+    <author>
+      <name>Keon Kim</name>
+    </author>
+    <author>
+      <name>Krish Chelikavada</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2503.15341v1</id>
+    <title>Uncertainty-Guided Chain-of-Thought for Code Generation with LLMs</title>
+    <updated>2025-03-19T15:40:45Z</updated>
+    <link href="https://arxiv.org/abs/2503.15341v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2503.15341v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Chain-of-Thought (CoT) reasoning has been demonstrated as an effective technique for improving the problem-solving capabilities of large language models (LLMs) in the context of code generation. However, existing CoT methods often exhibit a tendency toward "overthinking", where the LLM consistently applies reasoning strategies without adequately considering the task's underlying complexity. This results in the LLMs allocating excessive computational resources, in terms of tokens, to relatively simple tasks or problems where the correct answer is already evident. Additionally, this overthinking may lead LLMs down incorrect reasoning paths, resulting in incorrect code generation. In this paper, we introduce UnCertainty-Aware Chain-of-Thought (UnCert-CoT), an LLM-based approach designed to enhance code generation by incorporating an uncertainty-aware CoT reasoning mechanism, which focuses computational resources on targeting points where LLMs are more prone to error. We propose two confidence-based uncertainty measures: Entropy-based and Probability Differential-based methods. When uncertainty is high, UnCert-CoT activates CoT-decoding to generate multiple reasoning paths and selects the final code that exhibits the highest likelihood of correctness. In contrast, LLM directly generates the code when uncertainty is low. This uncertainty judgment mechanism allows LLMs to prioritize complex tasks and avoid unnecessary steps in simpler cases, thereby improving overall efficiency and accuracy in code generation. Our experimental results demonstrate that UnCert-CoT significantly enhances code generation accuracy on challenging benchmark MHPP(Mostly Hard Python Problems), it achieves improvements up to 6.1% on PassRate accuracy, particularly in situations where traditional LLMs are prone to errors.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-03-19T15:40:45Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Yuqi Zhu</name>
+    </author>
+    <author>
+      <name>Ge Li</name>
+    </author>
+    <author>
+      <name>Xue Jiang</name>
+    </author>
+    <author>
+      <name>Jia Li</name>
+    </author>
+    <author>
+      <name>Hong Mei</name>
+    </author>
+    <author>
+      <name>Zhi Jin</name>
+    </author>
+    <author>
+      <name>Yihong Dong</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.02241v3</id>
+    <title>Zero-Shot Confidence Estimation for Small LLMs: When Supervised Baselines Aren't Worth Training</title>
+    <updated>2026-05-07T16:11:01Z</updated>
+    <link href="https://arxiv.org/abs/2605.02241v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.02241v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>How reliably can a small language model estimate its own correctness? The answer determines whether local-to-cloud routing-escalating queries a cheap local model cannot handle-can work without supervised training data. As inference costs dominate large language model (LLM) deployment budgets, routing most queries to a cheap local model while reserving expensive cloud calls for hard cases is an increasingly common cost-control strategy. We compare zero-shot confidence signals against RouteLLM-style supervised baselines across three 7-8B model families and two datasets (1,000 and 500 queries per model, respectively). Average token log-probability, which requires no training data, matches or exceeds supervised baselines in-distribution (Area Under the Receiver Operating Characteristic curve (AUROC) 0.650-0.714 vs. 0.644-0.676) and substantially outperforms them out-of-distribution (0.717-0.833 vs. 0.512-0.564), because it measures a property of the model's generation rather than the query distribution. This paper further proposes retrieval-conditional self-assessment, a pre-generation signal that selectively injects retrieved knowledge when similarity is high, improving over bare self-assessment by up to +0.069 AUROC at 3-10x lower latency than log-probability. A supervised baseline trained on 1,000 labeled examples never exceeds the zero-shot signal. We release all code, data, and experiment logs.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.ET" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-04T05:33:03Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Luong N. Nguyen</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2603.25112v3</id>
+    <title>Do LLMs Know What They Know? Measuring Metacognitive Efficiency with Signal Detection Theory</title>
+    <updated>2026-07-28T22:49:39Z</updated>
+    <link href="https://arxiv.org/abs/2603.25112v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2603.25112v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Standard evaluation of LLM confidence relies on calibration metrics (ECE, Brier score) that conflate two capacities: how much a model knows (Type-1 accuracy) and how well its confidence signal tracks that knowledge (Type-2 metacognitive sensitivity). We apply Signal Detection Theory to decompose them, treating token-level normalised log-probability as a graded confidence variable and answer correctness as the state to be discriminated. We characterise the Type-2 ROC of this signal, including its unequal-variance structure via z-ROC analysis, and -- because the meta-d' efficiency ratio is not well defined for open-ended QA, which lacks a two-alternative Type-1 decision -- quantify efficiency with a model-free information measure, normalised metacognitive information (meta-I_2r). Across four LLMs and 224,000 factual QA trials we find: (1) metacognitive information varies by a factor of 1.98 across models and is not predicted by accuracy, the rank correlation being -0.80 on TriviaQA and +0.00 on Natural Questions; (2) the confidence signal has model-specific unequal-variance structure (z-ROC slopes 0.78 to 1.18) invisible to calibration metrics, the slope ordering replicating on NQ; (3) efficiency is domain-specific, weakest in Science &amp; Technology for every model; (4) temperature dissociates accuracy from metacognitive information, which stays near-flat for three of four models while accuracy falls; and (5) metacognitive information tracks the accuracy gain from confidence-based abstention exactly (rho = +1.00) while accuracy does not. All estimates carry permutation nulls and bootstrap confidence intervals. This version (v3) corrects a differential length bias in the automated correctness scorer, validated against 1,830 human adjudications; the inverse accuracy-efficiency coupling reported in v1 and v2 does not survive relabelling. See the version note on page 1.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-03-26T07:38:28Z</published>
+    <arxiv:comment>12 pages, 4 figures, 3 tables. v3 corrects a differential length bias in the automated correctness scorer, validated against 1,830 human adjudications; all analyses recomputed. The inverse accuracy-efficiency coupling in v1/v2 does not survive relabelling; see the version note on page 1. Pre-registered. Code and annotations: github.com/synthiumjp/metacognition-audit</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Jon-Paul Cacioli</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.32444v1</id>
+    <title>Rethinking Training-Inference Mismatch in LLM Reinforcement Learning: Where It Arises and How to Correct It</title>
+    <updated>2026-09-26T10:21:24Z</updated>
+    <link href="https://arxiv.org/abs/2609.32444v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.32444v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We study training-inference mismatch in reinforcement learning with verifiable rewards (RLVR) for large language models, where rollouts are sampled by an inference engine while gradients are computed by a training engine, and the two engines assign different probabilities to the same tokens. To account for this discrepancy in policy updates, we introduce calibrated importance sampling (CIS). CIS is motivated by an empirically supported logit-displacement characterization that expresses the mismatch as an additive displacement $\varepsilon_t$ in log-odds, determined by the per-logit perturbation before the softmax, whose distribution is approximately invariant to token confidence. This characterization motivates a confidence-aware truncation: large positive displacements are truncated at a single constant threshold, which maps back to an importance-ratio cap that tightens as token confidence increases. Theoretically, we show that CIS replaces the unbounded second moment that governs the error of exact importance sampling with a term bounded by a constant, at the cost of a bias controlled by the truncated excess. In evaluation across three mixture-of-experts models and five mathematical reasoning benchmarks, CIS achieves the highest five-benchmark average on all three models among the evaluated baselines. Diagnostic analyses show that CIS places less truncation bias on low-confidence tokens than truncated importance sampling, while upward clipping of small importance weights reduces held-out accuracy.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-26T10:21:24Z</published>
+    <arxiv:comment>32 pages. Code: https://github.com/kzhao5/CIS-RL</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Tianrun Yu</name>
+    </author>
+    <author>
+      <name>Kaixiang Zhao</name>
+    </author>
+    <author>
+      <name>Shangzhe Li</name>
+    </author>
+    <author>
+      <name>Yuxiao Yang</name>
+    </author>
+    <author>
+      <name>Porter Jenkins</name>
+    </author>
+    <author>
+      <name>Weitong Zhang</name>
+    </author>
+    <author>
+      <name>Taylor W. Killian</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.24440v1</id>
+    <title>Bigger or Cheaper? Scale and Quantization Effects on Uncertainty Signals in Vision-Language Models Under Image Degradation</title>
+    <updated>2026-07-27T13:47:44Z</updated>
+    <link href="https://arxiv.org/abs/2607.24440v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.24440v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Vision-language models (VLMs) deployed on consumer hardware must decide when to answer and when to defer, and that decision depends on having a confidence signal that tracks correctness. A practitioner with a fixed memory budget faces a choice between a small model at full precision, the same small model quantized, and a larger model quantized into the same footprint -- three configurations that push the confidence signal in opposing directions. We measure, on identical inputs, how model scale and 4-bit quantization affect two confidence signals in the Qwen2-VL family: the confidence a model states in natural language, and its own mean token probability over the answer it generates. Across 5,700 predictions spanning six realistic photographic degradations at three severities, we find that scale sharply improves the model's internal uncertainty signal (mean error-detection AUROC 0.80 to 0.98 from 2B to 7B) while its verbalized confidence stays weak and often at chance (mean 0.61 to 0.69): the gap between what the model knows and what it says widens rather than closes with size. We find that 4-bit quantization is nearly free for accuracy (-1.6 points) but expensive for the confidence signal (internal AUROC 0.95 to 0.80, and the verbalized-confidence parse rate collapses from 99% to 64%). For a fixed memory budget the recommendation is therefore to prefer a larger quantized model over a smaller full-precision one: 7B-4bit gives both the best accuracy and the best uncertainty signal (internal AUROC 0.98) of the three configurations that fit. We frame the results as selective-prediction operating points so they translate directly into a deployment recommendation, and we argue that error-detection AUROC, not calibration error, is the metric that exposes the difference between the two signals.</summary>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-27T13:47:44Z</published>
+    <arxiv:comment>12 pages, 4 figures. Code and data: https://github.com/Asif-Ferdous/vlm-scale-quant</arxiv:comment>
+    <arxiv:primary_category term="cs.CV"/>
+    <author>
+      <name>M M Asif Ferdous</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.26035v1</id>
+    <title>Truth for Believable AI: Expressed Doubt, Provenance, and Belief Revision as an Engineerable Stance</title>
+    <updated>2026-09-22T11:34:53Z</updated>
+    <link href="https://arxiv.org/abs/2609.26035v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.26035v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Conversational agents often express answers in a uniformly confident register. We test whether expressed uncertainty, provenance-aware assertion, and explicit belief revision can be implemented as a behavior layer over a fixed language model; we do not test believability or trust. The layer combines three epistemic states, per-claim confidence and typed provenance, a provenance-gated expression rule, and a persistent revision store with auditable acknowledgments and partial resistance to false corrections. We evaluate it on a constructed, mechanically scored multi-session benchmark using a synthetic model and Qwen2.5-0.5B-Instruct. The synthetic instrument passes all five checks. On the real model, acknowledgment soundness, a by-construction guarantee, holds in 100% of cases, and true corrections are accepted more often than false ones (0.44 vs. 0.15 on held beliefs; 0.875 vs. 0.420 including rule-accepted corrections of unheld facts), but the pre-specified expression-fidelity, contradiction-separation, and provenance margins fail. A disclosed post hoc analysis shows that expression gated on mean answer-token probability ranks correctness below chance end to end (AUC 0.41, conversation-clustered), whereas gating on sampling consistency discriminates (AUC 0.66). A consistency-gated configuration selected from this finding and evaluated under a separately committed protocol meets the conversation-level manipulation and capability-equivalence criteria and replicates on a redrawn conversation set. The manipulation result is selection-dependent, and both criteria remain unresolved when uncertainty is clustered over the 60 facts. The supported conclusions are limited to the by-construction audit guarantee, store-dependent partial correction discrimination, and a benchmark- and model-specific failure of token-probability gating; scaling the fact base is required before human evaluation.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-22T11:34:53Z</published>
+    <arxiv:comment>17 pages, 4 figures, 3 tables. Companion framework paper: arXiv:2607.15883. Code, benchmark, cached model outputs, and result files archived at doi:10.5281/zenodo.21462986 (code and results) and doi:10.5281/zenodo.21462988 (benchmark dataset)</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Sebastian Cochinescu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2602.19626v2</id>
+    <title>Nacrith: Neural Lossless Compression via Ensemble Context Modeling and High-Precision CDF Coding</title>
+    <updated>2026-02-24T11:10:17Z</updated>
+    <link href="https://arxiv.org/abs/2602.19626v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2602.19626v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We present Nacrith, a lossless compression system that combines a 135M-parameter transformer language model (SmolLM2-135M) with an ensemble of lightweight online predictors and a 32-bit arithmetic coder, achieving the best compression results among the systems evaluated in this study on natural language text. Beyond the base LLM-plus-arithmetic-coding paradigm, Nacrith introduces several contributions: (1) a CDF precision upgrade from 2^16 to 2^24 that eliminates ~75% of quantization overhead caused by minimum-probability floors in large vocabularies; (2) a token-level N-gram model for fast local predictions; (3) an adaptive log-space bias head correcting per-document LLM errors via online gradient descent; (4) confidence-based LLM skip for accelerating highly predictable tokens; (5) a hybrid binary format (NC06) extending neural compression to arbitrary binary files--to our knowledge a first among LLM-based compressors; (6) a llama cpp inference backend achieving ~7x faster single-token decode than PyTorch; (7) parallel multi-GPU compression across up to 8 workers; and (8) native KV cache sliding window reducing per-slide cost by ~37x. The system requires only ~500 MB of GGUF weights and ~1.2 GB VRAM per worker, running on consumer GPUs.
+  On alice29 (Canterbury Corpus, 152 KB), Nacrith achieves 0.918 bits per byte (bpb)--outperforming gzip by 3.1x, bzip2 by 2.5x, CMIX v21 by 44%, and ts_zip by 20%, while compressing below the 0th-, 1st-, and 2nd-order byte-level Shannon entropy bounds. On enwik8 (100 MB), Nacrith achieves 0.9389 bpb (11.74%), surpassing ts_zip (~1.11 bpb) by 15% and FineZip (1.024 bpb) by 8% despite using a 60x smaller model with no fine-tuning. An out-of-distribution (OOD) evaluation on a document published after the model's training cutoff confirms these gains are not memorization artifacts, achieving 0.723 bpb on unseen text.</summary>
+    <category term="cs.IT" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-02-23T09:14:05Z</published>
+    <arxiv:comment>10 pages</arxiv:comment>
+    <arxiv:primary_category term="cs.IT"/>
+    <author>
+      <name>Roberto Tacconelli</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2604.12196v2</id>
+    <title>Efficient Best-Of-N with Radial Consensus Score</title>
+    <updated>2026-10-21T22:40:59Z</updated>
+    <link href="https://arxiv.org/abs/2604.12196v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2604.12196v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Solving complex problems with large language models (LLMs) often requires selecting the best answer from multiple candidate responses (best-of-$N$), yet identifying the most reliable one remains challenging, particularly when correctness does not align with majority agreement. Existing approaches based on voting or probability scoring rely on surface-level signals (e.g., frequency or token-level likelihood), often missing high-quality rare answers and ignoring the geometric structure of candidate representations, where correctness may emerge as semantic consistency rather than surface agreement. To address these limitations, we introduce Radial Consensus Score (RCS), a simple, efficient, and training-free method for best-of-$N$ selection. RCS models semantic consensus by computing a weighted Frechet mean (semantic center) of answer embeddings and ranking candidates by their radial distance to this center. This enables it to recover semantically coherent correct answers despite lexical fragmentation, even when no single surface form holds a plurality under exact-match voting. Importantly, RCS offers a flexible framework that supports multiple weighting schemes, enabling the integration of arbitrary signals, such as semantic agreement or model confidence, with the position of the center adapting accordingly. Extensive experiments across five open-weight models and various benchmarks demonstrate that RCS matches or outperforms strong baselines at every sampling budget, with the largest gains when correct answers are lexically fragmented. Moreover, RCS serves as an effective drop-in replacement for majority voting in multi-agent debate and remains effective in black-box scenarios. These results suggest that geometric consensus can serve as a scalable and reliable alternative to voting-based methods for answer selection. Code is publicly available at https://github.com/manhitv/RCS.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-04-14T02:02:20Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Manh Nguyen</name>
+    </author>
+    <author>
+      <name>Sunil Gupta</name>
+    </author>
+    <author>
+      <name>Hung Le</name>
+    </author>
+  </entry>
+</feed>

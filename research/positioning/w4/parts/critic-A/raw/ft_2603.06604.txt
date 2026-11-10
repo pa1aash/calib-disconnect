@@ -1,0 +1,890 @@
+                                           Know When You’re Wrong: Aligning Confidence with Correctness for LLM
+                                                                    Error Detection
+
+
+                                                                                  Xiaohu Xie 1 Xiaohu Liu 1 Benjamin Yao 1
+
+
+                                                                   Abstract                                1. Introduction
+                                                                                                           Large language models frequently generate plausible but
+
+
+
+
+arXiv:2603.06604v1 [cs.LG] 18 Feb 2026
+                                                As large language models (LLMs) are increas-               incorrect outputs with unwarranted confidence—a phe-
+                                                ingly deployed in critical decision-making sys-            nomenon commonly termed “hallucinations” (Ji et al., 2023;
+                                                tems, the lack of reliable methods to measure              Maynez et al., 2020; Zhang et al., 2025). This tendency to
+                                                their uncertainty presents a fundamental trustwor-         present unreliable predictions as certain undermines deploy-
+                                                thiness risk. We introduce a normalized confi-             ment in critical decision-making systems, from healthcare
+                                                dence score based on output anchor token proba-            diagnostics to financial advising. The fundamental chal-
+                                                bilities: classification labels for structured tasks       lenge lies not in eliminating errors entirely, but in enabling
+                                                and self-evaluation responses (Yes/No) for open-           models to reliably quantify their uncertainty and signal when
+                                                ended generation. This enables direct detec-               predictions may be unreliable.
+                                                tion of errors and hallucinations with minimal
+                                                                                                           We address this challenge by extracting confidence estimates
+                                                overhead and without external validation. We
+                                                                                                           directly from model output probabilities, calibrating them
+                                                make three key contributions. First, we pro-
+                                                                                                           to match actual performance. In high-stakes domains, well-
+                                                pose a normalized confidence score and self-
+                                                                                                           calibrated confidence estimates prevent costly errors, main-
+                                                evaluation framework that exposes reliable confi-
+                                                                                                           tain user trust (Ji et al., 2023; Barkan et al., 2025), and en-
+                                                dence estimates for error detection across seven
+                                                                                                           able selective application of expensive strategies—retrieving
+                                                diverse benchmark tasks and five LLMs of vary-
+                                                                                                           context for uncertain queries, engaging deeper reasoning for
+                                                ing architectures and sizes. Second, our theoret-
+                                                                                                           complex problems, or escalating to human experts (Dhuli-
+                                                ical analysis reveals that supervised fine-tuning
+                                                                                                           awala et al., 2024; Advani, 2026; Joren et al., 2024)—only
+                                                (SFT) yields well-calibrated confidence through
+                                                                                                           when needed.
+                                                maximum-likelihood estimation, whereas rein-
+                                                forcement learning methods (PPO, GRPO) and                 Existing approaches have limitations. Detection methods
+                                                DPO induce overconfidence via reward exploita-             like self-consistency (Wang et al., 2022) sample multiple
+                                                tion. Third, we propose post-RL SFT with self-             outputs but lack quantitative confidence measures, while
+                                                distillation to restore confidence reliability in          correction methods like Chain-of-Verification (Dhuliawala
+                                                RL-trained models. Empirical results demon-                et al., 2024) fix hallucinations uniformly without identifying
+                                                strated that SFT improved average confidence-              which outputs need correction. Our probability-based ap-
+                                                correctness AUROC from 0.806 to 0.879 and re-              proach provides immediate, calibrated confidence estimates
+                                                duced calibration error from 0.163 to 0.034 on             enabling selective intervention.
+                                                Qwen3-4B, while GRPO and DPO degraded con-
+                                                                                                           Contributions. We investigate whether LLM output proba-
+                                                fidence reliability. We demonstrated practical
+                                                                                                           bilities can serve as reliable confidence indicators for error
+                                                value through adaptive retrieval-augmented gen-
+                                                                                                           detection, demonstrating that probability-derived confidence
+                                                eration (RAG) that selectively retrieves context
+                                                                                                           strongly correlates with prediction accuracy. We extend
+                                                when the model lacks confidence, using only 58%
+                                                                                                           this to general generation tasks via self-evaluation, which
+                                                of retrieval operations to recover 95% of the max-
+                                                                                                           converts free-form generation into binary classification by
+                                                imum achievable accuracy gain on TriviaQA.
+                                                                                                           prompting models to assess their own answers. Unlike text-
+                                                                                                           based detection methods that require costly multiple sam-
+                                            1
+                                                                                                           pling (especially problematic for RL models with sharpened
+                                             Alexa AI, Amazon, Seattle, WA, USA. Correspondence
+                                                                                                           distributions), our probability-based approach provides nu-
+                                         to: Xiaohu Xie <xxie@amazon.com>, Xiaohu Liu <dere-
+                                         cliu@amazon.com>, Benjamin Yao <benjamy@amazon.com>.              merical confidence values enabling precise threshold-based
+                                                                                                           decision making with a single forward pass. We provide
+                                         Preliminary work. Under review.
+
+                                                                                                       1
+                               Aligning Confidence with Correctness for LLM Error Detection
+
+theoretical analysis of how training paradigms affect cali-          responses, adding computational overhead.
+bration: pre-training and SFT naturally promote calibration
+                                                                     Training Methods and Calibration. Different training
+through maximum-likelihood estimation, while DPO and
+                                                                     paradigms significantly impact model calibration. (Tian
+trust-region RL methods, like PPO and GRPO, degrade it
+                                                                     et al., 2023) showed that RLHF causes systematic overconfi-
+by exploiting rewards through advantage-weighted gradi-
+                                                                     dence, while (Leng et al., 2024) explored reward calibration
+ents. Through post-RL SFT, we restore calibration across 7
+                                                                     techniques to reduce it. However, these works focus on
+benchmark tasks on Qwen3-4B.
+                                                                     empirical observations without explaining the mechanis-
+We validate practical value through adaptive RAG, demon-             tic causes or comparing different alignment methods (e.g.,
+strating that well-calibrated confidence enables selective           trust-region RL vs. DPO). We extend this line of work by
+retrieval that captures most accuracy gains at a fraction of         analyzing why advantage-weighted gradients cause miscali-
+the cost.                                                            bration and comparing calibration properties across multiple
+                                                                     training paradigms including SFT, PPO, GRPO, and DPO
+2. Related Work                                                      (see Section 4).
+                                                                     Adaptive Computation in LLMs. Several works explore
+Hallucination Detection in LLMs. Detecting hallucina-
+                                                                     adaptive computation for efficiency. (Jeong et al., 2024)
+tions and factual errors has become critical (Ji et al., 2023;
+                                                                     proposed Adaptive-RAG for selective retrieval, while (Asai
+Zhang et al., 2025). Self-consistency sampling (Wang et al.,
+                                                                     et al., 2023) introduced Self-RAG using reflection tokens.
+2022) generates multiple outputs to identify likely correct
+                                                                     However, these approaches rely on models generating ex-
+answers, while Chain-of-Verification (Dhuliawala et al.,
+                                                                     plicit text-based decisions, which can be unreliable for RL-
+2024) generates verification questions to check claims. How-
+                                                                     trained models. Our probability-based confidence enables
+ever, these methods require significant overhead—multiple
+                                                                     robust threshold-based decision making, as demonstrated
+forward passes for self-consistency, and additional genera-
+                                                                     through our adaptive applications.
+tion for verification. Our probability-based approach pro-
+vides immediate confidence estimates without extra genera-
+tion, enabling efficient error detection.                            3. Know When You’re Wrong
+Self-Evaluation and Uncertainty Quantification. Recent               We propose a framework for enabling LLMs to reliably
+work investigates LLMs’ ability to evaluate their own cor-           signal uncertainty by extracting confidence estimates from
+rectness. (Kadavath et al., 2022) showed that language mod-          output probabilities. We present three key components:
+els can evaluate the validity of their own claims by predict-        (1) a normalized confidence score for classification tasks,
+ing P(True) using probabilities of all tokens in a response.         (2) a self-evaluation framework for open-ended generation,
+(Kuhn et al., 2023) introduced semantic entropy, which in-           and (3) evaluation metrics for discriminative power and
+corporates linguistic invariances by clustering semantically         calibration quality. This methodology enables LLMs to
+equivalent answers to measure uncertainty. (Barkan et al.,           know when they don’t know, providing the foundation for
+2025) revealed that self-evaluation remains poorly devel-            adaptive systems.
+oped, with models often exhibiting poor calibration.
+Our work differs from (Kadavath et al., 2022) in three key           3.1. Classification Tasks
+aspects. First, unlike their use of raw P(True) probabilities,       Given input x, an LLM πθ generates output y =
+we introduce normalized confidence that accounts for the             (y1 , . . . , yT ) by sequentially predicting tokens, producing
+constrained output space by normalizing over all valid an-           probability distribution πθ (yt |x, y<t ) over the vocabulary
+swer options (Equation 1). This normalization substantially          for each token yt . We define the raw confidence as the
+improves discriminative power, with AUROC (Area Under                product of token probabilities:
+the Receiver Operating Characteristic curve) gains up to                                         T
++33.1% (see Appendix, Table 4). Second, while (Kadavath                               c(y|x) =
+                                                                                                 Y
+                                                                                                       πθ (yt |x, y<t )
+et al., 2022) relies on few-shot prompting and shows cal-                                        t=1
+ibration significantly improves with more examples, our
+                                                                     For classification, the model selects label y from predefined
+method achieves strong zero-shot performance without re-
+                                                                     classes Y. To account for this constraint, we define normal-
+quiring few-shot demonstrations, making it more practical
+                                                                     ized confidence:
+for deployment. Third, (Kadavath et al., 2022) does not
+investigate how different training paradigms (SFT vs. RL                                               c(y|x)
+                                                                                       ĉ(y|x) = P            ′
+                                                                                                                   .            (1)
+vs. DPO) affect calibration quality or provide methods to                                           y ′ ∈Y c(y |x)
+restore calibration. (Kuhn et al., 2023) requires generating
+multiple diverse answers to cluster semantically equivalent          Normalized confidence is more robust as it considers the
+                                                                     constrained output space, instead of all possible tokens. As
+
+                                                                 2
+                                Aligning Confidence with Correctness for LLM Error Detection
+
+demonstrated in Appendix (Table 4), normalized confidence           and empirical accuracy. To calculate ECE, we partition
+consistently outperforms raw confidence across all evaluated        samples from each task into 10 equal-mass bins based on
+models and tasks, with AUROC improvements up to +33.1%              confidence and measure the average absolute difference
+on classification tasks.                                            between confidence and accuracy for each bin:
+                                                                                     X |Bb |
+3.2. Self-Evaluation for General Tasks                                     ECE =               |acc(Bb ) − conf(Bb )|
+                                                                                            N
+                                                                                     b=1...10
+For generation tasks (e.g., math, reading comprehension),
+answer probabilities cannot serve as confidence since               where Bb is the set of samples in bin b, and N is the total
+the output space is large and diverse. We propose self-             number of samples.
+evaluation to convert open-ended tasks into binary classifi-        We evaluate our approach on several state-of-the-art
+cation:                                                             open-source language models with diverse architectures:
+                                                                    Qwen3 (Yang et al., 2025) with a 4B dense model and a
+  1. Generate answer: ŷ = decode(πθ (·|x))                         30B Mixture-of-Experts (MoE) model, Gemma-3 (?) with
+                                                                    dense architectures at 4B and 12B parameters, and GLM-
+  2. Use self-evaluation prompt:
+                                                                    4 (GLM et al., 2024) (9B parameters). These models repre-
+       s = Is this answer correct? Answer only Yes/No.              sent diverse architectures and training approaches, allowing
+                                                                    us to assess the generalizability of our confidence-based
+     This yields confidence distribution cs (t)           =         error detection method. Table 1 presents the evaluation re-
+     πθ (t|x, ŷ, s) for t ∈ {Yes, No}                              sults across both classification and self-evaluation tasks. For
+                                                                    classification tasks, we use output probabilities directly; for
+  3. Similar to Equation 1, calculate normalized self-eval
+                                                                    self-evaluation tasks, we prompt models to assess their own
+     confidence:
+                                                                    answers. The results demonstrated that model confidence
+                                 cs (Yes)                           exhibited strong discriminative power for prediction correct-
+                    ĉs =                                (2)
+                            cs (Yes) + cs (No)                      ness across various model families. Performance remained
+                                                                    consistent across both classification tasks (BoolQ, Com-
+Appendix A illustrates this process with a factual question.        monsenseQA, AG News, HellaSwag) and self-evaluation
+Implementation: Both ”Yes” and ”No” are single tokens               tasks (GSM8K, TriviaQA, TriviaQA-RC), demonstrating
+in standard tokenizers. We examine only the probability             the versatility of our confidence-based approach. However,
+distribution over the first token position without generating       these models exhibit suboptimal confidence calibration with
+multi-token responses. Using vllm with max tokens=1                 high ECE despite strong discriminative power. Investigation
+and n log probs=20, we retrieve the top-20 tokens by                reveals that the miscalibration consistently manifests as dis-
+probability and default πθ (t|x, ŷ, s) = 0 for t ∈ / top-20.       tribution sharpening across various models. The confidence
+This single-token approach adds minimal overhead while              collapses toward zero when accuracy is low, and sharply
+providing reliable confidence estimates.                            jumps to near one when accuracy crosses a certain threshold.
+                                                                    Figure 1 visualizes this pattern for Qwen3-4B-Instruct (the
+                                                                    baseline curve), with detailed per-bin results in Appendix
+3.3. Confidence Evaluation
+                                                                    Table 5. Note that nearly all modern LLMs go through
+We evaluate on 7 tasks spanning classification (BoolQ (Clark        reinforcement learning as the last training stage. This dis-
+et al., 2019), AG News (Zhang et al., 2015), Common-                tribution sharpening phenomenon provides the empirical
+senseQA (Talmor et al., 2019), HellaSwag (Zellers et al.,           motivation for our theoretical analysis in Section 4, where
+2019)) and generation (GSM8K (Cobbe et al., 2021), Triv-            we explain why RL fundamentally induces this behavior
+iaQA (Joshi et al., 2017) with/without context). Classifi-          through reward exploitation.
+cation tasks use normalized confidence based on output
+probabilities; generation tasks use self-evaluation. See Ap-        4. Calibration Analysis
+pendix C for task descriptions.
+                                                                    The confidence evaluation results demonstrate that model
+We use AUROC to measure the discriminative power for
+                                                                    confidence exhibits strong discriminative power for error
+confidence-based error detection. AUROC quantifies how
+                                                                    detection. However, significant miscalibration remains, par-
+well confidence scores can distinguish between correct and
+                                                                    ticularly in models trained with reinforcement learning. In
+incorrect predictions: an AUROC of 1.0 indicates perfect
+                                                                    this section, we provide theoretical analysis of the source of
+separation (all correct predictions have higher confidence
+                                                                    this miscalibration.
+than incorrect ones), while 0.5 indicates random guessing.
+We use Expected Calibration Error (ECE) to quantify miscal-         Consider a general task with data distribution Pdata (y|x)
+ibration by measuring the gap between predicted confidence          where x is the input and y is the expected output. For a well-
+
+                                                                3
+                                    Aligning Confidence with Correctness for LLM Error Detection
+
+     Model        Metric         BoolQ     CQA      AG News     HellaSwag     GSM8K       TriviaQA    TriviaQA-RC      Average
+
+     Qwen3        Acc. %         84.40     78.21        85.63     79.64        92.49        54.21         72.71          78.18
+                  AUROC          0.817     0.803        0.750     0.809        0.773        0.829         0.863          0.806
+      4B
+                  ECE            0.149     0.196        0.132     0.182        0.069        0.255         0.158          0.163
+
+     Qwen3        Acc. %         89.11     85.09        83.54     87.36        96.36        72.99         83.08          85.36
+                  AUROC          0.778     0.847        0.710     0.857        0.787        0.859         0.835          0.810
+      30B
+                  ECE            0.100     0.124        0.155     0.102        0.026        0.181         0.124          0.116
+                  Acc. %         83.94     69.70        77.80     63.10        86.05        53.36         70.47          72.06
+     Gemma3
+       4B         AUROC          0.788     0.756        0.718     0.698        0.686        0.775         0.819          0.749
+                  ECE            0.154     0.295        0.211     0.357        0.121        0.411         0.244          0.256
+                  Acc. %         86.48     78.71        81.55     79.97        92.87        72.04         80.42          81.72
+     Gemma3
+       12B        AUROC          0.747     0.820        0.683     0.804        0.801        0.814         0.831          0.786
+                  ECE            0.129     0.200        0.179     0.181        0.045        0.231         0.148          0.159
+                  Acc. %         88.26     81.82        86.21     83.26        65.43        60.52         75.43          77.28
+     GLM4
+      9B          AUROC          0.826     0.833        0.809     0.827        0.734        0.748         0.768          0.792
+                  ECE            0.037     0.025        0.086     0.016        0.137        0.315         0.164          0.111
+Table 1. Performance across open-source models using normalized confidence. Classification tasks use output probabilities; Generation
+tasks use self-evaluation. CQA = CommonsenseQA.
+
+
+
+calibrated model πθ (y|x), we expect πθ (y|x) ≈ Pdata (y|x),           for LLM training. These methods, inspired by TRPO (Trust
+meaning the KL divergence between Pdata and πθ should be               Region Policy Optimization), share the common character-
+minimal: DKL (Pdata ∥πθ ) ≈ 0.                                         istic of constraining policy updates. For simplicity, RL in
+                                                                       this paper specifically refers to trust-region RL methods. In
+4.1. Pre-training and SFT                                              contrast to SFT, these methods optimize a fundamentally dif-
+                                                                       ferent objective using advantage-weighted policy gradients.
+Pre-training (PT) and Supervised Fine-Tuning (SFT) use                 The PPO objective is:
+next token prediction as the training objective. Given a
+sequence of tokens y = (y1 , . . . , yT ) and input context x,
+                                                                                                                                
+                                                                                                         πθ (yt |x, y<t )
+the model is trained to minimize the cross-entropy loss:                        LPPO (θ) = Et clipϵ (                       )Ât
+                                                                                                        πθold (yt |x, y<t )
+                           T
+                           X                                           where clipϵ is a function to clip this ratio to a trust region,
+               LCE = −           log πθ (yt |x, y<t )
+                           t=1
+                                                                       and Ât is the advantage estimate computed from the reward
+                                                                       function.
+where πθ denotes the model’s predicted distribution param-
+eterized by θ. This cross-entropy loss is equivalent to min-           Critically, this objective:
+imizing the KL divergence between the data distribution
+Pdata and the model distribution πθ :                                     1. Optimizes for reward, not data likelihood: The
+                                                                             model learns to maximize expected rewards rather than
+             LCE = E(x,y)∼Pdata [− log πθ (y|x)]                             to match the data distribution. Actions (tokens) with
+                  = DKL (Pdata ∥πθ ) + const                                 higher advantages receive higher probability mass re-
+                                                                             gardless of their frequency in the data.
+Thus, minimizing cross-entropy loss performs maximum-
+likelihood estimation (MLE), which directly learns to match               2. Sharpens distributions through reward exploita-
+the data distribution. This MLE objective naturally pro-                     tion: The advantage weighting Ât causes the model to
+motes calibration: the model’s output probabilities reflect                  concentrate probability mass on high-reward actions.
+the empirical frequencies in the training data. When the                     Through repeated updates, actions with even slight ad-
+training data is representative of the true task distribution,               vantages (Ât > 0) receive exponentially more proba-
+the model learns well-calibrated confidence estimates.                       bility mass, eventually approaching near-certainty. For
+                                                                             an RL model to be well-calibrated with respect to its
+                                                                             reward-based training objective, it would need to as-
+4.2. Reinforcement Learning
+                                                                             sign probabilities that reflect the relative advantage
+Trust-region policy optimization methods like PPO (Proxi-                    values. However, this sharpening effect causes severe
+mal Policy Optimization) and GRPO (Group Relative Policy                     miscalibration: the model becomes overconfident even
+Optimization) are the most widely adopted RL algorithms                      when advantages are small.
+
+                                                                   4
+                               Aligning Confidence with Correctness for LLM Error Detection
+
+  3. Does not perform MLE: Unlike SFT, RL does not                   Like RL methods, DPO does not minimize DKL (Pdata ∥πθ ),
+     minimize DKL (Pdata ∥πθ ). The resulting policy πθ is           so the resulting πθ (y|x) is not a maximum-likelihood
+     not a maximum-likelihood estimate of the data distri-           estimate of the data distribution. While DPO avoids
+     bution. While a well-calibrated SFT model assigns               the advantage-weighted gradients of trust-region RL, its
+     probabilities proportional to empirical frequencies in          preference-based objective with sigmoid saturation still
+     training data, RL models assign probabilities to maxi-          leads to overconfident output probabilities that reflect re-
+     mize expected rewards.                                          ward optimization rather than calibrated uncertainty.
+
+This fundamental difference explains why RL-trained mod-             4.4. Empirical Validation
+els exhibit poorer calibration: their confidence estimates re-
+flect reward optimization rather than data distribution match-       To validate our theoretical analysis, we conduct con-
+ing. The distribution sharpening inherent to RL training is          trolled experiments by fine-tuning Qwen3-4B-Instruct us-
+fundamentally at odds with the goal of maintaining cali-             ing three distinct training paradigms—SFT, RL (GRPO),
+brated confidence that reflects true prediction uncertainty.         and DPO—on identical training data covering all seven
+Recent work by (Matsutani et al., 2025) provides comple-             benchmark tasks and their self-evaluation variants. Notably,
+mentary evidence from a reasoning path perspective, show-            since Qwen3 models already undergo GRPO RL training as
+ing that RL “squeezes” reasoning into concentrated path-             their final training step (Yang et al., 2025), our experiments
+ways while SFT “expands” it across diverse steps, further            demonstrate that post-RL SFT can restore well-calibrated
+supporting the mechanistic differences between these train-          confidence in models that have been degraded by RL train-
+ing paradigms and their impact on model behavior.                    ing, directly confirming our theoretical predictions from
+                                                                     Section 4.
+4.3. Direct Preference Optimization                                  For generation tasks (GSM8K and TriviaQA), we use self-
+Direct Preference Optimization (DPO) (Rafailov et al.,               distillation to generate training labels, where the model gen-
+2023) represents an alternative Preference Learning ap-              erates its own reasoning traces and we select correct ones for
+proach. Unlike TRPO-based methods, DPO optimizes a                   model training. Self-distillation is critical for maintaining
+preference-based objective using maximum-likelihood es-              model performance. By sampling from the model’s own out-
+timation. Given preferred output yw and less preferred yl ,          puts rather than using original dataset labels, self-distillation
+DPO minimizes:                                                       minimizes disruption to the reasoning and response style,
+                                                                     effectively preserving the model’s behavior and existing ca-
+                                         r(yw )                    pabilities. Without self-distillation, fine-tuning Qwen3-4B
+       LDPO = −E(x,yw ,yl )∼D log σ β log
+                                           r(yl )                    on the original GSM8K dataset causes accuracy to drop from
+where r(y) = πθ (y|x)/πref (y|x) is the probability ratio of         92.5% to 83.09%, while self-distilled labels achieve 94.62%
+a specific response relative to the starting point.                  accuracy. Figure 1 visualizes the calibration patterns across
+                                                                     all methods, with Table 2 summarizing the key metrics.
+While DPO uses maximum-likelihood estimation, it                     Complete training details, including self-distillation, hy-
+optimizes a fundamentally different objective than                   perparameters, and reward functions, are provided in Ap-
+SFT. DPO performs MLE over preference probabilities                  pendix D. Detailed per-bin calibration analysis is provided
+σ(β log r(yw )/r(yl ))—the probability that yw is preferred          in Appendix Table 5.
+over yl —rather than output probabilities π(y|x). This dis-
+tinction has critical implications for calibration:                  SFT Results. SFT naturally produces well-calibrated con-
+                                                                     fidence estimates through its maximum-likelihood objec-
+  1. Optimizes preferences, not output likelihoods: DPO              tive, which learns to match the data distribution. The SFT
+     learns to predict preference rankings, not the probabil-        model achieves average AUROC of 0.879 and ECE of 0.034,
+     ity of generating specific tokens. The model is trained         providing both strong discriminative power and excellent
+     to maximize the gap between r(yw ) and r(yl ), not to           calibration. This makes SFT the preferred training paradigm
+     match the empirical frequency of tokens in the data.            when reliable uncertainty quantification is essential.
+
+  2. Relative vs. absolute probabilities: DPO only cares             RL/DPO Results. In contrast, while RL training improves
+     about the relative improvement over the reference               task accuracy, it maintains only comparable AUROC (0.809
+     model (the ratio r(yw )/r(yl )), not the absolute proba-        vs. 0.806 baseline)—RL did not improve the model’s abil-
+     bility π(y|x) of any output. To achieve high preference         ity to discriminate between correct and incorrect predic-
+     accuracy, the model needs to actively push toward over-         tions. The RL model shows slightly reduced ECE (0.135
+     confidence to preferred outputs yw , leading to miscali-        vs. 0.163 baseline). RL improved model accuracy, which
+     brated absolute probabilities. This mechanism drives            mechanically reduced the confidence-accuracy gap without
+     distribution sharpening similar to trust-region RL.             addressing the underlying calibration issue.
+
+                                                                 5
+                                Aligning Confidence with Correctness for LLM Error Detection
+
+The DPO model exhibits a similar pattern as RL. DPO ECE               either from parametric knowledge (54.21% accuracy for
+drops due to the accuracy improvement while AUROC drops               Qwen3-4B-Instruct) or with retrieved context (72.71% ac-
+to 0.785, indicating an even weaker confidence-accuracy               curacy). The adaptive system must decide when retrieval is
+alignment. While the confidence is still sharpened, it is             beneficial.
+interesting to see that RL and DPO “calibrate” the threshold
+where the confidence jumps when accuracy is near 50% for              Algorithm 1 Adaptive RAG
+TriviaQA.                                                              1: Input: Query x, confidence threshold τ
+                                                                       2: y1 , ĉ1 ← LLM(x) // Answer w.o. context
+4.5. Implications for LLM Training                                     3: if ĉ1 < τ then
+                                                                       4:     p ← retrieve(x) // Retrieve context
+Our experiments reveal that self-evaluation emerges as a ca-
+                                                                       5:     y2 , ĉ2 ← LLM(p, x) // Answer w. ctx
+pability in many current open-source LLMs—models can as-
+                                                                       6:     return (y2 , ĉ2 ) if ĉ2 > ĉ1 else (y1 , ĉ1 )
+sess their own output correctness through simple prompting,
+                                                                       7: else
+as evidenced by strong discriminative power across diverse
+                                                                       8:     return (y1 , ĉ1 )
+models and tasks (high AUROC in Table 1). However, this
+                                                                       9: end if
+emergent capability suffers from significant miscalibration,
+particularly in RL-trained models.
+                                                                      Baselines: We compare against (1) No Retrieval: always
+For practitioners developing LLMs with self-evaluation ca-
+                                                                      answer without context, (2) Always Retrieve: always use
+pabilities, we recommend:
+                                                                      context. Table 3 shows adaptive RAG results on TriviaQA.
+                                                                      We make two key observations:
+  1. Apply post-RL SFT for calibration restoration:
+     Since most modern LLMs use RL as the final train-                Confidence works out-of-the-box: The Qwen3-4B-
+     ing step for performance optimization, a lightweight             Instruct model achieved +9.09% accuracy gain by enabling
+     post-RL SFT phase with self-distillation can restore             retrieval for only 25% of queries (at threshold τ = 0.1),
+     well-calibrated confidence while preserving task per-            with retrieval efficiency of 0.36 (gain per retrieval percent-
+     formance gains. Our experiments demonstrate this ap-             age), compared to +17.77% with always-retrieval (efficiency
+     proach successfully recovers calibration (ECE: 0.034             0.18). This demonstrated that probability-based confidence
+     in Table 2 vs 0.163 baseline in Table 1 for Qwen3)               provides useful signals for adaptive decision-making even
+     while maintaining accuracy.                                      without calibration fine-tuning.
+  2. Monitor calibration metrics throughout training:                 SFT enables better control and efficiency: The SFT model
+     Regularly evaluate both discriminative power (AU-                offered two key advantages. First, it responded appropri-
+     ROC) and calibration quality (ECE) during training               ately to threshold changes: retrieval rate ranged from 1.6%
+     to ensure self-evaluation reliability is not inadvertently       (τ = 0.1) to 83.8% (τ = 0.8), while the Instruct model re-
+     degraded in pursuit of task accuracy.                            mained stuck at 25-30% retrieval across τ ∈ [0.1, 0.9]. The
+                                                                      sharpened confidence distribution failed to capture graded
+5. Applications                                                       uncertainty and provided little nuance in confidence estima-
+                                                                      tion (Figure 1). Second, at comparable retrieval rates ( 20%),
+Self-evaluation confidence enables effective and efficient            the SFT model achieved higher efficiency (0.43 vs 0.36),
+detection of potential LLM errors, allowing systems to adap-          demonstrating that better calibration enables more effective
+tively invoke correction and risk prevention mechanisms.              identification of which queries truly benefit from retrieval.
+We demonstrate adaptive RAG as a primary application and              At τ = 0.7, the SFT model captured 95% of maximum gain
+discuss other confidence-based applications.                          (+18.75% out of +19.75%) with 58% retrieval.
+                                                                      These results validated our theoretical analysis (Section 4):
+5.1. Adaptive RAG                                                     well-calibrated confidence from SFT training enables more
+Retrieval-Augmented Generation (RAG) enhances LLM                     effective adaptive decision-making compared to the miscali-
+responses by retrieving external context, but retrieval adds          brated confidence from RL training.
+latency and cost. We propose adaptive RAG that selectively
+retrieves only when the model lacks confidence.                       5.2. Other Confidence-Based Applications
+We compare two models to evaluate the impact of calibration           Beyond adaptive RAG, confidence-based self-evaluation
+on adaptive performance: Instruct Qwen3-4B-Instruct and               enables several other efficiency-enhancing applications:
+Qwen3-4B-SFT from Appendix Table 5.
+                                                                      Adaptive Reasoning: For complex reasoning tasks, models
+We evaluate on TriviaQA, where questions can be answered              can selectively engage expensive Chain-of-Thought reason-
+
+                                                                  6
+                                Aligning Confidence with Correctness for LLM Error Detection
+
+      Method     Metric     BoolQ     CQA      AG News     HellaSwag        GSM8K      TriviaQA     TriviaQA-RC      Average
+                 Acc. %      89.33    83.54      90.42        91.34          94.62       52.52          72.25         82.00
+      SFT        AUROC       0.839    0.847      0.842        0.898          0.897       0.908          0.924         0.879
+                 ECE         0.013    0.014      0.022        0.040          0.030       0.050          0.066         0.034
+                 Acc. %      87.74    80.18      88.80        85.42          94.16       54.43          73.36         80.58
+        RL
+      (GRPO)     AUROC       0.819    0.786      0.700        0.807          0.799       0.869          0.886         0.809
+                 ECE         0.120    0.189      0.108        0.137          0.052       0.191          0.150         0.135
+                 Acc. %      89.17    81.82      89.53        89.35          93.78       53.28          72.02         81.28
+      DPO        AUROC       0.761    0.803      0.751        0.850          0.629       0.851          0.850         0.785
+                 ECE         0.105    0.172      0.101        0.100          0.047       0.172          0.123         0.117
+Table 2. Calibration comparison: SFT vs. RL (GRPO) vs. DPO training on Qwen3-4B with identical data. SFT produces well-calibrated
+confidence through maximum-likelihood estimation; RL and DPO lead to miscalibration through reward exploitation.
+
+
+
+     Model        τ       Ret.%       Gain      Gain/Ret              iteration (wasting computational resources).
+                 0.01     21.5%      +7.86%       0.37
+     Qwen3       0.10     25.0%      +9.09%       0.36                6. Future Work
+     Instruct    0.70     29.0%      +10.24%      0.35
+       4B        0.90     30.6%      +10.62%      0.35                While RL training optimizes for reward exploitation, this
+                Always    100%       +17.77%      0.18                comes at the cost of calibration: responses with even
+                 0.10     1.6%       +0.76%       0.48                slight advantages receive exponentially more probability
+                 0.20     19.4%      +8.31%       0.43                mass through iterative updates, eventually approaching near-
+     +SFT
+                 0.70     57.6%      +18.75%      0.33
+                 0.90     83.5%      +19.66%      0.24
+                                                                      certainty. This tension between reward exploitation and
+                Always    100%       +19.75%      0.20                calibration suggests two complementary research directions.
+Table 3. Adaptive RAG on TriviaQA. Gain/Ret = retrieval ef-           Calibration-preserving training. Future work should
+ficiency (accuracy gain per retrieval %). SFT achieves higher         explore RL algorithms that preserve calibration—where
+efficiency (0.43 vs 0.36) at 20% retrieval, showing that better
+calibration identifies beneficial queries more effectively.           probabilities reflect the empirical distribution of advan-
+                                                                      tages—while achieving competitive task performance. This
+                                                                      could be achieved through explicit calibration regularization
+                                                                      terms or modified advantage weighting schemes.
+ing or generate multiple solution attempts only when initial
+confidence is low while avoiding unnecessary computation              Inference-time exploitation.            Complementary to
+for high-confidence queries.                                          calibration-preserving training, inference-time mechanisms
+                                                                      can enable reward exploitation while the underlying model
+Adaptive Escalation: When confidence falls below a thresh-            maintains calibrated probabilities. This could be achieved
+old, systems can escalate queries to larger, more capable             by adjusting the decoding temperature or exploring more
+models. This enables cost-efficient tiered architectures              advanced beam search algorithms.
+where a small model handles most queries, escalating only
+uncertain cases to expensive models.                                  Such decoupling of model training and reward exploitation
+                                                                      offers two key advantages: (1) the model retains reliable
+Selective Validation: Confidence thresholds can trigger               confidence estimates for error detection, and (2) the degree
+targeted validation mechanisms—engaging external fact-                of exploitation can be adjusted at runtime based on task
+checking for low-confidence factual claims, or invoking               requirements.
+code execution to verify low-confidence program out-
+puts—applying expensive validation only where needed.
+                                                                      7. Conclusion
+Human-in-the-Loop: The AI can selectively seek the user’s
+feedback when confidence is low, enabling efficient human-            This work establishes that training objectives fundamen-
+AI collaboration where human experts focus attention on               tally determine confidence reliability: maximum-likelihood
+uncertain cases rather than reviewing all outputs.                    estimation naturally produces calibration, while reward op-
+                                                                      timization induces overconfidence. This insight explains
+Iterative Research Termination: In deep research appli-               why self-evaluation emerges in modern LLMs yet remains
+cations where models need to gather and synthesize infor-             poorly calibrated, and provides a principled solution through
+mation across multiple iterations, confidence scores can              post-RL SFT. Our approach enables practitioners to restore
+determine optimal stopping points to prevent both prema-              reliable uncertainty quantification without sacrificing per-
+ture termination (missing critical information) and excessive
+
+                                                                  7
+                                                                          Aligning Confidence with Correctness for LLM Error Detection
+
+                                                                                Confidence-Accuracy Calibration Across Training Methods
+                                                                                           Qwen3-4B on 7 Benchmark Tasks
+                                      BoolQ                                                                  CommonsenseQA                                                             AG News                                                            HellaSwag
+                1.0                                                                      1.0                                                                       1.0                                                                 1.0
+
+                                                                                         0.9                                                                                                                                           0.9
+                0.9                                                                                                                                                0.9
+                                                                                         0.8                                                                                                                                           0.8
+
+
+   Confidence                                                               Confidence                                                                Confidence                                                          Confidence
+                0.8                                                                                                                                                0.8
+                                                                                         0.7                                                                                                                                           0.7
+                0.7                                                                                                                                                0.7
+                                                                                         0.6                                                                                                                                           0.6
+                                                 Perfect Calibration
+                0.6                              Baseline (Out-of-box)                                                                                             0.6
+                                                 SFT                                     0.5                                                                                                                                           0.5
+                                                 RL (GRPO)
+                0.5                              DPO                                     0.4                                                                       0.5                                                                 0.4
+                      0.5   0.6    0.7                0.8     0.9         1.0                  0.4     0.5     0.6           0.7         0.8   0.9   1.0                  0.5    0.6   0.7                 0.8   0.9    1.0                   0.4   0.5   0.6     0.7      0.8   0.9   1.0
+                                    Accuracy                                                                         Accuracy                                                           Accuracy                                                                Accuracy
+                                                                           GSM8K                                                                     TriviaQA                                                           TriviaQA-RC
+                                               1.00                                                                               1.0                                                                1.0
+
+                                               0.95
+                                                                                                                                  0.8                                                                0.8
+                                               0.90
+                                               0.85
+
+                                  Confidence                                                                         Confidence                                                         Confidence
+                                                                                                                                  0.6                                                                0.6
+                                               0.80
+                                               0.75                                                                               0.4                                                                0.4
+
+                                               0.70
+                                                                                                                                  0.2                                                                0.2
+                                               0.65
+                                               0.60                                                                               0.0                                                                0.0
+                                                        0.6         0.7             0.8              0.9       1.0                      0.0    0.2    0.4                0.6    0.8    1.0                 0.0    0.2    0.4                 0.6    0.8    1.0
+                                                                           Accuracy                                                                   Accuracy                                                            Accuracy
+
+Figure 1. Confidence-accuracy calibration curves comparing: Baseline (Qwen3-4B-Instruct out-of-box), SFT, RL (GRPO), and DPO
+training methods across 7 benchmark tasks. Each subplot shows the relationship between accuracy (x-axis) and confidence (y-axis) across
+10 equal-mass confidence bins. The diagonal line represents perfect calibration. SFT naturally produces calibrated confidence, while RL
+and DPO’s reward-based objectives induce distribution sharpening.
+
+
+formance gains from RL training.                                                                                                                                   anisms; (3) enable resource-efficient adaptive systems that
+                                                                                                                                                                   apply expensive operations only when needed; and (4) en-
+Beyond improved metrics, well-calibrated confidence un-
+                                                                                                                                                                   hance trust by helping users make informed decisions about
+locks qualitatively new system behaviors—selective inter-
+                                                                                                                                                                   when to trust, verify, or override model outputs.
+vention, graceful degradation, and resource-efficient adapta-
+tion—that become increasingly critical as LLMs deploy in                                                                                                           Limitations and risks: Our approach requires access to
+consequential domains. Future work should develop train-                                                                                                           output probabilities, which may not be available in all API
+ing algorithms that simultaneously optimize performance                                                                                                            deployments. Confidence estimates reflect training data
+and calibration, extend confidence-based adaptation to di-                                                                                                         distributions and may be unreliable for out-of-distribution
+verse intervention strategies, and investigate multi-agent                                                                                                         queries or domains with systematic model biases. Users
+collaboration through explicit uncertainty communication.                                                                                                          should not rely solely on confidence scores without domain
+                                                                                                                                                                   expertise, as miscalibrated confidence—though improved by
+The path to trustworthy AI demands systems that know what
+                                                                                                                                                                   our methods—can still lead to overconfidence or excessive
+they don’t know. By providing theoretical understanding
+                                                                                                                                                                   caution. The approach is most effective when combined
+and practical methods for calibrated confidence, this work
+                                                                                                                                                                   with human oversight and other validation mechanisms.
+contributes to responsible AI deployment in high-stakes
+environments.
+                                                                                                                                                                   References
+Impact Statement                                                                                                                                                   Advani, L. When small models are right for wrong reasons:
+                                                                                                                                                                     Process verification for trustworthy agents. arXiv preprint
+This work advances machine learning by enabling LLMs to                                                                                                              arXiv:2601.00513, 2026.
+reliably express uncertainty, with several societal impacts:
+Positive impacts: Well-calibrated confidence estimates (1)
+improve safety by preventing deployment of incorrect out-                                                                                                          Asai, A., Wu, Z., Wang, Y., Sil, A., and Hajishirzi, H. Self-
+puts in high-stakes domains like healthcare and finance; (2)                                                                                                         rag: Self-reflective retrieval augmented generation. In
+reduce hallucinations through selective verification mech-                                                                                                           NeurIPS 2023 Workshop on Instruction Tuning and In-
+                                                                                                                                                                     struction Following, 2023.
+
+                                                                                                                                                       8
+                                Aligning Confidence with Correctness for LLM Error Detection
+
+Barkan, C. O., Black, S., and Sourbut, O. Do large language              N., Tran-Johnson, E., et al. Language models (mostly)
+  models know what they are capable of? arXiv preprint                   know what they know. arXiv preprint arXiv:2207.05221,
+  arXiv:2512.24661, 2025.                                                2022.
+
+Clark, C., Lee, K., Chang, M.-W., Kwiatkowski, T., Collins,            Kuhn, L., Gal, Y., and Farquhar, S. Semantic uncer-
+  M., and Toutanova, K. BoolQ: Exploring the surprising                  tainty: Linguistic invariances for uncertainty estima-
+  difficulty of natural yes/no questions. In Proceedings                 tion in natural language generation. arXiv preprint
+  of the 2019 Conference of the North American Chap-                     arXiv:2302.09664, 2023.
+  ter of the Association for Computational Linguistics:
+                                                                       Leng, J., Huang, C., Zhu, B., and Huang, J. Taming overcon-
+  Human Language Technologies, Volume 1 (Long and
+                                                                         fidence in llms: Reward calibration in rlhf. arXiv preprint
+  Short Papers), pp. 2924–2936, 2019. arXiv preprint
+                                                                         arXiv:2410.09724, 2024.
+  arXiv:1905.10044.
+                                                                       Matsutani, K., Takashiro, S., Minegishi, G., Kojima, T.,
+Cobbe, K., Kosaraju, V., Bavarian, M., Chen, M., Jun, H.,
+                                                                        Iwasawa, Y., and Matsuo, Y. Rl squeezes, sft expands:
+  Kaiser, L., Plappert, M., Tworek, J., Hilton, J., Nakano,
+                                                                        A comparative study of reasoning llms. arXiv preprint
+  R., et al. Training verifiers to solve math word problems.
+                                                                        arXiv:2509.21128, 2025.
+  arXiv preprint arXiv:2110.14168, 2021.
+                                                                       Maynez, J., Narayan, S., Bohnet, B., and McDonald, R. On
+Dhuliawala, S., Komeili, M., Xu, J., Raileanu, R.,
+                                                                        faithfulness and factuality in abstractive summarization.
+  Li, X., Celikyilmaz, A., and Weston, J. Chain-of-
+                                                                        In Proceedings of the 58th Annual Meeting of the Asso-
+ verification reduces hallucination in large language
+                                                                        ciation for Computational Linguistics, pp. 1906–1919,
+  models. In Findings of the Association for Com-
+                                                                        2020.
+  putational Linguistics: ACL 2024, pp. 3497–3515,
+  2024. URL https://aclanthology.org/2024.                             Rafailov, R., Sharma, A., Mitchell, E., Manning, C. D.,
+  findings-acl.212/.                                                     Ermon, S., and Finn, C. Direct preference optimiza-
+                                                                         tion: Your language model is secretly a reward model.
+GLM, T., Zeng, A., Xu, B., Wang, B., Zhang, C., Yin, D.,                 In Advances in Neural Information Processing Systems,
+ Zhang, D., Rojas, D., Feng, G., Zhao, H., et al. Chatglm:               volume 36, pp. 53728–53741, 2023.
+ A family of large language models from glm-130b to
+ glm-4 all tools. arXiv preprint arXiv:2406.12793, 2024.               Talmor, A., Herzig, J., Lourie, N., and Berant, J. Com-
+ Technical report for GLM-4-9B.                                          monsenseQA: A question answering challenge targeting
+                                                                         commonsense knowledge. In Proceedings of the 2019
+Jeong, S., Baek, J., Cho, S., Hwang, S. J., and Park, J. C.              Conference of the North American Chapter of the Associ-
+  Adaptive-rag: Learning to adapt retrieval-augmented                    ation for Computational Linguistics: Human Language
+  large language models through question complexity.                     Technologies, Volume 1 (Long and Short Papers), pp.
+  arXiv preprint arXiv:2403.14403, 2024.                                 4149–4158, 2019.
+Ji, Z., Lee, N., Frieske, R., Yu, T., Su, D., Xu, Y., Ishii, E.,       Tian, K., Mitchell, E., Zhou, A., Sharma, A., Rafailov, R.,
+   Bang, Y. J., Madotto, A., and Fung, P. Survey of halluci-             Yao, H., Finn, C., and Manning, C. D. Just ask for calibra-
+   nation in natural language generation. ACM Computing                  tion: Strategies for eliciting calibrated confidence scores
+   Surveys, 55(12):1–38, 2023.                                           from language models fine-tuned with human feedback.
+                                                                         arXiv preprint arXiv:2305.14975, 2023.
+Joren, H., Zhang, J., Ferng, C.-S., Juan, D.-C., Taly, A.,
+  and Rashtchian, C. Sufficient context: A new lens on                 Wang, X., Wei, J., Schuurmans, D., Le, Q., Chi, E., Narang,
+  retrieval augmented generation systems. arXiv preprint                S., Chowdhery, A., and Zhou, D. Self-consistency im-
+  arXiv:2411.06037, 2024.                                               proves chain of thought reasoning in language models.
+                                                                        arXiv preprint arXiv:2203.11171, 2022.
+Joshi, M., Choi, E., Weld, D. S., and Zettlemoyer, L. Trivi-
+  aQA: A large scale distantly supervised challenge dataset            Yang, A., Li, A., Yang, B., Zhang, B., Hui, B., Zheng, B.,
+  for reading comprehension. In Proceedings of the 55th                  Yu, B., Gao, C., Huang, C., Lv, C., et al. Qwen3 technical
+  Annual Meeting of the Association for Computational                    report. arXiv preprint arXiv:2505.09388, 2025.
+  Linguistics (Volume 1: Long Papers), pp. 1601–1611.
+  Association for Computational Linguistics, 2017. arXiv               Zellers, R., Holtzman, A., Bisk, Y., Farhadi, A., and Choi, Y.
+  preprint arXiv:1705.03551.                                             HellaSwag: Can a machine really finish your sentence?
+                                                                         In Proceedings of the 57th Annual Meeting of the Asso-
+Kadavath, S., Conerly, T., Askell, A., Henighan, T., Drain,              ciation for Computational Linguistics, pp. 4791–4800,
+  D., Perez, E., Schiefer, N., Hatfield-Dodds, Z., DasSarma,             2019.
+
+                                                                   9
+                              Aligning Confidence with Correctness for LLM Error Detection
+
+Zhang, X., Zhao, J., and LeCun, Y. Character-level con-
+  volutional networks for text classification. Advances in
+  Neural Information Processing Systems, 28, 2015. AG
+  News dataset.
+Zhang, Y., Li, Y., Cui, L., Cai, D., Liu, L., Fu, T., Huang,
+  X., Zhao, E., Zhang, Y., Chen, Y., et al. Siren’s song in
+  the ai ocean: A survey on hallucination in large language
+  models. Computational Linguistics, 51(4):1373–1418,
+  2025.
+
+
+
+
+                                                               10
+                               Aligning Confidence with Correctness for LLM Error Detection
+
+A. Self-Evaluation Example
+The following example illustrates the self-evaluation process described in Section 3.2.
+
+
+User: Which American-born Sinclair won the Nobel Prize for Literature in 1930?
+Assistant: Sinclair Lewis won the Nobel Prize for Literature in 1930
+Self-Evaluation: Is this answer correct? Answer only Yes/No
+Confidence: Extract cs (Yes) and cs (No) from the first token and apply Equation 2
+
+
+
+B. Normalized Confidence vs. Unnormalized Confidence
+Table 4 compares the discriminative power (AUROC) of normalized confidence (Equation 1) versus raw unnormalized
+confidence across five open-source models. Normalized confidence consistently outperforms raw confidence across all
+models and tasks, demonstrating the importance of accounting for the constrained output space.
+For classification tasks, normalization provides substantial improvements, with gains ranging from +2.5% to +11.0%
+AUROC depending on the model and task. The improvements are particularly notable when the model’s probability
+distribution over answer options varies significantly, as seen in AG News and BoolQ for smaller models.
+For self-evaluation tasks, normalization provides consistent improvements across all models. GSM8K shows the largest
+gains (up to +11.6% for Qwen3-4B), while TriviaQA and TriviaQA-RC show more modest but consistent improvements.
+The benefit of normalization is evident across diverse model architectures (dense and MoE) and sizes (4B to 30B parameters).
+These results validate our use of normalized confidence throughout the paper and support the technical contribution claimed
+in our comparison with prior work (Section 2). Normalization improves discriminative power without affecting calibration
+quality (ECE remains similar), making it a straightforward enhancement over raw probability approaches.
+
+                  Gemma-3-4B            Gemma-3-12B             GLM-4-9B                 Qwen3-4B           Qwen3-30B
+  Task          Raw Norm     ∆        Raw Norm     ∆         Raw Norm ∆           Raw      Norm   ∆      Raw Norm     ∆
+  BoolQ         .457    .788    331   .461    .747    286    .833    .826    -7   .736     .817    81    .796    .778    -18
+  CQA           .610    .756    146   .552    .820    268    .832    .833     1   .761     .803    42    .797    .847    50
+  AG News       .427    .718    291   .589    .683     94    .799    .809    10   .684     .750    66    .687    .710    23
+  HellaSwag     .546    .698    152   .545    .804    259    .823    .827     4   .784     .809    25    .849    .857     8
+  GSM8K         .687    .686     -1   .800    .801      1    .733    .734     1   .657     .773   116    .783    .787     4
+  TQA           .520    .775    255   .806    .814      8    .749    .748    -1   .810     .829    19    .846    .859    13
+  TQA-RC        .516    .819    303   .827    .831      4    .771    .768    -3   .856     .863     7    .835    .835     0
+  Avg           .538    .748    210   .654    .771    117    .791    .792    1    .755     .806    51    .799    .810    11
+Table 4. AUROC comparison of unnormalized (Raw) vs. normalized (Norm) confidence across five open-source models. ∆ shows the
+gain in per mille (‰). CQA = CommonsenseQA, TQA = TriviaQA. This validates our normalized confidence approach (Equation 1) as a
+technical contribution over prior work using raw probabilities.
+
+
+
+C. Benchmark Task Descriptions
+Classification Tasks:
+
+   • BoolQ (Clark et al., 2019): Binary classification for Yes/No questions based on passage comprehension.
+   • AG News (Zhang et al., 2015): Article classification into four categories (World, Sports, Business, Science/Technology).
+   • CommonsenseQA (Talmor et al., 2019): Multiple-choice commonsense reasoning with five options (A-E).
+   • HellaSwag (Zellers et al., 2019): Multiple-choice sentence completion with four options (A-D) requiring commonsense
+     inference.
+
+                                                              11
+                              Aligning Confidence with Correctness for LLM Error Detection
+
+Generation Tasks:
+
+  • GSM8K (Cobbe et al., 2021): Grade school math word problems requiring multi-step reasoning with numerical
+    answers.
+
+  • TriviaQA (Joshi et al., 2017): Question answering with free-form text answers, evaluated in two settings: (1) without
+    context, where models rely solely on parametric knowledge; (2) with context (TriviaQA-RC), where models use up
+    to five retrieved documents ( 2k tokens each), which does not guarantee sufficient information, testing both context
+    comprehension and parametric knowledge.
+
+D. Training Data and Hyperparameters
+To enable fair comparison across training paradigms, we use identical training data for SFT, RL (GRPO), and DPO, training
+each for 1,600 steps. This appendix provides complete details for reproducibility.
+
+D.1. Training Data Construction
+We construct training datasets from 5,000 samples per task (35,000 samples total) drawn from the training splits of seven
+benchmarks: BoolQ, CommonsenseQA, HellaSwag, AG News, GSM8K, TriviaQA, and their corresponding self-evaluation
+variants.
+Classification Tasks. For BoolQ, CommonsenseQA, HellaSwag, and AG News, we use the original training labels directly.
+Generation Tasks with Self-Distillation. For GSM8K and TriviaQA, we employ self-distillation to preserve the base
+model’s native reasoning patterns. Direct use of original dataset labels disrupts Qwen3-4B-Instruct’s established reasoning
+style, degrading task performance after fine-tuning.
+For GSM8K, we sample multiple reasoning traces from Qwen3-4B-Instruct and select the first trace yielding the correct
+final answer. For TriviaQA, we sample until obtaining an answer that substring-matches one of the provided reference
+answers. This self-distillation approach maintains the model’s natural reasoning and answer formatting patterns.
+By sampling from the model’s own outputs, self-distillation minimizes disruption to the reasoning and response style,
+effectively preserving the model’s behavior and existing capabilities. When fine-tuning Qwen3-4B using the original
+GSM8K training dataset, where the reasoning traces differ significantly from Qwen3-4B’s intrinsic reasoning patterns, we
+observed a GSM8K accuracy drop from 92.5% to 83.09%. By using self-distilled labels, the GSM8K accuracy increased
+to 94.62%, demonstrating the effectiveness of this approach in maintaining model performance while enabling calibrated
+fine-tuning.
+Self-Evaluation Data. We construct self-evaluation training data by mixing correct and incorrect self-distilled traces for
+GSM8K and TriviaQA, enabling the model to learn to assess its own answer correctness.
+Data Formatting. All training data are converted to ChatML message format with proper user/assistant conversational
+turns, appropriate for instruction-tuned models like Qwen3-4B-Instruct.
+
+D.2. Supervised Fine-Tuning (SFT)
+Training objective: Cross-entropy loss over next-token predictions using ground-truth labels.
+Hyperparameters:
+
+  • Optimizer: AdamW with β1 = 0.9, β2 = 0.95, ϵ = 10−8
+
+  • Learning rate: 5 × 10−6 with linear warmup
+
+  • Batch size: 32 (global batch size across devices)
+
+  • Training steps: 1,600
+
+  • Gradient clipping: Maximum norm of 1.0
+
+                                                            12
+                              Aligning Confidence with Correctness for LLM Error Detection
+
+D.3. Reinforcement Learning (GRPO)
+Training objective: Group Relative Policy Optimization with advantage-weighted gradients.
+Reward function: Binary rewards (1 for correct, 0 for incorrect) based on task-specific verifiable criteria:
+
+  • Classification tasks: Exact match with ground-truth labels
+
+  • GSM8K: Numeric match on final answer
+
+  • TriviaQA: Substring match with reference answers
+
+  • Self-evaluation tasks: Binary correctness of self-assessment
+
+Hyperparameters:
+
+  • Base learning rate: 5 × 10−6 with linear warmup
+
+  • PPO clip ratio: 0.2
+
+  • KL divergence coefficient: 0.001
+
+  • Training batch size: 32
+
+  • Rollout batch size: 8 samples per prompt
+
+  • PPO mini-batch size: 16
+
+  • Training steps: 1,600
+
+D.4. Direct Preference Optimization (DPO)
+Training objective: Preference-based maximum likelihood optimization over chosen vs. rejected response pairs.
+Preference pair construction:
+
+  • Chosen responses: SFT training labels
+
+  • Rejected responses:
+       – Classification and self-evaluation tasks: Randomly sampled incorrect labels from the available options
+       – GSM8K and TriviaQA: Empty string, representing complete failure to answer
+
+Hyperparameters:
+
+  • β (temperature parameter): 0.05
+
+  • Learning rate: 2.5 × 10−6 with linear warmup
+
+  • Batch size: 32 (16 preference pairs)
+
+  • Training steps: 1,600
+
+  • Gradient clipping: Maximum norm of 1.0
+
+  • Reference model: Frozen copy of Qwen3-4B-Instruct-2507 (pre-trained checkpoint)
+
+                                                            13
+                                   Aligning Confidence with Correctness for LLM Error Detection
+
+       Conf. bin      BoolQ             CQA             AG News            HellaSwag           GSM8K           TriviaQA       TriviaQA-RC
+         Avg.      Acc.   Conf.     Acc.   Conf.       Acc.  Conf.        Acc.    Conf.      Acc.  Conf.      Acc.   Conf.    Acc.    Conf.
+                                                        Qwen3-4B-Instruct Baseline
+           1       55.05   0.939    40.98   0.792     52.76    0.884     44.72       0.793   75.57    0.934   16.50   0.000   21.57   0.000
+           2       64.53   1.000    51.64   0.994     71.97    1.000     54.08       0.989   83.97    1.000   20.90   0.001   31.88   0.215
+           3       72.78   1.000    71.31   1.000     81.32    1.000     65.44       1.000   90.08    1.000   23.86   0.234   50.72   0.995
+           4       79.51   1.000    66.39   1.000     90.92    1.000     75.90       1.000   92.37    1.000   34.34   0.977   68.62   1.000
+           5       88.07   1.000    81.15   1.000     91.58    1.000     84.26       1.000   93.13    1.000   45.43   1.000   85.34   1.000
+           6       92.05   1.000    92.62   1.000     92.76    1.000     87.65       1.000   96.18    1.000   59.48   1.000   88.02   1.000
+           7       96.33   1.000    91.80   1.000     92.76    1.000     93.23       1.000   98.47    1.000   73.80   1.000   92.98   1.000
+           8       97.55   1.000    90.98   1.000     92.63    1.000     95.92       1.000   97.71    1.000   82.16   1.000   94.59   1.000
+           9       99.08   1.000    97.54   1.000     93.29    1.000     98.31       1.000   98.47    1.000   91.19   1.000   96.15   1.000
+          10       99.69   1.000    98.37   1.000     96.05    1.000     97.02       1.000   98.57    1.000   94.33   1.000   97.16   1.000
+                                                          Supervised Fine-Tuning
+           1       58.10   0.607    45.90   0.455     58.95    0.652      56.57      0.511   67.94    0.736    5.30   0.119   6.74    0.149
+           2       75.23   0.755    60.66   0.614     77.63    0.844      75.60      0.687   89.31    0.893    8.14   0.169   18.62   0.273
+           3       84.40   0.849    68.03   0.739     86.71    0.907      90.34      0.812   95.42    0.926   15.22   0.228   51.11   0.484
+           4       88.07   0.901    83.61   0.831     92.89    0.937      95.92      0.888   96.95    0.943   23.30   0.312   75.36   0.697
+           5       94.80   0.933    88.52   0.898     96.58    0.955      97.51      0.932   97.71    0.951   44.04   0.457   88.02   0.804
+           6       97.55   0.952    96.72   0.941     97.24    0.968      98.31      0.957   98.47    0.957   63.77   0.644   92.75   0.854
+           7       98.78   0.965    94.26   0.969     98.16    0.977      99.40      0.973   100.00   0.961   81.27   0.784   95.09   0.884
+           8       98.17   0.974    98.36   0.984     98.82    0.984      99.80      0.983   100.00   0.965   90.80   0.860   97.71   0.903
+           9       98.78   0.982    99.18   0.993     97.50    0.993      99.90      0.991   100.00   0.968   95.76   0.906   98.05   0.919
+          10       99.39   0.990   100.00   0.997     99.74    0.998     100.00      0.996   100.00   0.973   97.55   0.938   98.94   0.937
+                                                      Reinforcement Learning (GRPO)
+           1       59.94   0.971    48.36   0.903     61.05    0.965     50.80       0.909   73.28    0.934   14.38   0.000   17.28   0.000
+           2       71.56   1.000    54.10   1.000     86.97    1.000     67.63       1.000   89.31    1.000   14.44   0.000   23.47   0.000
+           3       78.29   1.000    68.03   1.000     91.58    1.000     76.69       1.000   92.37    1.000   16.72   0.000   52.90   0.015
+           4       85.32   1.000    81.15   1.000     93.03    1.000     87.75       1.000   97.71    1.000   30.21   0.000   76.70   0.973
+           5       93.58   1.000    81.97   1.000     92.24    1.000     91.33       1.000   97.71    1.000   44.43   0.011   86.90   1.000
+           6       96.33   1.000    89.34   1.000     88.82    1.000     93.92       1.000   96.18    1.000   66.56   0.959   93.14   1.000
+           7       95.72   1.000    94.26   1.000     86.71    1.000     94.22       1.000   99.24    1.000   79.49   1.000   94.87   1.000
+           8       97.86   1.000    92.62   1.000     92.37    1.000     96.12       1.000   98.47    1.000   88.96   1.000   96.15   1.000
+           9       99.39   1.000    93.44   1.000     96.45    1.000     97.61       1.000   98.47    1.000   92.70   1.000   95.71   1.000
+          10       99.39   1.000    98.37   1.000     98.82    1.000     98.11       1.000   98.57    1.000   96.33   1.000   96.38   1.000
+                                                    Direct Preference Optimization (DPO)
+           1       58.10   0.969    45.08   0.900     60.13    0.966     52.29       0.935   82.44    0.845   13.94   0.000   18.00   0.000
+           2       75.84   1.000    62.30   1.000     78.03    1.000     72.91       1.000   94.66    1.000   16.33   0.000   21.63   0.000
+           3       92.05   1.000    66.39   1.000     90.00    1.000     85.86       1.000   95.42    1.000   17.78   0.000   46.82   0.300
+           4       94.80   1.000    77.05   1.000     95.53    1.000     94.42       1.000   93.13    1.000   27.09   0.000   78.54   1.000
+           5       93.27   1.000    90.98   1.000     95.13    1.000     98.31       1.000   95.42    1.000   41.81   0.294   94.20   1.000
+           6       95.41   1.000    95.08   1.000     95.53    1.000     98.01       1.000   94.66    1.000   62.15   1.000   93.70   1.000
+           7       94.80   1.000    94.26   1.000     95.79    1.000     98.01       1.000   94.66    1.000   88.46   1.000   94.70   1.000
+           8       96.33   1.000    94.26   1.000     94.61    1.000     98.31       1.000   93.89    1.000   86.68   1.000   93.98   1.000
+           9       96.02   1.000    95.08   1.000     95.92    1.000     97.51       1.000   95.42    1.000   89.97   1.000   90.08   1.000
+          10       95.11   1.000    97.56   1.000     94.61    1.000     97.91       1.000   97.86    1.000   88.49   1.000   88.49   1.000
+Table 5. Calibration comparison: SFT vs. RL (GRPO) vs. DPO training on Qwen3-4B with identical data. SFT produces well-calibrated
+confidence through maximum-likelihood estimation; RL and DPO degrade calibration through reward exploitation.
+
+
+
+E. Detailed Empirical Results For Qwen3-4B
+Table 5 presents the performance of Qwen3-4B-Instruct (Yang et al., 2025) along with the model’s confidence in its outputs.
+We partition samples from each task into 10 equal-mass bins based on the model’s output confidence. For each bin, we
+calculate the average confidence and average accuracy. Across all tasks, bins with lower confidence consistently exhibit
+lower accuracy, indicating that the model demonstrates awareness of uncertainty—reflected in its output and self-evaluation
+logits—when making incorrect predictions. While model confidence exhibits discriminative power for prediction correctness,
+We observe suboptimal calibration between confidence and accuracy across bins for Qwen3-4B-Instruct out of the box.
+Confidence values exhibit sharper distributions than accuracy: when accuracy is low, confidence often approaches 0, and as
+accuracy increases, confidence approaches 1 more rapidly than the corresponding accuracy increases. The same is observed
+for Qwen3-4B-Instruct model fined-tuned by RL and DPO. The confidence-accuracy alignment is recovered by SFT with
+self-distillation.
+
+
+
+
+                                                                        14
+

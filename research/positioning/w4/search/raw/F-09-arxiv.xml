@@ -1,0 +1,202 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/8x63cAk+hfageqBV2aSle77agPU</id>
+  <title>arXiv Query: search_query=all:introspection AND all:language AND all:models AND all:report AND all:internal AND all:states&amp;id_list=&amp;start=0&amp;max_results=15</title>
+  <updated>2026-11-09T23:02:32Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=all:introspection+AND+(all:language+AND+(all:models+AND+(all:report+AND+(all:internal+AND+all:states))))&amp;start=0&amp;max_results=15&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>15</opensearch:itemsPerPage>
+  <opensearch:totalResults>9</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2601.01828v1</id>
+    <title>Emergent Introspective Awareness in Large Language Models</title>
+    <updated>2026-01-05T06:47:41Z</updated>
+    <link href="https://arxiv.org/abs/2601.01828v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2601.01828v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We investigate whether large language models can introspect on their internal states. It is difficult to answer this question through conversation alone, as genuine introspection cannot be distinguished from confabulations. Here, we address this challenge by injecting representations of known concepts into a model's activations, and measuring the influence of these manipulations on the model's self-reported states. We find that models can, in certain scenarios, notice the presence of injected concepts and accurately identify them. Models demonstrate some ability to recall prior internal representations and distinguish them from raw text inputs. Strikingly, we find that some models can use their ability to recall prior intentions in order to distinguish their own outputs from artificial prefills. In all these experiments, Claude Opus 4 and 4.1, the most capable models we tested, generally demonstrate the greatest introspective awareness; however, trends across models are complex and sensitive to post-training strategies. Finally, we explore whether models can explicitly control their internal representations, finding that models can modulate their activations when instructed or incentivized to "think about" a concept. Overall, our results indicate that current language models possess some functional introspective awareness of their own internal states. We stress that in today's models, this capacity is highly unreliable and context-dependent; however, it may continue to develop with further improvements to model capabilities.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-01-05T06:47:41Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Jack Lindsey</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.35108v1</id>
+    <title>A mechanistic study of language model introspection</title>
+    <updated>2026-09-28T13:13:10Z</updated>
+    <link href="https://arxiv.org/abs/2609.35108v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.35108v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) can sometimes report perturbations to their internal activations---even when the input provides no evidence that an intervention occurred. How do models detect and localize such internal changes? We study this question using a controlled task that keeps the input text fixed. We either inject a concept vector into the hidden state at one of ten token positions or apply no intervention. The model is asked to identify the perturbed position or report that no intervention occurred. Across three model families, we identify two small groups of attention heads with distinct roles in introspective reporting. Middle-layer gate heads influence whether the model reports a change, while router heads in a later layer help select the position to report. Interventions on gate heads can suppress position reports even when router heads supply location information. We further examine why reporting accuracy varies across concepts. Concept vectors that are localized more accurately produce stronger attention-score and output responses in gate heads, which is associated with better alignment of the induced key and value changes in their QK and OV computations. Together, these findings identify attention-head mechanisms supporting introspective detection and localization.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-28T13:13:10Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Jiahong Zou</name>
+    </author>
+    <author>
+      <name>Xiangkun Sun</name>
+    </author>
+    <author>
+      <name>Lingkai Kong</name>
+    </author>
+    <author>
+      <name>Tonghan Wang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.20569v1</id>
+    <title>Open-Weight Masked Introspection: Measuring What Language Models Can Report About Their Own Computation</title>
+    <updated>2026-08-20T21:09:50Z</updated>
+    <link href="https://arxiv.org/abs/2608.20569v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.20569v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Are frontier models able to introspect about their internal states? Recent work suggests that under certain conditions a complex enough model can audit its own internals, call out what changed, and report back confidently about it. We tested that claim on eight open-weight models from seven families and found no such ability: asked whether their own computation had been altered, none answered better than chance. To test it we built Open-Weight Masked Introspection (OWMI), a framework that intervenes on residual-stream sites, attention heads and sparse-autoencoder features, then interrogates the model about the change against the null conditions an answer has to beat: sham runs where nothing was altered, impact-matched random perturbations, and a text-only observer that sees only the visible output.
+  Over 78,000 measurements, no model's report discriminates a real intervention from a sham beyond chance (AUROC ~0.5007), and an equivalence test bounds the effect below 0.15 percentage points of AUROC. Surprisingly, all the information needed is in the models. A model fine-tuned to report this class of intervention reaches near-perfect recovery on held-out directions, and a linear probe recovers intervention presence from the same activations at 75% to 95.8% accuracy, sharpening to no held-out error at the last layer before the model speaks. In one model the signal surfaces in the confidence rather than the words: its yes-or-no report never varies, while the confidence attached to it separates intervention from sham at AUROC 0.647. The failure sits in the path from internal state to verbal report, so oversight that reads a model's own testimony needs validating against an internal reference.
+  While our results show the inability of current open-weight models to introspect, the debate is not settled for future models.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-20T21:09:50Z</published>
+    <arxiv:comment>We release OWMI as a library so that this emerging ability can be measured as it develops. Hugging Face OWMI library: https://huggingface.co/emilioferrara/owmi</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Emilio Ferrara</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2603.18893v3</id>
+    <title>Don't Ask: Understanding What Numeric Self-Reports Measure in Language Models</title>
+    <updated>2026-10-10T21:22:12Z</updated>
+    <link href="https://arxiv.org/abs/2603.18893v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2603.18893v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Language models are often asked to rate their internal states with a number, but it is unclear how reliable this measure is. We train probes for four affective concepts (wellbeing, interest, focus and impulsivity) in eight instruction-tuned models to track these states over multi-turn conversations. We compare each probe's score with a numeric self-report of the same state, elicited at every turn. We find that rating questions displace the probed state, and that the rating is only weakly coupled with the probe score before the question but tracks the post-question probe much more strongly. Steering experiments suggest that models use the affective directions to inform ratings, but that relationship is not specific: ratings are associated with other concepts' probes as much as with their own, and change little when the question is about the user. Finally, neither the pre-question coupling nor concept specificity improves with scale (1B-27B). We warn about the effect a question can have on the internal states one is asking about, and caution against numeric self-report as a reliable measure of those states.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-03-19T13:33:27Z</published>
+    <arxiv:comment>41 pages, 30 figures, 18 tables. Replaces the preprint "Quantitative Introspection in Language Models: Tracking Emotive States Across Conversation" with an extended, revised study: new title; 8 models (previously 1 in depth, 4 in less detail); 100 conversations (40 previous, 60 new); probe readouts before and after the rating question (previously only after); new controls; revised conclusions</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Nicolas Martorell</name>
+    </author>
+    <author>
+      <name>Bruno Bianchi</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2410.13787v1</id>
+    <title>Looking Inward: Language Models Can Learn About Themselves by Introspection</title>
+    <updated>2024-10-17T17:24:10Z</updated>
+    <link href="https://arxiv.org/abs/2410.13787v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2410.13787v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Humans acquire knowledge by observing the external world, but also by introspection. Introspection gives a person privileged access to their current state of mind (e.g., thoughts and feelings) that is not accessible to external observers. Can LLMs introspect? We define introspection as acquiring knowledge that is not contained in or derived from training data but instead originates from internal states. Such a capability could enhance model interpretability. Instead of painstakingly analyzing a model's internal workings, we could simply ask the model about its beliefs, world models, and goals. More speculatively, an introspective model might self-report on whether it possesses certain internal states such as subjective feelings or desires and this could inform us about the moral status of these states. Such self-reports would not be entirely dictated by the model's training data.
+  We study introspection by finetuning LLMs to predict properties of their own behavior in hypothetical scenarios. For example, "Given the input P, would your output favor the short- or long-term option?" If a model M1 can introspect, it should outperform a different model M2 in predicting M1's behavior even if M2 is trained on M1's ground-truth behavior. The idea is that M1 has privileged access to its own behavioral tendencies, and this enables it to predict itself better than M2 (even if M2 is generally stronger).
+  In experiments with GPT-4, GPT-4o, and Llama-3 models (each finetuned to predict itself), we find that the model M1 outperforms M2 in predicting itself, providing evidence for introspection. Notably, M1 continues to predict its behavior accurately even after we intentionally modify its ground-truth behavior. However, while we successfully elicit introspection on simple tasks, we are unsuccessful on more complex tasks or those requiring out-of-distribution generalization.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-10-17T17:24:10Z</published>
+    <arxiv:comment>15 pages, 9 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Felix J Binder</name>
+    </author>
+    <author>
+      <name>James Chua</name>
+    </author>
+    <author>
+      <name>Tomek Korbak</name>
+    </author>
+    <author>
+      <name>Henry Sleight</name>
+    </author>
+    <author>
+      <name>John Hughes</name>
+    </author>
+    <author>
+      <name>Robert Long</name>
+    </author>
+    <author>
+      <name>Ethan Perez</name>
+    </author>
+    <author>
+      <name>Miles Turpin</name>
+    </author>
+    <author>
+      <name>Owain Evans</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.26242v2</id>
+    <title>Can LLMs Introspect? A Reality Check</title>
+    <updated>2026-08-21T13:18:53Z</updated>
+    <link href="https://arxiv.org/abs/2605.26242v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.26242v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Can large language models detect and report their own internal states? A number of recent studies have argued that they can. Drawing on lessons from human metacognition research, we argue that this conclusion may be premature. We identify two conditions that a paradigm needs to meet in order to establish introspection. First, the test needs to require privileged access: it should not be solvable using cues available in the input. Second, it needs to require second-order computation: second-order, meta-representations of first-order, task-related representations. This condition cannot be satisfied by task performance alone: it requires designs under which second-order and first-order accounts make divergent predictions. We re-examine two paradigms that have been used to argue for model introspection in light of these conditions. In the first, models must predict labels derived from their own hidden states; we find that classifiers that can only access the input match the models' in-context predictions, indicating that the original results do not demonstrate privileged access to internal representations. In the second paradigm, models must detect whether their internal states have been tampered with; we find they cannot reliably distinguish such interventions from manipulations of the input, suggesting that their success reflects generic anomaly detection rather than sensitivity to internal interventions in particular. We conclude that current evidence is insufficient to establish metacognitive monitoring in LLMs.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-25T18:07:49Z</published>
+    <arxiv:comment>Accepted at COLM 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Shashwat Singh</name>
+    </author>
+    <author>
+      <name>Tal Linzen</name>
+    </author>
+    <author>
+      <name>Shauli Ravfogel</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.17495v1</id>
+    <title>A Sense of Proprioception in Language Models</title>
+    <updated>2026-10-12T23:35:16Z</updated>
+    <link href="https://arxiv.org/abs/2610.17495v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.17495v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>In humans, proprioception corresponds to the sense of self-movement or position, e.g. understanding the position of one's arm. This sense is often less well-understood and in popular understanding sometimes conflated with introspection. But, notably, proprioception is a separate sense, with dedicated receptors and verifiable outcomes. On the other hand though, language models cannot observe their own internal states during training (and for example answer the question which experts activated in a certain layer of an MoE) and so cannot accurately report on them. Yet, such information is, by virtue of being internal to the model, both accessible, and readily constructed into verifiable signals. We argue that this provides the basis for a digital analog of proprioception. As such, we train models through SFT and on-policy training to equip them with this ability. We show that modern models can be trained to understand a range of subtypes of proprioception, such as routing decision awareness, token entropy, decision depth or logit lens information, without affecting model capabilities. We then run these models through a broad evaluation of situational awareness, legibility, and epiphenomenality, to evaluate in what ways access to proprioception changes model behavior.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-12T23:35:16Z</published>
+    <arxiv:comment>28 pages, 22 figures, preprint</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Jonas Geiping</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2311.08576v1</id>
+    <title>Towards Evaluating AI Systems for Moral Status Using Self-Reports</title>
+    <updated>2023-11-14T22:45:44Z</updated>
+    <link href="https://arxiv.org/abs/2311.08576v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2311.08576v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>As AI systems become more advanced and widely deployed, there will likely be increasing debate over whether AI systems could have conscious experiences, desires, or other states of potential moral significance. It is important to inform these discussions with empirical evidence to the extent possible. We argue that under the right circumstances, self-reports, or an AI system's statements about its own internal states, could provide an avenue for investigating whether AI systems have states of moral significance. Self-reports are the main way such states are assessed in humans ("Are you in pain?"), but self-reports from current systems like large language models are spurious for many reasons (e.g. often just reflecting what humans would say). To make self-reports more appropriate for this purpose, we propose to train models to answer many kinds of questions about themselves with known answers, while avoiding or limiting training incentives that bias self-reports. The hope of this approach is that models will develop introspection-like capabilities, and that these capabilities will generalize to questions about states of moral significance. We then propose methods for assessing the extent to which these techniques have succeeded: evaluating self-report consistency across contexts and between similar models, measuring the confidence and resilience of models' self-reports, and using interpretability to corroborate self-reports. We also discuss challenges for our approach, from philosophical difficulties in interpreting self-reports to technical reasons why our proposal might fail. We hope our discussion inspires philosophers and AI researchers to criticize and improve our proposed methodology, as well as to run experiments to test whether self-reports can be made reliable enough to provide information about states of moral significance.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2023-11-14T22:45:44Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Ethan Perez</name>
+    </author>
+    <author>
+      <name>Robert Long</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2602.11358v2</id>
+    <title>When Models Examine Themselves: Vocabulary-Activation Correspondence in Self-Referential Processing</title>
+    <updated>2026-02-18T12:06:38Z</updated>
+    <link href="https://arxiv.org/abs/2602.11358v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2602.11358v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models produce rich introspective language when prompted for self-examination, but whether this language reflects internal computation or sophisticated confabulation has remained unclear. We show that self-referential vocabulary tracks concurrent activation dynamics, and that this correspondence is specific to self-referential processing. We introduce the Pull Methodology, a protocol that elicits extended self-examination through format engineering, and use it to identify a direction in activation space that distinguishes self-referential from descriptive processing in Llama 3.1. The direction is orthogonal to the known refusal direction, localised at 6.25% of model depth, and causally influences introspective output when used for steering. When models produce "loop" vocabulary, their activations exhibit higher autocorrelation (r = 0.44, p = 0.002); when they produce "shimmer" vocabulary under steering, activation variability increases (r = 0.36, p = 0.002). Critically, the same vocabulary in non-self-referential contexts shows no activation correspondence despite nine-fold higher frequency. Qwen 2.5-32B, with no shared training, independently develops different introspective vocabulary tracking different activation metrics, all absent in descriptive controls. The findings indicate that self-report in transformer models can, under appropriate conditions, reliably track internal computational states.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-02-11T20:44:33Z</published>
+    <arxiv:comment>Code and data: https://doi.org/10.5281/zenodo.18567446 Repro: https://github.com/patternmatcher/TRACE-REPRO</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Zachary Pedram Dadfar</name>
+    </author>
+    <arxiv:doi>10.5281/zenodo.18567445</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.5281/zenodo.18567445" title="doi"/>
+  </entry>
+</feed>

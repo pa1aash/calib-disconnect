@@ -1,0 +1,190 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/w237t+KN3EuS2gfMlbNNswK4fo8</id>
+  <title>arXiv Query: search_query=all:adaptive AND all:sampling AND all:budget AND all:code AND all:generation AND all:confidence&amp;id_list=&amp;start=0&amp;max_results=15</title>
+  <updated>2026-11-09T22:58:14Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=all:adaptive+AND+(all:sampling+AND+(all:budget+AND+(all:code+AND+(all:generation+AND+all:confidence))))&amp;start=0&amp;max_results=15&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>15</opensearch:itemsPerPage>
+  <opensearch:totalResults>7</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2606.16908v1</id>
+    <title>LESS Is More: Mutual-Stability Sampling for Diffusion Language Models</title>
+    <updated>2026-06-15T16:15:45Z</updated>
+    <link href="https://arxiv.org/abs/2606.16908v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.16908v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Diffusion large language models (dLLMs) offer a promising alternative to autoregressive decoding by iteratively refining masked sequences, enabling parallel token updates and bidirectional conditioning. Their practical efficiency, however, is limited by sampling procedures that execute a fixed number of reverse denoising steps selected before decoding, spending computation on already-stable positions and sometimes committing unstable ones too early. We present \textsc{LESS}, a training-free, model-agnostic adaptive sampler that treats token commitment as an online stopping problem. \textsc{LESS} implements mutual-stability sampling through a joint stability rule that makes a masked position eligible for unmasking only when its top-1 prediction has high confidence, its top-1 token persists across recent reverse steps, and its predictive distribution is stable under top-$K$ inter-step Jensen--Shannon divergence. We evaluate \textsc{LESS} on Dream-7B, LLaDA-8B, and LLaDA-1.5-8B, covering full-sequence diffusion and semi-autoregressive blockwise sampling regimes, across seven benchmarks spanning general knowledge, math, and code. \textsc{LESS} improves average accuracy over strong training-free adaptive samplers while using $72.1\%$ fewer reverse steps than fixed-budget decoding. Since each reverse step requires a Transformer forward pass, these step-count reductions translate into fewer forward evaluations, lower measured wall-clock latency, and lower estimated inference compute.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-15T16:15:45Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Amr Mohamed</name>
+    </author>
+    <author>
+      <name>Guokan Shang</name>
+    </author>
+    <author>
+      <name>Michalis Vazirgiannis</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.13252v2</id>
+    <title>The Sample Complexity of Multiple Change Point Identification under Bandit Feedback</title>
+    <updated>2026-10-21T09:34:23Z</updated>
+    <link href="https://arxiv.org/abs/2605.13252v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.13252v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We study multiple change point localization under bandit feedback. An unknown piecewise-constant function on a compact interval can be queried sequentially at adaptively chosen inputs, and each query returns a noisy evaluation of the function. The goal is to identify a prescribed number of discontinuities, known as change points, within a target precision $η$ and confidence level $1-δ$, while using as few samples as possible. We propose an adaptive algorithm that first detects intervals likely to contain change points and then refines their locations to precision $η$. We establish non-asymptotic upper bounds on its sample budget, together with corresponding lower bounds. Prior work shows that jump magnitudes alone determine the asymptotic sample complexity as $δ\to 0$. We reveal that this picture is incomplete beyond this regime. We demonstrate, both empirically and theoretically, that for general $δ$ and $η$, the complexity is jointly governed by the jumps and the relative positions of the change points.</summary>
+    <category term="stat.ML" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="math.ST" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-13T09:35:19Z</published>
+    <arxiv:comment>Accepted at NeurIPS 2026. 43 pages. v2: camera-ready version (extended related work, refined comparison with MCPI, corrected Lemma 1/Lemma 4 statements, code release)</arxiv:comment>
+    <arxiv:primary_category term="stat.ML"/>
+    <author>
+      <name>Maximilian Graf</name>
+    </author>
+    <author>
+      <name>Victor Thuot</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2509.25420v1</id>
+    <title>Adaptive Test-Time Reasoning via Reward-Guided Dual-Phase Search</title>
+    <updated>2025-09-29T19:27:23Z</updated>
+    <link href="https://arxiv.org/abs/2509.25420v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2509.25420v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) have achieved significant advances in reasoning tasks. A key approach is tree-based search with verifiers, which expand candidate reasoning paths and use reward models to guide pruning and selection. Although effective in improving accuracy, these methods are not optimal in terms of efficiency: they perform simple decomposition on the reasoning process, but ignore the planning-execution nature of tasks such as math reasoning or code generation. This results in inefficient exploration of reasoning process. To address this, we propose a dual-phase test-time scaling framework that explicitly separates reasoning into planning and execution, and performs search over the two phases individually. Specifically, we decompose reasoning trajectories and develop reward models for each phase, enabling the search to explore and prune plans and executions separately. We further introduce a dynamic budget allocation mechanism that adaptively redistributes sampling effort based on reward feedback, allowing early stopping on confident steps and reallocation of computation to more challenging parts of the reasoning process. Experiments on both mathematical reasoning and code generation benchmarks demonstrate that our approach consistently improves accuracy while reducing redundant computation.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-09-29T19:27:23Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Yingqian Cui</name>
+    </author>
+    <author>
+      <name>Zhenwei Dai</name>
+    </author>
+    <author>
+      <name>Pengfei He</name>
+    </author>
+    <author>
+      <name>Bing He</name>
+    </author>
+    <author>
+      <name>Hui Liu</name>
+    </author>
+    <author>
+      <name>Xianfeng Tang</name>
+    </author>
+    <author>
+      <name>Jingying Zeng</name>
+    </author>
+    <author>
+      <name>Suhang Wang</name>
+    </author>
+    <author>
+      <name>Yue Xing</name>
+    </author>
+    <author>
+      <name>Jiliang Tang</name>
+    </author>
+    <author>
+      <name>Benoit Dumoulin</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.01106v1</id>
+    <title>Hints Help But Do They Teach? Evaluating Skills Transfer in Code Generation</title>
+    <updated>2026-09-01T11:47:39Z</updated>
+    <link href="https://arxiv.org/abs/2609.01106v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.01106v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>When a hint turns a failing generated program into a passing one, does it provide missing information or merely steer the model toward a solution it could already produce? We test these hypotheses on HumanEval+ and MBPP+ using executable evaluation. For Qwen2.5-3B-Instruct, adaptive relevant hints rescue 36 of 79 selected failures; an unrelated hint rescues 19, while eight unhinted samples solve 46 and recover 31 of the 36 relevant-hint rescues. Phi-3.5-mini shows the same pattern: relevant hints rescue 42 of 101 failures, an unrelated hint rescues 17, and unhinted sampling solves 57, including 36 of the 42 relevant-hint rescues. Because the hint conditions use different attempt budgets, these comparisons do not isolate a purely semantic effect. Mechanistic tests on Qwen identify a stable activation direction shared by relevant and unrelated hints. Persistently adding this direction yields 14 rescues and 18 regressions, with no detectable net accuracy gain; learned low-rank interventions have a positive but imprecise estimated effect. Full textual specifications solve 22 of 24 context-defined problems, versus 5-11 for tested virtual-KV prefixes. Post-generation hidden-state probes transfer across benchmarks, with pooled AUROC 0.806 and 0.780, but their top-one selection advantage over token confidence is statistically unresolved. Overall, relevant hints can rescue failures, but most rescued solutions are already reachable through ordinary sampling, and the internal interventions tested here do not establish task-general capability transfer.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-01T11:47:39Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Will Badr</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2512.02882v1</id>
+    <title>OptPO: Optimal Rollout Allocation for Test-time Policy Optimization</title>
+    <updated>2025-12-02T15:38:52Z</updated>
+    <link href="https://arxiv.org/abs/2512.02882v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2512.02882v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Test-time policy optimization enables large language models (LLMs) to adapt to distribution shifts by leveraging feedback from self-generated rollouts. However, existing methods rely on fixed-budget majority voting to estimate rewards, incurring substantial computational redundancy. We propose Optimal Rollout Allocation for Test-time Policy Optimization (OptPO), a principled framework that adaptively allocates inference budgets. By formulating the voting process as a Bayesian sequential probability ratio test, OptPO dynamically halts sampling once the posterior confidence in a consensus answer exceeds a specified threshold. Crucially, it utilizes the retained rollouts for on-policy updates, seamlessly integrating with algorithms like PPO or GRPO without requiring ground-truth labels. Across diverse reasoning benchmarks, OptPO significantly reduces rollout overhead compared to fixed-sample baselines while preserving or improving accuracy. By unifying statistically optimal stopping with test-time learning, OptPO offers a computationally efficient paradigm for test-time adaptation. The source code will be open upon acceptance at https://open-upon-acceptance.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-12-02T15:38:52Z</published>
+    <arxiv:comment>Work in Progress</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Youkang Wang</name>
+    </author>
+    <author>
+      <name>Jian Wang</name>
+    </author>
+    <author>
+      <name>Rubing Chen</name>
+    </author>
+    <author>
+      <name>Tianyi Zeng</name>
+    </author>
+    <author>
+      <name>Xiao-Yong Wei</name>
+    </author>
+    <author>
+      <name>Qing Li</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.08122v2</id>
+    <title>Workload-Preserving Differentially Private Synthetic Data for Causal Inference via Maximum-Entropy Calibration</title>
+    <updated>2026-07-17T04:28:43Z</updated>
+    <link href="https://arxiv.org/abs/2607.08122v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.08122v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Workload-based differentially private (DP) synthetic data methods privately measure aggregate queries and post-process the noisy answers into synthetic records. Generic workloads can achieve strong distributional fidelity, but causal estimands such as the average treatment effect (ATE) depend on treatment-arm balance and outcome moments that generic marginals need not preserve. We propose causal workloads: DP query sets designed around the orthogonal moments used by doubly robust causal estimators. The released workload can be used directly by stable moment-map estimators or reconstructed by maximum-entropy calibration into reusable synthetic data; our theory decomposes ATE error into sampling, privacy, workload-approximation, Monte Carlo, and calibration terms. We also introduce Causal-AIM, an adaptive workload selector, and a noise-aware multiple-imputation (NA+MI) procedure for confidence intervals from DP synthetic data. Because the workload is released once, the same DP synthetic table can support ATE, ATT, and subgroup analyses without additional privacy spending. Empirically, causal workloads are most useful at strict privacy budgets and for calibrated uncertainty, while generic workloads often retain an advantage for point RMSE as privacy relaxes. The broader lesson is a tradeoff: distributional fidelity can help point accuracy, but valid causal inference requires preserving causal moments and propagating DP noise rather than treating synthetic rows as real.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-09T05:44:03Z</published>
+    <arxiv:comment>Accepted at the 42nd Conference on Uncertainty in Artificial Intelligence (UAI 2026). Includes appendices. Code: https://github.com/AsiaeeLab/causal-aim References now show missing arxiv ids</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Amir Asiaee</name>
+    </author>
+    <author>
+      <name>Kaveh Aryan</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2511.11979v3</id>
+    <title>CITADEL: A Semi-Supervised Active Learning Framework for Malware Detection Under Continuous Distribution Drift</title>
+    <updated>2026-02-14T06:52:02Z</updated>
+    <link href="https://arxiv.org/abs/2511.11979v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2511.11979v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Android malware detection systems suffer severe performance degradation over time due to concept drift caused by evolving malicious and benign app behaviors. Although recent methods leverage active learning and hierarchical contrastive loss to address drift, they remain fully supervised, computationally expensive, and ineffective on long-term real-world benchmark. Moreover, expert labeling does not scale to the monthly emergence of nearly 300K new Android malware samples, leaving most data unlabeled and underutilized.
+  To address these challenges, we propose CITADEL, a semi-supervised active learning framework for Android malware detection. Existing semi-supervised methods assume continuous and semantically meaningful input transformations, and fail to generalize well to high-dimensional binary malware features. We bridge this gap with malware-specific augmentations, Bernoulli bit flips and feature masking, that stochastically perturb feature to regularize learning under evolving malware distributions. \system further incorporates supervised contrastive loss to improve boundary sample discrimination and combines it with a multi-criteria active learning strategy based on prediction confidence, $L_p$-norm distance, and boundary uncertainty, enabling effective adaptation under constrained labeling budgets. Extensive evaluation on four large-scale Android malware benchmarks -- APIGraph, Chen-AZ, MaMaDroid, and LAMDA, demonstrates that \system outperforms prior work, achieving F1 score of over 1\%, 3\%, 7\%, and 14\% respectively, using only 40\% labeled samples. Furthermore, \system shows significant efficiency over prior work incurring $24\times$ faster training and $13\times$ fewer operations.
+  \paragraph{Availability} The code is available at https://github.com/IQSeC-Lab/CITADEL.git.</summary>
+    <category term="cs.CR" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-11-15T01:34:15Z</published>
+    <arxiv:primary_category term="cs.CR"/>
+    <author>
+      <name>Md Ahsanul Haque</name>
+    </author>
+    <author>
+      <name>Md Mahmuduzzaman Kamol</name>
+    </author>
+    <author>
+      <name>Suresh Kumar Amalapuram</name>
+    </author>
+    <author>
+      <name>Vladik Kreinovich</name>
+    </author>
+    <author>
+      <name>Mohammad Saidur Rahman</name>
+    </author>
+  </entry>
+</feed>

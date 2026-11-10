@@ -1,0 +1,524 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/4uSVw0VBQsPvNbFUrAKlmbZembc</id>
+  <title>arXiv Query: search_query=all:RLHF AND all:calibration AND all:language AND all:models&amp;id_list=&amp;start=0&amp;max_results=15</title>
+  <updated>2026-11-09T22:55:57Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=all:RLHF+AND+(all:calibration+AND+(all:language+AND+all:models))&amp;start=0&amp;max_results=15&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>15</opensearch:itemsPerPage>
+  <opensearch:totalResults>52</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2410.09724v2</id>
+    <title>Taming Overconfidence in LLMs: Reward Calibration in RLHF</title>
+    <updated>2025-02-28T23:36:40Z</updated>
+    <link href="https://arxiv.org/abs/2410.09724v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2410.09724v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Language model calibration refers to the alignment between the confidence of the model and the actual performance of its responses. While previous studies point out the overconfidence phenomenon in Large Language Models (LLMs) and show that LLMs trained with Reinforcement Learning from Human Feedback (RLHF) are overconfident with a more sharpened output probability, in this study, we reveal that RLHF tends to lead models to express verbalized overconfidence in their own responses. We investigate the underlying cause of this overconfidence and demonstrate that reward models used for Proximal Policy Optimization (PPO) exhibit inherent biases towards high-confidence scores regardless of the actual quality of responses. Building upon this insight, we propose two PPO variants: PPO-M: PPO with Calibrated Reward Modeling and PPO-C: PPO with Calibrated Reward Calculation. PPO-M integrates explicit confidence scores in reward model training, which calibrates reward models to better capture the alignment between response quality and verbalized confidence. PPO-C adjusts the reward score during PPO based on the difference between the current reward and the exponential average of past rewards. Both PPO-M and PPO-C can be seamlessly integrated into the current PPO pipeline and do not require additional golden labels. We evaluate our methods on both Llama3-8B and Mistral-7B across six diverse datasets including multiple-choice and open-ended generation. Experimental results demonstrate that both of our methods can reduce calibration error and maintain performance comparable to standard PPO. We further show that they could preserve model capabilities in open-ended conversational settings.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-10-13T04:48:40Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Jixuan Leng</name>
+    </author>
+    <author>
+      <name>Chengsong Huang</name>
+    </author>
+    <author>
+      <name>Banghua Zhu</name>
+    </author>
+    <author>
+      <name>Jiaxin Huang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2409.19817v1</id>
+    <title>Calibrating Language Models with Adaptive Temperature Scaling</title>
+    <updated>2024-09-29T22:54:31Z</updated>
+    <link href="https://arxiv.org/abs/2409.19817v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2409.19817v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The effectiveness of large language models (LLMs) is not only measured by their ability to generate accurate outputs but also by their calibration-how well their confidence scores reflect the probability of their outputs being correct. While unsupervised pre-training has been shown to yield LLMs with well-calibrated conditional probabilities, recent studies have shown that after fine-tuning with reinforcement learning from human feedback (RLHF), the calibration of these models degrades significantly. In this work, we introduce Adaptive Temperature Scaling (ATS), a post-hoc calibration method that predicts a temperature scaling parameter for each token prediction. The predicted temperature values adapt based on token-level features and are fit over a standard supervised fine-tuning (SFT) dataset. The adaptive nature of ATS addresses the varying degrees of calibration shift that can occur after RLHF fine-tuning. ATS improves calibration by over 10-50% across three downstream natural language evaluation benchmarks compared to prior calibration methods and does not impede performance improvements from RLHF.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-09-29T22:54:31Z</published>
+    <arxiv:comment>EMNLP 2024</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Johnathan Xie</name>
+    </author>
+    <author>
+      <name>Annie S. Chen</name>
+    </author>
+    <author>
+      <name>Yoonho Lee</name>
+    </author>
+    <author>
+      <name>Eric Mitchell</name>
+    </author>
+    <author>
+      <name>Chelsea Finn</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2404.02655v2</id>
+    <title>Calibrating the Confidence of Large Language Models by Eliciting Fidelity</title>
+    <updated>2024-10-09T08:51:28Z</updated>
+    <link href="https://arxiv.org/abs/2404.02655v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2404.02655v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models optimized with techniques like RLHF have achieved good alignment in being helpful and harmless. However, post-alignment, these language models often exhibit overconfidence, where the expressed confidence does not accurately calibrate with their correctness rate. In this paper, we decompose the language model confidence into the \textit{Uncertainty} about the question and the \textit{Fidelity} to the answer generated by language models. Then, we propose a plug-and-play method to estimate the confidence of language models. Our method has shown good calibration performance by conducting experiments with 6 RLHF-LMs on four MCQA datasets. Moreover, we propose two novel metrics, IPR and CE, to evaluate the calibration of the model, and we have conducted a detailed discussion on \textit{Truly Well-Calibrated Confidence}. Our method could serve as a strong baseline, and we hope that this work will provide some insights into the model confidence calibration.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-04-03T11:36:12Z</published>
+    <arxiv:comment>EMNLP 2024</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Mozhi Zhang</name>
+    </author>
+    <author>
+      <name>Mianqiu Huang</name>
+    </author>
+    <author>
+      <name>Rundong Shi</name>
+    </author>
+    <author>
+      <name>Linsen Guo</name>
+    </author>
+    <author>
+      <name>Chong Peng</name>
+    </author>
+    <author>
+      <name>Peng Yan</name>
+    </author>
+    <author>
+      <name>Yaqian Zhou</name>
+    </author>
+    <author>
+      <name>Xipeng Qiu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2601.08842v1</id>
+    <title>Resisting Correction: How RLHF Makes Language Models Ignore External Safety Signals in Natural Conversation</title>
+    <updated>2025-12-20T21:04:34Z</updated>
+    <link href="https://arxiv.org/abs/2601.08842v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2601.08842v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Safety architectures for language models increasingly rely on external monitors to detect errors and inject corrective signals at inference time. For such systems to function in interactive settings, models must be able to incorporate externally provided confidence information into their verbal responses. In this work, we test whether instruction-tuned language models preserve this controllability across different interaction modes.
+  Using Llama-3.2-3B on GSM8K, we perform a causal intervention study in which explicit external confidence signals are injected and model compliance is measured under multiple prompt strategies. We find that base models exhibit near-perfect controllability (Spearman rho close to 1.0), while instruction-tuned models display a striking context dependence: they fully comply with external corrections under explicit command prompts (bias approximately 0 percent, rho = 0.93), yet systematically ignore the same signals in natural conversational queries (bias plus 40 percent, rho = 0.04).
+  This behavior is not a capability failure; the model can process the signal, but an emergent property of RLHF optimization that prioritizes conversational fluency over external calibration cues in natural dialogue. We further show that internal token-level confidence in small models is uninformative (r = 0.035), underscoring the necessity of external supervision. Our findings highlight a deployment-critical failure mode: the interaction style users expect is precisely where safety corrections are least effective.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-12-20T21:04:34Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Felipe Biava Cataneo</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2604.10585v1</id>
+    <title>Calibration Collapse Under Sycophancy Fine-Tuning: How Reward Hacking Breaks Uncertainty Quantification in LLMs</title>
+    <updated>2026-04-12T11:09:49Z</updated>
+    <link href="https://arxiv.org/abs/2604.10585v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2604.10585v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Modern large language models (LLMs) are increasingly fine-tuned via reinforcement learning from human feedback (RLHF) or related reward optimisation schemes. While such procedures improve perceived helpfulness, we investigate whether sycophantic reward signals degrade calibration -- a property essential for reliable uncertainty quantification. We fine-tune Qwen3-8B under three regimes: no fine-tuning (base), neutral supervised fine-tuning (SFT) on TriviaQA, and sycophancy-inducing Group Relative Policy Optimisation (GRPO) that rewards agreement with planted wrong answers. Evaluating on $1{,}000$ MMLU items across five subject domains with bootstrap confidence intervals and permutation testing, we find that \textbf{sycophantic GRPO produces consistent directional calibration degradation} -- ECE rises by $+0.006$ relative to the base model and MCE increases by $+0.010$ relative to neutral SFT -- though the effect does not reach statistical significance ($p = 0.41$) at this training budget. Post-hoc matrix scaling applied to all three models reduces ECE by $40$--$64\%$ and improves accuracy by $1.5$--$3.0$ percentage points. However, the sycophantic model retains the highest post-scaling ECE relative to the neutral SFT control ($0.042$ vs.\ $0.037$), suggesting that reward-induced miscalibration leaves a structured residual even after affine correction. These findings establish a methodology for evaluating the calibration impact of reward hacking and motivate calibration-aware training objectives.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-04-12T11:09:49Z</published>
+    <arxiv:comment>Accepted at the AISTATS 2026 Workshop on Towards Trustworthy Predictions: Theory and Applications of Calibration for Modern AI. 14 Pages</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Subramanyam Sahoo</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2504.04950v1</id>
+    <title>A Unified Pairwise Framework for RLHF: Bridging Generative Reward Modeling and Policy Optimization</title>
+    <updated>2025-04-07T11:34:48Z</updated>
+    <link href="https://arxiv.org/abs/2504.04950v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2504.04950v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Reinforcement Learning from Human Feedback (RLHF) has emerged as a important paradigm for aligning large language models (LLMs) with human preferences during post-training. This framework typically involves two stages: first, training a reward model on human preference data, followed by optimizing the language model using reinforcement learning algorithms. However, current RLHF approaches may constrained by two limitations. First, existing RLHF frameworks often rely on Bradley-Terry models to assign scalar rewards based on pairwise comparisons of individual responses. However, this approach imposes significant challenges on reward model (RM), as the inherent variability in prompt-response pairs across different contexts demands robust calibration capabilities from the RM. Second, reward models are typically initialized from generative foundation models, such as pre-trained or supervised fine-tuned models, despite the fact that reward models perform discriminative tasks, creating a mismatch. This paper introduces Pairwise-RL, a RLHF framework that addresses these challenges through a combination of generative reward modeling and a pairwise proximal policy optimization (PPO) algorithm. Pairwise-RL unifies reward model training and its application during reinforcement learning within a consistent pairwise paradigm, leveraging generative modeling techniques to enhance reward model performance and score calibration. Experimental evaluations demonstrate that Pairwise-RL outperforms traditional RLHF frameworks across both internal evaluation datasets and standard public benchmarks, underscoring its effectiveness in improving alignment and model behavior.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-04-07T11:34:48Z</published>
+    <arxiv:comment>11oages,2 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Wenyuan Xu</name>
+    </author>
+    <author>
+      <name>Xiaochen Zuo</name>
+    </author>
+    <author>
+      <name>Chao Xin</name>
+    </author>
+    <author>
+      <name>Yu Yue</name>
+    </author>
+    <author>
+      <name>Lin Yan</name>
+    </author>
+    <author>
+      <name>Yonghui Wu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2305.14975v2</id>
+    <title>Just Ask for Calibration: Strategies for Eliciting Calibrated Confidence Scores from Language Models Fine-Tuned with Human Feedback</title>
+    <updated>2023-10-24T04:27:42Z</updated>
+    <link href="https://arxiv.org/abs/2305.14975v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2305.14975v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>A trustworthy real-world prediction system should produce well-calibrated confidence scores; that is, its confidence in an answer should be indicative of the likelihood that the answer is correct, enabling deferral to an expert in cases of low-confidence predictions. Recent studies have shown that unsupervised pre-training produces large language models (LMs) whose conditional probabilities are remarkably well-calibrated. However, the most widely-used LMs are fine-tuned with reinforcement learning from human feedback (RLHF-LMs), and some studies have suggested that RLHF-LMs produce conditional probabilities that are very poorly calibrated. In light of this perceived weakness, we conduct a broad evaluation of methods for extracting confidence scores from RLHF-LMs. For RLHF-LMs such as ChatGPT, GPT-4, and Claude, we find that verbalized confidences emitted as output tokens are typically better-calibrated than the model's conditional probabilities on the TriviaQA, SciQ, and TruthfulQA benchmarks, often reducing the expected calibration error by a relative 50%.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2023-05-24T10:12:33Z</published>
+    <arxiv:comment>EMNLP 2023 Camera Ready</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Katherine Tian</name>
+    </author>
+    <author>
+      <name>Eric Mitchell</name>
+    </author>
+    <author>
+      <name>Allan Zhou</name>
+    </author>
+    <author>
+      <name>Archit Sharma</name>
+    </author>
+    <author>
+      <name>Rafael Rafailov</name>
+    </author>
+    <author>
+      <name>Huaxiu Yao</name>
+    </author>
+    <author>
+      <name>Chelsea Finn</name>
+    </author>
+    <author>
+      <name>Christopher D. Manning</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2502.11028v3</id>
+    <title>Mind the Confidence Gap: Overconfidence, Calibration, and Distractor Effects in Large Language Models</title>
+    <updated>2025-12-12T03:29:17Z</updated>
+    <link href="https://arxiv.org/abs/2502.11028v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2502.11028v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) show remarkable proficiency in natural language tasks, yet their frequent overconfidence-misalignment between predicted confidence and true correctness-poses significant risks in critical decision-making applications. We present a comprehensive analysis on calibration in LLMs across nine LLMs and three factual Question-Answering (QA) datasets, systematically comparing standard free-generation settings against structured distractor-augmented prompts. Our evaluation reveals that explicitly incorporating distractors can substantially mitigate miscalibration, achieving relative accuracy improvements up to 460% and ECE reductions up to 90%. Despite general trends, we uncover nuanced findings: large RLHF-tuned models display inherent calibration strengths but can paradoxically suffer increased miscalibration on easier queries, whereas smaller models benefit disproportionately from distractor prompts but remain significantly miscalibrated. Through detailed analyses across question types, we identify persistent calibration failures, particularly in person-based queries. We conclude with concrete recommendations-targeted fine-tuning, structured prompting, and strategic model choice-to ensure reliable, trustworthy LLM deployments.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-02-16T07:46:09Z</published>
+    <arxiv:comment>Published in Transactions on Machine Learning Research (TMLR)</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Prateek Chhikara</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2404.09127v3</id>
+    <title>Confidence Calibration and Rationalization for LLMs via Multi-Agent Deliberation</title>
+    <updated>2024-05-10T16:38:23Z</updated>
+    <link href="https://arxiv.org/abs/2404.09127v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2404.09127v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Uncertainty estimation is a significant issue for current large language models (LLMs) that are generally poorly calibrated and over-confident, especially with reinforcement learning from human feedback (RLHF). Unlike humans, whose decisions and confidences not only stem from intrinsic beliefs but can also be adjusted through daily observations, existing calibration methods for LLMs focus on estimating or eliciting individual confidence without taking full advantage of the "Collective Wisdom": the interaction among multiple LLMs that can collectively improve both accuracy and calibration. In this work, we propose Collaborative Calibration, a post-hoc training-free calibration strategy that leverages the collaborative and expressive capabilities of multiple tool-augmented LLM agents in a simulated group deliberation process. We demonstrate the effectiveness of Collaborative Calibration on generative QA tasks across various domains, showing its potential in harnessing the rationalization of collectively calibrated confidence assessments and improving the reliability of model predictions.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-04-14T02:40:43Z</published>
+    <arxiv:comment>Accepted at ICLR 2024 Workshop on Reliable and Responsible Foundation Models</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Ruixin Yang</name>
+    </author>
+    <author>
+      <name>Dheeraj Rajagopal</name>
+    </author>
+    <author>
+      <name>Shirley Anugrah Hayati</name>
+    </author>
+    <author>
+      <name>Bin Hu</name>
+    </author>
+    <author>
+      <name>Dongyeop Kang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2402.16030v1</id>
+    <title>Don't Forget Your Reward Values: Language Model Alignment via Value-based Calibration</title>
+    <updated>2024-02-25T08:45:10Z</updated>
+    <link href="https://arxiv.org/abs/2402.16030v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2402.16030v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>While Reinforcement Learning from Human Feedback (RLHF) significantly enhances the generation quality of Large Language Models (LLMs), recent studies have raised concerns regarding the complexity and instability associated with the Proximal Policy Optimization (PPO) algorithm, proposing a series of order-based calibration methods as viable alternatives. This paper delves further into current order-based methods, examining their inefficiencies in utilizing reward values and addressing misalignment issues. Building upon these findings, we propose a novel \textbf{V}alue-based \textbf{C}ali\textbf{B}ration (VCB) method to better align LLMs with human preferences. Experimental results demonstrate that VCB surpasses existing alignment methods on AI assistant and summarization datasets, providing impressive generalizability, robustness, and stability in diverse settings.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-02-25T08:45:10Z</published>
+    <arxiv:comment>19 pages, Under review</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Xin Mao</name>
+    </author>
+    <author>
+      <name>Feng-Lin Li</name>
+    </author>
+    <author>
+      <name>Huimin Xu</name>
+    </author>
+    <author>
+      <name>Wei Zhang</name>
+    </author>
+    <author>
+      <name>Anh Tuan Luu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.19818v1</id>
+    <title>Uncertainty-Aware Reward Modeling for Stable RLHF</title>
+    <updated>2026-06-18T05:46:32Z</updated>
+    <link href="https://arxiv.org/abs/2606.19818v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.19818v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Reinforcement learning from human feedback (RLHF) aligns large language models by training reward models on preference data and optimizing policies to maximize predicted rewards. However, this pipeline faces two fundamental challenges: (1) reward models cannot signal when their predictions are unreliable, since they usually act as deterministic point estimators; and (2) modern group-based policy optimization can amplify unreliable reward signals, as exemplified by GRPO's uniform treatment of rewards during advantage computation. As policies explore increasingly diverse responses, these two limitations create a critical vulnerability: unreliable reward estimates may be granted disproportionate influence, triggering severe reward hacking. We propose Uncertainty-Aware Reward Modeling (UARM), which equips reward models with calibrated uncertainty via quantile-based conformal prediction and reweights GRPO advantages through heteroscedastic variance decomposition. Experiments across HelpSteer, UltraFeedback, and PKU-SafeRLHF demonstrate that UARM significantly improves reward model calibration, reduces reward hacking, and enhances downstream alignment quality compared to standard GRPO and uncertainty-agnostic baselines.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-18T05:46:32Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Licheng Pan</name>
+    </author>
+    <author>
+      <name>Haocheng Yang</name>
+    </author>
+    <author>
+      <name>Haoxuan Li</name>
+    </author>
+    <author>
+      <name>Yichen Sun</name>
+    </author>
+    <author>
+      <name>Yunsheng Lu</name>
+    </author>
+    <author>
+      <name>Shijian Wang</name>
+    </author>
+    <author>
+      <name>Lei Shen</name>
+    </author>
+    <author>
+      <name>Yuan Lu</name>
+    </author>
+    <author>
+      <name>Zhixuan Chu</name>
+    </author>
+    <author>
+      <name>Hao Wang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2204.05862v1</id>
+    <title>Training a Helpful and Harmless Assistant with Reinforcement Learning from Human Feedback</title>
+    <updated>2022-04-12T15:02:38Z</updated>
+    <link href="https://arxiv.org/abs/2204.05862v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2204.05862v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We apply preference modeling and reinforcement learning from human feedback (RLHF) to finetune language models to act as helpful and harmless assistants. We find this alignment training improves performance on almost all NLP evaluations, and is fully compatible with training for specialized skills such as python coding and summarization. We explore an iterated online mode of training, where preference models and RL policies are updated on a weekly cadence with fresh human feedback data, efficiently improving our datasets and models. Finally, we investigate the robustness of RLHF training, and identify a roughly linear relation between the RL reward and the square root of the KL divergence between the policy and its initialization. Alongside our main results, we perform peripheral analyses on calibration, competing objectives, and the use of OOD detection, compare our models with human writers, and provide samples from our models using prompts appearing in recent related work.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2022-04-12T15:02:38Z</published>
+    <arxiv:comment>Data available at https://github.com/anthropics/hh-rlhf</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Yuntao Bai</name>
+    </author>
+    <author>
+      <name>Andy Jones</name>
+    </author>
+    <author>
+      <name>Kamal Ndousse</name>
+    </author>
+    <author>
+      <name>Amanda Askell</name>
+    </author>
+    <author>
+      <name>Anna Chen</name>
+    </author>
+    <author>
+      <name>Nova DasSarma</name>
+    </author>
+    <author>
+      <name>Dawn Drain</name>
+    </author>
+    <author>
+      <name>Stanislav Fort</name>
+    </author>
+    <author>
+      <name>Deep Ganguli</name>
+    </author>
+    <author>
+      <name>Tom Henighan</name>
+    </author>
+    <author>
+      <name>Nicholas Joseph</name>
+    </author>
+    <author>
+      <name>Saurav Kadavath</name>
+    </author>
+    <author>
+      <name>Jackson Kernion</name>
+    </author>
+    <author>
+      <name>Tom Conerly</name>
+    </author>
+    <author>
+      <name>Sheer El-Showk</name>
+    </author>
+    <author>
+      <name>Nelson Elhage</name>
+    </author>
+    <author>
+      <name>Zac Hatfield-Dodds</name>
+    </author>
+    <author>
+      <name>Danny Hernandez</name>
+    </author>
+    <author>
+      <name>Tristan Hume</name>
+    </author>
+    <author>
+      <name>Scott Johnston</name>
+    </author>
+    <author>
+      <name>Shauna Kravec</name>
+    </author>
+    <author>
+      <name>Liane Lovitt</name>
+    </author>
+    <author>
+      <name>Neel Nanda</name>
+    </author>
+    <author>
+      <name>Catherine Olsson</name>
+    </author>
+    <author>
+      <name>Dario Amodei</name>
+    </author>
+    <author>
+      <name>Tom Brown</name>
+    </author>
+    <author>
+      <name>Jack Clark</name>
+    </author>
+    <author>
+      <name>Sam McCandlish</name>
+    </author>
+    <author>
+      <name>Chris Olah</name>
+    </author>
+    <author>
+      <name>Ben Mann</name>
+    </author>
+    <author>
+      <name>Jared Kaplan</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2412.19792v5</id>
+    <title>InfAlign: Inference-aware language model alignment</title>
+    <updated>2025-08-21T16:32:06Z</updated>
+    <link href="https://arxiv.org/abs/2412.19792v5" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2412.19792v5" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Language model alignment is a critical step in training modern generative language models. Alignment targets to improve win rate of a sample from the aligned model against the base model. Today, we are increasingly using inference-time algorithms (e.g., Best-of-N, controlled decoding, tree search) to decode from language models rather than standard sampling. We show that this train/test mismatch makes standard RLHF framework sub-optimal in view of such inference-time methods. To this end, we propose a framework for inference-aware alignment (InfAlign), which aims to optimize inference-time win rate of the aligned policy against the base model. We prove that for any inference-time decoding procedure, the optimal aligned policy is the solution to the standard RLHF problem with a transformation of the reward. This motivates us to provide the calibrate-and-transform RL (InfAlign-CTRL) algorithm to solve this problem, which involves a reward calibration step and a KL-regularized reward maximization step with a transformation of the calibrated reward. For best-of-N sampling and best-of-N jailbreaking, we propose specific transformations offering up to 3-8% improvement on inference-time win rates. Finally, we also show that our proposed reward calibration method is a strong baseline for optimizing standard win rate.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.IT" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-12-27T18:45:36Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Ananth Balashankar</name>
+    </author>
+    <author>
+      <name>Ziteng Sun</name>
+    </author>
+    <author>
+      <name>Jonathan Berant</name>
+    </author>
+    <author>
+      <name>Jacob Eisenstein</name>
+    </author>
+    <author>
+      <name>Michael Collins</name>
+    </author>
+    <author>
+      <name>Adrian Hutter</name>
+    </author>
+    <author>
+      <name>Jong Lee</name>
+    </author>
+    <author>
+      <name>Chirag Nagpal</name>
+    </author>
+    <author>
+      <name>Flavien Prost</name>
+    </author>
+    <author>
+      <name>Aradhana Sinha</name>
+    </author>
+    <author>
+      <name>Ananda Theertha Suresh</name>
+    </author>
+    <author>
+      <name>Ahmad Beirami</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2410.20869v1</id>
+    <title>Reward Modeling with Weak Supervision for Language Models</title>
+    <updated>2024-10-28T09:37:58Z</updated>
+    <link href="https://arxiv.org/abs/2410.20869v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2410.20869v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Recent advancements in large language models (LLMs) have led to their increased application across various tasks, with reinforcement learning from human feedback (RLHF) being a crucial part of their training to align responses with user intentions. In the RLHF process, a reward model is trained using responses preferences determined by human labelers or AI systems, which then refines the LLM through reinforcement learning. This work introduces weak supervision as a strategy to extend RLHF datasets and enhance reward model performance. Weak supervision employs noisy or imprecise data labeling, reducing reliance on expensive manually labeled data. By analyzing RLHF datasets to identify heuristics that correlate with response preference, we wrote simple labeling functions and then calibrated a label model to weakly annotate unlabeled data. Our evaluation show that while weak supervision significantly benefits smaller datasets by improving reward model performance, its effectiveness decreases with larger, originally labeled datasets. Additionally, using an LLM to generate and then weakly label responses offers a promising method for extending preference data.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-10-28T09:37:58Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Ben Hauptvogel</name>
+    </author>
+    <author>
+      <name>Malte Ostendorff</name>
+    </author>
+    <author>
+      <name>Georg Rehm</name>
+    </author>
+    <author>
+      <name>Sebastian Möller</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2403.16950v5</id>
+    <title>Aligning with Human Judgement: The Role of Pairwise Preference in Large Language Model Evaluators</title>
+    <updated>2025-01-17T03:43:53Z</updated>
+    <link href="https://arxiv.org/abs/2403.16950v5" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2403.16950v5" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) have demonstrated promising capabilities as automatic evaluators in assessing the quality of generated natural language. However, LLMs still exhibit biases in evaluation and often struggle to generate coherent evaluations that align with human assessments. In this work, we first conduct a systematic study of the misalignment between LLM evaluators and human evaluation, revealing that existing calibration methods aimed at mitigating biases of LLMs are insufficient for effectively aligning LLM evaluators. Inspired by the use of preference data in RLHF, we formulate the evaluation as a ranking problem and introduce Pairwise-preference Search (PAIRS), an uncertainty-guided search-based rank aggregation method that employs LLMs to conduct pairwise comparisons locally and efficiently ranks candidate texts globally. PAIRS achieves state-of-the-art performance on representative evaluation tasks in long-form generations and demonstrates significant improvements over direct scoring. Furthermore, we provide insights into the role of pairwise preference in quantifying the transitivity of LLMs and demonstrate how PAIRS benefits from calibration using debiased pairwise evaluations.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-03-25T17:11:28Z</published>
+    <arxiv:comment>This paper has been accepted by COLM 2024</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Yinhong Liu</name>
+    </author>
+    <author>
+      <name>Han Zhou</name>
+    </author>
+    <author>
+      <name>Zhijiang Guo</name>
+    </author>
+    <author>
+      <name>Ehsan Shareghi</name>
+    </author>
+    <author>
+      <name>Ivan Vulić</name>
+    </author>
+    <author>
+      <name>Anna Korhonen</name>
+    </author>
+    <author>
+      <name>Nigel Collier</name>
+    </author>
+  </entry>
+</feed>

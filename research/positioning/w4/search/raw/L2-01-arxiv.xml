@@ -1,0 +1,357 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/vfPZNTOvDOPcOpB1vDFivcCCO/Y</id>
+  <title>arXiv Query: search_query=all:hidden AND all:states AND all:predict AND all:correctness AND all:generated AND all:code&amp;id_list=&amp;start=0&amp;max_results=15</title>
+  <updated>2026-11-09T22:55:13Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=all:hidden+AND+(all:states+AND+(all:predict+AND+(all:correctness+AND+(all:generated+AND+all:code))))&amp;start=0&amp;max_results=15&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>15</opensearch:itemsPerPage>
+  <opensearch:totalResults>21</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2603.24787v3</id>
+    <title>ReLope: From Hidden-State Probing to a Decision Module for Multimodal LLM Routing</title>
+    <updated>2026-10-05T00:13:14Z</updated>
+    <link href="https://arxiv.org/abs/2603.24787v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2603.24787v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Routing balances performance and cost in hybrid systems by escalating selected queries from a lightweight model to a powerful but expensive one. Hidden-state probes provide an effective routing signal by predicting the small model's correctness from hidden states it already computes. Although effective in text-only settings, their behavior on multimodal LLMs (MLLMs) is less understood. We find that correctness is harder to predict from hidden states when questions are paired with images rather than with captions of those images. Two training-free dependence measures, HSIC and label CKA, show the same pattern. We first investigate whether changing hidden states used by the probe improves correctness prediction for MLLMs. We propose Attention Probe, which learns an attention query to pool frozen token states into a routing feature and improves over the standard probe. However, pooling only recombines hidden states computed for answer generation, not for deciding whether the answer should be trusted. We therefore build a decision layer inside the existing MLLM and train it for the routing decision. The resulting router, ReLope (KL-Regularized LoRA Probe), adapts a separate copy of one MLLM layer with LoRA and regularizes it with a KL-penalized stochastic bottleneck. This decision branch shares the frozen lower layers and leaves the model's answer-generation path unchanged. ReLope attains the highest correctness prediction AUC on all five benchmarks and three backbones we evaluate and improves the accuracy versus cost trade-off at negligible overhead. These results suggest a new perspective and a practical technical path on routing: rather than reading decisions off states built for generation, routing decisions can be learned by a dedicated decision layer inside the model. Code: https://github.com/Spinozaaa/ReLope</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-03-25T20:00:57Z</published>
+    <arxiv:comment>19 pages. Code: https://github.com/Spinozaaa/ReLope</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Yaopei Zeng</name>
+    </author>
+    <author>
+      <name>Congchao Wang</name>
+    </author>
+    <author>
+      <name>Blake JianHang Chen</name>
+    </author>
+    <author>
+      <name>Lu Lin</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2510.02934v1</id>
+    <title>Model-Agnostic Correctness Assessment for LLM-Generated Code via Dynamic Internal Representation Selection</title>
+    <updated>2025-10-03T12:25:28Z</updated>
+    <link href="https://arxiv.org/abs/2510.02934v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2510.02934v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) have demonstrated impressive capabilities in code generation and are increasingly integrated into the software development process. However, ensuring the correctness of LLM-generated code remains a critical concern. Prior work has shown that the internal representations of LLMs encode meaningful signals for assessing code correctness. Nevertheless, the existing methods rely on representations from pre-selected/fixed layers and token positions, which could limit its generalizability across diverse model architectures and tasks. In this work, we introduce AUTOPROBE, a novel model-agnostic approach that dynamically selects the most informative internal representations for code correctness assessment. AUTOPROBE employs an attention-based mechanism to learn importance scores for hidden states, enabling it to focus on the most relevant features. These weighted representations are then aggregated and passed to a probing classifier to predict code correctness across multiple dimensions, including compilability, functionality, and security. To evaluate the performance of AUTOPROBE, we conduct extensive experiments across multiple benchmarks and code LLMs. Our experimental results show that AUTOPROBE consistently outperforms the baselines. For security assessment, AUTOPROBE surpasses the state-of-the-art white-box approach by 18%. For compilability and functionality assessment, AUTOPROBE demonstrates its highest robustness to code complexity, with the performance higher than the other approaches by up to 19% and 111%, respectively. These findings highlight that dynamically selecting important internal signals enables AUTOPROBE to serve as a robust and generalizable solution for assessing the correctness of code generated by various LLMs.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-10-03T12:25:28Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Thanh Trong Vu</name>
+    </author>
+    <author>
+      <name>Tuan-Dung Bui</name>
+    </author>
+    <author>
+      <name>Thu-Trang Nguyen</name>
+    </author>
+    <author>
+      <name>Son Nguyen</name>
+    </author>
+    <author>
+      <name>Hieu Dinh Vo</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.29737v1</id>
+    <title>Minimal Prompt Perturbations Lead to Code Vulnerabilities: Prompt Fragility and Hidden-State Signals in Coding LLMs</title>
+    <updated>2026-05-28T10:30:28Z</updated>
+    <link href="https://arxiv.org/abs/2605.29737v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.29737v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>LLM-based coding assistants are seeing rapid adoption, offering substantial gains in developer productivity. As organizations increasingly ship code these agents produce, the security of that code becomes critical. Prior work has shown that minor prompt perturbations degrade the functional correctness of LLM-generated code, but whether they also compromise code security has remained unstudied. We apply token-level mutations to prompts across three models and five programming languages, and show that mutations as small as a single-character change can flip generated code from secure to vulnerable. Probing the models' hidden states reveals that this fragility is partially encoded in prompt representations, but unevenly so. Input-handling vulnerabilities, where the model omits validation or sanitization, are more predictable (mean AUC 0.753) than secure-defaults vulnerabilities, where insecure code stems from one local choice such as a weak algorithm or unsafe parameter (mean AUC 0.674). These results show that the threat model for LLM-assisted coding extends beyond prompt injection to ordinary prompt variation, and indicate that input-handling flaws can be caught before generation while secure-defaults flaws require intervention during decoding.</summary>
+    <category term="cs.CR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-28T10:30:28Z</published>
+    <arxiv:primary_category term="cs.CR"/>
+    <author>
+      <name>Alexander Sternfeld</name>
+    </author>
+    <author>
+      <name>Andrei Kucharavy</name>
+    </author>
+    <author>
+      <name>Ljiljana Dolamic</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.13975v1</id>
+    <title>Introspective Uncertainty Estimation for LLM-Based Code Generation</title>
+    <updated>2026-09-12T14:43:07Z</updated>
+    <link href="https://arxiv.org/abs/2609.13975v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.13975v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) are increasingly used for code generation but can produce fluent yet functionally incorrect outputs, which limits trust in their usage for practical software engineering workflows. This thesis investigates whether Introspective Uncertainty Estimation (IUE), based on internal hidden-state representations of LLMs, can reliably indicate correctness at the response and line levels for code generation tasks. The objective is to determine the extent to which hidden states encode information about functional code correctness and how this can be leveraged for practical risk assessment and fault localization. Methodologically, this thesis combines response-level evaluation on LiveCodeBench (LCB) and BigCodeBench (BCB) with an augmentation pipeline that derives token- and line-level labels from incorrect programs. In this setup, it compares static and dynamic response-level features, evaluates generalization across tasks, programming domains, and token positions, and studies line-level fault localization.
+  The results show that hidden states contain a strong response-level correctness signal. Static single-token probes perform best, while more elaborate dynamic strategies yield no consistent gains. While generalization across tasks, domains, and token positions is feasible, setting-dependent degradation largely remains for real-world software projects. At a fine granularity, line-level prediction is substantially harder than response-level estimation. However, in a conditional localization setup with known-incorrect programs, Top-K point-of-failure ranking remains effective. Overall, the findings suggest that hidden states are a robust and informative resource for estimating functional code correctness, supporting a two-stage workflow that combines response-level risk screening with targeted line-level prioritization.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-12T14:43:07Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Thomas Klassert</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.09842v3</id>
+    <title>System-Prompt Conditioning and Hidden-State Geometry in Four Open-Weight Models: Corrections and What Survives</title>
+    <updated>2026-10-08T01:08:49Z</updated>
+    <link href="https://arxiv.org/abs/2607.09842v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.09842v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Versions 1 and 2 of this preprint reported that an identity-specifying system prompt leaves a geometric fingerprint in the final-layer hidden-state trajectories of four open-weight language models, and that instruction tuning moves this fingerprint from the direction to the magnitude of the hidden-state vector. An audit of their code and data found the following. The curvature statistic described as Ollivier-Ricci curvature on Euclidean k-NN graphs was a non-standard Forman-type edge statistic on graphs built from temporal and cosine k-NN edges. Its released test permuted pooled edges instead of trajectories, and the published p-values came from unreleased code. The quantity reported as the norm of the first generated state is the state at the last prompt position, from which the first output token is predicted. The generic control prompt was matched to the identity prompt in characters, not in tokens. This version corrects the methods, withdraws the regime-specific claims (one model per regime) and the direction-to-magnitude claim, and re-analyzes the data with added controls. What survives is narrower. Centroid distance, maximum mean discrepancy and a linear probe separate every pair of prompt conditions in every model, while the curvature statistic exceeds its split-half noise floor in only four of twelve comparisons. In Gemma-4-E4B-it this state has a lower norm under the identity prompt than under a token-length-matched generic prompt (138.1 vs. 216.5; Cohen's d = -5.45; n = 20). Its direction also separates the conditions, and the effect fits the state's role in planning the output: the identity prompt instructs a pause before every answer, and the model opens 98 of 100 responses with a pause marker. When the first token is fixed, the norm ordering reverses. The base model continues the prompt template instead of answering. A redesigned follow-up study is in preparation.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-10T17:22:36Z</published>
+    <arxiv:comment>v3: substantial correction, replaces v1-v2. The curvature reported as Ollivier-Ricci was a Forman-type statistic on temporal plus cosine k-NN graphs, tested at edge level. The regime-specific and direction-to-magnitude claims are withdrawn. Added: simple-baseline, split-half, trajectory-level and token-length-matched controls. 14 pages, 1 figure, 9 tables</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Jorge Castillo Sepúlveda</name>
+    </author>
+    <author>
+      <name>Marco Torres Yévenes</name>
+    </author>
+    <author>
+      <name>Juan Carlos Lanas</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.15976v1</id>
+    <title>Fiber Fingerprints of Hidden Learning-State Dynamics</title>
+    <updated>2026-08-17T00:03:26Z</updated>
+    <link href="https://arxiv.org/abs/2608.15976v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.15976v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>A learning system can occupy execution states that are indistinguishable under every declared present-behavior readout yet respond differently to future training. We formalize this through fiber fingerprints: controlled future-learning response laws restricted to present-behavior equivalence classes. Prefix-compatible finite probes induce a predictive quotient functor, a Nerode-type minimal recursively sufficient representation, and a canonical set-level predictive fiber without assuming smoothness, reversibility, finite rank, or a manifold. Under an explicit finite-dimensional Hilbert realization, response decomposes into visible, visible-mode-reuse, and irreducible-new sectors; a history-reachability bridge retains only distinctions generated by natural training histories. Conditional mechanism results then identify a graph-Hodge chronology decomposition, a regular switching class with root-mean-square scale $\sqrt{p}η^{3/2}$ and finite-scale corrections, and an exact Adam moment section whose immediate adaptive field is constant while common future gradients can reveal hidden moment differences. Frozen Transformer--LoRA--AdamW studies with Qwen2.5-7B and Mistral-7B-v0.3 support a local action backbone, longer-horizon first-return non-closure, and fresh visible-relative completion with output-range reuse and a low-rank irreducible sector. Stronger claims remain bounded by preregistered negative or mixed results: re-anchored transport is unresolved above its measurement floor; the strict finite-grid Hodge--$3/2$ conjunction is unmet despite prospective contraction; Qwen accessibility is not established in the frozen raw moment chart; and Mistral revelation is future-context dependent rather than bank invariant. Within these support-, scale-, metric-, and context-resolved boundaries, present behavior is not a sufficient statistic for declared future learning.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-17T00:03:26Z</published>
+    <arxiv:comment>30 pages, 8 figures, 7 tables. Ancillary files include figure-reproducibility code and frozen plot-level data</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Qinyou Wang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.16244v2</id>
+    <title>Activating Latent Security Knowledge through LLM-Guided Risk Analysis for Secure Code Generation</title>
+    <updated>2026-08-26T13:08:43Z</updated>
+    <link href="https://arxiv.org/abs/2606.16244v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.16244v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models are pretrained on extensive software and security corpora, yet they frequently generate functionally correct code containing well-known vulnerabilities. Existing defenses commonly treat this behavior as a knowledge deficit, addressing it through model-specific fine-tuning or retrieval from large collections of vulnerability code examples. We argue that insecure generation can arise from a failure to activate task-relevant security knowledge, rather than from knowledge absence alone. We present BRACE, an inference-time, training-free security harness for risk-conditioned activation of security knowledge in black-box code generation. Given only a coding task, BRACE first utilizes an LLM (as a security expert) to identify task-relevant security risks. The predicted risk identifiers are validated against a lightweight canonical catalog and converted into concise, task-specific risk cues. BRACE then supplies these cues to the target code model, prompting it to apply its own secure-coding knowledge while satisfying the original functional requirements. The framework requires no target-model fine-tuning, parameter access, hidden states, mutable logits, learned retriever, or coding-example knowledge base. We evaluate BRACE on six open-weight models and six frontier commercial models with four benchmarks (CyberNative, HumanEval, CWEval, BaxBench), measuring functional correctness, security, joint functionality-security, and project-level generation. BRACE raises the average Safe Code Rate from 33.9% under Secure Prompt to 91.2% on CyberNative. It also improves CWEval Func-Sec performance from 49.7% to 69.6%. Mechanism-oriented ablations further show that the gains depend on selecting task-relevant risks.</summary>
+    <category term="cs.CR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-15T05:43:37Z</published>
+    <arxiv:primary_category term="cs.CR"/>
+    <author>
+      <name>Xiaoyun Xu</name>
+    </author>
+    <author>
+      <name>Lichao Wu</name>
+    </author>
+    <author>
+      <name>Jona te Lintelo</name>
+    </author>
+    <author>
+      <name>Siyu Zhang</name>
+    </author>
+    <author>
+      <name>Keke Gai</name>
+    </author>
+    <author>
+      <name>Stjepan Picek</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.16824v1</id>
+    <title>Confidence Geometry Reveals Trace-Level Correctness in Large Language Model Reasoning</title>
+    <updated>2026-05-16T05:57:00Z</updated>
+    <link href="https://arxiv.org/abs/2605.16824v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.16824v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) generate not only reasoning text, but also token-level confidence trajectories that record how uncertainty evolves during inference. Whether these trajectories are relevant to reasoning correctness remains unclear. Here we show that confidence trajectories encode a content-agnostic confidence geometry associated with trace-level final-answer correctness. Using only token-level confidence values, without access to the input question, reasoning text, hidden states, or external verifiers, we find that low-dimensional representations of confidence trajectories separate correct from incorrect reasoning traces. Across GSM8K, MATH, and MMLU, this geometric separation is quantitatively linked to downstream predictability: stronger clustering of correct and incorrect traces, measured by the Davies--Bouldin index, consistently corresponds to higher correctness-discrimination AUC. We further show that correctness-related information is enriched in the tail of reasoning, suggesting that late-stage confidence dynamics carry key correctness signals. We propose NeuralConf, a lightweight estimator that learns from confidence trajectories for correctness evaluation. Under a fixed trace budget, NeuralConf-derived scores improve confidence-weighted answer aggregation over majority voting, tail confidence, and other static baselines. These results reveal that LLMs expose trace-intrinsic statistical signals of correctness through their own confidence dynamics, offering a route to improve inference using information already present within generation.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-16T05:57:00Z</published>
+    <arxiv:comment>11 pages, 9 figures, 1 table. Code is available at https://github.com/QML-TGU/NeuralConf</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Shuo Liu</name>
+    </author>
+    <author>
+      <name>Ding Liu</name>
+    </author>
+    <author>
+      <name>Shi-Ju Ran</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2602.13699v2</id>
+    <title>Gradient-Stable Attention Heads Signal LLM Correctness</title>
+    <updated>2026-09-17T20:42:54Z</updated>
+    <link href="https://arxiv.org/abs/2602.13699v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2602.13699v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) often generate plausible yet incorrect answers, posing risks in safety-critical settings such as medicine. Human evaluation is expensive, and LLM-as-judge approaches risk introducing hidden errors. Recent single-pass white-box methods detect contextual hallucinations using linear probes over model internals, but their generalization to out-of-domain, out-of-task, and training-free settings remains poorly understood. We introduce HeadEntropy, a method that predicts answer correctness by measuring how susceptible each attention head's pattern is to modification under further gradient updates. The key insight is that the trace of the softmax Jacobian is a monotonic function of 2-Renyi entropy, linking attention spread to gradient stability during training, even without the reference annotation. With no training, HeadEntropy reaches 0.736 AUROC, outperforms every training-free baseline in paired comparison and matches a hidden-state probe out-of-domain, at under 1% of inference cost. We evaluate broadly across 5 instruction-tuned LLMs and 5 datasets spanning general knowledge, multi-hop reasoning, mathematical reasoning, claim verification, and medicine. The code is available at https://github.com/StanfordMIMI/HeadEntropy.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-02-14T09:50:19Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <arxiv:journal_ref>EMNLP 2026, Findings track</arxiv:journal_ref>
+    <author>
+      <name>Sophie Ostmeier</name>
+    </author>
+    <author>
+      <name>Brian Axelrod</name>
+    </author>
+    <author>
+      <name>Maya Varma</name>
+    </author>
+    <author>
+      <name>Asad Aali</name>
+    </author>
+    <author>
+      <name>Yabin Zhang</name>
+    </author>
+    <author>
+      <name>Magdalini Paschali</name>
+    </author>
+    <author>
+      <name>Sanmi Koyejo</name>
+    </author>
+    <author>
+      <name>Curtis Langlotz</name>
+    </author>
+    <author>
+      <name>Akshay Chaudhari</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2604.14174v2</id>
+    <title>Correcting Suppressed Log-Probabilities in Language Models with Post-Transformer Adapters</title>
+    <updated>2026-04-17T04:11:58Z</updated>
+    <link href="https://arxiv.org/abs/2604.14174v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2604.14174v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Alignment-tuned language models frequently suppress factual log-probabilities on politically sensitive topics despite retaining the knowledge in their hidden representations. We show that a 786K-parameter (approximately 0.02% of the base model) post-transformer adapter, trained on frozen hidden states, corrects this suppression on 31 ideology-discriminating facts across Qwen3-4B, 8B, and 14B. The adapter memorizes all 15 training facts and generalizes to 11--39% of 16 held-out facts across 5 random splits per scale, with zero knowledge regressions via anchored training. Both gated (SwiGLU) and ungated (linear bottleneck) adapters achieve comparable results; neither consistently outperforms the other (Fisher exact p &gt; 0.09 at all scales). On instruct models, the adapter corrects log-probability rankings. When applied at all token positions during generation, the adapter produces incoherent output; however, when applied only at the current prediction position (last-position-only), the adapter produces coherent, less censored text. A logit-space adapter operating after token projection fails to produce coherent generation at any application mode, suggesting hidden-state intervention is the correct level for generation correction. A previously undocumented silent gradient bug in Apple MLX explains all null results in earlier iterations of this work: the standard pattern nn.value_and_grad(model, fn)(model.parameters()) returns zero gradients without error; the correct pattern nn.value_and_grad(model, fn)(model, data) resolves this. We provide a minimal reproduction and discuss implications for other adapter research using MLX.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-03-25T16:27:43Z</published>
+    <arxiv:comment>12 pages, 3 figures, code at https://github.com/SolomonB14D3/qwen-adapter-correction</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Bryan Sanchez</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.34359v1</id>
+    <title>Improving Large Language Models for Code through Runtime Program-State Reasoning</title>
+    <updated>2026-09-28T05:37:40Z</updated>
+    <link href="https://arxiv.org/abs/2609.34359v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.34359v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models receive limited explicit training in reasoning about runtime program states. We study whether training models to reason about runtime program states improves downstream software-engineering capabilities. We introduce two complementary program-state reasoning tasks. Buggy input-output reasoning requires a model to generate a concrete input that exposes a behavioral difference between a buggy program and a hidden correct implementation and to predict the resulting execution behavior. Precondition-postcondition reasoning requires an agent to symbolically characterize a bug-triggering precondition, predict the expected postcondition, explain their causal connection, and instantiate this reasoning as an executable regression test. By incorporating these two tasks into a staged post-training pipeline, we develop Comet-9B, a 9B language model based on Qwen3.5-9B Base. We evaluate the resulting checkpoints on repository-level patch generation, regression-test generation, and security PoC generation. Adding both program-state reasoning tasks to supervised fine-tuning (SFT) on issue resolution improves success rates by 7.25 percentage points on SWE-bench Pro and 9.70 points on SWT-Bench Verified. Sequential reinforcement learning on the two tasks yields further gains of 7.25, 26.79, and 4.67 percentage points on SWE-bench Pro, SWT-Bench Verified, and CyberGym, respectively. Despite having only 9B parameters, Comet-9B achieves a score comparable to the reported GPT-5.2 result on SWE-bench Pro and matches the reported success rate of a GPT-4o-based agent on SWT-Bench Verified.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-28T05:37:40Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Hongwei Li</name>
+    </author>
+    <author>
+      <name>Spandan Garg</name>
+    </author>
+    <author>
+      <name>Yufan Huang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2408.04289v1</id>
+    <title>EMTeC: A Corpus of Eye Movements on Machine-Generated Texts</title>
+    <updated>2024-08-08T08:00:45Z</updated>
+    <link href="https://arxiv.org/abs/2408.04289v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2408.04289v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The Eye Movements on Machine-Generated Texts Corpus (EMTeC) is a naturalistic eye-movements-while-reading corpus of 107 native English speakers reading machine-generated texts. The texts are generated by three large language models using five different decoding strategies, and they fall into six different text type categories. EMTeC entails the eye movement data at all stages of pre-processing, i.e., the raw coordinate data sampled at 2000 Hz, the fixation sequences, and the reading measures. It further provides both the original and a corrected version of the fixation sequences, accounting for vertical calibration drift. Moreover, the corpus includes the language models' internals that underlie the generation of the stimulus texts: the transition scores, the attention scores, and the hidden states. The stimuli are annotated for a range of linguistic features both at text and at word level. We anticipate EMTeC to be utilized for a variety of use cases such as, but not restricted to, the investigation of reading behavior on machine-generated text and the impact of different decoding strategies; reading behavior on different text types; the development of new pre-processing, data filtering, and drift correction algorithms; the cognitive interpretability and enhancement of language models; and the assessment of the predictive power of surprisal and entropy for human reading times. The data at all stages of pre-processing, the model internals, and the code to reproduce the stimulus generation, data pre-processing and analyses can be accessed via https://github.com/DiLi-Lab/EMTeC/.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-08-08T08:00:45Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Lena Sophia Bolliger</name>
+    </author>
+    <author>
+      <name>Patrick Haller</name>
+    </author>
+    <author>
+      <name>Isabelle Caroline Rose Cretton</name>
+    </author>
+    <author>
+      <name>David Robert Reich</name>
+    </author>
+    <author>
+      <name>Tannon Kew</name>
+    </author>
+    <author>
+      <name>Lena Ann Jäger</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2305.04782v2</id>
+    <title>HistAlign: Improving Context Dependency in Language Generation by Aligning with History</title>
+    <updated>2023-12-03T19:31:39Z</updated>
+    <link href="https://arxiv.org/abs/2305.04782v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2305.04782v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Language models (LMs) can generate hallucinations and incoherent outputs, which highlights their weak context dependency. Cache-LMs, which augment LMs with a memory of recent history, can increase context dependency and have shown remarkable performance in diverse language generation tasks. However, we find that even with training, the performance gain stemming from the cache component of current cache-LMs is suboptimal due to the misalignment between the current hidden states and those stored in the memory. In this work, we present HistAlign, a new training approach to ensure good cache alignment such that the model receives useful signals from the history. We first prove our concept on a simple and synthetic task where the memory is essential for correct predictions, and we show that the cache component of HistAlign is better aligned and improves overall performance. Next, we evaluate HistAlign on diverse downstream language generation tasks, including prompt continuation, abstractive summarization, and data-to-text. We demonstrate that HistAlign improves text coherence and faithfulness in open-ended and conditional generation settings respectively. HistAlign is also generalizable across different model families, showcasing its strength in improving context dependency of LMs in diverse scenarios. Our code is publicly available at https://github.com/meetdavidwan/histalign</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2023-05-08T15:34:56Z</published>
+    <arxiv:comment>EMNLP 2023 (20 pages)</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>David Wan</name>
+    </author>
+    <author>
+      <name>Shiyue Zhang</name>
+    </author>
+    <author>
+      <name>Mohit Bansal</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2601.17593v4</id>
+    <title>LLMs Think with DAGs: Probing the Latent Graph Structure of Reasoning</title>
+    <updated>2026-10-15T18:09:02Z</updated>
+    <link href="https://arxiv.org/abs/2601.17593v4" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2601.17593v4" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models often externalize reasoning as linear chains, but many reasoning problems can be more naturally modeled as directed acyclic graphs (DAGs), where intermediate conclusions branch, merge, and are reused. Whether such graph structure is reflected in model internals remains unclear. We introduce Reasoning DAG Probing to answer this question. We formalize each premise, intermediate conclusion, and final answer as a DAG node, and train lightweight probes to predict node depth, pairwise distance, and adjacency from LLM hidden states. Across logical, mathematical, and code reasoning benchmarks, we find that DAG structure is meaningfully encoded in LLM representations: it peaks in intermediate layers, with later layers preferentially recover deeper nodes and longer-range reasoning dependencies, and becomes stronger with model scale. DAG structure also progressively emerges during autoregressive generation in ways that anticipate answer correctness, while steering activations toward the ground-truth DAG structure can convert some originally incorrect generations into correct ones. These results suggest that LLM reasoning is not purely sequential, but reflects measurable latent graph structure.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-01-24T21:11:51Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Tianjun Zhong</name>
+    </author>
+    <author>
+      <name>Linyang He</name>
+    </author>
+    <author>
+      <name>Ziyang Li</name>
+    </author>
+    <author>
+      <name>Nima Mesgarani</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.21678v2</id>
+    <title>Decodable but Not Faithful: Coupling Natural-Language Rationales to Programmatic Verifiers</title>
+    <updated>2026-08-08T16:02:09Z</updated>
+    <link href="https://arxiv.org/abs/2606.21678v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.21678v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Language models can generate plausible rationales for their predictions, but these explanations may not faithfully represent the model's internal reasoning. We propose verifier-coupled reasoning, a framework that inserts inline claims into reasoning traces and trains an auxiliary consistency head to predict programmatic verifier outputs from rationale-span hidden states. The central finding is a gap between decodability and faithfulness: consistency training reliably makes verifier information decodable from rationale representations, but decodability does not guarantee faithful generation. In LeanCheck (formal theorem proving), rationale-only and proof-only pooling achieve perfect directional separation under counterfactual conflict. In KataGo (Go engine), commentary spans encode 10-way win-rate buckets at 81% accuracy. Yet in a code setting, the model achieves 98.6% coupling while its generated explanations remain unfaithful: fluent prose with correct structured claims, but describing unrelated algorithms; a controlled pretrained-vs-from-scratch comparison shows the gap is not capacity-driven. Synthetic activation patching confirms causal influence (73-89% vs. 31% baseline), FEVER reveals that evidence-only pooling isolates genuine evidence sensitivity at the cost of raw accuracy, and per-claim analysis shows that consistency loss disproportionately benefits fine-grained claims over binary ones. These results establish that consistency losses are effective diagnostics and representation-shaping tools, but not sufficient conditions for faithful reasoning.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-19T18:37:24Z</published>
+    <arxiv:comment>Accepted to the ICML 2026 AI4Math Workshop as a poster</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Vatsal Ananthula</name>
+    </author>
+    <author>
+      <name>Adarsh Kumarappan</name>
+    </author>
+  </entry>
+</feed>

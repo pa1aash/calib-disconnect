@@ -1,0 +1,392 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/4YETPeyGyBl4hovCMOy0VLHxEPY</id>
+  <title>arXiv Query: search_query=all:reasoning AND all:models AND all:probing AND all:hidden AND all:states AND all:correctness&amp;id_list=&amp;start=0&amp;max_results=15</title>
+  <updated>2026-11-09T22:56:30Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=all:reasoning+AND+(all:models+AND+(all:probing+AND+(all:hidden+AND+(all:states+AND+all:correctness))))&amp;start=0&amp;max_results=15&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>15</opensearch:itemsPerPage>
+  <opensearch:totalResults>45</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2610.22046v1</id>
+    <title>Effectiveness of Hidden-State Probes for Localizing Reasoning Failures</title>
+    <updated>2026-10-15T15:15:40Z</updated>
+    <link href="https://arxiv.org/abs/2610.22046v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.22046v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Verifying the final answer of a long reasoning trace may show that the trace is wrong but it does not distinguish three cases. The problem may lie beyond the model's capability, another attempt would succeed, or one step in an otherwise recoverable trace made the trace fail. Standard hidden-state probes are trained on final-answer correctness, a label that conflates these cases. Monte Carlo rollouts distinguish the cases and locate the failing step at additional inference cost. We test the hidden states of 4B and 8B reasoning models for the failure type and the failing step and compare each probe with the strongest baseline that uses no hidden states. On incorrect 8B traces, the confidence probe, a calibrated correctness probe at a midpoint cutoff, misses 81% of cases in which a single step makes the trace unrecoverable and 47% of cases in which another attempt would succeed. A probe with a different training design over the same states reverses the ordering of these two kinds of failure, so either ordering can be read from those states. At both scales, no single tested probe locates the failing step more accurately than a rule based only on trace length, and at 4B a probe trained to predict that step fails to outperform this rule in any of 10 runs on identical traces. The confidence probe therefore indicates that an answer is wrong, but its failure-type ordering depends on its training design.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-15T15:15:40Z</published>
+    <arxiv:comment>Accepted at the NeurIPS 2026 Workshop on Interpretability as a Science (InterpScience). OpenReview: https://openreview.net/forum?id=X1D0ZeEeZ4 . 30 pages, 5 figures, 13 tables. Code: https://github.com/SSubhnil/Reasoning-Failures ; Data: https://huggingface.co/datasets/ssubhnil/Reasoning-Failures</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <arxiv:journal_ref>Interpretability as a Science: NeurIPS 2026 Workshop, 2026</arxiv:journal_ref>
+    <author>
+      <name>Shubham Subhnil</name>
+    </author>
+    <author>
+      <name>Yannis Belkhiter</name>
+    </author>
+    <author>
+      <name>Erik Miehling</name>
+    </author>
+    <author>
+      <name>Adam Dahlgren Lindström</name>
+    </author>
+    <author>
+      <name>Elizabeth M. Daly</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2504.05419v1</id>
+    <title>Reasoning Models Know When They're Right: Probing Hidden States for Self-Verification</title>
+    <updated>2025-04-07T18:42:01Z</updated>
+    <link href="https://arxiv.org/abs/2504.05419v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2504.05419v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Reasoning models have achieved remarkable performance on tasks like math and logical reasoning thanks to their ability to search during reasoning. However, they still suffer from overthinking, often performing unnecessary reasoning steps even after reaching the correct answer. This raises the question: can models evaluate the correctness of their intermediate answers during reasoning? In this work, we study whether reasoning models encode information about answer correctness through probing the model's hidden states. The resulting probe can verify intermediate answers with high accuracy and produces highly calibrated scores. Additionally, we find models' hidden states encode correctness of future answers, enabling early prediction of the correctness before the intermediate answer is fully formulated. We then use the probe as a verifier to decide whether to exit reasoning at intermediate answers during inference, reducing the number of inference tokens by 24\% without compromising performance. These findings confirm that reasoning models do encode a notion of correctness yet fail to exploit it, revealing substantial untapped potential to enhance their efficiency.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-04-07T18:42:01Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Anqi Zhang</name>
+    </author>
+    <author>
+      <name>Yulin Chen</name>
+    </author>
+    <author>
+      <name>Jane Pan</name>
+    </author>
+    <author>
+      <name>Chen Zhao</name>
+    </author>
+    <author>
+      <name>Aurojit Panda</name>
+    </author>
+    <author>
+      <name>Jinyang Li</name>
+    </author>
+    <author>
+      <name>He He</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.01853v1</id>
+    <title>Spatiotemporal Hidden-State Dynamics as a Signature of Internal Reasoning in Large Language Models</title>
+    <updated>2026-05-03T12:46:41Z</updated>
+    <link href="https://arxiv.org/abs/2605.01853v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.01853v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large reasoning models (LRMs) generate extended solutions, yet it remains unclear whether these traces reflect substantive internal computation or merely verbosity and overthinking. Although recent hidden-state analyses suggest that internal representations carry correctness-related signals, their coarse aggregations may obscure the token and layer structure underlying reasoning computation. We investigate hidden-state transitions across decoding steps and layers, and identify a distinct spatiotemporal pattern in LRMs: successful trajectories exhibit broad temporal dynamics with localized layer-wise concentration, while this structure is weaker in non-reasoning models and knowledge-heavy domains. We formalize this characteristic as Spatiotemporal Amplitude of Latent Transition (StALT), a training-free trajectory statistic that summarizes temporal changes between adjacent tokens weighted by within-token layer saliency. Across diverse models and benchmarks, StALT reliably separates correct from incorrect trajectories in reasoning-intensive regimes, providing a competitive label-free correctness signal alongside strong output-space and length-based baselines. Intervention analyses further show that this spatiotemporal amplitude responds systematically to manipulations that increase or reduce the demand for internal reasoning, supporting its association with latent reasoning dynamics in LRMs. These findings provide empirical evidence that LRMs exhibit measurable hidden-state dynamics and offer a practical probe for understanding internal computation beyond output-based evaluation.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-03T12:46:41Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Kotaro Furuya</name>
+    </author>
+    <author>
+      <name>Takahito Tanimura</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.31561v1</id>
+    <title>What Am I Missing? Question-Answering as Hidden State Probing</title>
+    <updated>2026-05-29T17:27:07Z</updated>
+    <link href="https://arxiv.org/abs/2605.31561v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.31561v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Test-time reasoning has become a significant field of study since the introduction of chain-of-thought reasoning in large language models (LLMs). However, the mechanisms of this reasoning process are still under-explored -- from the same input prompt, and even the same partial solution, LLMs can produce varied answers if sampled multiple times. We propose to leverage question-asking as an inference-time intervention that articulates information about the model's hidden state. To achieve that, we present a student-teacher setting where a student asks questions to a teacher. We train a probe on the student's hidden state before and after asking a question and find it is predictive of the trajectory's final correctness, even before generating the teacher's answer. This suggests there is a meaningful signal from the self-diagnosis that occurs during question generation rather than information transfer from the teacher. We then frame question-asking as a sequential decision problem, using this probe as a quality score, and define a gating policy to ask questions that maximize likelihood of correctness. We find that the success of question-asking as an intervention is largely dependent on the model's self-consistency. Our empirical results show a gap between detection and recovery; while our gating policy captures model correctness and uncertainty, interventions are equally likely to harm correct trajectories as they are to recover incorrect ones. This gap between diagnosis and correction has broader implications on language models' capacity for self-refinement under uncertainty.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-29T17:27:07Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Chu Fei Luo</name>
+    </author>
+    <author>
+      <name>Samuel Dahan</name>
+    </author>
+    <author>
+      <name>Xiaodan Zhu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2601.17593v4</id>
+    <title>LLMs Think with DAGs: Probing the Latent Graph Structure of Reasoning</title>
+    <updated>2026-10-15T18:09:02Z</updated>
+    <link href="https://arxiv.org/abs/2601.17593v4" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2601.17593v4" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models often externalize reasoning as linear chains, but many reasoning problems can be more naturally modeled as directed acyclic graphs (DAGs), where intermediate conclusions branch, merge, and are reused. Whether such graph structure is reflected in model internals remains unclear. We introduce Reasoning DAG Probing to answer this question. We formalize each premise, intermediate conclusion, and final answer as a DAG node, and train lightweight probes to predict node depth, pairwise distance, and adjacency from LLM hidden states. Across logical, mathematical, and code reasoning benchmarks, we find that DAG structure is meaningfully encoded in LLM representations: it peaks in intermediate layers, with later layers preferentially recover deeper nodes and longer-range reasoning dependencies, and becomes stronger with model scale. DAG structure also progressively emerges during autoregressive generation in ways that anticipate answer correctness, while steering activations toward the ground-truth DAG structure can convert some originally incorrect generations into correct ones. These results suggest that LLM reasoning is not purely sequential, but reflects measurable latent graph structure.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-01-24T21:11:51Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Tianjun Zhong</name>
+    </author>
+    <author>
+      <name>Linyang He</name>
+    </author>
+    <author>
+      <name>Ziyang Li</name>
+    </author>
+    <author>
+      <name>Nima Mesgarani</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.09502v1</id>
+    <title>Hidden Error Awareness in Chain-of-Thought Reasoning: The Signal Is Diagnostic, Not Causal</title>
+    <updated>2026-05-10T12:26:46Z</updated>
+    <link href="https://arxiv.org/abs/2605.09502v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.09502v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Chain-of-thought (CoT) prompting assumes that generated reasoning reflects a model's internal computation. We show this assumption is wrong in a specific, measurable way: models internally detect their own reasoning errors but outwardly express confidence in them. A linear probe on hidden states predicts trace correctness with 0.95 AUROC -- from the very first reasoning step (0.79) -- while verbalized confidence for wrong traces is 4.55/5, nearly identical to correct ones (4.87/5). A text-surface classifier achieves only 0.59 on the same data, confirming a 0.20-point gap invisible in the generated text. This hidden error awareness holds across three model families (Qwen, Llama, Phi), 1.5B-72B parameters, and RL-trained reasoning models (DeepSeek-R1, 0.852 AUROC). The natural question is whether this signal can fix the errors it detects. It cannot. Four interventions -- activation steering, probe-guided best-of-N, self-correction, and activation patching -- all fail; patching destroys output coherence entirely. The signal is diagnostic, not causal: a readout of computation quality, not a lever to redirect it. This delineates a boundary for mechanistic interpretability: error representations during reasoning are fundamentally different from the factual knowledge representations that prior work has successfully edited.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-10T12:26:46Z</published>
+    <arxiv:comment>10 pages, 5 figures, 10 tables.Mechanistic Interpretability @ ICML 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Aojie Yuan</name>
+    </author>
+    <author>
+      <name>Zhiyuan Julian Su</name>
+    </author>
+    <author>
+      <name>Haiyue Zhang</name>
+    </author>
+    <author>
+      <name>Yi Nian</name>
+    </author>
+    <author>
+      <name>Yue Zhao</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2611.07876v1</id>
+    <title>Which Signals of Code Correctness Survive Distribution Shift? Hidden-State and Causal Predictors of Program and Verdict Correctness</title>
+    <updated>2026-11-05T11:57:19Z</updated>
+    <link href="https://arxiv.org/abs/2611.07876v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2611.07876v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models increasingly judge code, yet without external feedback such judgments are unreliable, and verifying them by executing tests or by extended reasoning is costly. Instead, execution-free correctness predictors use signals from the model's output probabilities, sampled solutions, or hidden states to identify judgments that warrant further verification. However, these predictors may degrade under distribution shifts when generalizing across projects and languages.
+  We compare six execution-free predictors from four families on Qwen3-Coder-30B and gpt-oss-20b under benchmark shift between LiveCodeBench and BigCodeBench and language shift across Python, C++ and Java. We evaluate two targets: whether the model's own verdict on a program can be trusted, and whether the program itself is correct. Besides established approaches, we adapt two novel causal localization methods to code, which have been shown to be more robust out-of-distribution on natural language tasks. For verdict correctness, causal localization improves robustness to language shift. For Qwen3-Coder a probe on the causally localized subspace stays 0.09 AUROC ahead of output confidence under language shift (0.11 in distribution), significantly outperforming the best non-causal predictor by 0.04 AUROC on average. This advantage, however, does not generalize consistently to gpt-oss or to benchmark shift. For program correctness, predictors transfer more successfully between benchmarks, largely by identifying problems on which the model tends to fail. However, their ability to rank candidates within the same problem is limited.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-11-05T11:57:19Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Viola Campos</name>
+    </author>
+    <author>
+      <name>Thomas Klassert</name>
+    </author>
+    <author>
+      <name>Adrian Ulges</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.13772v1</id>
+    <title>Where Does Reasoning Break? Step-Level Hallucination Detection via Hidden-State Transport Geometry</title>
+    <updated>2026-05-13T16:48:48Z</updated>
+    <link href="https://arxiv.org/abs/2605.13772v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.13772v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models hallucinate during multi-step reasoning, but most existing detectors operate at the trace level: they assign one confidence score to a full output, fail to localize the first error, and often require multiple sampled completions. We frame hallucination instead as a property of the hidden-state trajectory produced during a single forward pass. Correct reasoning moves through a stable manifold of locally coherent transitions; a first error appears as a localized excursion in transport cost away from this manifold. We operationalize this view with a label-conditioned teacher that builds a trace-specific contrastive PCA lens and scores each step with seven geometric transition features, and a deployable BiLSTM student distilled from the teacher that operates on raw hidden states without inference-time labels. We prove that contrastive PCA is the optimal projection for a transport-separation objective between first error and correct states, and that single-pass first error localization holds whenever the first error creates a positive transport margin over preceding correct transitions. On ProcessBench, PRM800K, HaluEval, and TruthfulQA, both models outperform entropy-based, probing-based, and attention-based baselines in-domain; the teacher transfers stably across language models and datasets, while the student collapses under shift, a gap our distillation theory predicts. These results recast step-level hallucination detection as a problem of trajectory dynamics and identify the central obstacle to deployment: preserving the contrastive transport margin under distribution shift.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-13T16:48:48Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Tyler Alvarez</name>
+    </author>
+    <author>
+      <name>Ali Baheri</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.26119v1</id>
+    <title>Probing the Origins of Reasoning Performance: Representational Quality for Mathematical Problem-Solving in RL vs. SFT Fine-Tuned Models</title>
+    <updated>2026-07-28T17:42:42Z</updated>
+    <link href="https://arxiv.org/abs/2607.26119v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.26119v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large reasoning models trained via reinforcement learning (RL) have been increasingly shown to outperform their supervised fine-tuned (SFT) counterparts on mathematical reasoning tasks; Yet the mechanistic basis for this advantage remains unclear. We therefore ask, what internal representational differences enable RL models' superior performance? Our work presents two converging lines of evidence: First, linear probes trained on layer-wise hidden states reveal that RL models tend to achieve higher accuracy in predicting answer correctness compared to SFT models, indicating more linearly separable and structured representations. Second, mean ablation studies show that RL models develop a hierarchical architecture where deeper layers become progressively more critical, whereas SFT models distribute importance uniformly across layers. Together, these findings demonstrate that RL training fundamentally restructures how models represent and process reasoning problems. Finally, we analyze token-count variability under repeated sampling across problems to assess adaptive compute allocation. While we observe higher variability in some RL-tuned models than in their SFT counterparts, we see strong consistency in others, suggesting that token allocation may depend more on the overall training pipeline than on RL versus SFT alone. We believe this token-allocation variability reveals the spread of plausible on-policy reasoning, highlighting which models exhibit stable policies versus those that are under-determined, potentially non-identifiable solution behaviour.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-28T17:42:42Z</published>
+    <arxiv:comment>Second Workshop on XAI4Science, AAAI 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Antyabha Rahman</name>
+    </author>
+    <author>
+      <name>Akshaj Gurugubelli</name>
+    </author>
+    <author>
+      <name>Omar Ankit</name>
+    </author>
+    <author>
+      <name>Kevin Zhu</name>
+    </author>
+    <author>
+      <name>Aishwarya Balwani</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2507.12379v1</id>
+    <title>Probing for Arithmetic Errors in Language Models</title>
+    <updated>2025-07-16T16:27:50Z</updated>
+    <link href="https://arxiv.org/abs/2507.12379v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2507.12379v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We investigate whether internal activations in language models can be used to detect arithmetic errors. Starting with a controlled setting of 3-digit addition, we show that simple probes can accurately decode both the model's predicted output and the correct answer from hidden states, regardless of whether the model's output is correct. Building on this, we train lightweight error detectors that predict model correctness with over 90% accuracy. We then extend our analysis to structured chain-of-thought traces on addition-only GSM8K problems and find that probes trained on simple arithmetic generalize well to this more complex setting, revealing consistent internal representations. Finally, we demonstrate that these probes can guide selective re-prompting of erroneous reasoning steps, improving task accuracy with minimal disruption to correct outputs. Our findings suggest that arithmetic errors can be anticipated from internal activations alone, and that simple probes offer a viable path toward lightweight model self-correction.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-07-16T16:27:50Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Yucheng Sun</name>
+    </author>
+    <author>
+      <name>Alessandro Stolfo</name>
+    </author>
+    <author>
+      <name>Mrinmaya Sachan</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.08200v1</id>
+    <title>Where Reliability Lives in Vision-Language Models: A Mechanistic Study of Attention, Hidden States, and Causal Circuits</title>
+    <updated>2026-05-05T22:27:05Z</updated>
+    <link href="https://arxiv.org/abs/2605.08200v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.08200v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>A pervasive intuition holds that vision-language models (VLMs) are most trustworthy when their attention maps look sharp: concentrated attention on the queried region should imply a confident, calibrated answer. We test this Attention-Confidence Assumption directly. We instrument three open-weight VLM families (LLaVA-1.5, PaliGemma, Qwen2-VL; 3-7B parameters) with a unified mechanistic pipeline -- the VLM Reliability Probe (VRP) -- that compares attention structure, generation dynamics, and hidden-state geometry against a single correctness label. Three results emerge. (i) Attention structure is a near-zero predictor of correctness (R_pb(C_k,y)=0.001, 95% CI [-0.034,0.036]; R_pb(H_s,y)=-0.012, [-0.047,0.024] on a pooled n=3,090 split), even though attention remains causally necessary for feature extraction (top-30% patch masking drops accuracy by 8.2-11.3 pp, p&lt;0.001). (ii) Reliability becomes legible later in the computation: a single hidden-state linear probe reaches AUROC&gt;0.95 on POPE for two of three families, and self-consistency at K=10 is the strongest behavioral predictor we measure at 10x inference cost (R_pb=0.43). (iii) Causal neuron-level ablations expose a sharp architectural split with direct monitor-design implications: late-fusion LLaVA concentrates reliability in a fragile late bottleneck (-8.3 pp object-identification accuracy after top-5 probe-neuron ablation), whereas early-fusion PaliGemma and Qwen2-VL distribute it widely and absorb destruction of ~50% of their peak-layer hidden dimension with &lt;=1 pp degradation. The takeaway is narrow but consequential: in 3-7B VLMs, reliability is read more reliably off hidden-state geometry, layer-wise margin formation, and sparse late-layer circuits than off attention-map sharpness.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-05T22:27:05Z</published>
+    <arxiv:comment>15 pages, 4 figures, 10 tables. Accepted at the ICLR 2026 Workshop on Multimodal Reasoning. Code and probe-training pipelines: https://github.com/itsloganmann/VLM-Reliability-Probe</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Logan Mann</name>
+    </author>
+    <author>
+      <name>Ajit Saravanan</name>
+    </author>
+    <author>
+      <name>Ishan Dave</name>
+    </author>
+    <author>
+      <name>Shikhar Shiromani</name>
+    </author>
+    <author>
+      <name>Saadullah Ismail</name>
+    </author>
+    <author>
+      <name>Yi Xia</name>
+    </author>
+    <author>
+      <name>Emily Huang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2511.14773v1</id>
+    <title>Temporal Predictors of Outcome in Reasoning Language Models</title>
+    <updated>2025-11-03T08:57:18Z</updated>
+    <link href="https://arxiv.org/abs/2511.14773v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2511.14773v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The chain-of-thought (CoT) paradigm uses the elicitation of step-by-step rationales as a proxy for reasoning, gradually refining the model's latent representation of a solution. However, it remains unclear just how early a Large Language Model (LLM) internally commits to an eventual outcome. We probe this by training linear classifiers on hidden states after the first t reasoning tokens, showing that eventual correctness is highly predictable after only a few tokens, even when longer outputs are needed to reach a definite answer. We show that, for harder questions, a drop in predictive accuracy highlights a selection artifact: hard items are disproportionately represented in long CoTs. Overall, our results imply that for reasoning models, internal self-assessment of success tends to emerge after only a few tokens, with implications for interpretability and for inference-time control.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-11-03T08:57:18Z</published>
+    <arxiv:comment>4 pages, 4 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Joey David</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2611.05919v1</id>
+    <title>Routes of Reasoning: Reading and Reshaping Test-Time Compute in MoE Models</title>
+    <updated>2026-11-04T04:13:02Z</updated>
+    <link href="https://arxiv.org/abs/2611.05919v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2611.05919v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Reasoning models allocate test-time compute across distinct behaviors such as planning, deriving, and verifying. However, models frequently "overthink," continuing to verify and re-derive long after finding a correct answer. This wastes expensive compute and can even degrade performance. Existing interventions, such as token budgets or steering, primarily regulate reasoning duration rather than targeting specific behaviors. In this work, we demonstrate that Mixture-of-Experts (MoE) routers provide a natural, training-free interface for behavioral control. We first split reasoning traces into sentence-level segments and label each with one of six reasoning behaviors (planning, execution, restatement, fact, reflection, and conclusion), so that every token carries the behavior of its segment. Linear probes on router logits predict this label nearly as well as probes on the residual stream, the model's full hidden state and the standard target for probing, while using about half as many features. These signals generalize: experts associated with a reasoning behavior on one dataset predict the same behavior on the others, across six datasets spanning five domains (math, code, science, knowledge, and commonsense). Building on this, we selectively edit expert router scores during inference to curb overthinking. Across four models and four benchmarks, this intervention reduces the number of generated tokens by a median of 30.4% (and up to 63.3%). Crucially, it encourages the model to stop once the problem is solved, rather than skipping essential reasoning steps. Accuracy never drops by more than 0.5 percentage points, and frequently improves. Ultimately, MoE routing offers both an interpretable lens into reasoning states and a lightweight mechanism for optimizing test-time compute.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-11-04T04:13:02Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Shengjie Wang</name>
+    </author>
+    <author>
+      <name>Mohsen Fayyaz</name>
+    </author>
+    <author>
+      <name>Nanyun Peng</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2603.01326v1</id>
+    <title>Truth as a Trajectory: What Internal Representations Reveal About Large Language Model Reasoning</title>
+    <updated>2026-03-01T23:52:10Z</updated>
+    <link href="https://arxiv.org/abs/2603.01326v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2603.01326v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Existing explainability methods for Large Language Models (LLMs) typically treat hidden states as static points in activation space, assuming that correct and incorrect inferences can be separated using representations from an individual layer. However, these activations are saturated with polysemantic features, leading to linear probes learning surface-level lexical patterns rather than underlying reasoning structures. We introduce Truth as a Trajectory (TaT), which models the transformer inference as an unfolded trajectory of iterative refinements, shifting analysis from static activations to layer-wise geometric displacement. By analyzing displacement of representations across layers, TaT uncovers geometric invariants that distinguish valid reasoning from spurious behavior. We evaluate TaT across dense and Mixture-of-Experts (MoE) architectures on benchmarks spanning commonsense reasoning, question answering, and toxicity detection. Without access to the activations themselves and using only changes in activations across layers, we show that TaT effectively mitigates reliance on static lexical confounds, outperforming conventional probing, and establishes trajectory analysis as a complementary perspective on LLM explainability.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-03-01T23:52:10Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Hamed Damirchi</name>
+    </author>
+    <author>
+      <name>Ignacio Meza De la Jara</name>
+    </author>
+    <author>
+      <name>Ehsan Abbasnejad</name>
+    </author>
+    <author>
+      <name>Afshar Shamsi</name>
+    </author>
+    <author>
+      <name>Zhen Zhang</name>
+    </author>
+    <author>
+      <name>Javen Shi</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.30345v1</id>
+    <title>Answer Probing-Guided Search for Diverse Solution Exploration of LLMs</title>
+    <updated>2026-08-31T07:01:36Z</updated>
+    <link href="https://arxiv.org/abs/2608.30345v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.30345v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Generating multiple diverse and high-quality solutions is valuable for many applications, such as code-test generation and drug discovery. However, Large Language Models (LLMs) tend to converge on a single high-confidence solution during inference, limiting exploration of alternative valid solution paths. Existing test-time methods promote diversity through tree-like search and prune semantically similar branches using response-level semantic embeddings. However, we find that such embeddings are easily confounded by linguistic and stylistic similarities, making it difficult to distinguish genuinely distinct solution paths. To address this, we introduce Answer Probing, which probes the potential answer an LLM would reach from an intermediate reasoning path. We demonstrate that the hidden states of probed answers more effectively differentiate distinct solution paths than semantic embeddings, and the perplexity of probed answers serves as a practical proxy for reasoning correctness. Based on these findings, we propose Answer Probing-Guided Tree Search (APTS), which guides the tree search by the probed answers' hidden state similarity and perplexity. Experiments on three reasoning tasks across two LLMs show that APTS consistently enhances solution diversity, demonstrating its effectiveness and robustness.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-31T07:01:36Z</published>
+    <arxiv:comment>Accepted to the EMNLP 2026 Main</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Yi Fang</name>
+    </author>
+    <author>
+      <name>Que Shen</name>
+    </author>
+    <author>
+      <name>Chengpeng Li</name>
+    </author>
+    <author>
+      <name>Boyi Deng</name>
+    </author>
+    <author>
+      <name>Wei Shi</name>
+    </author>
+    <author>
+      <name>Wenjie Wang</name>
+    </author>
+    <author>
+      <name>Fuli Feng</name>
+    </author>
+    <author>
+      <name>Fengli Xu</name>
+    </author>
+    <author>
+      <name>Dayiheng Liu</name>
+    </author>
+  </entry>
+</feed>

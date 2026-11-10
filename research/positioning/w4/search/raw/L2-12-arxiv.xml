@@ -1,0 +1,420 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/2pxp/kcukqgueK40nzueHh8ibJg</id>
+  <title>arXiv Query: search_query=all:chain AND all:thought AND all:calibration AND all:confidence&amp;id_list=&amp;start=0&amp;max_results=15</title>
+  <updated>2026-11-09T22:56:39Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=all:chain+AND+(all:thought+AND+(all:calibration+AND+all:confidence))&amp;start=0&amp;max_results=15&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>15</opensearch:itemsPerPage>
+  <opensearch:totalResults>66</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2606.11211v1</id>
+    <title>Calibration Drift Under Reasoning: How Chain-of-Thought Budgets Induce Overconfidence in Large Language Models</title>
+    <updated>2026-04-24T04:46:16Z</updated>
+    <link href="https://arxiv.org/abs/2606.11211v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.11211v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The ability of large language models (LLMs) to express calibrated uncertainty is important for safe deployment. Chain-of-thought (CoT) reasoning is widely used to improve accuracy and reliability, but its effect on calibration is not fully understood. We show that this picture is incomplete: in some settings, increasing the reasoning budget beyond a task-specific threshold can cause models to become systematically overconfident, assigning high confidence to incorrect answers. We call this phenomenon Calibration Drift Under Reasoning (CDUR) and study it both theoretically and empirically.
+  We define reasoning budget B and analyze conditions under which Expected Calibration Error ECE(B) follows a non-monotonic pattern: it first decreases as reasoning corrects errors, then increases as longer reasoning produces internally consistent but incorrect explanations. We propose a Hypothesis Lock-In model based on autoregressive generation to explain this behavior.
+  We evaluate Llama-3.1-8B and Llama-3.3-70B on 47 reasoning-trap questions across four reasoning budgets and three seeds (1,368 API calls; 574 valid responses). The 8B model shows non-monotonic calibration behavior, while results for the 70B model are limited to baseline evaluation and are inconclusive for budget-dependent effects.
+  We introduce CABStop, a calibration-aware stopping rule that halts reasoning when confidence diverges from an auxiliary accuracy estimate. These results suggest that increasing reasoning depth does not always improve reliability and should be monitored carefully.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-04-24T04:46:16Z</published>
+    <arxiv:comment>31 pages, 4 figures, 3 tables. Introduces Calibration Drift Under Reasoning (CDUR) with theoretical analysis and preliminary experiments; includes CABStop; code and data available</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Prakul Sunil Hiremath</name>
+    </author>
+    <author>
+      <name>Harshit R. Hiremath</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2506.08243v1</id>
+    <title>Temporalizing Confidence: Evaluation of Chain-of-Thought Reasoning with Signal Temporal Logic</title>
+    <updated>2025-06-09T21:21:12Z</updated>
+    <link href="https://arxiv.org/abs/2506.08243v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2506.08243v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) have shown impressive performance in mathematical reasoning tasks when guided by Chain-of-Thought (CoT) prompting. However, they tend to produce highly confident yet incorrect outputs, which poses significant risks in domains like education, where users may lack the expertise to assess reasoning steps. To address this, we propose a structured framework that models stepwise confidence as a temporal signal and evaluates it using Signal Temporal Logic (STL). In particular, we define formal STL-based constraints to capture desirable temporal properties and compute robustness scores that serve as structured, interpretable confidence estimates. Our approach also introduces a set of uncertainty reshaping strategies to enforce smoothness, monotonicity, and causal consistency across the reasoning trajectory. Experiments show that our approach consistently improves calibration metrics and provides more reliable uncertainty estimates than conventional confidence aggregation and post-hoc calibration.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-06-09T21:21:12Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Zhenjiang Mao</name>
+    </author>
+    <author>
+      <name>Artem Bisliouk</name>
+    </author>
+    <author>
+      <name>Rohith Reddy Nama</name>
+    </author>
+    <author>
+      <name>Ivan Ruchkin</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.14961v1</id>
+    <title>CoRA: Confidence-Rationale Alignment for Reliable Chain-of-Thought Reasoning</title>
+    <updated>2026-06-12T21:10:33Z</updated>
+    <link href="https://arxiv.org/abs/2606.14961v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.14961v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Chain-of-thought (CoT) reasoning can improve LLM performance, but high answer confidence may be misleading when the accompanying CoT rationale is plausible yet incomplete or poorly supported. We study confidence--rationale alignment: whether a model's confidence in its committed answer is justified by its generated rationale. We introduce a GRPO-based reinforcement learning framework that jointly rewards answer correctness, committed-answer probability, and rubric-based rationale support, where the rubric assesses grounding, coherence, task match, and connection to the selected answer without revealing the gold answer to the judge. Across MedQA, MathQA, and OpenBookQA using three open-weight LLMs, our method reduces the confidence--rationale alignment error by up to 26.51% compared with untuned checkpoints, SFT, and correctness-only GRPO, while maintaining competitive accuracy and often improving calibration. These results show that reliable CoT reasoning requires not only confident answers, but rationales that substantively support them.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-12T21:10:33Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Juming Xiong</name>
+    </author>
+    <author>
+      <name>Weixin Liu</name>
+    </author>
+    <author>
+      <name>Kevin Guo</name>
+    </author>
+    <author>
+      <name>Congning Ni</name>
+    </author>
+    <author>
+      <name>Junchao Zhu</name>
+    </author>
+    <author>
+      <name>Chongyu Qu</name>
+    </author>
+    <author>
+      <name>Chao Yan</name>
+    </author>
+    <author>
+      <name>Katherine Brown</name>
+    </author>
+    <author>
+      <name>Avinash Baidya</name>
+    </author>
+    <author>
+      <name>Xiang Gao</name>
+    </author>
+    <author>
+      <name>Bradley Malin</name>
+    </author>
+    <author>
+      <name>Zhijun Yin</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2511.06437v1</id>
+    <title>Optimizing Chain-of-Thought Confidence via Topological and Dirichlet Risk Analysis</title>
+    <updated>2025-11-09T16:09:02Z</updated>
+    <link href="https://arxiv.org/abs/2511.06437v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2511.06437v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Chain-of-thought (CoT) prompting enables Large Language Models to solve complex problems, but deploying these models safely requires reliable confidence estimates, a capability where existing methods suffer from poor calibration and severe overconfidence on incorrect predictions. We propose Enhanced Dirichlet and Topology Risk (EDTR), a novel decoding strategy that combines topological analysis with Dirichlet-based uncertainty quantification to measure LLM confidence across multiple reasoning paths. EDTR treats each CoT as a vector in high-dimensional space and extracts eight topological risk features capturing the geometric structure of reasoning distributions: tighter, more coherent clusters indicate higher confidence while dispersed, inconsistent paths signal uncertainty. We evaluate EDTR against three state-of-the-art calibration methods across four diverse reasoning benchmarks spanning olympiad-level mathematics (AIME), grade school math (GSM8K), commonsense reasoning, and stock price prediction \cite{zhang2025aime, cobbe2021training, talmor-etal-2019-commonsenseqa, yahoo_finance}. EDTR achieves 41\% better calibration than competing methods with an average ECE of 0.287 and the best overall composite score of 0.672, while notably achieving perfect accuracy on AIME and exceptional calibration on GSM8K with an ECE of 0.107, domains where baselines exhibit severe overconfidence. Our work provides a geometric framework for understanding and quantifying uncertainty in multi-step LLM reasoning, enabling more reliable deployment where calibrated confidence estimates are essential.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-11-09T16:09:02Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Abhishek More</name>
+    </author>
+    <author>
+      <name>Anthony Zhang</name>
+    </author>
+    <author>
+      <name>Nicole Bonilla</name>
+    </author>
+    <author>
+      <name>Ashvik Vivekan</name>
+    </author>
+    <author>
+      <name>Kevin Zhu</name>
+    </author>
+    <author>
+      <name>Parham Sharafoleslami</name>
+    </author>
+    <author>
+      <name>Maheep Chaudhary</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.33290v1</id>
+    <title>Calibration, Not Answer Selection: Distilling Internal Confidence in Reasoning Models</title>
+    <updated>2026-09-27T06:52:17Z</updated>
+    <link href="https://arxiv.org/abs/2609.33290v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.33290v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Reinforcement learning with binary correctness rewards trains correctness, not calibrated confidence. The confidence that reasoning models verbalize is systematically overconfident, and the problem is not merely one of scale: verbalized confidence tracks how willing a model is to commit to an answer, not how likely the answer is to be right. Post-hoc rescaling therefore fits one distribution but rarely transfers. We look inside the model instead. On factual question answering, a linear probe on the hidden state between the chain of thought and the answer is substantially better calibrated: its expected calibration error is 5 to 38 times lower than that of the verbalized score across four benchmarks and two model families. However, when used to pick among N sampled answers, that same probe nearly ties majority voting yet falls far short of the oracle. Internal states answer "how certain am I" well and "which answer is right" poorly, so the signal should be reported as a confidence rather than used to select answers. As a result, we introduce probe-guided self-distillation (Probe-SD): score a model's own sampled traces with the probe, overwrite the confidence each trace states, and finetune the base checkpoint of the same family, so nothing but the model itself remains at test time. On Qwen3-14B, Probe-SD cuts ECE from 0.178 to 0.024 in-domain and from 0.542 to 0.113 out-of-domain, where it also beats post-hoc recalibration and self-consistency distillation. The resulting confidence is well-calibrated and useful for weighted voting, behaviors previously attributed to online RL, here obtained with supervised finetuning alone.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-27T06:52:17Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Yadong Xi</name>
+    </author>
+    <author>
+      <name>Rongsheng Zhang</name>
+    </author>
+    <author>
+      <name>Tangjie Lv</name>
+    </author>
+    <author>
+      <name>Ziyang Luo</name>
+    </author>
+    <author>
+      <name>Ruochen Zhao</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2508.14390v2</id>
+    <title>REHEARSE: Experiential Rehearsal for Verbal Confidence Calibration in Large Language Models</title>
+    <updated>2026-08-13T01:37:05Z</updated>
+    <link href="https://arxiv.org/abs/2508.14390v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2508.14390v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) often express verbal confidence that is poorly aligned with actual correctness, limiting their reliability in safety-critical applications. Existing prompt-based methods treat calibration largely as a one-shot inference problem, relying on either instance-level reasoning or post-hoc self-assessment. We introduce Rehearse (Experiential Rehearsal), a training-free method that instead enables models to adapt from their own scored confidence experience. In a credence-calibration game grounded in a strictly proper scoring rule, the model receives feedback on prior confidence decisions; this experience is summarized in a post-game trajectory prefix that captures systematic over- or under-confidence. At inference time, the model applies this cross-instance calibration signal to the chain-of-thought reasoning trace for each new question. Across four LLMs, three benchmarks, and five random seeds, Rehearse achieves the lowest average ECE among training-free methods with improved accuracy, reducing average ECE by 58% relative to the uncalibrated baseline. Code is available at https://anonymous.4open.science/r/Experiential-Rehearsal-7C77/.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-08-20T03:33:38Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Ke Fang</name>
+    </author>
+    <author>
+      <name>Tianyi Zhao</name>
+    </author>
+    <author>
+      <name>Qianwen Wang</name>
+    </author>
+    <author>
+      <name>Lu Cheng</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.13753v2</id>
+    <title>Post-Training Shifts Confidence: A Three-Stage Analysis of How SFT, RL, and OPD Shape CoT Calibration</title>
+    <updated>2026-07-20T09:24:51Z</updated>
+    <link href="https://arxiv.org/abs/2607.13753v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.13753v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models have made strong reasoning gains through supervised fine-tuning, reinforcement learning, and on-policy distillation, yet these post-training methods are usually evaluated only by final-answer accuracy. We study how they reshape confidence during reasoning. We introduce a three-stage calibration framework that evaluates confidence before, during, and after chain-of-thought generation, corresponding to difficulty estimation, early termination, and answer aggregation. Through a controlled comparison on mathematical reasoning benchmarks, we find that OPD provides the most useful pre-reasoning confidence, SFT gives the strongest online signal for early stopping, and RL produces the most reliable trace-level signal for aggregation. We further show that confidence reliability is position-dependent: RL confidence becomes informative after a path-commitment phase, while OPD confidence is useful early but can become inversely calibrated later. Based on this observation, we propose PosConf, a position-aware confidence strategy that uses confidence only from reliable relative-position intervals. PosConf improves RL answer aggregation by 6.1 points over majority voting and consistently improves OPD early stopping under tight token budgets, with gains up to 4.3 points by avoiding its later inverse-calibration region, showing that \emph{confidence in reasoning models should be used both stage-wise and position-awarely}. Our code is available at https://github.com/EIT-NLP/Post-Training-Calibration.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-15T12:12:37Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Shuhao Li</name>
+    </author>
+    <author>
+      <name>Guodong Du</name>
+    </author>
+    <author>
+      <name>Anhao Zhao</name>
+    </author>
+    <author>
+      <name>Wanyu Lin</name>
+    </author>
+    <author>
+      <name>Tianyu Yuan</name>
+    </author>
+    <author>
+      <name>Xiaoyu Shen</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2601.13368v1</id>
+    <title>Recurrent Confidence Chain: Temporal-Aware Uncertainty Quantification in Large Language Models</title>
+    <updated>2026-01-19T20:04:34Z</updated>
+    <link href="https://arxiv.org/abs/2601.13368v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2601.13368v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>As reasoning modules, such as the chain-of-thought mechanism, are applied to large language models, they achieve strong performance on various tasks such as answering common-sense questions and solving math problems. The main challenge now is to assess the uncertainty of answers, which can help prevent misleading or serious hallucinations for users. Although current methods analyze long reasoning sequences by filtering unrelated tokens and examining potential connections between nearby tokens or sentences, the temporal spread of confidence is often overlooked. This oversight can lead to inflated overall confidence, even when earlier steps exhibit very low confidence. To address this issue, we propose a novel method that incorporates inter-step attention to analyze semantic correlations across steps. For handling long-horizon responses, we introduce a hidden confidence mechanism to retain historical confidence information, which is then combined with stepwise confidence to produce a more accurate overall estimate. We evaluate our method on the GAOKAO math benchmark and the CLadder causal reasoning dataset using mainstream open-source large language models. Our approach is shown to outperform state-of-the-art methods by achieving a superior balance between predictive quality and calibration, demonstrated by strong performance on both Negative Log-Likelihood and Expected Calibration Error.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-01-19T20:04:34Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Zhenjiang Mao</name>
+    </author>
+    <author>
+      <name>Anirudhh Venkat</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2603.08999v4</id>
+    <title>Learning When to Sample: Confidence-Aware Selective Sampling for Efficient Chain-of-Thought Reasoning</title>
+    <updated>2026-06-21T19:23:29Z</updated>
+    <link href="https://arxiv.org/abs/2603.08999v4" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2603.08999v4" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) can achieve strong reasoning performance through chain-of-thought (CoT) reasoning, yet they often generate unnecessarily long reasoning paths that incur high inference cost. Self-consistency-based approaches push accuracy higher still, but they require sampling and aggregating multiple reasoning trajectories, leading to substantial computational overhead. In this paper, we introduce a confidence-aware selective sampling framework that, at inference time, analyzes a single reasoning trajectory to adaptively determine whether to rely on that trajectory alone or trigger multi-path sampling. The framework uses trajectory-level numeric features and sentence-level linguistic features extracted from reasoning states to guide selective multi-path reasoning. We train it on MedQA and evaluate it in-domain on MedQA and under calibration-only transfer on MathQA, MedMCQA, and MMLU, without further fine-tuning. Experimental results show that the proposed framework maintains comparable performance to full and efficient multi-path reasoning baselines, with accuracy changes of $-0.41 \pm 0.58$ and $-0.31 \pm 0.58$ percentage points, respectively, while reducing token usage by $71.7 \pm 5.0%$ and $36.6 \pm 9.1%$. These findings demonstrate that reasoning trajectories contain rich signals for uncertainty estimation, enabling a simple, transferable mechanism to balance accuracy and efficiency in LLM reasoning.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-03-09T22:34:06Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Juming Xiong</name>
+    </author>
+    <author>
+      <name>Kevin Guo</name>
+    </author>
+    <author>
+      <name>Congning Ni</name>
+    </author>
+    <author>
+      <name>Weixin Liu</name>
+    </author>
+    <author>
+      <name>Chao Yan</name>
+    </author>
+    <author>
+      <name>Katherine Brown</name>
+    </author>
+    <author>
+      <name>Avinash Baidya</name>
+    </author>
+    <author>
+      <name>Xiang Gao</name>
+    </author>
+    <author>
+      <name>Bradley Malin</name>
+    </author>
+    <author>
+      <name>Zhijun Yin</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2503.10628v1</id>
+    <title>Uncertainty in Action: Confidence Elicitation in Embodied Agents</title>
+    <updated>2025-03-13T17:59:41Z</updated>
+    <link href="https://arxiv.org/abs/2503.10628v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2503.10628v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Expressing confidence is challenging for embodied agents navigating dynamic multimodal environments, where uncertainty arises from both perception and decision-making processes. We present the first work investigating embodied confidence elicitation in open-ended multimodal environments. We introduce Elicitation Policies, which structure confidence assessment across inductive, deductive, and abductive reasoning, along with Execution Policies, which enhance confidence calibration through scenario reinterpretation, action sampling, and hypothetical reasoning. Evaluating agents in calibration and failure prediction tasks within the Minecraft environment, we show that structured reasoning approaches, such as Chain-of-Thoughts, improve confidence calibration. However, our findings also reveal persistent challenges in distinguishing uncertainty, particularly under abductive settings, underscoring the need for more sophisticated embodied confidence elicitation methods.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-03-13T17:59:41Z</published>
+    <arxiv:comment>Project page: https://plan-lab.github.io/ece/</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Tianjiao Yu</name>
+    </author>
+    <author>
+      <name>Vedant Shah</name>
+    </author>
+    <author>
+      <name>Muntasir Wahed</name>
+    </author>
+    <author>
+      <name>Kiet A. Nguyen</name>
+    </author>
+    <author>
+      <name>Adheesh Juvekar</name>
+    </author>
+    <author>
+      <name>Tal August</name>
+    </author>
+    <author>
+      <name>Ismini Lourentzou</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2604.13271v1</id>
+    <title>Enhancing Confidence Estimation in Telco LLMs via Twin-Pass CoT-Ensembling</title>
+    <updated>2026-04-14T20:03:08Z</updated>
+    <link href="https://arxiv.org/abs/2604.13271v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2604.13271v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) are increasingly applied to complex telecommunications tasks, including 3GPP specification analysis and O-RAN network troubleshooting. However, a critical limitation remains: LLM-generated confidence scores are often biased and unreliable, frequently exhibiting systematic overconfidence. This lack of trustworthy self-assessment makes it difficult to verify model outputs and safely rely on them in practice. In this paper, we study confidence calibration in telecom-domain LLMs using the representative Gemma-3 model family (4B, 12B, and 27B parameters), evaluated on TeleQnA, ORANBench, and srsRANBench. We show that standard single-pass, verbalized confidence estimates fail to reflect true correctness, often assigning high confidence to incorrect predictions. To address this, we propose a novel Twin-Pass Chain of Thought (CoT)-Ensembling methodology for improving confidence estimation by leveraging multiple independent reasoning evaluations and aggregating their assessments into a calibrated confidence score. Our approach reduces Expected Calibration Error (ECE) by up to 88% across benchmarks, significantly improving the reliability of model self-assessment. These results highlight the limitations of current confidence estimation practices and demonstrate a practical path toward more trustworthy evaluation of LLM outputs in telecommunications.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-04-14T20:03:08Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Anton Saenko</name>
+    </author>
+    <author>
+      <name>Pranshav Gajjar</name>
+    </author>
+    <author>
+      <name>Abiodun Ganiyu</name>
+    </author>
+    <author>
+      <name>Vijay K. Shah</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2507.10007v2</id>
+    <title>Deep Hidden Cognition Facilitates Reliable Chain-of-Thought Reasoning</title>
+    <updated>2025-11-25T02:54:52Z</updated>
+    <link href="https://arxiv.org/abs/2507.10007v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2507.10007v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Chain of Thought (CoT) reasoning has demonstrated remarkable deep reasoning capabilities in both large language models (LLMs) and multimodal large language models (MLLMs). However, its reliability is often undermined by the accumulation of errors in intermediate steps. This paper introduces an novel approach to calibrate the CoT reasoning accuracy by leveraging the model's intrinsic veracity encoding. We discover that specific attention head activations reliably reflect the truthfulness of reasoning steps in CoT. Based on this insight, we train a confidence predictor to evaluate the correctness of each reasoning step using these truthfulness-sensitive activations, dynamically selecting the most plausible reasoning path via beam search. Experimental results demonstrate that our method significantly outperforms the state-of-the-art baselines (e.g., Few-Shot CoT, Self-Consistency, and Self-Evaluation Guided Beam Search) across the mathematical, symbolic, and commonsense reasoning tasks, exhibiting superior accuracy and reliability in both unimodal and multimodal settings. We further validate the approach on large reasoning models, confirming its applicability to specialized reasoning models. Additionally, we explore the role of the model's self-correction ability in CoT reasoning. This work provides a novel reliability improvement path for CoT reasoning with broad application potential.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-07-14T07:41:35Z</published>
+    <arxiv:comment>This paper has been accepted by AAAI-26</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Zijun Chen</name>
+    </author>
+    <author>
+      <name>Wenbo Hu</name>
+    </author>
+    <author>
+      <name>Richang Hong</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2511.04869v1</id>
+    <title>Trained on Tokens, Calibrated on Concepts: The Emergence of Semantic Calibration in LLMs</title>
+    <updated>2025-11-06T23:14:45Z</updated>
+    <link href="https://arxiv.org/abs/2511.04869v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2511.04869v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Models (LLMs) often lack meaningful confidence estimates for their outputs. While base LLMs are known to exhibit next-token calibration, it remains unclear whether they can assess confidence in the actual meaning of their responses beyond the token level. We find that, when using a certain sampling-based notion of semantic calibration, base LLMs are remarkably well-calibrated: they can meaningfully assess confidence in open-domain question-answering tasks, despite not being explicitly trained to do so. Our main theoretical contribution establishes a mechanism for why semantic calibration emerges as a byproduct of next-token prediction, leveraging a recent connection between calibration and local loss optimality. The theory relies on a general definition of "B-calibration," which is a notion of calibration parameterized by a choice of equivalence classes (semantic or otherwise). This theoretical mechanism leads to a testable prediction: base LLMs will be semantically calibrated when they can easily predict their own distribution over semantic answer classes before generating a response. We state three implications of this prediction, which we validate through experiments: (1) Base LLMs are semantically calibrated across question-answering tasks, (2) RL instruction-tuning systematically breaks this calibration, and (3) chain-of-thought reasoning breaks calibration. To our knowledge, our work provides the first principled explanation of when and why semantic calibration emerges in LLMs.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="stat.ML" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-11-06T23:14:45Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Preetum Nakkiran</name>
+    </author>
+    <author>
+      <name>Arwen Bradley</name>
+    </author>
+    <author>
+      <name>Adam Goliński</name>
+    </author>
+    <author>
+      <name>Eugene Ndiaye</name>
+    </author>
+    <author>
+      <name>Michael Kirchhof</name>
+    </author>
+    <author>
+      <name>Sinead Williamson</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2604.26152v1</id>
+    <title>AI Observability for Large Language Model Systems: A Multi-Layer Analysis of Monitoring Approaches from Confidence Calibration to Infrastructure Tracing</title>
+    <updated>2026-04-28T22:27:54Z</updated>
+    <link href="https://arxiv.org/abs/2604.26152v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2604.26152v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The deployment of large language models (LLMs) in production environments has created an urgent need for observability systems that span the full stack -- from model internals to GPU kernels. Yet existing monitoring approaches address isolated layers of this stack, and no comprehensive analysis has examined how these techniques relate, overlap, or complement each other. This paper presents a structured analysis of five recent research contributions (2025-2026) that collectively define the emerging landscape of AI observability: confidence calibration via reinforcement learning (MIT), internal state monitoring through propositional probes (UC Berkeley), chain-of-thought monitorability evaluation (OpenAI), autonomous cloud operations benchmarking (Microsoft Research, UC Berkeley, UIUC), and non-intrusive inference-level tracing (TRUFFLD). We organize these contributions into a five-layer observability taxonomy, synthesize their key findings into a unified comparison, and identify four critical gaps that remain unaddressed. We further contextualize these research directions against practical operational observability systems that translate infrastructure telemetry into actionable insights for site reliability teams. Our analysis reveals that while individual monitoring layers have matured rapidly, the integration challenge -- connecting model-level confidence signals with infrastructure-level anomalies into coherent operational intelligence -- remains the defining open problem for the field.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-04-28T22:27:54Z</published>
+    <arxiv:comment>10 pages, 2 figures, 3 tables, survey paper</arxiv:comment>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Twinkll Sisodia</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.00164v1</id>
+    <title>Verifiable Rewards for Calibrated Probabilistic Forecasting</title>
+    <updated>2026-06-30T20:42:45Z</updated>
+    <link href="https://arxiv.org/abs/2607.00164v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.00164v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Reinforcement learning with verifiable rewards can in principle train calibrated probabilistic forecasters, since a proper scoring rule such as the Brier score is computed from outcomes alone and is minimized in expectation by the true probability. In practice it degrades calibration, and existing remedies address epistemic uncertainty, where a model's confidence accompanies a verifiably correct or incorrect answer. We study aleatoric forecasting, where the forecast itself is the output and the label is one stochastic outcome, taking NFL in-game win probability as a testbed with the betting market as a reference. Rewarding the realized per-play outcome fails, because the single outcome is a noisy target and the policy gradient corrupts the chain of thought. We introduce a verifiable, label-free reward, a state-conditioned empirical win rate estimated from past outcomes, that removes the label noise, and we keep the gradient off the reasoning, by direct prediction or a gradient mask, so it cannot be corrupted. Trained with this reward alone, without human labels or supervised fine-tuning, a 7B model reaches the calibration of the betting market by direct prediction and is better calibrated than a zero-shot frontier model. That frontier model and a tabular estimator reach the same Brier score as this model, identifying the market's small remaining edge as live in-game information beyond their shared inputs. Masking the gradient, rather than dropping the chain of thought, preserves reasoning from which the forecast follows, which ordinary chain-of-thought training corrupts.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-30T20:42:45Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Sadanand Singh</name>
+    </author>
+    <author>
+      <name>Allam Reddy</name>
+    </author>
+    <author>
+      <name>Manan Chopra</name>
+    </author>
+  </entry>
+</feed>

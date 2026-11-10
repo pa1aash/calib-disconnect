@@ -1,0 +1,456 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/d/QaZyIzJNKzksOB0WoKf8jj19M</id>
+  <title>arXiv Query: search_query=all:training AND all:verbalized AND all:confidence AND all:reinforcement AND all:learning&amp;id_list=&amp;start=0&amp;max_results=15</title>
+  <updated>2026-11-09T22:57:00Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=all:training+AND+(all:verbalized+AND+(all:confidence+AND+(all:reinforcement+AND+all:learning)))&amp;start=0&amp;max_results=15&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>15</opensearch:itemsPerPage>
+  <opensearch:totalResults>20</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2505.23912v2</id>
+    <title>LoVeC: Reinforcement Learning for Better Verbalized Confidence in Long-Form Generations</title>
+    <updated>2026-05-13T21:21:09Z</updated>
+    <link href="https://arxiv.org/abs/2505.23912v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2505.23912v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Hallucination remains a major challenge for the safe and trustworthy deployment of large language models (LLMs) in factual content generation. Prior work has explored confidence estimation as an effective approach to hallucination detection, but often relies on post-hoc self-consistency methods that require computationally expensive sampling. Verbalized confidence offers a more efficient alternative, but existing approaches are largely limited to short-form question answering (QA) tasks and do not generalize well to open-ended generation. In this paper, we propose LoVeC (Long-form Verbalized Confidence), a novel reinforcement learning based method that trains LLMs to append an on-the-fly numerical confidence score to each generated statement during long-form generation. The confidence score serves as a direct and interpretable signal of the factuality of generation. We introduce two evaluation settings, free-form tagging and iterative tagging, to assess different verbalized confidence estimation methods. Experiments on three long-form QA datasets show that our RL-trained models achieve better calibration and generalize robustly across domains. Also, our method is highly efficient, being 20 times faster than traditional self-consistency methods while achieving better calibration.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-05-29T18:05:20Z</published>
+    <arxiv:comment>ACL 2026 Main</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Caiqi Zhang</name>
+    </author>
+    <author>
+      <name>Xiaochen Zhu</name>
+    </author>
+    <author>
+      <name>Chengzu Li</name>
+    </author>
+    <author>
+      <name>Nigel Collier</name>
+    </author>
+    <author>
+      <name>Andreas Vlachos</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.04332v2</id>
+    <title>On the effectiveness of reward functions in reinforcement learning for confidence calibration of large language models</title>
+    <updated>2026-10-06T02:46:08Z</updated>
+    <link href="https://arxiv.org/abs/2607.04332v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.04332v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>In this paper, we consider the setting where large language models (LLMs) are trained using reinforcement learning (RL) to simultaneously improve reasoning accuracy and verbalize their confidence. Our reward scheme uses two functions for rewarding confidence verbalized by the LLM: one for correct answers and the other for incorrect answers. If poorly designed, such a scheme may incentivize an LLM to answer incorrectly in order for its confidence to be calibrated, a phenomenon we term confidence reward hacking. We introduce the notion of non-hackable confidence reward schemes and provide methods for constructing them. We show that selective confidence reward hacking can arise in practical datasets under hackable reward schemes while non-hackable reward schemes are resistant to hacking. Finally, we place some of these schemes along an overconfidence-underconfidence spectrum for RL-based confidence calibration and demonstrate experimentally that they tend to exhibit the corresponding calibration biases relative to other schemes in the spectrum. The code of our experiments is available in https://anonymous.4open.science/r/rl-confidence-calibration-9ED4/README.md.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-05T14:29:18Z</published>
+    <arxiv:comment>80 pages, 10 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Chee Heng Tan</name>
+    </author>
+    <author>
+      <name>Zhuoyi Lin</name>
+    </author>
+    <author>
+      <name>Mehul Motani</name>
+    </author>
+    <author>
+      <name>Wee Sun Lee</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2506.03723v1</id>
+    <title>Verbalized Confidence Triggers Self-Verification: Emergent Behavior Without Explicit Reasoning Supervision</title>
+    <updated>2025-06-04T08:56:24Z</updated>
+    <link href="https://arxiv.org/abs/2506.03723v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2506.03723v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Uncertainty calibration is essential for the safe deployment of large language models (LLMs), particularly when users rely on verbalized confidence estimates. While prior work has focused on classifiers or short-form generation, confidence calibration for chain-of-thought (CoT) reasoning remains largely unexplored. Surprisingly, we find that supervised fine-tuning with scalar confidence labels alone suffices to elicit self-verification behavior of language models, without any explicit reasoning supervision or reinforcement learning-based rewards. Despite being trained only to produce a verbalized confidence score without any self-verifying examples, the model learns to generate longer and self-checking responses for low-confidence queries while providing more concise answers for high-confidence ones. We further propose a simple rethinking method that boosts performance via test-time scaling based on calibrated uncertainty. Experiments on GSM8K and held-out reasoning tasks such as MATH-500 and ARC-Challenge show that our confidence-aware fine-tuning improves both calibration and accuracy, while also enhancing interpretability by aligning the model's reasoning path with its confidence.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-06-04T08:56:24Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Chaeyun Jang</name>
+    </author>
+    <author>
+      <name>Moonseok Choi</name>
+    </author>
+    <author>
+      <name>Yegon Kim</name>
+    </author>
+    <author>
+      <name>Hyungi Lee</name>
+    </author>
+    <author>
+      <name>Juho Lee</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.32470v1</id>
+    <title>On the Pitfalls of Verbalized Confidence Priors for Calibrating Large Reasoning Models</title>
+    <updated>2026-09-26T11:00:45Z</updated>
+    <link href="https://arxiv.org/abs/2609.32470v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.32470v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large reasoning models (LRMs) often suffer from overconfidence when expressing their uncertainty. Confidence-aware reinforcement learning (RL) offers a promising way to optimize calibration. However, it relies on on-policy rollouts and is thus constrained by the model's pre-RL confidence distribution, which we term confidence prior. In this work, we reveal that off-the-shelf LRMs exhibit a confidence prior heavily concentrated on a few high values, which persists throughout RL. Theoretically, we prove that this concentration suppresses policy gradient updates for rarely sampled confidence values and inflates the lower bound on expected Brier risk. To overcome this exploration bottleneck, we propose CalibSFT, a plug-and-play supervised fine-tuning stage that shapes a calibrated confidence prior with broad support before RL. For each question, CalibSFT constructs confidence targets combining its success rate with response-level correctness, which provably preserves proper-scoring optimality, and then balances training responses across the confidence spectrum to enable diverse confidence exploration during RL. To learn from incorrect responses without imitating their reasoning, CalibSFT introduces correctness-conditional supervision, guiding confidence across all responses while supervising reasoning only on correct ones. Across 16 mathematical and general reasoning benchmarks, incorporating CalibSFT reduces calibration errors and improves discrimination across five representative RL algorithms while preserving comparable accuracy. Furthermore, CalibSFT delivers practical benefits for downstream selective prediction and model routing. Our code is available at https://github.com/ml-stat-Sustech/verbalized-confidence-training.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-26T11:00:45Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Shuoyuan Wang</name>
+    </author>
+    <author>
+      <name>Beier Luo</name>
+    </author>
+    <author>
+      <name>Hao Zeng</name>
+    </author>
+    <author>
+      <name>Chengyao Yu</name>
+    </author>
+    <author>
+      <name>Songxin Zhang</name>
+    </author>
+    <author>
+      <name>Zejian Xie</name>
+    </author>
+    <author>
+      <name>Bingyi Jing</name>
+    </author>
+    <author>
+      <name>Hongxin Wei</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.34857v1</id>
+    <title>Beyond Verbalized Confidence: Calibrating Reasoners with Differentiable Readouts</title>
+    <updated>2026-09-28T10:47:41Z</updated>
+    <link href="https://arxiv.org/abs/2609.34857v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.34857v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Reinforcement learning with verifiable rewards (RLVR) trains reasoning models to produce correct answers, but does not ensure that their stated confidence is calibrated. The resulting models are systematically overconfident. Recent methods train calibration inside the RLVR loop by having the model state a numerical confidence alongside its answer, but they all obtain the confidence by sampling it as text. This choice imposes two costs: a sampled confidence introduces variance and in practice collapses to a handful of distinct values, and sampling makes the confidence non-differentiable, forcing the calibration loss through a scalar reward. We propose CREDO (Confidence REaDOut) to replace sampling with a deterministic readout. While RLVR optimizes correctness, CREDO reads the confidence from a dedicated token pair in the model's output distribution and trains it by differentiable regression. CREDO further turns the trained confidence into a signal for accuracy, weighting rollouts by how far confidence and outcome disagree, so that accuracy and calibration improve together. Across mathematical and code reasoning, CREDO attains the best accuracy and calibration, and the gains extend to abstention and selective prediction.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-28T10:47:41Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Chenxiao Fan</name>
+    </author>
+    <author>
+      <name>Chongming Gao</name>
+    </author>
+    <author>
+      <name>Gangyi Zhang</name>
+    </author>
+    <author>
+      <name>Leyang Shen</name>
+    </author>
+    <author>
+      <name>Yaxin Gong</name>
+    </author>
+    <author>
+      <name>Jiamin Wang</name>
+    </author>
+    <author>
+      <name>Jiakai Wang</name>
+    </author>
+    <author>
+      <name>Dong Wang</name>
+    </author>
+    <author>
+      <name>Yang Liu</name>
+    </author>
+    <author>
+      <name>Fuli Feng</name>
+    </author>
+    <author>
+      <name>Xiangnan He</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.18614v1</id>
+    <title>Can an Agent Learn to Predict Its Own Failure? Outcome-Grounded Confidence Calibration in LLM Agents</title>
+    <updated>2026-10-13T16:00:01Z</updated>
+    <link href="https://arxiv.org/abs/2610.18614v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.18614v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Controlling an acting LLM agent means deciding, at each step of a long-horizon task, whether to trust its next action, abstain, or hand off to a human. That decision needs a per-step confidence signal predicting whether the current rollout will eventually succeed. The agent's own self-reported verbalized confidence is the natural candidate, but existing reinforcement learning methods calibrate it against the correctness of a decision at the current step. We propose a method to calibrate it against the eventual outcome of a multi-step episode: under GRPO, the group of rollouts for a task supplies success labels, and a proper scoring rule scores each step's confidence against the realized outcome. In offline RL on recorded trajectories of a Qwen2.5-7B agent in ALFWorld, TextWorld, and WebShop environments, the AUROC of step confidence against episode outcome rises from near chance to 0.68-0.85, and the top-10% of steps the agent is most confident about succeed ~4.3x more often than average. In online RL on the live ALFWorld agent, four calibration rewards improve early-step AUROC, expected calibration error goes from 0.42 to below 0.12, and selective execution improves over both the untrained agent and a format-only RL control, without degrading task success. We also introduce an evaluation protocol that separates episode depth, task difficulty, and attempt-level foresight, which shows where the gain lies: the trained agent recognizes from its first step which tasks it will fail, while telling a succeeding attempt from a failing one at the same task is harder, with some early-window signal emerging on TextWorld.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-13T16:00:01Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Ashutosh Hathidara</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2402.04824v1</id>
+    <title>Learning Communication Policies for Different Follower Behaviors in a Collaborative Reference Game</title>
+    <updated>2024-02-07T13:22:17Z</updated>
+    <link href="https://arxiv.org/abs/2402.04824v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2402.04824v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Albrecht and Stone (2018) state that modeling of changing behaviors remains an open problem "due to the essentially unconstrained nature of what other agents may do". In this work we evaluate the adaptability of neural artificial agents towards assumed partner behaviors in a collaborative reference game. In this game success is achieved when a knowledgeable Guide can verbally lead a Follower to the selection of a specific puzzle piece among several distractors. We frame this language grounding and coordination task as a reinforcement learning problem and measure to which extent a common reinforcement training algorithm (PPO) is able to produce neural agents (the Guides) that perform well with various heuristic Follower behaviors that vary along the dimensions of confidence and autonomy. We experiment with a learning signal that in addition to the goal condition also respects an assumed communicative effort. Our results indicate that this novel ingredient leads to communicative strategies that are less verbose (staying silent in some of the steps) and that with respect to that the Guide's strategies indeed adapt to the partner's level of confidence and autonomy.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-02-07T13:22:17Z</published>
+    <arxiv:comment>Work presented at the "Cooperative Multi-Agent Systems Decision-making and Learning" workshop (AAAI'24)</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Philipp Sadler</name>
+    </author>
+    <author>
+      <name>Sherzod Hakimov</name>
+    </author>
+    <author>
+      <name>David Schlangen</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2603.29492v2</id>
+    <title>Calibrated Confidence Expression for Radiology Report Generation</title>
+    <updated>2026-09-22T08:31:20Z</updated>
+    <link href="https://arxiv.org/abs/2603.29492v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2603.29492v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Safe deployment of Large Vision-Language Models (LVLMs) in radiology report generation requires not only accurate predictions but also clinically interpretable indicators of when outputs should be thoroughly reviewed, enabling selective radiologist verification and reducing the risk of hallucinated findings influencing clinical decisions. One intuitive approach to this is verbalized confidence, where the model explicitly states its certainty. However, current state-of-the-art language models are often overconfident, and research on calibration in multimodal settings such as radiology report generation is limited. To address this gap, we introduce ConRad (Confidence Calibration for Radiology Reports), a reinforcement learning framework for fine-tuning medical LVLMs to produce calibrated verbalized confidence estimates alongside radiology reports. We study two settings: a single report-level confidence score and a sentence-level variant assigning a confidence to each claim. Both are trained using the GRPO algorithm with reward functions based on the logarithmic scoring rule, which incentivizes truthful self-assessment by penalizing miscalibration and guarantees optimal calibration under reward maximization. Experimentally, ConRad substantially improves calibration and outperforms competing methods. In a clinical evaluation we show that ConRad's report level scores are well aligned with clinicians' judgment. By highlighting full reports or low-confidence statements for targeted review, ConRad can support safer clinical integration of AI-assistance for report generation.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-03-31T09:37:33Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>David Bani-Harouni</name>
+    </author>
+    <author>
+      <name>Chantal Pellegrini</name>
+    </author>
+    <author>
+      <name>Julian Lüers</name>
+    </author>
+    <author>
+      <name>Su Hwan Kim</name>
+    </author>
+    <author>
+      <name>Markus Baalmann</name>
+    </author>
+    <author>
+      <name>Benedikt Wiestler</name>
+    </author>
+    <author>
+      <name>Rickmer Braren</name>
+    </author>
+    <author>
+      <name>Nassir Navab</name>
+    </author>
+    <author>
+      <name>Matthias Keicher</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2607.01612v1</id>
+    <title>Scaling with Confidence: Calibrating Confidence of LLMs for Adaptive Test Time Scaling</title>
+    <updated>2026-07-02T02:29:33Z</updated>
+    <link href="https://arxiv.org/abs/2607.01612v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2607.01612v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Training large language models (LLMs) with reinforcement learning (RL) has significantly advanced their performance on reasoning and question-answering tasks. However, prevailing RL reward designs typically prioritize response correctness, neglecting to incentivize models to express their confidence accurately. This leads to a critical problem: performance gains are often accompanied by poor calibration between confidence and accuracy, misleading models to overconfidently hallucinate when uncertain. To address this limitation, we propose $\textbf{C}$orrectness and $\textbf{C}$onfidence $\textbf{C}$alibration $\textbf{R}$einforcement $\textbf{L}$earning ($\textbf{C3RL}$), a novel RL algorithm integrating correctness, calibration and dataset-informed reference accuracy rewards together. Comprehensive evaluation across 8 text and multimodal datasets demonstrates that C3RL enhances calibration without sacrificing accuracy, outperforming the current state-of-the-art method in both performance and calibration metrics. Utilizing the well-calibrated verbalized confidence from C3RL, we further introduce $\textbf{C}$onfidence-based $\textbf{A}$daptive Test Time $\textbf{S}$caling ($\textbf{CAS}$), an adjustable inference-time strategy that allocates computational resources based on response confidence. Experiments show that CAS surpasses majority voting on both in-domain and out-of-domain datasets while reducing the inference budget by up to 12.33 times. We believe the synergy of C3RL and CAS paves the way for deploying more reliable and resource-efficient LLMs. The code, data and models will be released.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-02T02:29:33Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Xuqing Yang</name>
+    </author>
+    <author>
+      <name>Yi Yuan</name>
+    </author>
+    <author>
+      <name>Shanzhe Lei</name>
+    </author>
+    <author>
+      <name>Xuhong Wang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.33290v1</id>
+    <title>Calibration, Not Answer Selection: Distilling Internal Confidence in Reasoning Models</title>
+    <updated>2026-09-27T06:52:17Z</updated>
+    <link href="https://arxiv.org/abs/2609.33290v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.33290v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Reinforcement learning with binary correctness rewards trains correctness, not calibrated confidence. The confidence that reasoning models verbalize is systematically overconfident, and the problem is not merely one of scale: verbalized confidence tracks how willing a model is to commit to an answer, not how likely the answer is to be right. Post-hoc rescaling therefore fits one distribution but rarely transfers. We look inside the model instead. On factual question answering, a linear probe on the hidden state between the chain of thought and the answer is substantially better calibrated: its expected calibration error is 5 to 38 times lower than that of the verbalized score across four benchmarks and two model families. However, when used to pick among N sampled answers, that same probe nearly ties majority voting yet falls far short of the oracle. Internal states answer "how certain am I" well and "which answer is right" poorly, so the signal should be reported as a confidence rather than used to select answers. As a result, we introduce probe-guided self-distillation (Probe-SD): score a model's own sampled traces with the probe, overwrite the confidence each trace states, and finetune the base checkpoint of the same family, so nothing but the model itself remains at test time. On Qwen3-14B, Probe-SD cuts ECE from 0.178 to 0.024 in-domain and from 0.542 to 0.113 out-of-domain, where it also beats post-hoc recalibration and self-consistency distillation. The resulting confidence is well-calibrated and useful for weighted voting, behaviors previously attributed to online RL, here obtained with supervised finetuning alone.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-27T06:52:17Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Yadong Xi</name>
+    </author>
+    <author>
+      <name>Rongsheng Zhang</name>
+    </author>
+    <author>
+      <name>Tangjie Lv</name>
+    </author>
+    <author>
+      <name>Ziyang Luo</name>
+    </author>
+    <author>
+      <name>Ruochen Zhao</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2603.03752v1</id>
+    <title>Confidence-Calibrated Small-Large Language Model Collaboration for Cost-Efficient Reasoning</title>
+    <updated>2026-03-04T05:55:20Z</updated>
+    <link href="https://arxiv.org/abs/2603.03752v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2603.03752v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large language models (LLMs) demonstrate superior reasoning capabilities compared to small language models (SLMs), but incur substantially higher costs. We propose COllaborative REAsoner (COREA), a system that cascades an SLM with an LLM to achieve a balance between accuracy and cost in complex reasoning tasks. COREA first attempts to answer questions using the SLM, which outputs both an answer and a verbalized confidence score. Questions with confidence below a predefined threshold are deferred to the LLM for more accurate resolution. We introduce a reinforcement learning-based training algorithm that aligns the SLM's confidence through an additional confidence calibration reward. Extensive experiments demonstrate that our method jointly improves the SLM's reasoning ability and confidence calibration across diverse datasets and model backbones. Compared to using the LLM alone, COREA reduces cost by 21.5% and 16.8% on out-of-domain math and non-math datasets, respectively, with only an absolute pass@1 drop within 2%.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-03-04T05:55:20Z</published>
+    <arxiv:comment>Accepted to EACL 2026 Main Conference</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Chuang Zhang</name>
+    </author>
+    <author>
+      <name>Zizhen Zhu</name>
+    </author>
+    <author>
+      <name>Yihao Wei</name>
+    </author>
+    <author>
+      <name>Bing Tian</name>
+    </author>
+    <author>
+      <name>Junyi Liu</name>
+    </author>
+    <author>
+      <name>Henan Wang</name>
+    </author>
+    <author>
+      <name>Xavier Wang</name>
+    </author>
+    <author>
+      <name>Yaxiao Liu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2507.16806v2</id>
+    <title>Beyond Binary Rewards: Training LMs to Reason About Their Uncertainty</title>
+    <updated>2026-05-15T00:00:51Z</updated>
+    <link href="https://arxiv.org/abs/2507.16806v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2507.16806v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>When language models (LMs) are trained via reinforcement learning (RL) to generate natural language "reasoning chains", their performance improves on a variety of difficult question answering tasks. Today, almost all successful applications of RL for reasoning use binary reward functions that evaluate the correctness of LM outputs. Because such reward functions do not penalize guessing or low-confidence outputs, they often have the unintended side-effect of degrading calibration and increasing the rate at which LMs generate incorrect responses (or "hallucinate") in other problem domains. This paper describes RLCR (Reinforcement Learning with Calibration Rewards), an approach to training reasoning models that jointly improves accuracy and calibrated confidence estimation. During RLCR, LMs generate both predictions and numerical confidence estimates after reasoning. They are trained to optimize a reward function that augments a binary correctness score with a Brier score -- a scoring rule for confidence estimates that incentivizes calibrated prediction. We first prove that this reward function (or any reward function that uses a bounded, proper scoring rule) yields models whose predictions are both accurate and well-calibrated. We next show that across diverse datasets, RLCR substantially improves calibration with no loss in accuracy, on both in-domain and out-of-domain evaluations -- outperforming both ordinary RL training and classifiers trained to assign post-hoc confidence scores. While ordinary RL hurts calibration, RLCR improves it. Finally, we demonstrate that verbalized confidence can be leveraged at test time to improve accuracy and calibration via confidence-weighted scaling methods. Our results show that explicitly optimizing for calibration can produce more generally reliable reasoning models. Code, models, and further info is available at https://rl-calibration.github.io/.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2025-07-22T17:56:01Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Mehul Damani</name>
+    </author>
+    <author>
+      <name>Isha Puri</name>
+    </author>
+    <author>
+      <name>Stewart Slocum</name>
+    </author>
+    <author>
+      <name>Idan Shenfeld</name>
+    </author>
+    <author>
+      <name>Leshem Choshen</name>
+    </author>
+    <author>
+      <name>Yoon Kim</name>
+    </author>
+    <author>
+      <name>Jacob Andreas</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2305.14975v2</id>
+    <title>Just Ask for Calibration: Strategies for Eliciting Calibrated Confidence Scores from Language Models Fine-Tuned with Human Feedback</title>
+    <updated>2023-10-24T04:27:42Z</updated>
+    <link href="https://arxiv.org/abs/2305.14975v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2305.14975v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>A trustworthy real-world prediction system should produce well-calibrated confidence scores; that is, its confidence in an answer should be indicative of the likelihood that the answer is correct, enabling deferral to an expert in cases of low-confidence predictions. Recent studies have shown that unsupervised pre-training produces large language models (LMs) whose conditional probabilities are remarkably well-calibrated. However, the most widely-used LMs are fine-tuned with reinforcement learning from human feedback (RLHF-LMs), and some studies have suggested that RLHF-LMs produce conditional probabilities that are very poorly calibrated. In light of this perceived weakness, we conduct a broad evaluation of methods for extracting confidence scores from RLHF-LMs. For RLHF-LMs such as ChatGPT, GPT-4, and Claude, we find that verbalized confidences emitted as output tokens are typically better-calibrated than the model's conditional probabilities on the TriviaQA, SciQ, and TruthfulQA benchmarks, often reducing the expected calibration error by a relative 50%.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2023-05-24T10:12:33Z</published>
+    <arxiv:comment>EMNLP 2023 Camera Ready</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Katherine Tian</name>
+    </author>
+    <author>
+      <name>Eric Mitchell</name>
+    </author>
+    <author>
+      <name>Allan Zhou</name>
+    </author>
+    <author>
+      <name>Archit Sharma</name>
+    </author>
+    <author>
+      <name>Rafael Rafailov</name>
+    </author>
+    <author>
+      <name>Huaxiu Yao</name>
+    </author>
+    <author>
+      <name>Chelsea Finn</name>
+    </author>
+    <author>
+      <name>Christopher D. Manning</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2601.07264v1</id>
+    <title>The Confidence Dichotomy: Analyzing and Mitigating Miscalibration in Tool-Use Agents</title>
+    <updated>2026-01-12T07:10:35Z</updated>
+    <link href="https://arxiv.org/abs/2601.07264v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2601.07264v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Autonomous agents based on large language models (LLMs) are rapidly evolving to handle multi-turn tasks, but ensuring their trustworthiness remains a critical challenge. A fundamental pillar of this trustworthiness is calibration, which refers to an agent's ability to express confidence that reliably reflects its actual performance. While calibration is well-established for static models, its dynamics in tool-integrated agentic workflows remain underexplored. In this work, we systematically investigate verbalized calibration in tool-use agents, revealing a fundamental confidence dichotomy driven by tool type. Specifically, our pilot study identifies that evidence tools (e.g., web search) systematically induce severe overconfidence due to inherent noise in retrieved information, while verification tools (e.g., code interpreters) can ground reasoning through deterministic feedback and mitigate miscalibration. To robustly improve calibration across tool types, we propose a reinforcement learning (RL) fine-tuning framework that jointly optimizes task accuracy and calibration, supported by a holistic benchmark of reward designs. We demonstrate that our trained agents not only achieve superior calibration but also exhibit robust generalization from local training environments to noisy web settings and to distinct domains such as mathematical reasoning. Our results highlight the necessity of domain-specific calibration strategies for tool-use agents. More broadly, this work establishes a foundation for building self-aware agents that can reliably communicate uncertainty in high-stakes, real-world deployments.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-01-12T07:10:35Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Weihao Xuan</name>
+    </author>
+    <author>
+      <name>Qingcheng Zeng</name>
+    </author>
+    <author>
+      <name>Heli Qi</name>
+    </author>
+    <author>
+      <name>Yunze Xiao</name>
+    </author>
+    <author>
+      <name>Junjue Wang</name>
+    </author>
+    <author>
+      <name>Naoto Yokoya</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.15588v2</id>
+    <title>Calibrating LLMs with Semantic-level Reward</title>
+    <updated>2026-05-20T21:06:51Z</updated>
+    <link href="https://arxiv.org/abs/2605.15588v2" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.15588v2" rel="related" type="application/pdf" title="pdf"/>
+    <summary>As large language models (LLMs) are deployed in consequential settings such as medical question answering and legal reasoning, the ability to estimate when their outputs are likely to be correct is essential for safe and reliable use, requiring well-calibrated uncertainty. Standard reinforcement learning with verifiable rewards (RLVR) trains models with a binary correctness reward that is indifferent to confidence, providing no penalty for confident but wrong predictions and thereby degrading calibration. Recent work addresses this by training models to produce verbalized confidence scores alongside answers and rewarding agreement with correctness. However, verbalized confidence is calibrated at the token level and thus exhibits inconsistency across textual variations with same semantic meaning. We propose \textbf{Calibration with Semantic Reward (CSR)}, a framework that calibrates language models directly in semantic space without a verbalized confidence interface. CSR combines the correctness reward with a novel semantic calibration reward that encourages exploitation among correct rollouts by promoting semantic agreement, and exploration among incorrect ones by discouraging spurious consistency. Experiments across three model families on HotpotQA (in-distribution) and TriviaQA, MSMARCO, and NQ-Open (out-of-distribution) show that CSR consistently achieves lower ECE and higher AUROC than verbalized-confidence baselines across nearly all settings, reducing ECE by up to $40\%$ and improving AUROC by up to $31\%$ over verbalized-confidence baselines, with calibration behavior generalizing robustly across all four evaluation settings.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-15T03:55:11Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Fengfei Yu</name>
+    </author>
+    <author>
+      <name>Ruijia Niu</name>
+    </author>
+    <author>
+      <name>Dongxia Wu</name>
+    </author>
+    <author>
+      <name>Yian Ma</name>
+    </author>
+    <author>
+      <name>Rose Yu</name>
+    </author>
+  </entry>
+</feed>
