@@ -1,6 +1,6 @@
 # Project context (read first)
 
-Last updated: wave 4, 2026-11-10. This is the short capsule every session reads before doing anything
+Last updated: wave 5, 2026-11-10. This is the short capsule every session reads before doing anything
 else. Details live in the files it points to.
 
 ## Goal
@@ -41,6 +41,8 @@ New work goes only into these top-level paths (created in wave 3, each with a RE
 | `research/positioning/` | Literature-positioning outputs; every finding tracked |
 | `docs/style/`, `docs/s3/` | Prose audit prompt; wave 3 records (orientation, positioning brief, lint baseline) |
 | `docs/s4/` | Wave 4 report (`W4_REPORT.md`) |
+| `docs/s5/` | Wave 5 report (`W5_REPORT.md`) |
+| `research/positioning/w5/` | Wave 5 gap-closing pass: `INSTRUMENTS.md`, `DIFFERENTIAL.md`, `parts/` |
 | `tools/prose_lint.py` | Prose linter for manuscript source (`tools/prose_lint.toml`, tests in `tests/prose_lint/`) |
 
 The pre-commit hook rejects any staged change (addition, modification, deletion, rename) under a
@@ -118,11 +120,17 @@ Read `DIGEST.md` first, then `VERDICTS.md` and `RECOMMENDATION.md`. The revised 
 - The vault run is synced to `research/positioning/code-llm-confidence-positioning-d82d00/` with a
   SHA-256 `MANIFEST.json`; `references.bib` holds 128 fetched records.
 
+## Headline findings: wave 5 gap-closing pass (`research/positioning/w5/`, `docs/s5/W5_REPORT.md`)
+
+- **Pivot A14 is triggered.** 2610.31820 ("Free Lunch for LLMs Confidence", concurrent, 2026-10-22) shows a trained own-readout (R-Tuning) tying a probe fit on the same labels on code, in pooled AUROC (Table 3, within .02 on four splits). Campos 2611.07876 already has a prompt-only probe, within-problem AUROC, and a clustered bootstrap.
+- **The former Rank 1 is unseated as the spine.** Proposed replacement, pending operator confirmation: the measurement protocol (oracle swap, estimator set, release split) with the controlled comparison and the routing replay as analyses on the same generations.
+- **Other cell changes.** L1 Q10 and L3 Q2/Q7 are now NARROW (MARGIN 2605.22949; Thinking-in-Bets 2610.34654). L2 Q10 is OCCUPIED (concurrent).
+- **Corrections to W4 numbers.** Campos "0.620 versus 0.629" is a mismatched pair. CREDO's untrained Base-d is .782.
+- **Instruments.** arXiv full-text search (search.arxiv.org) passes. Semantic Scholar bulk search works. Remaining gaps are partial, so every CLEAN cell stays CLEAN (provisional).
+
 ## Current stage
 
-Waves 0 to 4 are complete. Wave 4 produced the literature positioning above. No pipeline code,
-experiment, or manuscript text exists yet. The next stage is the pipeline design for the Rank 1
-study, after the operator decisions below.
+Waves 0 to 5 are complete. Wave 5 Part A finished, and its stop condition fired: a full text unseated Rank 1. Part B (the pipeline design) was not started. No pipeline code, experiment, design document, or manuscript text exists. The next step is the operator's choice of spine (`docs/s5/W5_REPORT.md` section 10), then the design wave.
 
 ## Conventions
 
@@ -132,14 +140,11 @@ attribution trailers. Never use `--no-verify`.
 
 ## Open operator items
 
-1. Confirm that v4 (DPRC) is recorded as unrun future work (wave 4 recommends it stays out).
-2. Decide, for each element in the method inventory, which definition the new pipeline uses
-   (label protocol, log-probability transform, AST formula, TACE, prompts, seeds).
-3. Rotate the former GPU host key and host if still live (from W0), and keep the pristine local
-   backup private.
-4. Confirm the six-month concurrency window (works first posted after 2026-05-10).
-5. Allow search.arxiv.org, api2.openreview.net, api.datacite.org, and osf.io, or provide a Semantic
-   Scholar or OpenAlex API key, for a gap-closing search pass before the introduction is drafted.
-6. Decide the wording of the TMLR LLM-use footnote.
-7. Read the remaining leads before any novelty sentence: arXiv 2610.19226, Crossref record
-   10.1109/tse.2026.3713834, and the forward citers of Resist-and-Update (2607.12985).
+1. Confirm the wave 5 replacement spine, or rule that concurrent works do not trigger the pivot rules (`docs/s5/W5_REPORT.md` section 10, items 1 and 2).
+2. Decide whether 2610.31820 must be compared experimentally or only discussed.
+3. Optional: put a Semantic Scholar or OpenAlex key in a local, untracked `.env`.
+4. Decide the wording of the TMLR LLM-use footnote.
+5. Decide the method definitions per `docs/s2/METHOD_INVENTORY.md`. The design wave proposes them, and the operator signs off.
+6. Rotate the former GPU host key and host if still live (from W0); keep the pristine local backup private.
+
+Resolved in wave 5: v4 (DPRC) is out of scope; the six-month window is confirmed; the unread leads were read; the allowlist was extended.
