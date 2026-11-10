@@ -138,14 +138,22 @@ class RunLayout:
         return self.root / "execute" / "cache.sqlite"
 
     # -- readouts
-    def scores(self, model_key: str, population: str, readout: str, suite: str | None, fold_seed: int | None) -> Path:
+    def scores(self, model_key: str, population: str, readout: str, suite: str | None, fold_seed: int | None,
+               gen_set: str = "frozen") -> Path:
+        """Frozen generations: readouts/<model>/<pop>/<readout>/<suite>/seed<s>.parquet. Any other
+        generation set (for example "fresh:SR_E_seed0_fold3") adds a directory level named after it,
+        so fresh scores never overwrite frozen ones (contract change 2026-11-11)."""
         r = readout.replace(":", "_")
         s = suite or "none"
         fs = "na" if fold_seed is None else str(fold_seed)
-        return self.root / "readouts" / model_key / population / r / s / f"seed{fs}.parquet"
+        base = self.root / "readouts" / model_key / population / r / s
+        if gen_set != "frozen":
+            base = base / self._gs(gen_set)
+        return base / f"seed{fs}.parquet"
 
-    def fits(self, model_key: str, population: str, readout: str, suite: str, fold_seed: int) -> Path:
-        return self.scores(model_key, population, readout, suite, fold_seed).with_suffix(".fits.json")
+    def fits(self, model_key: str, population: str, readout: str, suite: str, fold_seed: int,
+             gen_set: str = "frozen") -> Path:
+        return self.scores(model_key, population, readout, suite, fold_seed, gen_set).with_suffix(".fits.json")
 
     def adapters(self, model_key: str) -> Path:
         return self.root / "adapters" / model_key

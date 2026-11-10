@@ -100,7 +100,7 @@ def _read_shards(shard_dir: Path) -> list[dict[str, Any]]:
     import pandas as pd
 
     rows: list[dict[str, Any]] = []
-    cols = ["sample_uid", "model_key", "benchmark", "problem_id", "generation_set", "completion_text", "truncated"]
+    cols = ["sample_uid", "model_key", "benchmark", "problem_id", "generation_set", "completion_text", "truncated", "engine"]
     for f in sorted(shard_dir.glob("shard-*.parquet")):
         rows.extend(pd.read_parquet(f, columns=cols).to_dict("records"))
     return rows
@@ -207,6 +207,10 @@ def run(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool 
     if not cfg.execute_untrusted:
         rep.notes.append("execute_untrusted is False: only the reference check ran; no extracted sample was "
                          "executed; labels and agreement outputs were not written")
+    # Integration-test path (wave 8, C1): MockBackend samples are hand-written mutations of reference
+    # solutions, never model output, so they may run under the trusted runner. Only when the run uses the
+    # mock backend, cfg.extra["mock_fixtures_trusted"] is set, and every row of a set has engine "mock".
+    mock_trusted = cfg.backend == "mock" and bool(cfg.extra.get("mock_fixtures_trusted", False))
     cache = None
     if can_execute:
         try:
@@ -216,7 +220,7 @@ def run(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool 
             rep.notes.append(f"isolation preflight failed, extracted samples were not executed: {e}")
             can_execute = False
         rep.metrics["preflight"] = executor.preflight_report
-    if can_execute:
+    if can_execute or mock_trusted:
         cache = ExecCache(layout.exec_cache, audit_seed=int(cfg.extra.get("cache_audit_seed", 0)),
                           audit_log=layout.logs / "cache_audit.jsonl")
 
@@ -235,7 +239,8 @@ def run(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool 
                     by_set.setdefault(r["generation_set"], []).append(r)
                 for gen_set, grows in sorted(by_set.items()):
                     _one_set(cfg, layout, manifest, rep, cfg_hash, executor, cache, model, b, gen_set, grows,
-                             mode, problems[b], suites[b], excluded, workers, can_execute, fail_counts, all_labels)
+                             mode, problems[b], suites[b], excluded, workers, can_execute, fail_counts, all_labels,
+                             mock_trusted=mock_trusted)
     if cache is not None:
         rep.metrics["cache"] = cache.stats()
         cache.close()
@@ -251,7 +256,9 @@ def run(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool 
 
 
 def _one_set(cfg, layout, manifest, rep, cfg_hash, executor, cache, model, b, gen_set, grows, mode, problems,
-             suites, excluded, workers, can_execute, fail_counts, all_labels) -> None:
+             suites, excluded, workers, can_execute, fail_counts, all_labels, *, mock_trusted: bool = False) -> None:
+    trusted = mock_trusted and bool(grows) and all(r["engine"] == "mock" for r in grows)
+    can_execute = can_execute or trusted
     ext_path = layout.extractions(model, b, gen_set)
     lab_path = layout.labels(model, b, gen_set)
     agr_path = layout.agreement_outputs(model, b, gen_set)
@@ -277,12 +284,12 @@ def _one_set(cfg, layout, manifest, rep, cfg_hash, executor, cache, model, b, ge
     fail_counts[f"{model}/{b}/{gen_set}"] = dict(Counter(e.failure for e in extractions if e.failure))
     if not can_execute:
         return
-    labels = label_samples(extractions, problems, suites, executor, cache, trusted=False, workers=workers,
+    labels = label_samples(extractions, problems, suites, executor, cache, trusted=trusted, workers=workers,
                            excluded=excluded)
     _write_parquet([lab.to_dict() for lab in labels], TABLE_COLUMNS["labels"], lab_path)
     _add(manifest, layout, lab_path, cfg_hash, rep)
     all_labels.extend(labels)
-    sigs = agreement_signatures(extractions, problems, suites, executor, cache, trusted=False, workers=workers)
+    sigs = agreement_signatures(extractions, problems, suites, executor, cache, trusted=trusted, workers=workers)
     _write_parquet([{"sample_uid": e.sample_uid, "signature": signature_to_json(sigs.get(e.sample_uid))}
                     for e in extractions], ("sample_uid", "signature"), agr_path)
     _add(manifest, layout, agr_path, cfg_hash, rep)
