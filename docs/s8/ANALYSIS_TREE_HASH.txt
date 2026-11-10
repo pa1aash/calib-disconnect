@@ -1,0 +1,11 @@
+Pre-pilot analysis-code hash (design section 13; wave 8, step C4; docs/DEVIATIONS.md DEV-015)
+
+git tree hash of analysis/: eaedc4a6178152aef5821e4bec1f98361552d9ba
+last commit touching analysis/: 6f130c85143e76213944b1683c198fcf3ae87144
+recorded: 2026-11-11
+
+Verify: git rev-parse <commit>:analysis  (equals the tree hash while analysis/ is unchanged)
+Diff since: git diff 6f130c85143e76213944b1683c198fcf3ae87144 -- analysis/
+Generated outputs live in analysis/results/, which is git-ignored and outside the hashed tree.
+Later changes to analysis/ are allowed only with a DEVIATIONS entry that cites them; the pre-commit
+hook warns (without blocking) on any staged change under analysis/.
