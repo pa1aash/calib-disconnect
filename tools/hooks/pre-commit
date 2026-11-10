@@ -73,6 +73,20 @@ if [ -n "$design_changes" ]; then
   fi
 fi
 
+# 7. Pre-pilot analysis-code hash (wave 8, design section 13). The analysis/ tree was hashed before the
+#    pilot (docs/DEVIATIONS.md, DEV-015). Later changes are allowed but each must cite a DEVIATIONS
+#    entry. This check only WARNS; it never blocks. Generated outputs under analysis/results/ are exempt.
+analysis_changes="$(git diff --cached --name-only | grep -E '^analysis/' | grep -vE '^analysis/results/' || true)"
+if [ -n "$analysis_changes" ]; then
+  echo "pre-commit: WARNING: this commit changes analysis/ code after the pre-pilot hash (DEV-015):" >&2
+  printf '  %s\n' $analysis_changes >&2
+  if git diff --cached --name-only | grep -qx 'docs/DEVIATIONS.md'; then
+    echo "pre-commit: WARNING: make sure the new docs/DEVIATIONS.md entry cites this change." >&2
+  else
+    echo "pre-commit: WARNING: docs/DEVIATIONS.md is not staged; add an entry citing this change." >&2
+  fi
+fi
+
 # 4. Secret scan of staged changes.
 if ! command -v gitleaks >/dev/null 2>&1; then
   echo "pre-commit: gitleaks not found on PATH; install it (brew install gitleaks)." >&2
