@@ -38,3 +38,4 @@ completes. Times are local (IST).
 | 15:05 | HR step 15 | polish: 20 edits, about -850 characters; length escalation (about 13,600 words against a 10,000 ceiling) handed to step 16 | research/polish-log.json |
 | 15:16 | HR step 16 | readability: 24 of 25 recommendations applied (rec-6 skipped to keep two figures); report 13,336 words; integrity gate passed (no em-dashes, all wikilinks resolve, no pipeline leaks) | research/readability-decisions.json |
 | 15:20 | sync + commits | vault synced to research/positioning/code-llm-confidence-positioning-d82d00/ (631 files, 276 notes, SHA-256 verified; no raw_file PDFs exist in this vault); gitleaks false positives (5 bibkey and model-name lines) added to .gitleaksignore | MANIFEST.json |
+| 15:30 | W4 step 8 | W4_REPORT.md and CONTEXT.md committed and pushed | docs/s4/W4_REPORT.md |

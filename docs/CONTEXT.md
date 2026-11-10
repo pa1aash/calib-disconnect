@@ -1,6 +1,6 @@
 # Project context (read first)
 
-Last updated: wave 3, 2026-11-10. This is the short capsule every session reads before doing anything
+Last updated: wave 4, 2026-11-10. This is the short capsule every session reads before doing anything
 else. Details live in the files it points to.
 
 ## Goal
@@ -40,6 +40,7 @@ New work goes only into these top-level paths (created in wave 3, each with a RE
 | `paper/figures/` | Figure sources and renders |
 | `research/positioning/` | Literature-positioning outputs; every finding tracked |
 | `docs/style/`, `docs/s3/` | Prose audit prompt; wave 3 records (orientation, positioning brief, lint baseline) |
+| `docs/s4/` | Wave 4 report (`W4_REPORT.md`) |
 | `tools/prose_lint.py` | Prose linter for manuscript source (`tools/prose_lint.toml`, tests in `tests/prose_lint/`) |
 
 The pre-commit hook rejects any staged change (addition, modification, deletion, rename) under a
@@ -97,13 +98,31 @@ not say which side is right.
 - Certifications (awarded after acceptance): Outstanding, Featured, Reproducibility, Survey, J2C,
   and Expert. TMLR stopped considering survey papers on 2026-09-01.
 
+## Headline findings: literature positioning (`research/positioning/w4/`)
+
+Read `DIGEST.md` first, then `VERDICTS.md` and `RECOMMENDATION.md`. The revised brief is
+`docs/s3/POSITIONING_BRIEF_R1.md`.
+
+- "Probes beat the model's stated confidence on code" is OCCUPIED by Ribeiro et al. (ICSE 2026,
+  arXiv 2512.07404). Do not claim it.
+- Strongest defensible contribution (Rank 1): a controlled disconnect test (supervision-matched own
+  readouts including a trained stated-confidence arm, input-only baselines, pooled and within-problem
+  scoring) on an execution-graded measurement layer (oracle swap, estimator set, release split), with
+  an offline routing replay. Fallback (Rank 2): the measurement protocol alone.
+- Main threats: concurrent work by Campos et al. (2611.07876) and CREDO (2609.34857, trained stated
+  confidence on code, no probe).
+- The measurement-instrument framing is "used" (occupied); exposition only. `src/v4_dprc` stays out
+  of the strongest version.
+- Every CLEAN verdict is provisional: arXiv full-text search, OpenAlex full text, and Semantic
+  Scholar keyword search were unavailable or partial (`INSTRUMENTS.md`).
+- The vault run is synced to `research/positioning/code-llm-confidence-positioning-d82d00/` with a
+  SHA-256 `MANIFEST.json`; `references.bib` holds 128 fetched records.
+
 ## Current stage
 
-Waves 0 to 3 are complete. Wave 3 added the layout for new work (table above), the writing system
-(`paper/STYLE.md`, `docs/style/prose-audit-prompt.md`, `tools/prose_lint.py` with a baseline on v3 in
-`docs/s3/LINT_BASELINE_v3.md`), `docs/s3/ORIENTATION.md`, and `docs/s3/POSITIONING_BRIEF.md`. No
-pipeline code, experiment, or manuscript text exists yet. The next stage is the literature-positioning
-run scoped by the brief; pipeline design follows it.
+Waves 0 to 4 are complete. Wave 4 produced the literature positioning above. No pipeline code,
+experiment, or manuscript text exists yet. The next stage is the pipeline design for the Rank 1
+study, after the operator decisions below.
 
 ## Conventions
 
@@ -113,10 +132,14 @@ attribution trailers. Never use `--no-verify`.
 
 ## Open operator items
 
-1. Decide whether v4 (DPRC) is in scope for the TMLR paper or recorded as unrun future work.
+1. Confirm that v4 (DPRC) is recorded as unrun future work (wave 4 recommends it stays out).
 2. Decide, for each element in the method inventory, which definition the new pipeline uses
    (label protocol, log-probability transform, AST formula, TACE, prompts, seeds).
 3. Rotate the former GPU host key and host if still live (from W0), and keep the pristine local
    backup private.
-4. Confirm the OpenReview TMLR submission form fields, which could not be read headlessly.
-5. Decide how to disclose LLM tool use in the first-page footnote, as the TMLR FAQ requires.
+4. Confirm the six-month concurrency window (works first posted after 2026-05-10).
+5. Allow search.arxiv.org, api2.openreview.net, api.datacite.org, and osf.io, or provide a Semantic
+   Scholar or OpenAlex API key, for a gap-closing search pass before the introduction is drafted.
+6. Decide the wording of the TMLR LLM-use footnote.
+7. Read the remaining leads before any novelty sentence: arXiv 2610.19226, Crossref record
+   10.1109/tse.2026.3713834, and the forward citers of Resist-and-Update (2607.12985).
