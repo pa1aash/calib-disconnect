@@ -194,9 +194,26 @@ def _spec_for(specs: dict[str, list[FeatureSpec]], member: str, layer: int | Non
     raise KeyError((member, layer))
 
 
+PROBE_RETRY_EXTRA_C = (1e-4, 100.0)   # K4 retry for the probe: these values are added to the grid
+
+
 def crossfit_family(data: ReadoutData, plan: FoldPlan, label_suite: str, model_key: str, population: str, *,
                     want: tuple[str, ...] = ("P", "P2", "P3", "Pmulti", "P2_single_split"),
                     C_grid=K.PROBE_C_GRID) -> FamilyResult:
+    """Family selection with the probe's K4 retry (section 13): if, for a majority of outer folds, the best
+    inner-CV log loss of the family is no better than the training base rate, the selection is repeated
+    once with PROBE_RETRY_EXTRA_C added to the C grid (every fold). If it still fails on a majority the
+    result is kept and flagged. FitRecords carry `retried` and `flagged`; scores carry `flagged`."""
+    res, fails = _family_once(data, plan, label_suite, model_key, population, want, C_grid, False, False)
+    if fails and sum(fails) * 2 > len(fails):
+        grid = tuple(sorted(set(C_grid) | set(PROBE_RETRY_EXTRA_C)))
+        res, fails2 = _family_once(data, plan, label_suite, model_key, population, want, grid, True, False)
+        if fails2 and sum(fails2) * 2 > len(fails2):
+            res, _ = _family_once(data, plan, label_suite, model_key, population, want, grid, True, True)
+    return res
+
+
+def _family_once(data, plan, label_suite, model_key, population, want, C_grid, retried: bool, flagged: bool):
     F = Folds(data, plan, label_suite)
     feats = _Features(data)
     n_layers = hidden_array(data, "hs_p2").shape[1]
@@ -205,6 +222,7 @@ def crossfit_family(data: ReadoutData, plan: FoldPlan, label_suite: str, model_k
     members = tuple(PROBE_MEMBERS) if need_all else tuple(m for m in PROBE_MEMBERS if m in want)
     all_specs = [s for m in members for s in specs[m]]
     res = FamilyResult(scores={w: [] for w in want}, fits={w: [] for w in want})
+    fails: list[bool] = []
     final_cache: dict[tuple, tuple[np.ndarray, np.ndarray]] = {}
 
     def final(f, spec, C):
@@ -215,6 +233,8 @@ def crossfit_family(data: ReadoutData, plan: FoldPlan, label_suite: str, model_k
 
     for f in F.outer_folds:
         sel = select_over_specs(feats, F, f, all_specs, C_grid, f"probe:outer{f}")
+        best_any = sel.best(members)
+        fails.append(best_any is None or not (best_any[1] < sel.base_rate_pooled))
         picks: dict[str, tuple[tuple, float]] = {}
         for m in members:
             b = sel.best((m,))
@@ -234,20 +254,23 @@ def crossfit_family(data: ReadoutData, plan: FoldPlan, label_suite: str, model_k
             spec = _spec_for(specs, member, layer)
             te, logits = final(f, spec, C)
             res.scores[name] += scores_from_arrays(data, te, logits, expit(logits), folds=F, model_key=model_key,
-                                                   population=population, readout=name, label_suite=label_suite)
+                                                   population=population, readout=name, label_suite=label_suite,
+                                                   flagged=flagged)
             info = {"member": member, "layer": layer, "C": C, "n_train": int(len(F.outer_train(f)))}
             if name == "P2_single_split":
                 info["selected_on"] = "first inner split"
                 loss_for_record, base_for_record = sel.loss_split0[(member, layer, C)], sel.base_rate_split0
             else:
                 loss_for_record, base_for_record = cv_loss, sel.base_rate_pooled
-            res.fits[name].append(fit_record(model_key, name, label_suite, plan, f, info, loss_for_record, base_for_record))
+            info["C_grid"] = list(C_grid)
+            res.fits[name].append(fit_record(model_key, name, label_suite, plan, f, info, loss_for_record,
+                                             base_for_record, retried=retried, flagged=flagged))
             res.chosen[f][name] = info
         # layer for the MLP probe: best single-layer member by pooled inner CV loss
         b = sel.best(("P2", "P3"))
         if b is not None:
             res.best_single_layer[f] = int(b[0][1])
-    return res
+    return res, fails
 
 
 PROBE_MEMBERS = K.PROBE_MEMBERS

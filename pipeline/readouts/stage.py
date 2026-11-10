@@ -18,6 +18,12 @@ inner split under the first suite (E; for LiveCodeBench lcb_label unless a recip
 `readouts/<model>/<population>/ST/recipes_seed<s>.json`, and reused for the other suites, S^R, and the
 ladder. Backend "mock" uses the surrogate trainer through the same plumbing.
 
+Checkpoints (RECIPE_SOURCE: B1..B6, T1, T2, S1, C3, C4) reuse the recipe of their source model, read from its
+FitRecords; a missing source recipe raises `MissingRecipeError` unless `cfg.extra["allow_own_recipe"]` is set
+(the pilot model T1). LiveCodeBench reuses the label-validity recipe the same way. The capacity-ladder ranks 1
+and 4 reuse the rank-16 recipe (alpha stays twice the rank). Before the first trained readout of an
+architecture class the stage runs the mask unit test (`gate.run_mask_gate`) and refuses to train if it fails.
+
 Extra output names beyond READOUTS (see CONTRACT_REQUESTS.md): SZ_V1_drop, AGREE_problem, and the
 isotonic variants iso:ST_inner234, iso:ST_insample, iso:SZ_V1_drop.
 """
@@ -43,7 +49,8 @@ from .common import Folds
 from .isotonic import crossfit_isotonic, drop_inner_split, rename_iso
 from .lat import crossfit_lat
 from .probe import crossfit_family, crossfit_mlp, crossfit_prompt
-from .recipe import RecipeTable
+from .gate import MaskTestFailed
+from .recipe import Recipe, RecipeTable
 from .surrogate import SurrogateTrainer, surrogate_features
 from .unsupervised import agreement_scores, ast_cluster_scores, tl_scores
 from .verbal import v1_parse_report, v1_scores, v1_train_scores, v2_scores
@@ -54,6 +61,14 @@ ISO_BASES = ("SZ_V1", "SZ_V1_drop", "SZ_V2", "TL_geo", "TL_min")
 EXTRA_NAMES = ("SZ_V1_drop", "AGREE_problem")
 LORA_FAMILY = ("ST", "ST_r1", "ST_r4", "ST_r16", "ST_head", "SR")
 STUDY_LIKE = ("MOCK", "SMOKE")
+# Checkpoints that reuse the recipe of a source model, per (fold seed, outer fold) (design 7.4): bases from the
+# instruct model of their family, trajectory checkpoints and the Olmo base from P3, thinking-on from thinking-off.
+RECIPE_SOURCE = {"B1": "P1", "B2": "P2", "B3": "P3", "B4": "P4", "B5": "P5", "B6": "P6", "T1": "P3", "T2": "P3",
+                 "S1": "P1", "C3": "C1", "C4": "C2"}
+
+
+class MissingRecipeError(RuntimeError):
+    """A checkpoint's source recipe is absent and cfg.extra["allow_own_recipe"] is not set."""
 
 
 def _populations(cfg: RunConfig) -> list[tuple[str, tuple[str, ...]]]:
@@ -85,6 +100,7 @@ class _Ctx:
                 self.plans[s] = p
         self.seeds = sorted(self.plans)
         self.tables: dict[int, RecipeTable] = {}
+        self.recipe_origin = "selected here"
         self._real = None
         self._surrogate = None
         suites = cfg.extra.get("suites") or SUITES_BY_POP[population]
@@ -178,16 +194,47 @@ class _Ctx:
     def recipes_path(self, seed: int, population: str | None = None) -> Path:
         return self.layout.root / "readouts" / self.model / (population or self.pop) / "ST" / f"recipes_seed{seed}.json"
 
+    def source_model(self) -> str | None:
+        return RECIPE_SOURCE.get(self.model)
+
+    def _recipes_from_fits(self, source: str, seed: int) -> RecipeTable:
+        """Recipes of `source` for fold seed `seed`, read from its label-validity ST FitRecords (suite E)."""
+        t = RecipeTable()
+        path = self.layout.fits(source, "label_validity", "ST", "E", seed)
+        if path.exists():
+            for fr in files.json_load_fits(path):
+                sel = fr.selected
+                t.put(seed, fr.outer_fold, Recipe(
+                    lr=sel["lr"], steps=sel["steps"], n_train_inner=sel["n_train_inner"],
+                    epoch_fraction=sel["epoch_fraction"], schedule_epochs=sel["schedule_epochs"],
+                    inner_val_logloss=fr.inner_val_logloss, base_rate_logloss=fr.base_rate_logloss,
+                    retried=fr.retried, flagged=fr.flagged))
+        return t
+
     def table(self, seed: int) -> RecipeTable:
+        """The recipe table for this model. Order: an explicit cfg.extra["recipes"]; the source model's
+        FitRecords (checkpoints, and LiveCodeBench from the label-validity fits); otherwise empty, which
+        means "select here", allowed only for models without a source (primary models on the label-validity
+        population) or when cfg.extra["allow_own_recipe"] is set (the pilot model T1)."""
         if seed not in self.tables:
             t = RecipeTable()
             ext = self.cfg.extra.get("recipes")
+            self.recipe_origin = "selected here"
             if isinstance(ext, str) and Path(ext).exists():
-                t = RecipeTable.load(Path(ext))
+                t, self.recipe_origin = RecipeTable.load(Path(ext)), f"file {Path(ext).name}"
             elif isinstance(ext, dict):
-                t = RecipeTable.from_dict(ext)
-            elif self.pop != "label_validity" and self.recipes_path(seed, "label_validity").exists():
-                t = RecipeTable.load(self.recipes_path(seed, "label_validity"))
+                t, self.recipe_origin = RecipeTable.from_dict(ext), "cfg.extra"
+            else:
+                src = self.source_model()
+                if src is not None or self.pop != "label_validity":
+                    t = self._recipes_from_fits(src or self.model, seed)
+                    self.recipe_origin = f"{src or self.model} FitRecords"
+                    if not t.recipes:
+                        if not self.cfg.extra.get("allow_own_recipe"):
+                            raise MissingRecipeError(
+                                f"{self.model}/{self.pop}: no recipe of {src or self.model} for fold seed {seed}; fit its "
+                                "S^T first or set cfg.extra['allow_own_recipe']")
+                        self.recipe_origin = "selected here (allow_own_recipe)"
             self.tables[seed] = t
         return self.tables[seed]
 
@@ -210,8 +257,12 @@ class _Ctx:
             provider = load_layouts_provider(self.cfg)
             self._real = RealBackend.from_pretrained(
                 self.cfg, self.model,
-                lambda tok: provider(self.cfg, self.layout, self.model, self.benches, self.data.sample_uids, tok),
+                lambda tok, mdl: provider(self.cfg, self.layout, self.model, self.benches, self.data.sample_uids, tok, mdl),
                 self.layout.answer_tokens)
+        if not self._real.gate_done:   # 7.12: refuse to train unless the mask test passes for this class
+            from .gate import arch_key
+            rp = self.layout.config_dir / f"mask_test_{arch_key(self._real.model)}.json"
+            self._real.mask_gate(rp, register=self.w._register)
         with (self._real.sr() if kind == "sr" else self._real.st(rank=rank, head=head)) as t:
             yield t
 
@@ -256,7 +307,8 @@ class _Ctx:
                 break
             with self.trainer("st") as tr:
                 ar = AdapterReadout("ST", tr, table, select=select, inner_adapters=inner,
-                                    max_steps=self.cfg.lora_max_steps)
+                                    max_steps=self.cfg.lora_max_steps,
+                                    extra_selected={"recipe_source": self.recipe_origin})
                 res = ar.crossfit_full(d, plan, suite, m, p)
             if select:
                 self._save_table(seed)
@@ -367,6 +419,8 @@ def run(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool 
                     for suite in ctx.suites:
                         ctx.run_probes(seed, plan, suite)
                 ctx.run_lora()
+            except (MissingRecipeError, MaskTestFailed):
+                raise
             except RuntimeError as e:   # for example a missing token-layout provider for the real backend
                 report.ok = False
                 report.notes.append(f"{model_key}/{population}: {e}")

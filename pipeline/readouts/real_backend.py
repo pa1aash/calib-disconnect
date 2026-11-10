@@ -27,27 +27,32 @@ from .lora_train import MaskedLoraTrainer
 from .masked_lora import LoraSpec, MaskedLoraModel, answer_token_ids
 from .rtuning import RTuningTokens, RTuningTrainer, rtuning_tokens_from_tokenizer
 
-DEFAULT_LAYOUTS_PROVIDER = "pipeline.generate.layouts:teacher_forced_layouts"
+DEFAULT_LAYOUTS_PROVIDER = "pipeline.readouts.layouts:default_layouts_provider"
 
 
 def load_layouts_provider(cfg: RunConfig) -> Callable:
+    """A "module:function" path from cfg.extra["layouts_provider"], default: the generate stage's layout
+    construction (`layouts.default_layouts_provider`). Signature:
+    (cfg, layout, model_key, benches, sample_uids, tokenizer, model) -> list[TeacherForcedLayout]."""
     path = cfg.extra.get("layouts_provider", DEFAULT_LAYOUTS_PROVIDER)
     mod, _, fn = path.partition(":")
     try:
         return getattr(importlib.import_module(mod), fn)
     except (ImportError, AttributeError) as e:
-        raise RuntimeError(f"LoRA readouts need a token-layout provider ({path}): {e}. "
-                           "See pipeline/readouts/CONTRACT_REQUESTS.md.") from e
+        raise RuntimeError(f"cannot load the token-layout provider {path}: {e}") from e
 
 
 def answer_ids_from_config(layout_answer_tokens: Path, model_key: str, tokenizer) -> tuple[list[int], list[int]]:
-    """Yes/No token sets from config/answer_tokens.json when present ({model_key: {"yes": [...], "no": [...]}}),
-    else scanned from the tokenizer (7.12)."""
+    """Yes/No token sets as the generate stage wrote them to config/answer_tokens.json:
+    {model_key: {"model_id", "revision", "yes": [{"id", "token", "text"}], "no": [...]}} (plain integer ids are
+    also accepted). A missing file or entry (or the mock backend's placeholder) falls back to the generate
+    stage's own tokenizer scan, which gives the same sets."""
     p = Path(layout_answer_tokens)
     if p.exists():
         d = json.loads(p.read_text()).get(model_key)
         if isinstance(d, dict) and d.get("yes") and d.get("no"):
-            return [int(i) for i in d["yes"]], [int(i) for i in d["no"]]
+            ident = lambda e: int(e["id"]) if isinstance(e, dict) else int(e)  # noqa: E731
+            return [ident(e) for e in d["yes"]], [ident(e) for e in d["no"]]
     return answer_token_ids(tokenizer)
 
 
@@ -60,6 +65,15 @@ class RealBackend:
         self.rtuning_tokens = rtuning_tokens
         self.pad_id, self.micro_batch, self.eval_batch, self.sr_micro_batch = pad_id, micro_batch, eval_batch, sr_micro_batch
         self.economy = economy
+        self.gate_done = False
+
+    def mask_gate(self, report_path: Path, register=None) -> dict:
+        """7.12: run the mask unit test (real layouts, float32) before the first trained readout."""
+        from .gate import run_mask_gate
+        rep = run_mask_gate(self.model, self.layouts, report_path, yes_ids=self.yes_ids, no_ids=self.no_ids,
+                            pad_id=self.pad_id, register=register)
+        self.gate_done = True
+        return rep
 
     @classmethod
     def from_pretrained(cls, cfg: RunConfig, model_key: str, layouts_fn: Callable, answer_tokens_path: Path):
@@ -76,7 +90,7 @@ class RealBackend:
         yes, no = answer_ids_from_config(answer_tokens_path, model_key, tok)
         eot = getattr(tok, "eos_token_id", None)
         tokens = rtuning_tokens_from_tokenizer(tok, eot_id=eot if isinstance(eot, int) else None)
-        return cls(model, layouts_fn(tok), yes, no, rtuning_tokens=tokens,
+        return cls(model, layouts_fn(tok, model), yes, no, rtuning_tokens=tokens,
                    pad_id=tok.pad_token_id if tok.pad_token_id is not None else 0)
 
     @contextlib.contextmanager

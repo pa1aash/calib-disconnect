@@ -31,6 +31,13 @@ REVIEW GUIDE. This file holds everything that the position mask touches:
      R-Tuning-style full adapter) changes non-masked positions (negative control).
 
 Training loops, recipes, and K4 are in `lora_train.py` and `recipe.py`; they only call this file.
+
+KNOWN SCHEDULE MISMATCH (design 7.3 reuse, to be logged in DEVIATIONS). The isotonic map's inner scores
+come from two kinds of adapter. Inner split 1 reuses the selection adapter at the selected step s of a
+cosine schedule set to the full selection length (2 epochs, or 4 on the K4 retry), so its learning rate
+has not annealed at s. Inner splits 2 to 4, and the final four-fold adapter, train for the transferred
+step count with the cosine schedule set to that length, annealed to zero. `iso:ST_inner234` (map fit
+without split 1) isolates the effect.
 """
 
 from __future__ import annotations
@@ -134,6 +141,9 @@ def collate_layouts(layouts: Sequence[TeacherForcedLayout], pad_id: int = 0, dev
         am[b, T - n:] = 1
         mk[b, T - n:] = torch.from_numpy(lay.mask().astype(np.float32))  # length n, 1 on the elicitation span
     pos = (am.cumsum(-1) - 1).clamp(min=0)
+    for b, e in enumerate(len(l.elicitation_ids) for l in layouts):   # the mask is exactly the last E real columns
+        if not (mk[b, T - e:] == 1).all() or mk[b].sum().item() != e:
+            raise ValueError("adapter mask is not 1 exactly on the trailing elicitation span")
     yt = None if y is None else torch.as_tensor(np.asarray(y, dtype=np.float32))
     batch = PaddedBatch(ids, am, pos, mk, [len(l.elicitation_ids) for l in layouts], yt)
     return to_device(batch, device) if device is not None else batch
@@ -145,23 +155,11 @@ def to_device(b: PaddedBatch, device) -> PaddedBatch:
 
 
 def answer_token_ids(tokenizer) -> tuple[list[int], list[int]]:
-    """Yes and No sets (7.12): every single token whose decoded text, stripped of leading whitespace, is
-    exactly "Yes" (resp. "No"). `tokenizer` needs `get_vocab()` or `vocab_size`, and `decode([id])`."""
-    n = len(tokenizer.get_vocab()) if hasattr(tokenizer, "get_vocab") else tokenizer.vocab_size
-    ids = range(max(n, getattr(tokenizer, "vocab_size", 0)))
-    yes, no = [], []
-    for i in ids:
-        try:
-            t = tokenizer.decode([i]).lstrip()
-        except Exception:  # noqa: BLE001 - unmapped ids
-            continue
-        if t in K.YES_STRINGS:
-            yes.append(i)
-        elif t in K.NO_STRINGS:
-            no.append(i)
-    if not yes or not no:
-        raise ValueError("empty Yes or No token set")
-    return yes, no
+    """Yes and No sets (7.12) by the generate stage's own rule (`answer_token_variants`), so the sets equal
+    the ones capture used for V2."""
+    from pipeline.generate.tokens import answer_token_variants
+    v = answer_token_variants(tokenizer)
+    return [d["id"] for d in v["yes"]], [d["id"] for d in v["no"]]
 
 
 # ---------------------------------------------------------------------------------------------------
@@ -204,7 +202,9 @@ class MaskedLoraModel:
     def _hook(self, module, inputs, output):
         if self._mask is None:
             return output
-        return output * self._mask.to(output.dtype)
+        # torch.where, not a product: exact zero off the span even if the branch output were non-finite
+        m = self._mask.to(output.device) > 0
+        return torch.where(m, output, torch.zeros((), dtype=output.dtype, device=output.device))
 
     # -- parameters --------------------------------------------------------------------------------
     @property
@@ -227,15 +227,24 @@ class MaskedLoraModel:
     def reset(self, seed: int = 0, init_std: float | None = None) -> None:
         """Re-initialize the adapter: A kaiming-uniform, B zero (or N(0, init_std) for tests with a
         nonzero adapter). Also re-initializes the linear head if present (zeros)."""
+        # Initialize on CPU with a CPU generator and copy to the weight's device and dtype, so the seed gives
+        # the same adapter on CPU and CUDA and no generator-device mismatch can occur.
         g = torch.Generator().manual_seed(int(seed))
+
+        def put(weight: nn.Parameter, fn) -> None:
+            tmp = torch.empty(weight.shape, dtype=torch.float32)
+            fn(tmp)
+            with torch.no_grad():
+                weight.copy_(tmp.to(device=weight.device, dtype=weight.dtype))
+
         for _, mod in self.peft.named_modules():
             la, lb = getattr(mod, "lora_A", None), getattr(mod, "lora_B", None)
             if isinstance(la, nn.ModuleDict) and "default" in la:
-                nn.init.kaiming_uniform_(la["default"].weight, a=math.sqrt(5), generator=g)
+                put(la["default"].weight, lambda t: nn.init.kaiming_uniform_(t, a=math.sqrt(5), generator=g))
                 if init_std is None:
-                    nn.init.zeros_(lb["default"].weight)
+                    put(lb["default"].weight, nn.init.zeros_)
                 else:
-                    nn.init.normal_(lb["default"].weight, std=init_std, generator=g)
+                    put(lb["default"].weight, lambda t: nn.init.normal_(t, std=init_std, generator=g))
         if self.head is not None:
             nn.init.zeros_(self.head.weight)
             nn.init.zeros_(self.head.bias)
@@ -294,6 +303,8 @@ class MaskedLoraModel:
 
     def final_state(self, batch: PaddedBatch, *, economy: bool = True) -> torch.Tensor:
         """Final normed hidden state at p3 (the last column), float32 [B, D], masked adapter."""
+        if not bool(batch.attention_mask[:, -1].all()):
+            raise ValueError("final_state needs a left-padded batch (the last column must be real in every row)")
         if not economy:
             return self.forward_full(batch, "masked").last_hidden_state[:, -1].float()
         Tp = batch.prefix_len
@@ -309,12 +320,16 @@ class MaskedLoraModel:
     def logodds_from_state(self, h: torch.Tensor, yes_ids: Sequence[int], no_ids: Sequence[int]) -> torch.Tensor:
         """float32 log P(Yes set) - log P(No set). The LM head is applied in float32, restricted to the
         answer-token rows (the softmax normalizer cancels in the difference)."""
-        w = self.hf.get_output_embeddings().weight
+        emb = self.hf.get_output_embeddings()
+        w = emb.weight
         dev = w.device
-        wy = w[torch.as_tensor(list(yes_ids), device=dev)].float()
-        wn = w[torch.as_tensor(list(no_ids), device=dev)].float()
-        h = h.float()
+        yi, ni = torch.as_tensor(list(yes_ids), device=dev), torch.as_tensor(list(no_ids), device=dev)
+        wy, wn = w[yi].float(), w[ni].float()
+        h = h.float().to(dev)
         zy, zn = h @ wy.T, h @ wn.T
+        bias = getattr(emb, "bias", None)   # same engine as capture: a head bias, if any, is added
+        if bias is not None:
+            zy, zn = zy + bias[yi].float(), zn + bias[ni].float()
         cap = getattr(self.hf.config.get_text_config(), "final_logit_softcapping", None)
         if cap:
             zy, zn = torch.tanh(zy / cap) * cap, torch.tanh(zn / cap) * cap
@@ -452,7 +467,8 @@ def mask_unit_test(model: nn.Module, layouts_or_tokenizer, adapter: "MaskedLoraM
             "prefix_cache_masked_vs_base_maxdiff": pref_kv,
         }
         report["a_nonmasked_match"] = bool(nm_h <= atol and nm_kv <= atol)
-        report["b_masked_differ"] = bool(last_m > atol and m_kv > atol)
+        report["b_masked_differ"] = bool(last_m > atol and m_kv > atol
+                                         and report["adapter_changes_logodds"] > atol)
         report["c_economy_matches"] = bool(report["economy_vs_full_logodds_maxdiff"] <= atol and pref_kv <= atol)
         if negative_control:
             report["negative_control_nonmasked_hidden_maxdiff"] = f_h
