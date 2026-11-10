@@ -50,6 +50,29 @@ if [ -n "$frozen_hits" ]; then
   fail=1
 fi
 
+# 6. Frozen design (wave 7): docs/s7/PIPELINE_DESIGN_FROZEN.md and its hash file may be added once
+#    and never modified, deleted, or renamed afterward. When added, the recorded SHA-256 must match.
+#    Deviations go to docs/DEVIATIONS.md. There is deliberately no override switch.
+FROZEN_DESIGN="docs/s7/PIPELINE_DESIGN_FROZEN.md"
+FROZEN_HASH="docs/s7/FROZEN_SHA256.txt"
+design_changes="$(git diff --cached --name-status --no-renames | awk -v a="$FROZEN_DESIGN" -v b="$FROZEN_HASH" '$2==a || $2==b {print $1" "$2}')"
+if [ -n "$design_changes" ]; then
+  while read -r st path; do
+    if [ "$st" != "A" ] || git cat-file -e "HEAD:$path" 2>/dev/null; then
+      echo "pre-commit: $path is frozen; record changes in docs/DEVIATIONS.md instead ($st)." >&2
+      fail=1
+    fi
+  done <<< "$design_changes"
+  if git cat-file -e ":$FROZEN_DESIGN" 2>/dev/null && git cat-file -e ":$FROZEN_HASH" 2>/dev/null; then
+    want="$(git show ":$FROZEN_HASH" | grep -oE '[0-9a-f]{64}' | head -1)"
+    have="$(git show ":$FROZEN_DESIGN" | shasum -a 256 | cut -d' ' -f1)"
+    if [ "$want" != "$have" ]; then
+      echo "pre-commit: $FROZEN_HASH does not match the SHA-256 of $FROZEN_DESIGN." >&2
+      fail=1
+    fi
+  fi
+fi
+
 # 4. Secret scan of staged changes.
 if ! command -v gitleaks >/dev/null 2>&1; then
   echo "pre-commit: gitleaks not found on PATH; install it (brew install gitleaks)." >&2
