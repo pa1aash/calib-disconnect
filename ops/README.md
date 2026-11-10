@@ -65,7 +65,7 @@ The pilot sandbox is `bwrap`. To use a container instead, pass `--container-imag
 
 ## Plans
 
-`smoke` (local, 6 jobs), `pilot` (39 jobs), `pilot-mixed-only` (26 jobs), `full` (stub listing, refused by `run` and `launch`).
+`smoke` (local, 6 jobs), `pilot` (40 jobs), `pilot-mixed-only` (25 jobs), `full` (stub listing, refused by `run` and `launch`).
 Job IDs look like `generate.P1.mbpp_plus.frozen` and name the done markers in `runs/<run_id>/state/`.
 Local smoke: `uv run python -m ops run --plan smoke --execute`.
 

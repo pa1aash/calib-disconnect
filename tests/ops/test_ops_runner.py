@@ -179,10 +179,10 @@ def test_dry_run_prints_and_imports_nothing(tmp_path, monkeypatch):
     layout = RunLayout.for_run("pilot", tmp_path)
     before = {m for m in ("torch", "vllm", "transformers") if m in sys.modules}
     s = Runner(plan, layout, dry_run=True, out=lines.append).run()
-    assert len(lines) == 1 + 39 and "pipeline.generate.stage:run_generate" in "\n".join(lines)
+    assert len(lines) == 1 + 40 and "pipeline.generate.stage:run_generate" in "\n".join(lines)
     assert not layout.root.exists()                                  # a dry run writes nothing
     assert {m for m in ("torch", "vllm", "transformers") if m in sys.modules} == before
-    assert s.count("not_run") == 39
+    assert s.count("not_run") == 40
 
 
 def test_real_resolver_imports_through_stages_table(monkeypatch):

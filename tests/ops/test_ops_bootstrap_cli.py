@@ -122,6 +122,6 @@ def test_launch_refuses_stub_plan(tmp_state):
 def test_plan_json_and_ledger_summary(tmp_path, capsys):
     assert cli.main(["plan", "--plan", "pilot", "--json"]) == 0
     d = json.loads(capsys.readouterr().out)
-    assert len(d["jobs"]) == 39 and d["download_models"][0] == "T1"
+    assert len(d["jobs"]) == 40 and d["download_models"][0] == "T1"
     assert cli.main(["ledger", "summary", "--ledger", str(tmp_path / "none.csv")]) == 0
     assert "rows=0" in capsys.readouterr().out

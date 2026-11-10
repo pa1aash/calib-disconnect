@@ -4,22 +4,68 @@
   "launchable": true,
   "pod": false,
   "config": {
-    "models": ["SMOKE"],
-    "benchmarks": ["humaneval_plus"],
+    "models": [
+      "SMOKE"
+    ],
+    "benchmarks": [
+      "humaneval_plus"
+    ],
     "k": 2,
-    "fold_seeds": [0],
+    "fold_seeds": [
+      0
+    ],
     "backend": "transformers",
     "device": "cpu",
     "sandbox": "trusted-only",
     "execute_untrusted": false,
     "problem_limit": 5,
     "lora_max_steps": 2,
-    "stages": ["data", "generate", "execute", "capture", "readouts", "analysis"]
+    "stages": [
+      "data",
+      "generate",
+      "execute",
+      "capture",
+      "readouts",
+      "analysis"
+    ]
   },
   "groups": [
-    {"stages": ["data"], "scopes": ["humaneval_plus"]},
-    {"stages": ["generate", "execute", "capture"], "models": ["SMOKE"], "scopes": ["humaneval_plus"]},
-    {"stages": ["readouts"], "models": ["SMOKE"], "scopes": ["label_validity"]},
-    {"stages": ["analysis"]}
+    {
+      "stages": [
+        "data"
+      ],
+      "scopes": [
+        "label_validity"
+      ]
+    },
+    {
+      "stages": [
+        "generate",
+        "execute",
+        "capture"
+      ],
+      "models": [
+        "SMOKE"
+      ],
+      "scopes": [
+        "humaneval_plus"
+      ]
+    },
+    {
+      "stages": [
+        "readouts"
+      ],
+      "models": [
+        "SMOKE"
+      ],
+      "scopes": [
+        "label_validity"
+      ]
+    },
+    {
+      "stages": [
+        "analysis"
+      ]
+    }
   ]
 }

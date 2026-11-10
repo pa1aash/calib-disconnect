@@ -17,6 +17,7 @@ from typing import Any, Mapping
 
 from pipeline.contracts import constants as C
 from pipeline.contracts.interfaces import RunConfig
+from pipeline.contracts.layout import RunLayout
 
 PLANS_DIR = Path(__file__).resolve().parent / "plans"
 STAGE_ORDER = ("data", "generate", "execute", "capture", "readouts", "analysis")
@@ -149,6 +150,29 @@ def order_jobs(jobs: list[Job] | tuple[Job, ...]) -> list[Job]:
     return out + sorted(post, key=key)
 
 
+_SR_ID = re.compile(r"^SR_(?P<suite>.+)_seed(?P<seed>\d+)_fold(?P<fold>\d+)$")
+FRESH_POPULATION = {"P1": "label_validity", "S1": "lcb"}
+
+
+def sr_adapter_rel(model_key: str, adapter_id: str) -> str:
+    """Run-root-relative path where the readouts stage saves the S^R adapter, built with the layout's
+    own adapters() directory and the stage's name rule sr_<population>_<suite>_seed<s>_fold<f>."""
+    m = _SR_ID.match(adapter_id)
+    if not m:
+        raise ValueError(f"not an S^R adapter id: {adapter_id}")
+    pop = FRESH_POPULATION[model_key]
+    name = f"sr_{pop}_{m['suite']}_seed{m['seed']}_fold{m['fold']}"
+    lay = RunLayout.for_run("x", Path("."))
+    return (lay.adapters(model_key) / name).relative_to(lay.root).as_posix()
+
+
+def resolve_fresh(f: Mapping[str, Any], k: int) -> dict[str, Any]:
+    out = dict(f)
+    out["k_g"] = k if out.get("k_g", "k") == "k" else int(out["k_g"])
+    out["adapter_path"] = sr_adapter_rel(out["model_key"], out["adapter_id"])
+    return out
+
+
 def job_config(cfg: RunConfig, job: Job) -> RunConfig:
     """The RunConfig a stage sees for one job: one model, one benchmark (or the plan's benchmarks for a
     population scope), and only its own stage. Job overrides apply last; "extra" is merged."""
@@ -160,10 +184,14 @@ def job_config(cfg: RunConfig, job: Job) -> RunConfig:
         kw["models"] = (job.model_key,)
     if job.scope in C.BENCHMARKS:
         kw["benchmarks"] = (job.scope,)
+    elif job.scope == "lcb":
+        kw["benchmarks"] = tuple(b for b in cfg.benchmarks if b == "lcb_v6")
     elif job.scope == "label_validity":
         kw["benchmarks"] = tuple(b for b in cfg.benchmarks if b in C.LABEL_VALIDITY_BENCHMARKS)
     if job.kind == "timing" and job.model_key:
         # timing-only probes are exempt from the generation-only skip (G10)
         kw["generation_only_models"] = tuple(m for m in cfg.generation_only_models if m != job.model_key)
+    if "fresh" in extra:
+        extra["fresh"] = [resolve_fresh(f, cfg.k) for f in extra["fresh"]]
     kw.update({k: (tuple(v) if isinstance(v, list) else v) for k, v in ov.items()})
     return dataclasses.replace(cfg, **kw)

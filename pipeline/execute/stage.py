@@ -121,6 +121,32 @@ def _add(manifest: Manifest, layout: RunLayout, path: Path, cfg_hash: str, repor
         report.outputs.append(rel)
 
 
+def merge_reference_checks(path: Path, new: list) -> list:
+    """Merge this job's reference checks into the existing table: rows of other benchmarks are kept, rows
+    of the processed problems are replaced. Reference checks do not depend on the model, so a row for the
+    same (problem_id, suite_id) that differs in passed or excluded raises."""
+    import pandas as pd
+
+    from pipeline.contracts.schemas import ReferenceCheck
+
+    mine = {(c.problem_id, c.suite_id): c for c in new}
+    kept: list = []
+    if path.exists():
+        for r in pd.read_parquet(path).to_dict("records"):
+            key = (r["problem_id"], r["suite_id"])
+            if key in mine:
+                c = mine[key]
+                if bool(r["passed"]) != c.passed or bool(r["excluded"]) != c.excluded:
+                    raise RuntimeError(f"reference check for {key} changed (passed {bool(r['passed'])} -> "
+                                       f"{c.passed}, excluded {bool(r['excluded'])} -> {c.excluded}): the "
+                                       "reference must be deterministic")
+            else:
+                f = r["failure"]
+                kept.append(ReferenceCheck(r["problem_id"], r["suite_id"], bool(r["passed"]),
+                                           None if f is None or f != f else f, bool(r["excluded"])))
+    return sorted(kept + list(new), key=lambda c: (c.problem_id, c.suite_id))
+
+
 def k1_acceptance(layout: RunLayout, excluded: set[tuple[str, str]]) -> tuple[bool, str]:
     """The operator accepts K1 by a file config/k1_accepted.json in the run root: a JSON list of
     [problem_id, suite_id] pairs, or {"excluded": [...]}, equal to the set of excluded pairs."""
@@ -207,11 +233,16 @@ def run(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool 
             rep.metrics["k1_triggered"] = True
             rep.notes.append(f"K1 TRIGGERED on {b}: reference exclusion above {constants.K1_MAX_REFERENCE_EXCLUSION}")
     if checks:
-        _write_parquet([c.to_dict() for c in checks], TABLE_COLUMNS["reference_checks"], layout.reference_checks)
+        merged = merge_reference_checks(layout.reference_checks, checks)
+        _write_parquet([c.to_dict() for c in merged], TABLE_COLUMNS["reference_checks"], layout.reference_checks)
         _add(manifest, layout, layout.reference_checks, cfg_hash, rep)
         pj = layout.root / "execute" / "agreement_label_proxy.json"
         pj.parent.mkdir(parents=True, exist_ok=True)
-        pj.write_text(json.dumps(proxies, indent=1, sort_keys=True) + "\n")
+        old = json.loads(pj.read_text()) if pj.exists() else {}
+        old.update(proxies)      # replace the keys of the benchmarks this job processed, keep the others
+        tmp = pj.with_name(pj.name + ".tmp")
+        tmp.write_text(json.dumps(old, indent=1, sort_keys=True) + "\n")
+        os.replace(tmp, pj)
         _add(manifest, layout, pj, cfg_hash, rep)
     rep.metrics.setdefault("k1_triggered", False)
     if rep.metrics["k1_triggered"]:

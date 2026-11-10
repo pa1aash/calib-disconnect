@@ -161,3 +161,40 @@ def test_mbpp_inputs_are_decoded_before_running(mbppplus):
     assert isinstance(raw.inputs[0][0], list)
     dec = stage.decode_suite(raw)
     assert isinstance(dec.inputs[0][0], tuple) and dec.inputs == s["O"].inputs
+
+
+def _two_benchmark_run(heplus, mbppplus, tmp_path):
+    layout = RunLayout.for_run("t", tmp_path)
+    (layout.root / "data").mkdir(parents=True)
+    for rows, tid, bench in ((heplus, "HumanEval/53", "humaneval_plus"), (mbppplus, "Mbpp/2", "mbpp_plus")):
+        p, s = build(rows, tid, bench, max_plus=5)
+        s["agree"] = TestSuite(p.problem_id, "agree", s["O"].inputs[:2], None, 0.0, "x", "")
+        layout.problems(bench).write_text(json.dumps(p.to_dict()) + "\n")
+        layout.suites(bench).write_text("".join(json.dumps(v.to_dict()) + "\n" for v in s.values()))
+    return layout
+
+
+def test_sequential_jobs_merge_reference_checks_and_proxies(heplus, mbppplus, tmp_path):
+    layout = _two_benchmark_run(heplus, mbppplus, tmp_path)
+    m = Manifest(run_id="t")
+    for bench in ("humaneval_plus", "mbpp_plus"):
+        rep = stage.run(cfg(models=(), benchmarks=(bench,)), layout, m)
+        assert rep.ok, rep.notes
+    ref = pd.read_parquet(layout.reference_checks)
+    assert set(ref.problem_id) == {"HumanEval/53", "Mbpp/2"} and len(ref) == 6 and ref.passed.all()
+    proxy = json.loads((layout.root / "execute" / "agreement_label_proxy.json").read_text())
+    assert set(proxy) == {"humaneval_plus", "mbpp_plus"}
+    assert m.verify(layout.root).passed
+    # rerunning a job is idempotent
+    stage.run(cfg(models=(), benchmarks=("humaneval_plus",)), layout, m)
+    assert len(pd.read_parquet(layout.reference_checks)) == 6
+
+
+def test_a_changed_reference_check_raises(heplus, mbppplus, tmp_path):
+    layout = _two_benchmark_run(heplus, mbppplus, tmp_path)
+    stage.run(cfg(models=(), benchmarks=("humaneval_plus",)), layout, Manifest(run_id="t"))
+    df = pd.read_parquet(layout.reference_checks)
+    df["passed"] = False
+    df.to_parquet(layout.reference_checks)
+    with pytest.raises(RuntimeError, match="deterministic"):
+        stage.run(cfg(models=(), benchmarks=("humaneval_plus",)), layout, Manifest(run_id="t"))

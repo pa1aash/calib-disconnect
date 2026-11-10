@@ -52,8 +52,7 @@
         "data"
       ],
       "scopes": [
-        "humaneval_plus",
-        "mbpp_plus"
+        "label_validity"
       ]
     },
     {
@@ -103,6 +102,28 @@
         "humaneval_plus",
         "mbpp_plus"
       ]
+    },
+    {
+      "kind": "timing",
+      "name": "gen50",
+      "stages": [
+        "generate"
+      ],
+      "models": [
+        "P4",
+        "P6"
+      ],
+      "scopes": [
+        "humaneval_plus"
+      ],
+      "gen_set": "timing",
+      "overrides": {
+        "problem_limit": 50,
+        "extra": {
+          "timing_only": true,
+          "probe": "generation_50_problems"
+        }
+      }
     },
     {
       "kind": "timing",

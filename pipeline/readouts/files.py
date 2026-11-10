@@ -237,3 +237,11 @@ def apply_reference_exclusions(data: ReadoutData, valid: set[str] | None) -> int
     for s in data.labels:
         data.labels[s] = np.where(bad, NO_LABEL, data.labels[s]).astype(np.int8)
     return int(bad.sum())
+
+
+def reference_problem_ids(layout: RunLayout) -> set[str] | None:
+    """Problem IDs that have a row in data/reference_checks.parquet (None if the file does not exist)."""
+    p = layout.reference_checks
+    if not p.exists():
+        return None
+    return {r["problem_id"] for r in _read_parquet_rows(p)}

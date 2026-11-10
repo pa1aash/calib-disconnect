@@ -20,7 +20,7 @@ def test_smoke_plan():
 def test_pilot_plan_counts_and_stage_restriction():
     p = load_plan("pilot")
     c = p.cfg
-    assert len(p.jobs) == 39 and len({j.id for j in p.jobs}) == 39
+    assert len(p.jobs) == 40 and len({j.id for j in p.jobs}) == 40
     assert c.seal_gamma is True and c.k == 10 and c.generation_only_models == C.PRIMARY_MODELS
     assert set(c.benchmarks) == set(C.LABEL_VALIDITY_BENCHMARKS)
     normal = [j for j in p.jobs if j.kind == "normal"]
@@ -33,14 +33,14 @@ def test_pilot_plan_counts_and_stage_restriction():
         assert len(mine) == 2 * len(C.LABEL_VALIDITY_BENCHMARKS)
         assert all(j.gen_set == "frozen" for j in mine)
     assert {j.stage for j in p.jobs if j.model_key in C.PRIMARY_MODELS and j.kind == "normal"}.isdisjoint({"capture", "readouts"})
-    assert [j.stage for j in p.jobs if j.stage == "data"] == ["data", "data"]
+    assert [(j.stage, j.scope) for j in p.jobs if j.stage == "data"] == [("data", "label_validity")]
 
 
 def test_pilot_timing_probes_are_timing_only():
     p = load_plan("pilot")
     t = [j for j in p.jobs if j.kind == "timing"]
-    assert sorted((j.model_key, j.stage) for j in t) == [("P4", "capture"), ("P4", "readouts"), ("P6", "capture"),
-                                                         ("P6", "readouts"), ("S1", "generate")]
+    assert sorted((j.model_key, j.stage) for j in t) == [("P4", "capture"), ("P4", "generate"), ("P4", "readouts"),
+                                                         ("P6", "capture"), ("P6", "generate"), ("P6", "readouts"), ("S1", "generate")]
     assert {m for m in C.THROUGHPUT_PROBE_MODELS} == {"P4", "P6", "S1"}
     for j in t:
         assert j.overrides["extra"]["timing_only"] is True and j.gen_set == "timing"
@@ -54,7 +54,7 @@ def test_pilot_timing_probes_are_timing_only():
 def test_pilot_mixed_only():
     p = load_plan("pilot-mixed-only")
     assert {j.stage for j in p.jobs} == {"data", "generate", "execute"}
-    assert len(p.jobs) == 2 + 6 * 2 * 2
+    assert len(p.jobs) == 1 + 6 * 2 * 2
     assert p.cfg.models == C.PRIMARY_MODELS and p.cfg.stages == ("data", "generate", "execute")
 
 
@@ -84,7 +84,7 @@ def test_order_puts_data_first_models_in_blocks_analysis_last():
     p = load_plan("pilot")
     rev = list(reversed(p.jobs))
     o = order_jobs(rev)
-    assert [j.stage for j in o[:2]] == ["data", "data"] and o[-1].stage == "analysis"
+    assert [j.stage for j in o[:1]] == ["data"] and o[-1].stage == "analysis"
     seen, last = [], None
     for j in o[2:-1]:
         if j.model_key != last:
@@ -144,10 +144,55 @@ def test_full_plan_fresh_jobs():
     p1 = [j for j in fresh if j.model_key == "P1"]
     s1 = [j for j in fresh if j.model_key == "S1"]
     assert {j.scope for j in p1} == {"humaneval_plus", "mbpp_plus", "label_validity"}
-    assert {j.scope for j in s1} == {"lcb_v6", } and {j.stage for j in s1} == {"generate", "execute", "capture", "readouts"}
+    assert {j.scope for j in s1} == {"lcb_v6", "lcb"} and {j.stage for j in s1} == {"generate", "execute", "capture", "readouts"}
     g = job_config(p.cfg, next(j for j in s1 if j.stage == "generate"))
     assert {f["k_g"] for f in g.extra["fresh"]} == {4} and g.k == p.cfg.k
     assert {f["k_g"] for f in job_config(p.cfg, next(j for j in p1 if j.stage == "generate")).extra["fresh"]} == {p.cfg.k}
     o = [j.id for j in order_jobs(p.jobs) if j.model_key == "P1"]
     first_fresh = min(i for i, x in enumerate(o) if ".fresh_" in x)
     assert all(".fresh_" not in x for x in o[:first_fresh]) and any(x.startswith("readouts.P1.label_validity.frozen") for x in o[:first_fresh])
+
+
+def test_data_jobs_one_per_population_never_split():
+    for n in ("smoke", "pilot", "pilot-mixed-only", "full"):
+        p = load_plan(n)
+        data = [j for j in p.jobs if j.stage == "data"]
+        assert {j.scope for j in data} <= {"label_validity", "lcb"} and len(data) == len({j.scope for j in data})
+        for j in data:
+            b = job_config(p.cfg, j).benchmarks
+            if j.scope == "label_validity":
+                assert b == tuple(x for x in p.cfg.benchmarks if x in C.LABEL_VALIDITY_BENCHMARKS)
+            else:
+                assert b == ("lcb_v6",)
+    p = load_plan("pilot")
+    assert job_config(p.cfg, [j for j in p.jobs if j.stage == "data"][0]).benchmarks == ("humaneval_plus", "mbpp_plus")
+
+
+def test_fresh_adapter_path_matches_readouts_stage_rule(tmp_path):
+    from pipeline.contracts.layout import RunLayout
+    from pipeline.readouts import fresh as rf
+
+    lay = RunLayout.for_run("r", tmp_path)
+    p = load_plan("full")
+    seen = 0
+    for j in p.jobs:
+        if j.stage == "generate" and j.gen_set.startswith("fresh:"):
+            for f in job_config(p.cfg, j).extra["fresh"]:
+                pop = "label_validity" if f["model_key"] == "P1" else "lcb"
+                suite = f["adapter_id"].split("_")[1]
+                fold = int(f["adapter_id"].rsplit("fold", 1)[1])
+                want = rf.sr_adapter_path(lay, f["model_key"], pop, suite, 0, fold)
+                assert lay.root / f["adapter_path"] == want and not f["adapter_path"].startswith("/")
+                seen += 1
+    assert seen > 0
+
+
+def test_pilot_timing_generate_precedes_timing_capture():
+    p = load_plan("pilot")
+    o = [j for j in order_jobs(p.jobs) if j.kind == "timing"]
+    for m in ("P4", "P6"):
+        st = [j.stage for j in o if j.model_key == m]
+        assert st.index("generate") < st.index("capture")
+        g = [j for j in o if j.model_key == m and j.stage == "generate"][0]
+        c = job_config(p.cfg, g)
+        assert c.problem_limit == 50 and c.extra["timing_only"] is True and c.extra["gen_set"] == "timing"

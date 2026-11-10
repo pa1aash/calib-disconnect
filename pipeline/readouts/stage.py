@@ -67,6 +67,10 @@ RECIPE_SOURCE = {"B1": "P1", "B2": "P2", "B3": "P3", "B4": "P4", "B5": "P5", "B6
                  "S1": "P1", "C3": "C1", "C4": "C2"}
 
 
+class PopulationCoverageError(RuntimeError):
+    """Labeled problems are missing from the fold plan or the reference checks (never dropped silently)."""
+
+
 class MissingRecipeError(RuntimeError):
     """A checkpoint's source recipe is absent and cfg.extra["allow_own_recipe"] is not set."""
 
@@ -123,6 +127,7 @@ class _Ctx:
         self.seeds = sorted(self.plans)
         self.tables: dict[int, RecipeTable] = {}
         self.recipe_origin = "selected here"
+        self.fresh_only = False
         self._real = None
         self._surrogate = None
         suites = cfg.extra.get("suites") or SUITES_BY_POP[population]
@@ -296,6 +301,8 @@ class _Ctx:
         if not self._real.gate_done:   # 7.12: refuse to train unless the mask test passes for this class
             from .gate import arch_key
             rp = self.layout.config_dir / f"mask_test_{arch_key(self._real.model)}.json"
+            if self.fresh_only and not rp.exists():
+                raise MaskTestFailed(f"no mask test report {rp.name}: run the frozen S^R training before its fresh sets")
             self._real.mask_gate(rp, register=self.w._register)
         with (self._real.sr() if kind == "sr" else self._real.st(rank=rank, head=head)) as t:
             yield t
@@ -413,11 +420,13 @@ class _Ctx:
                 w.tree(self.layout.adapters(m))
 
     # -- reading A: fresh sets (G4) -------------------------------------------------------------------
-    def run_fresh(self) -> None:
+    def run_fresh(self, only: str | None = None) -> None:
         if not sr_allowed(self.model, self.pop) or not (self.want("SR") or self.want("P")):
             return
         m, p, w = self.model, self.pop, self.w
         for fs in fresh.discover_fresh_sets(self.layout, m, self.benches):
+            if only is not None and fs.gen_set != only:
+                continue
             data = files.load_readout_data(self.layout, m, self.benches, fs.gen_set)
             if data is None:
                 self.report.notes.append(f"{m}/{p}/{fs.gen_set}: no capture")
@@ -466,9 +475,73 @@ def _planned(cfg: RunConfig, layout: RunLayout, model_key: str, population: str)
     return out
 
 
+def check_coverage(layout: RunLayout, model_key: str, population: str, data: ReadoutData, seeds) -> None:
+    """Every problem with a label in the population must be in the fold plan of each fold seed and, for the
+    label-validity population, in the reference checks. Raises PopulationCoverageError; never drops silently."""
+    labeled = [i for i in range(len(data.sample_uids)) if any(int(v[i]) != files.NO_LABEL for v in data.labels.values())]
+    by_bench: dict[str, set[str]] = {}
+    for i in labeled:
+        by_bench.setdefault(data.sample_uids[i].split("|")[2], set()).add(data.problem_ids[i])
+
+    def missing(have: set[str]) -> dict[str, list[str]]:
+        return {b: sorted(ps - have) for b, ps in by_bench.items() if ps - have}
+
+    for s in seeds:
+        plan = files.load_plan(layout, population, s)
+        if plan is None:
+            continue
+        miss = missing(set(plan.assignment))
+        if miss:
+            raise PopulationCoverageError(
+                f"{model_key}/{population}: the fold plan of seed {s} lacks labeled problems: "
+                + "; ".join(f"{b}: {len(v)} of {len(by_bench[b])} (first {v[0]})" for b, v in sorted(miss.items())))
+    if population == "label_validity":
+        rc = files.reference_problem_ids(layout)
+        if rc is not None:
+            miss = missing(rc)
+            if miss:
+                raise PopulationCoverageError(
+                    f"{model_key}/{population}: data/reference_checks.parquet lacks labeled problems: "
+                    + "; ".join(f"{b}: {len(v)} of {len(by_bench[b])} (first {v[0]})" for b, v in sorted(miss.items())))
+
+
+def _run_timing(cfg: RunConfig, layout: RunLayout, report: StageReport, dry_run: bool) -> StageReport:
+    """cfg.extra["timing_only"]: LoRA step timing on the "timing" generation set; writes no score, adapter, or probe.
+    Exempt from generation_only_models."""
+    from . import timing
+    n_steps = int(cfg.lora_max_steps or 10)
+    report.notes.append("timing_only: masked-LoRA step timing; no score, adapter, or probe is written")
+    for model_key in cfg.models:
+        for population, benches in _populations(cfg):
+            uids = timing.timing_uids(layout, model_key, benches)
+            if dry_run:
+                report.notes.append(f"would time {n_steps} LoRA steps of {model_key}/{population} on {len(uids)} timing samples")
+                continue
+            if cfg.backend == "mock":
+                report.notes.append(f"{model_key}: mock backend has no model; nothing timed")
+                continue
+            if not uids:
+                report.notes.append(f"{model_key}/{population}: no timing generations")
+                continue
+            from .real_backend import RealBackend, load_layouts_provider
+            provider = load_layouts_provider(cfg)
+            backend = RealBackend.from_pretrained(
+                cfg, model_key,
+                lambda tok, mdl: provider(cfg, layout, model_key, benches, uids, tok, mdl, gen_set=timing.TIMING_SET),
+                layout.answer_tokens)
+            res = timing.time_lora_steps(backend, n_steps)
+            report.metrics.setdefault("timing", {})[f"{model_key}/{population}"] = res
+            timing.write_timing_log(layout, model_key, res)
+    return report
+
+
 def run(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool = False) -> StageReport:
     report = StageReport(stage="readouts", ok=True)
+    if cfg.extra.get("timing_only"):
+        return _run_timing(cfg, layout, report, dry_run)
     writer = files.Writer(cfg, layout, manifest, report)
+    gen_set = str(cfg.extra.get("gen_set", "frozen"))
+    fresh_only = gen_set.startswith("fresh:")
     planned: list[str] = []
     for model_key in cfg.models:
         if model_key in cfg.generation_only_models:
@@ -476,12 +549,26 @@ def run(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool 
             continue
         for population, benches in _populations(cfg):
             if dry_run:
-                planned += _planned(cfg, layout, model_key, population)
+                planned += ([str(layout.scores(model_key, population, "SR", None, None, gen_set).relative_to(layout.root))]
+                            if fresh_only else _planned(cfg, layout, model_key, population))
+                continue
+            if fresh_only:   # N3: score the fresh set only; no frozen score, probe, or adapter is touched
+                ctx = _Ctx(cfg, layout, writer, report, model_key, population, benches,
+                           ReadoutData(sample_uids=[], problem_ids=[], labels={}))
+                ctx.fresh_only = True
+                try:
+                    ctx.run_fresh(only=gen_set)
+                except (MaskTestFailed, MissingRecipeError):
+                    raise
+                except RuntimeError as e:
+                    report.ok = False
+                    report.notes.append(f"{model_key}/{population}: {e}")
                 continue
             data = files.load_readout_data(layout, model_key, benches)
             if data is None:
                 report.notes.append(f"{model_key}/{population}: no capture index; skipped")
                 continue
+            check_coverage(layout, model_key, population, data, cfg.fold_seeds or (0,))   # N1, before any exclusion
             if population == "label_validity":   # G1: problems valid under BOTH suites, for every suite
                 n_removed = files.apply_reference_exclusions(data, files.valid_label_validity_problems(layout))
                 report.metrics.setdefault("reference_excluded_samples", {})[f"{model_key}/{population}"] = n_removed

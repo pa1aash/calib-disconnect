@@ -9,7 +9,7 @@ from pipeline.generate import stage as S
 from pipeline.generate import tokens as K
 
 import gen_tinylm as T
-from test_stage import _cfg, _setup
+from test_generate_stage import _cfg, _setup
 
 META = Path(__file__).resolve().parents[2] / ".hf-cache" / "meta"
 
