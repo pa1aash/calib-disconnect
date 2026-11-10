@@ -1,0 +1,27 @@
+{
+  "name": "full",
+  "description": "Stub expansion of the full matrix (design section 3.2), for listing jobs only. It is not launched in this wave; the runner refuses to execute it.",
+  "launchable": false,
+  "pod": true,
+  "config": {
+    "models": ["P1", "P2", "P3", "P4", "P5", "P6", "S1", "B1", "B2", "B3", "B4", "B5", "B6",
+               "C1", "C2", "C3", "C4", "T1", "T2", "X1", "X2"],
+    "benchmarks": ["humaneval_plus", "mbpp_plus", "lcb_v6"],
+    "k": 10,
+    "fold_seeds": [0, 1, 2],
+    "backend": "vllm",
+    "device": "cuda",
+    "sandbox": "container",
+    "execute_untrusted": true,
+    "stages": ["data", "generate", "execute", "capture", "readouts", "analysis"]
+  },
+  "groups": [
+    {"stages": ["data"], "scopes": ["humaneval_plus", "mbpp_plus", "lcb_v6"]},
+    {"stages": ["generate", "execute", "capture"], "models": ["P1", "P2", "P3", "P4", "P5", "P6", "S1"], "scopes": ["humaneval_plus", "mbpp_plus", "lcb_v6"]},
+    {"stages": ["readouts"], "models": ["P1", "P2", "P3", "P4", "P5", "P6", "S1"], "scopes": ["label_validity", "lcb_v6"]},
+    {"stages": ["generate", "execute", "capture"], "models": ["B1", "B2", "B3", "B4", "B5", "B6", "C1", "C2", "C3", "C4", "T1", "T2"], "scopes": ["humaneval_plus", "mbpp_plus"]},
+    {"stages": ["readouts"], "models": ["B1", "B2", "B3", "B4", "B5", "B6", "C1", "C2", "C3", "C4", "T1", "T2"], "scopes": ["label_validity"]},
+    {"stages": ["generate", "execute", "capture", "readouts"], "models": ["X1", "X2"], "scopes": ["lcb_v6"]},
+    {"stages": ["analysis"]}
+  ]
+}

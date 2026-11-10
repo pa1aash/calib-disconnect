@@ -1,0 +1,32 @@
+{
+  "name": "pilot",
+  "description": "Design section 13 as one run: T1 end to end (every stage, Gamma sealed); P1 to P6 mixed-count generation and labels at k = 10 (data, generate, execute only); timing-only throughput probes on P4, P6, and Qwen3-8B with thinking on.",
+  "launchable": true,
+  "pod": true,
+  "config": {
+    "models": ["T1", "P1", "P2", "P3", "P4", "P5", "P6", "S1"],
+    "benchmarks": ["humaneval_plus", "mbpp_plus"],
+    "k": 10,
+    "fold_seeds": [0, 1, 2],
+    "backend": "vllm",
+    "device": "cuda",
+    "sandbox": "container",
+    "execute_untrusted": true,
+    "stages": ["data", "generate", "execute", "capture", "readouts", "analysis"],
+    "generation_only_models": ["P1", "P2", "P3", "P4", "P5", "P6"],
+    "seal_gamma": true
+  },
+  "groups": [
+    {"stages": ["data"], "scopes": ["humaneval_plus", "mbpp_plus"]},
+    {"stages": ["generate", "execute", "capture"], "models": ["T1"], "scopes": ["humaneval_plus", "mbpp_plus"]},
+    {"stages": ["readouts"], "models": ["T1"], "scopes": ["label_validity"]},
+    {"stages": ["generate", "execute"], "models": ["P1", "P2", "P3", "P4", "P5", "P6"], "scopes": ["humaneval_plus", "mbpp_plus"]},
+    {"kind": "timing", "name": "forward50", "stages": ["capture"], "models": ["P4", "P6"], "scopes": ["humaneval_plus"], "gen_set": "timing",
+     "overrides": {"problem_limit": 50, "extra": {"timing_only": true, "probe": "forward_pass_50_problems"}}},
+    {"kind": "timing", "name": "lora200", "stages": ["readouts"], "models": ["P4", "P6"], "scopes": ["humaneval_plus"], "gen_set": "timing",
+     "overrides": {"problem_limit": 50, "lora_max_steps": 200, "extra": {"timing_only": true, "probe": "lora_200_steps_50_problems"}}},
+    {"kind": "timing", "name": "thinking", "stages": ["generate"], "models": ["S1"], "scopes": ["humaneval_plus"], "gen_set": "timing",
+     "overrides": {"problem_limit": 100, "k": 2, "extra": {"timing_only": true, "probe": "thinking_length_100_problems_x2"}}},
+    {"stages": ["analysis"]}
+  ]
+}
