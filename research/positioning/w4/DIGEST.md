@@ -1,5 +1,14 @@
 # Wave 4 digest: positioning for the TMLR submission
 
+> **Wave 5 update (2026-11-10).** Parts of this digest are superseded:
+>
+> - **Pivot A14 is triggered** by the concurrent work 2610.31820, which shows a trained own-readout tying a same-label probe on code in pooled AUROC. Rank 1 is unseated as the spine, and the proposed new spine is the measurement protocol, with the controlled comparison and the routing replay as analyses.
+> - **Cell changes:** L1 Q10 and L3 Q2/Q7 are now NARROW, and L2 Q10 is OCCUPIED (concurrent).
+> - **Number corrections:** Campos "0.620 versus 0.629" is a mismatched pair (matched under shift: .627 or .540 versus .629). CREDO's untrained Base-d is .782, not .690. The Ribeiro range mixes baselines, and its unit is selection accuracy.
+>
+> See the wave 5 change logs at the top of `VERDICTS.md` and `RECOMMENDATION.md`, and `../w5/`.
+
+
 Run date 2026-11-10. Scope: `docs/s3/POSITIONING_BRIEF_R1.md`. Literature window: January 2022 to November 2026. Full records:
 
 - `VERDICTS.md`: verdicts per component, with critic resolutions;

@@ -7,6 +7,69 @@ Run date 2026-11-10. This file ranks contributions using the verdicts in `VERDIC
 
 The editorial policy lists, among papers that should not be accepted, "papers that incorrectly claim novelty over existing published work, and papers that merely re-implement an idea that has already been reproduced before." Every novelty sentence below is therefore written as an absence finding with its instrument gaps named.
 
+## Wave 5 update (2026-11-10): Rank 1 unseated as the spine; replacement order invoked
+
+**What changed.** Wave 5 Part A read the full text of "Free Lunch for LLMs Confidence: The RL Critic Already Knows" (arXiv 2610.31820, concurrent, v1 2026-10-22). Evidence is in `../w5/parts/ft-A4b/dossiers/2610.31820.md` and `../w5/parts/critic-A7/FINDINGS.md` (F1 to F3).
+
+- **The comparison.** On code, it fits a linear probe "with the same labeled data" as a trained own-readout (R-Tuning) (Sec 4.1).
+- **The result.** In pooled AUROC the gap closes to within .02 on all four code splits (Table 3):
+  - Qwen3-8B: .86 vs .88, and .85 vs .84;
+  - Nemotron-Cascade-8B: .89 vs .89, and .79 vs .80.
+- **Pivot A14 is triggered.** That meets pivot A14 of `docs/s3/POSITIONING_BRIEF_R1.md` section 6 as worded: the gap "is shown to close, in discrimination ... under ... a training method for stated confidence". The operator ruled in wave 5 that concurrent work is always cited and differentiated, so this concurrent record counts.
+- **The rest is covered by published or concurrent works.** Campos 2611.07876 (Table V) already has a prompt-only probe on code, within-problem AUROC, and a problem-clustered paired bootstrap. Together these leave the Rank 1 controlled test at the A20 union boundary.
+- **Consequence.** Under R1 section 6, L2 is unviable as the spine, and this file's Rank 1 no longer holds as the headline. **This is the wave 5 stop condition.** Part B (the pipeline design) was not started.
+
+**What survives of the former Rank 1.** As an analysis inside the replacement spine, not a headline: on identical, execution-labeled, self-generated code, does a trained numeric own-readout, scored within problem, still differ from a probe? The comparison sits beside zero-shot verbal and sampling readouts, with prompt-only and code-text-only baselines fit to the same labels and folds. None of the following has been shown, so each needs an experiment:
+
+- the within-problem trained-versus-probe contrast;
+- identical generations across all arms;
+- a trained numeric (not categorical) readout;
+- base versus instruct (absent in every DIFFERENTIAL column);
+- the same-weights reasoning toggle.
+
+**Proposed ranking after wave 5 (for operator confirmation).** This follows the R1 replacement order, item 1, "L1 plus L3 as the spine". Each verdict is NARROW or CLEAN (provisional), as A25 requires.
+
+1. **The execution-graded measurement protocol (former Rank 2) as the spine, with the controlled comparison and the routing replay as analyses on the same generations.**
+   - **Verdict basis:**
+     - L1 Q3 (release split): NARROW, NeuroSym-Cal.
+     - L1 Q4 (label independence): NARROW.
+     - L1 Q5 (estimator set): NARROW; the estimator sub-part is CLEAN (provisional).
+     - L1 Q10 (oracle swap): NARROW after W5. MARGIN 2605.22949 covers verbal confidence only, and it has no original-test comparison on the same cohort.
+     - L1 Q13 (contamination effect): CLEAN (provisional).
+     - L3 routing: NARROW.
+   - **Draft contribution sentence (to revise in the design wave).** "On self-generated, execution-labeled code from several open model families, we test whether the ranking and calibration of four confidence families (sampling agreement, token probability, stated confidence including a trained readout, and hidden-state probes) change when execution labels are strengthened with augmented tests, when the calibration estimator changes, and when problems released after each model's training cutoff are separated from those released before; on the same generations we report within-problem discrimination under matched supervision and an offline routing replay against random and oracle orderings."
+   - **TMLR fit:**
+     - C1: strong, because the claims are factual and checkable.
+     - C2: moderate to good. The added within-problem and routing analyses widen the audience beyond evaluators.
+   - **Main risk:** the rankings are invariant to all three controls. That would be reported as a bounded robustness result.
+2. **The controlled disconnect comparison as a stand-alone headline (former Rank 1).**
+   - Not recommended while concurrent works are in scope.
+   - If the operator rules concurrent works out of scope for novelty, A14 reverts to "not triggered": among works posted before 2026-05-10, Ribeiro and NeuroSym-Cal have no trained readout, and RLCM 2604.23333 compares trained verbal confidence with a probe on code in ECE only, not in discrimination. The former Rank 1 then stands as written below.
+3. **Stated-confidence update after a shown failing test (former Rank 3).**
+   - Now NARROW: Thinking-in-Bets 2610.34654 (concurrent) measures confidence updates after valid and mistaken complaints on code, without a shown failing test.
+   - It stays out of the main paper.
+   - The 2610.19226 full text (A2) and the Resist-and-Update screen (A3) do not occupy it.
+4. **Confidence-routed execution budgets.** Unchanged: NARROW, inside rank 1 as a replay.
+
+**Novelty sentences that must now cite 2610.31820** (A7 F3):
+
+- supervision-matched probe-versus-trained-readout on code;
+- text-only estimators matching self-estimation on code;
+- probe-versus-verbal for thinking-on models on code;
+- sampling-versus-probe on LiveCodeBench, where self-consistency beats the probe out of distribution: Table 3, .89 vs .84 and .88 vs .80;
+- confidence-based best-of-N selection.
+
+Campos must be cited for the prompt-only baseline.
+
+**Corrections to this file's W4 text** (A5; A7 F13, F17, F18):
+
+- **Campos.** Campos reads a categorical self-judgment, P(Yes), so "no verbal readout" should read "no numeric or trained stated readout". The 0.69 to 0.78 within-problem values under item 7 come from Sec VI-C c, not Table V.
+- **CREDO.** Untrained Base-d is .782, so the trained gain is .782 to .850, not .690 to .850.
+- **Prompt-only baseline.** It is no longer a residual control (Campos Table V); it stays in any design as a required baseline.
+- **Unread leads.** The leads listed as unread are now read: 2610.19226 in full text; the TSE record through arXiv 2402.15938v3, with the TSE-only text ABSTRACT-ONLY; and the Resist-and-Update citers (complete).
+
+The W4 text below is kept as the record of wave 4's recommendation.
+
 ## Answers to the three required questions
 
 - **L2 pivot criteria (R1 section 6), applied explicitly:**
