@@ -23,6 +23,8 @@ from files listed in a run manifest.
         capture/<model_key>/<benchmark>/<gen_set>/index-<nnnnn>.parquet
         execute/extractions/<model_key>/<benchmark>/<gen_set>.parquet
         execute/labels/<model_key>/<benchmark>/<gen_set>.parquet
+        execute/agreement/<model_key>/<benchmark>/<gen_set>.parquet   behavior signatures (7.7)
+        execute/reference_outputs_<benchmark>.jsonl  expected outputs from canonical solutions
         execute/cache.sqlite                         execution cache (section 6)
         readouts/<model_key>/<population>/<readout>/<suite>/seed<s>.parquet   ReadoutScore rows
         readouts/<model_key>/<population>/<readout>/<suite>/seed<s>.fits.json FitRecord list
@@ -120,6 +122,16 @@ class RunLayout:
 
     def labels(self, model_key: str, benchmark: str, gen_set: str) -> Path:
         return self.root / "execute" / "labels" / model_key / benchmark / f"{self._gs(gen_set)}.parquet"
+
+    def agreement_outputs(self, model_key: str, benchmark: str, gen_set: str) -> Path:
+        """Per-sample behavior signatures on the "agree" input set (section 7.7): columns
+        sample_uid, signature (canonical JSON string or null)."""
+        return self.root / "execute" / "agreement" / model_key / benchmark / f"{self._gs(gen_set)}.parquet"
+
+    def reference_outputs(self, benchmark: str) -> Path:
+        """Expected outputs computed by running each canonical solution (trusted) on every input of
+        every suite, including "agree" (section 4 and 6): JSON lines keyed by (problem_id, suite_id)."""
+        return self.root / "execute" / f"reference_outputs_{benchmark}.jsonl"
 
     @property
     def exec_cache(self) -> Path:
