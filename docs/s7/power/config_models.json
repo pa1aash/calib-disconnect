@@ -1,0 +1,13 @@
+{
+  "status": "FINAL NAMES, ASSUMED mu. The six names are the final primary set (docs/s7/parts/models-A1/MODELS_A1.md section 4, per orchestrator). No A1 record states HumanEval+/MBPP+ pass@1 or pass@10 at T = 1.0 for any of them, so greedy_pass1_* are null and mu_T1 is a conservative (high, fewer-mixed) assumption: 0.80 for the 14B/31B/32B models, 0.72 for the 7B to 12B models. Replace with greedy values when available; mu is then derived by map_greedy_to_mu in power_sim_r2.py.",
+  "mu_meaning": "mu_T1 = mean per-problem pass probability at temperature 1.0 over the 542 problems (HumanEval+ 164, MBPP+ 378); used directly while greedy_pass1_* are null",
+  "refit_substudy_note": "R1 section 9 names Qwen2.5-Coder-7B-Instruct and Qwen3-14B as the LoRA refit sub-study. Qwen2.5-Coder-7B is not in the final primary set; the simulation uses Qwen3-14B and Qwen3-8B as the two sub-study models (assumption, only the count of 2 and the mu values matter).",
+  "models": [
+    {"name": "Qwen/Qwen3-8B (thinking off)", "mu_T1": 0.72, "greedy_pass1_humaneval_plus": null, "greedy_pass1_mbpp_plus": null, "refit_substudy": true},
+    {"name": "Qwen/Qwen3-14B (thinking off)", "mu_T1": 0.80, "greedy_pass1_humaneval_plus": null, "greedy_pass1_mbpp_plus": null, "refit_substudy": true},
+    {"name": "allenai/Olmo-3-7B-Instruct", "mu_T1": 0.72, "greedy_pass1_humaneval_plus": null, "greedy_pass1_mbpp_plus": null, "refit_substudy": false},
+    {"name": "allenai/Olmo-3.1-32B-Instruct", "mu_T1": 0.80, "greedy_pass1_humaneval_plus": null, "greedy_pass1_mbpp_plus": null, "refit_substudy": false},
+    {"name": "google/gemma-4-12B-it", "mu_T1": 0.72, "greedy_pass1_humaneval_plus": null, "greedy_pass1_mbpp_plus": null, "refit_substudy": false},
+    {"name": "google/gemma-4-31B-it (thinking off)", "mu_T1": 0.80, "greedy_pass1_humaneval_plus": null, "greedy_pass1_mbpp_plus": null, "refit_substudy": false}
+  ]
+}
