@@ -5,7 +5,7 @@ id: 260512446-orce-order-aware-alignment-of-verbalized-confidence-in-large-langu
 tags:
 - code-llm-calibration-aaai27-eabf3f
 created: '2026-07-17T18:30:28.377954Z'
-updated: '2026-07-17T18:33:10.739327Z'
+updated: '2026-11-10T09:27:37.741299Z'
 source: http://arxiv.org/abs/2605.12446
 source_domain: arxiv.org
 fetched_at: '2026-07-17T18:30:28.377230Z'
@@ -15,6 +15,8 @@ type: note
 tier: institutional
 content_type: paper
 deprecated: false
+summary: Deprecated duplicate or empty-body record (arXiv metadata only); superseded
+  by a full-text note of the same paper or out of scope
 ---
 
 [2605.12446] ORCE: Order-Aware Alignment of Verbalized Confidence in Large Language Models

@@ -8,39 +8,21 @@ tags:
 - scalar-not-localized
 - downstream-utility-scalar-only
 - code-llm-probe-verbalize-gap-3d8995
+- code-llm-confidence-positioning-d82d00
+- duplicate
+- duplicate-abstract-only
 created: '2026-07-19T20:02:56.354763Z'
-updated: '2026-07-20T06:38:08.608380Z'
+updated: '2026-11-09T23:26:01.754755Z'
 source: https://arxiv.org/abs/2607.12273
 source_domain: arxiv.org
 fetched_at: '2026-07-19T20:02:56.354405Z'
 fetch_provider: builtin
-status: draft
+status: deprecated
 type: note
 tier: institutional
 content_type: paper
 deprecated: false
-summary: 'Code-MUE (Ren, Xue, Ma, Huang; ISSTA 2026; arXiv:2607.12273, submitted 14
-  Jul 2026) is a purely black-box, execution-based uncertainty framework for code
-  LLMs: it samples multiple generations, clusters them into a Semantic Interaction
-  Graph via observed RUNTIME behavior (execution outcomes/traces), and computes the
-  Von Neumann entropy of that graph as a single scalar per-problem uncertainty score.
-  Across 8 SOTA code LLMs it reports Spearman correlation up to -0.98 between this
-  entropy score and functional correctness, beating lexical/embedding-based UE baselines,
-  and demonstrates downstream utility in two practical workflows: SELECTIVE PREDICTION
-  (abstain/flag low-confidence generations for risk detection) and RESPONSE SELECTION/re-ranking
-  among sampled candidates. DISTINCTION from DPRC: Code-MUE''s uncertainty is a WHOLE-SOLUTION
-  scalar (one entropy value per generation/problem) derived from black-box execution
-  clustering across samples -- it does not decompose into per-requirement/per-test-case
-  confidence, so it cannot localize WHICH specific requirement a solution is likely
-  to fail, only whether the solution AS A WHOLE is risky. This makes it a same-granularity
-  competitor to DPRC''s scalar-oracle baseline (0.875 on BigCodeBench), not to DPRC''s
-  per-method result (0.931) -- and it is the clearest evidence in this search that
-  ''downstream utility from execution-grounded confidence'' is already demonstrated
-  at the SCALAR level (selective prediction, re-ranking) but not yet shown at the
-  per-requirement level DPRC targets; that gap is exactly what a DPRC downstream-utility
-  experiment (e.g., using per-method confidence to target repair at the specific failing
-  requirement rather than regenerating/abstaining wholesale) would need to fill to
-  beat this bar.'
+summary: Short older note; full text is in code-mue-measuring-code-llms-uncertainty-through-execution-based-semantic-intera.
 ---
 
 *Suggested by [[flare-fine-grained-diagnostic-feedback-for-llm-code-refinement]] — downstream-utility candidate for localized/execution-based code confidence*

@@ -1,0 +1,135 @@
+[
+ {
+  "claim": "Linear probes on agent residual streams decode full correctness of the evolving program with AUC up to 0.83 and transfer across SWE-Bench Verified and Pro.",
+  "stance": "supports",
+  "stance_target": "probes read program correctness in agentic settings",
+  "evidence_type": "empirical",
+  "scope_conditions": "2 models, 2 benchmarks, mini-swe-agent",
+  "quoted_support": "a logistic-regression probe on hidden states is able to decode whether the current code parses, passes its test suite, reduces the number of failing tests, and introduces regressions, reaching AUC up to 0.83 for correctness across two models and two benchmarks.",
+  "numbers": [
+   "AUC up to 0.83",
+   "Laguna-XS.2 well-formedness AUC 0.78",
+   "shuffled labels 0.50"
+  ],
+  "entities": [
+   "Qwen3.6-35B-A3B",
+   "Laguna-XS.2",
+   "SWE-Bench"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "260705188-latent-programming-horizons-in-coding-agents-full-text",
+  "breadth": {
+   "confidence_families": "linear (logistic regression) residual-stream probes on hidden states (Sec 3.4); no verbal or sampled readouts",
+   "model_families_and_sizes": "Qwen3.6-35B-A3B, Laguna-XS.2, hidden dim 2048 (Sec 3.6)",
+   "base_vs_instruct": "not present (searched: base, instruct)",
+   "post_training_stages": "not present",
+   "reasoning_models": "not present (agent models; reasoning flag not analyzed)",
+   "elicitation_formats": "not present (no verbal elicitation)",
+   "benchmarks": "SWE-Bench-Verified 500 tasks, SWE-Bench-Pro 731 tasks, up to 10 trajectories per task (Sec 3.6)",
+   "label_source": "parse/compile, test suite oracle, failing-test count decrease, regression of initially passing tests (Sec 3.3)",
+   "label_independence": "execution labels independent of probe",
+   "contamination_split": "not present (searched: contaminat)",
+   "calibration_metrics": "AUC-ROC primary; claims probes are 'calibrated' in contributions (Sec 1) but no ECE/Brier located",
+   "granularity": "per-step program state, future horizon k up to 50 steps; test-suite-level properties (full, partial, regression)",
+   "causal_intervention": "shuffled-label control (AUC 0.50), cross-benchmark transfer (Fig 5); no steering"
+  }
+ },
+ {
+  "claim": "Probes predict outcomes of future edits above chance up to about 25 steps ahead (latent programming horizon).",
+  "stance": "supports",
+  "stance_target": "hidden states carry forward-looking program information",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec 4.2, k swept to 50",
+  "quoted_support": "Probes trained to predict the outcome of future edits ... achieve performance above chance up to roughly 25 steps in advance.",
+  "numbers": [
+   "k up to 25",
+   "kmax 50",
+   "median 52 steps per trajectory"
+  ],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "260705188-latent-programming-horizons-in-coding-agents-full-text",
+  "breadth": {
+   "confidence_families": "linear (logistic regression) residual-stream probes on hidden states (Sec 3.4); no verbal or sampled readouts",
+   "model_families_and_sizes": "Qwen3.6-35B-A3B, Laguna-XS.2, hidden dim 2048 (Sec 3.6)",
+   "base_vs_instruct": "not present (searched: base, instruct)",
+   "post_training_stages": "not present",
+   "reasoning_models": "not present (agent models; reasoning flag not analyzed)",
+   "elicitation_formats": "not present (no verbal elicitation)",
+   "benchmarks": "SWE-Bench-Verified 500 tasks, SWE-Bench-Pro 731 tasks, up to 10 trajectories per task (Sec 3.6)",
+   "label_source": "parse/compile, test suite oracle, failing-test count decrease, regression of initially passing tests (Sec 3.3)",
+   "label_independence": "execution labels independent of probe",
+   "contamination_split": "not present (searched: contaminat)",
+   "calibration_metrics": "AUC-ROC primary; claims probes are 'calibrated' in contributions (Sec 1) but no ECE/Brier located",
+   "granularity": "per-step program state, future horizon k up to 50 steps; test-suite-level properties (full, partial, regression)",
+   "causal_intervention": "shuffled-label control (AUC 0.50), cross-benchmark transfer (Fig 5); no steering"
+  }
+ },
+ {
+  "claim": "Related-work paragraph names Ribeiro et al. 2025, Bui et al. 2025, Vu et al. 2025 (AutoProbe), Di Cicco 2026, He et al. 2026, Gros and Devanbu 2025 as prior correctness probing, all on isolated snippets or single-step generation.",
+  "stance": "neutral",
+  "stance_target": "citer of L2 occupant",
+  "evidence_type": "expert-opinion",
+  "scope_conditions": "Related Work 'Correctness probing'",
+  "quoted_support": "All of this work studies a synthetic domain-specific language, isolated snippets, or a single step of generation.",
+  "numbers": [],
+  "entities": [
+   "Ribeiro",
+   "Di Cicco",
+   "Gros and Devanbu",
+   "Vu"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "260705188-latent-programming-horizons-in-coding-agents-full-text",
+  "breadth": {
+   "confidence_families": "linear (logistic regression) residual-stream probes on hidden states (Sec 3.4); no verbal or sampled readouts",
+   "model_families_and_sizes": "Qwen3.6-35B-A3B, Laguna-XS.2, hidden dim 2048 (Sec 3.6)",
+   "base_vs_instruct": "not present (searched: base, instruct)",
+   "post_training_stages": "not present",
+   "reasoning_models": "not present (agent models; reasoning flag not analyzed)",
+   "elicitation_formats": "not present (no verbal elicitation)",
+   "benchmarks": "SWE-Bench-Verified 500 tasks, SWE-Bench-Pro 731 tasks, up to 10 trajectories per task (Sec 3.6)",
+   "label_source": "parse/compile, test suite oracle, failing-test count decrease, regression of initially passing tests (Sec 3.3)",
+   "label_independence": "execution labels independent of probe",
+   "contamination_split": "not present (searched: contaminat)",
+   "calibration_metrics": "AUC-ROC primary; claims probes are 'calibrated' in contributions (Sec 1) but no ECE/Brier located",
+   "granularity": "per-step program state, future horizon k up to 50 steps; test-suite-level properties (full, partial, regression)",
+   "causal_intervention": "shuffled-label control (AUC 0.50), cross-benchmark transfer (Fig 5); no steering"
+  }
+ },
+ {
+  "claim": "No comparison of probe readout against verbal or sampled confidence is made; this paper is probe-only.",
+  "stance": "neutral",
+  "stance_target": "L2 occupancy limited to probe side",
+  "evidence_type": "empirical",
+  "scope_conditions": "searched full text for verbal, calibrat, self-report",
+  "quoted_support": "these probes are calibrated and transfer across benchmarks without retraining.",
+  "numbers": [],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "medium",
+  "source_note_id": "260705188-latent-programming-horizons-in-coding-agents-full-text",
+  "breadth": {
+   "confidence_families": "linear (logistic regression) residual-stream probes on hidden states (Sec 3.4); no verbal or sampled readouts",
+   "model_families_and_sizes": "Qwen3.6-35B-A3B, Laguna-XS.2, hidden dim 2048 (Sec 3.6)",
+   "base_vs_instruct": "not present (searched: base, instruct)",
+   "post_training_stages": "not present",
+   "reasoning_models": "not present (agent models; reasoning flag not analyzed)",
+   "elicitation_formats": "not present (no verbal elicitation)",
+   "benchmarks": "SWE-Bench-Verified 500 tasks, SWE-Bench-Pro 731 tasks, up to 10 trajectories per task (Sec 3.6)",
+   "label_source": "parse/compile, test suite oracle, failing-test count decrease, regression of initially passing tests (Sec 3.3)",
+   "label_independence": "execution labels independent of probe",
+   "contamination_split": "not present (searched: contaminat)",
+   "calibration_metrics": "AUC-ROC primary; claims probes are 'calibrated' in contributions (Sec 1) but no ECE/Brier located",
+   "granularity": "per-step program state, future horizon k up to 50 steps; test-suite-level properties (full, partial, regression)",
+   "causal_intervention": "shuffled-label control (AUC 0.50), cross-benchmark transfer (Fig 5); no steering"
+  }
+ }
+]

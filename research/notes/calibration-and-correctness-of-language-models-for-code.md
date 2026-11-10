@@ -7,55 +7,38 @@ tags:
 - code-llm-calibration
 - ece-bucket-collapse
 - aaai-bar-eval-dprc-d78e07
+- code-llm-confidence-positioning-d82d00
+- code-calibration
+- calibration
+- code-llm
+- l1-occupant
+- primary-chase
+- close-occupant
 created: '2026-07-17T18:33:10.228125Z'
-updated: '2026-07-19T20:04:19.679021Z'
+updated: '2026-11-09T23:27:43.709192Z'
 source: https://arxiv.org/html/2402.02047
 source_domain: arxiv.org
 fetched_at: '2026-07-17T18:33:10.227385Z'
 fetch_provider: builtin
-status: draft
+status: review
 type: note
 tier: institutional
 content_type: paper
 deprecated: false
-summary: 'PRIMARY ANCHOR (Spiess et al., ICSE 2025, arXiv:2402.02047, full text).
-  Develops an evaluation framework for calibration of generative code-LLMs across
-  three tasks -- line-level code completion, function synthesis, and automated program
-  repair -- five datasets (SStubs, DyPyBench, Defects4J, HumanEval, MBPP), and three
-  models (OpenAI GPT-3.5-turbo-instruct, OpenAI Codex, CodeGen2-16B), sampled at temperature
-  0. Headline finding: intrinsic LLM confidence measures are poorly aligned with actual
-  code correctness out of the box, with ECE ranging 0.09-0.73 across settings; a motivating
-  example shows GPT-3.5 completions with >90% average per-token confidence pass tests
-  only 52% of the time. Platt scaling (logistic-regression rescaling) improves calibration
-  but the paper identifies a ''bucket collapse'' failure mode: when a confidence measure
-  is poorly aligned with correctness, Platt scaling can squash all values into a single
-  bucket matching the baseline correctness rate, producing deceptively low ECE near
-  0 while Skill Score (relative to a Brier-score baseline) reveals the measure has
-  no real predictive utility -- so ECE alone is an insufficient/misleading calibration
-  metric, and Skill Score must be reported alongside it. Cross-task generalization
-  of rescaling is inconsistent: fitting on one function-synthesis task and applying
-  to another (GPT-3.5, same domain) only mildly degrades performance (SS 0.14->0.12,
-  ECE 0.07->0.05), but fitting on DyPyBench (program repair) and applying to function
-  synthesis catastrophically fails (SS 0.12->-1.28, ECE 0.08->0.54). Reflective/verbalized
-  confidence measures (self-ask, logit-based p_B/p_NB) are generally uncorrelated
-  with intrinsic measures and do not reliably improve calibration except when combined
-  with retrieval-augmented few-shotting on GPT-3.5 code completion, which reaches
-  Skill Score 0.15. Explicitly flagged as future work / left open: (1) whether findings
-  generalize to models with substantially different architectures/training beyond
-  the three tested (GPT-3.5, Codex, CodeGen2-16B) -- author-stated threat to validity;
-  (2) larger/more natural datasets for function synthesis & repair beyond HumanEval
-  (164 samples) and Defects4J (120 samples); (3) more robust statistical comparison
-  (bootstrapped p-values/effect sizes) of confidence-summarization methods; (4) calibrated
-  uncertainty for localized/token-level regions rather than whole-sequence confidence;
-  (5) whether geometric-mean token-probability summarization (vs. arithmetic mean/product
-  used here) generalizes -- marginal improvement noted but untested at scale. This
-  is the exact anchor the target AAAI-27 paper must extend/disconnect from: Spiess
-  establishes that code-LLM confidence is uncalibrated and that ECE can be gamed via
-  bucket collapse, but does not test newer instruction-tuned/RLHF-trained model families,
-  does not examine the calibration-vs-classification-accuracy tradeoff during fine-tuning
-  (cf. arXiv:2601.13284), and leaves cross-model/cross-architecture generalizability
-  of both the miscalibration finding and the bucket-collapse critique explicitly open.'
+summary: FULL TEXT, confirmed equal to Spiess et al. ICSE 2025 (arXiv 2402.02047 v4).
+  Calibration framework for code models (Codex, GPT-3.5) over token, line, function
+  levels; intrinsic, reflective/verbalized, few-shot reflective, Platt scaling; ECE
+  and Brier skill score; finds models not well calibrated out of the box, reflective
+  methods inconsistent. L1 occupant at framework level; no probes, no reasoning models.
 ---
+
+*Suggested by [[functional-entropy-predicting-functional-correctness-in-llm-generated-code-with]] — cited as prior code-model calibration/uncertainty work*
+
+*Suggested by [[when-to-answer-and-when-to-defer-a-decision-framework-for-reliable-code-predicti]] — cited as prior work on code model calibration*
+
+*Suggested by [[on-llms-internal-representation-of-code-correctness]] — cited as directly prior work on code-model confidence/probes*
+
+*Suggested by [[which-signals-of-code-correctness-survive-distribution-shift-hidden-state-and-ca]] — cited as directly prior work on code-model calibration/uncertainty*
 
 *Suggested by [[240202047-calibration-and-correctness-of-language-models-for-code]] — full HTML text of the primary anchor paper for exact benchmarks/models/ECE numbers*
 

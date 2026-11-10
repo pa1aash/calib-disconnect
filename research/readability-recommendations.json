@@ -1,0 +1,245 @@
+{
+  "recommendations": [
+    {
+      "id": "rec-1",
+      "category": "cut-duplicate",
+      "severity": "major",
+      "section": "## 7. Close occupants (### 7.3 Other close occupants)",
+      "current": "### 7.3 Other close occupants\n\n| Occupant | Status | Occupies | Leaves open for this design |\n|---|---|---|---|\n| CREDO 2609.34857 [[beyond-verbalized-confidence-calibrating-reasoners-with-differentiable-readouts]] | concurrent | Trained stated confidence on code with execution labels, AUROC 0.690 to 0.850 (Table 1) | Probe arm, within-problem scoring |\n| NeuroSym-Cal [[neurosym-cal-bridging-the-reasoning-execution-gap-in-code-generation-via-hierarc]] | published, Findings of ACL 2026 (vault ABSTRACT-ONLY) | Token, P(True) and self-verification, sampling, multicalibration; per-model post-cutoff subset | Probe, label independence, pre-cutoff contrast |\n| Tuerlings and Valdenegro-Toro [[verbalized-uncertainty-in-coding-llms-contamination-aware-calibration-uncertainl]] | published, UncertaiNLP 2026 | Verbal formats on code; shared post-cutoff window; ECE and AUROC decoupling | Non-verbal families, estimator variants, within-problem scoring |\n| Rathnasuriya and Yang 2610.11300 [[characterizing-overconfident-failure-in-llm-based-code-generation-full-text]] | concurrent | Token-level overconfidence; base and instruct at token level; recalibration control | Probe, verbal, oracle swap |\n| Gros and Devanbu 2512.24560 [[localized-calibrated-uncertainty-in-code-language-models]] | preprint only (December 2025) | Line-level four-family comparison with Platt on every readout | Program level, test-group unit, trained verbal |\n",
+      "recommended": "### 7.3 Other close occupants\n\nThe rows below cover occupants whose status or residual is not already given in Sections 2 to 6 or in the Section 7.4 matrix.\n\n| Occupant | Status | Occupies | Leaves open for this design |\n|---|---|---|---|\n",
+      "rationale": "These five rows restate status, scope, and residuals already given in Sections 2.1, 2.2, 3.4, and 5, and four of the five also appear as rows in the 7.4 matrix. Every arXiv id stays in the verdict table or 7.4, and every wikilink stays in the body (about -1,000 chars)."
+    },
+    {
+      "id": "rec-2",
+      "category": "cut-duplicate",
+      "severity": "moderate",
+      "section": "## 7. Close occupants (### 7.3 Other close occupants)",
+      "current": "| Liu et al. 2609.25938 [[certified-against-which-oracleexecution-labels-set-the-reported-riskof-conformal]] | concurrent | Oracle dependence and label independence, text-to-SQL | General code, cross-family rankings |\n| Klassert thesis [[abstract]] | preprint (MSc thesis) | Probe calibration (Brier skill) on code | Readout contrast, contamination control |\n",
+      "recommended": "",
+      "rationale": "Liu et al. (concurrent, text-to-SQL, oracle dependence) is covered in 2.2 and 2.3, its id 2609.25938 is in the verdict table, and the Klassert thesis's probe BSS and scope are covered in 2.2 and 2.4."
+    },
+    {
+      "id": "rec-3",
+      "category": "cut-duplicate",
+      "severity": "moderate",
+      "section": "## 7. Close occupants (### 7.3 Other close occupants)",
+      "current": "| Heteroskedastic Signals, SWE-Verifier, Give Up [[heteroskedastic-signals-in-budgeted-llm-verificationstructural-heterogeneity-lim]] [[261030284-swe-verifier-selective-verification-for-coding-agents-full-text]] [[give-up-to-get-more-priors-not-policies-govern-test-time-compute-allocation]] | concurrent | Gated compute with proxy, trained, or prior signals | Elicited or probe gate, clean labels, attainable oracle |\n| TRIAGE 2605.13414 [[260513414-triage-evaluating-prospective-metacognitive-control-in-llms-under-reso]] | concurrent | Random-to-oracle normalized self-directed token-budget allocation on LiveCodeBench (Sec 3) | Elicited or probe gate, execution budget per candidate |\n",
+      "recommended": "",
+      "rationale": "Section 4.2 already states each of these works' gate, budget unit, and missing arm, and says they are concurrent, and TRIAGE 2605.13414 stays in the verdict table."
+    },
+    {
+      "id": "rec-4",
+      "category": "cut-duplicate",
+      "severity": "minor",
+      "section": "## 7. Close occupants (### 7.3 Other close occupants)",
+      "current": "| 2609.00854 [[260900854-does-fault-localization-beat-a-fresh-attempt-placebo-controlled-test-g]] | concurrent (ABSTRACT-ONLY) | Matched-attempt localization versus blind resampling with a random-span placebo | Localization derived from own per-requirement confidence |\n",
+      "recommended": "",
+      "rationale": "Section 5 gives this record's status, result, and residual, and Sections 1.1, 8, 9.4, and 10 mention it again, so the row is a fourth restatement."
+    },
+    {
+      "id": "rec-5",
+      "category": "cut-duplicate",
+      "severity": "moderate",
+      "section": "## 7. Close occupants (### 7.3 Other close occupants)",
+      "current": "| Miao and Ungar; Probe-SD; RLCR; When Words Fall Short; Bulut [[closing-the-confidence-faithfulness-gap-in-large-language-models]] [[calibration-not-answer-selection-distilling-internal-confidence-in-reasoning-mod]] [[beyond-binary-rewards-training-lms-to-reason-about-their-uncertainty-2]] [[when-words-fall-short-iterative-synergy-between-verbalized-reasoning-and-hidden]] [[its-the-problem-not-the-pathbudget-and-difficulty-confounds-in-llm-reasoning-tra]] | preprints (non-code) | The general-NLP side of every L2 residual | Execution labels and symmetric supervision on code |\n",
+      "recommended": "",
+      "rationale": "These general-NLP works are comparison-side only under the brief, not occupants, and Sections 1.4, 3.2, 3.4, and 3.7 already cite each of them with its evidence."
+    },
+    {
+      "id": "rec-6",
+      "category": "cut-duplicate",
+      "severity": "moderate",
+      "section": "## 3. L2 (### 3.4 Trained stated confidence is now a concrete threat on code)",
+      "current": "General NLP points the same way. Probe-SD distills a probe into the verbal channel and lifts Qwen3-14B's verbal AUROC on TriviaQA from .825 to .928 in domain against a probe at .948, while isotonic recalibration cuts ECE from .178 to .013 but leaves AUROC at .825 (Tables 1 and 2) [[calibration-not-answer-selection-distilling-internal-confidence-in-reasoning-mod]]. RLCR, which adds a Brier reward to RL with verifiable rewards (RLVR), reaches verbal AUROC 0.69 against 0.55 for a final-layer probe on the RLVR model on HotpotQA, and 0.67 against 0.65 on Big-Math (Table 1) [[beyond-binary-rewards-training-lms-to-reason-about-their-uncertainty-2]]. ConfTuner reports AUROC gains of up to 14.4% [[conftuner-training-large-language-models-to-express-their-confidence-verbally]].",
+      "recommended": "General NLP points the same way. Probe-SD lifts Qwen3-14B's verbal AUROC on TriviaQA from .825 to .928 in domain against a probe at .948, while isotonic recalibration leaves AUROC at .825 (Tables 1 and 2) [[calibration-not-answer-selection-distilling-internal-confidence-in-reasoning-mod]]; RLCR's Brier reward reaches verbal AUROC 0.69 against 0.55 for a final-layer probe on HotpotQA (Table 1) [[beyond-binary-rewards-training-lms-to-reason-about-their-uncertainty-2]]; and ConfTuner reports AUROC gains of up to 14.4% [[conftuner-training-large-language-models-to-express-their-confidence-verbally]].",
+      "rationale": "Shortens the general-NLP detail while keeping every citation and its headline AUROC. It drops the secondary figures (Probe-SD ECE .178 to .013, RLCR Big-Math 0.67 against 0.65), so skip it if those must stay. About -260 chars."
+    },
+    {
+      "id": "rec-7",
+      "category": "cut-duplicate",
+      "severity": "minor",
+      "section": "## 3. L2 (### 3.4 Trained stated confidence is now a concrete threat on code)",
+      "current": "A supervision-matched arm (a trained verbal head or logit-feature head on the same execution labels), with validation-based checkpoint selection for every fitted reader and an isotonic-verbal control, is required. CREDO also strengthens",
+      "recommended": "The design therefore requires a supervision-matched arm (Section 9.1 item 2). CREDO also strengthens",
+      "rationale": "This repeats the design spec from Section 9.1 item 2 almost word for word, so a cross-reference keeps the requirement and removes the duplicate."
+    },
+    {
+      "id": "rec-8",
+      "category": "cut-duplicate",
+      "severity": "minor",
+      "section": "## 7. Close occupants (### 7.4 Breadth matrix of the closest occupants)",
+      "current": "CREDO 2609.34857 has no dossier (it was found after the dossier pass); its Table 1 covers one trained stated-confidence readout on one 8B model, with no probe.",
+      "recommended": "CREDO 2609.34857 has no dossier (it was found after the dossier pass; Section 3.4 gives its scope).",
+      "rationale": "Section 3.4 and the executive summary already give CREDO's scope (Qwen3-8B, trained stated confidence, no probe arm)."
+    },
+    {
+      "id": "rec-9",
+      "category": "cut-duplicate",
+      "severity": "moderate",
+      "section": "## 1. Scope, instruments, and verdict rules (### 1.3 Instruments, and why every CLEAN is provisional)",
+      "current": "The search instruments failed in specific, documented ways. arXiv full-text search failed validation, OpenAlex full-text search found one of two known positives before its budget ran out, Semantic Scholar keyword search was rate-limited throughout, and OpenReview sits behind a browser challenge. Every negative that depends on body-text search is therefore an instrument gap, never a zero, and no CLEAN verdict here is unconditional. Section 10 gives each gap, the verdicts it weakens, and the action that would close it.",
+      "recommended": "The search instruments failed in specific, documented ways; Section 10 gives each gap, the verdicts it weakens, and the action that would close it. Every negative that depends on body-text search is therefore an instrument gap, never a zero, and no CLEAN verdict here is unconditional.",
+      "rationale": "The Section 10 table rows G-FT, G-OA, G-S2, and G-OR repeat the per-instrument failure list (including the 1 of 2 positives figure), so 1.3 can keep only the rule and the pointer."
+    },
+    {
+      "id": "rec-10",
+      "category": "cut-duplicate",
+      "severity": "minor",
+      "section": "## 10. Instrument gaps",
+      "current": "Record-level limits also bear on cited evidence. 2609.00854 is ABSTRACT-ONLY, so its matched-attempt result is quoted from the abstract alone. NeuroSym-Cal's vault note is ABSTRACT-ONLY; its section citations come from a separate PDF read, which also corrects the vault summary (the final method is prompted self-verification, not latent perturbation).",
+      "recommended": "Record-level limits also bear on cited evidence. Beyond the two ABSTRACT-ONLY records named in Section 1.1, the separate NeuroSym-Cal PDF read corrects the vault summary (the final method is prompted self-verification, not latent perturbation).",
+      "rationale": "Sections 1.1 and 5 and the verdict table already state that both records are ABSTRACT-ONLY, so this caveat is a duplicate. The unique vault-summary correction is kept."
+    },
+    {
+      "id": "rec-11",
+      "category": "break-paragraph",
+      "severity": "moderate",
+      "section": "## 9. Ranked recommendation for TMLR (### 9.2 Rank 2)",
+      "current": "the comparison. **Evidence.** Items 1 to 3 of Section 9.1, with the oracle swap, the estimator set, and the release split as the core. **TMLR fit.** Good on criterion 1 (factual, checkable claims) and modest on criterion 2 (mainly code-model evaluators). **Main risk.** A null:",
+      "recommended": "the comparison.\n\n**Evidence.** Items 1 to 3 of Section 9.1, with the oracle swap, the estimator set, and the release split as the core.\n\n**TMLR fit.** Good on criterion 1 (factual, checkable claims) and modest on criterion 2 (mainly code-model evaluators).\n\n**Main risk.** A null:",
+      "rationale": "Gives Rank 2 the same one-label-per-paragraph layout as Rank 1 so readers can scan the ranks in parallel."
+    },
+    {
+      "id": "rec-12",
+      "category": "break-paragraph",
+      "severity": "moderate",
+      "section": "## 9. Ranked recommendation for TMLR (### 9.3 Rank 3)",
+      "current": "predicts repair success.\" **Evidence.** Paired programs in each arm, following Resist and Update's evidence-versus-pressure design and Iscan's placebo logic, with the change in stated confidence, its AUROC against repair success, and problem-clustered intervals. **TMLR fit.** Criterion 1 is good for a small, well-controlled study; criterion 2 is moderate, mainly the agent community. **Main risk.** It has",
+      "recommended": "predicts repair success.\"\n\n**Evidence.** Paired programs in each arm, following Resist and Update's evidence-versus-pressure design and Iscan's placebo logic, with the change in stated confidence, its AUROC against repair success, and problem-clustered intervals.\n\n**TMLR fit.** Criterion 1 is good for a small, well-controlled study; criterion 2 is moderate, mainly the agent community.\n\n**Main risk.** It has",
+      "rationale": "Gives Rank 3 the labeled-paragraph layout of Rank 1 so the ranks read in parallel."
+    },
+    {
+      "id": "rec-13",
+      "category": "break-paragraph",
+      "severity": "moderate",
+      "section": "## 4. L3 (### 4.3 Updating after a shown failing test)",
+      "current": "across tasks [[confidence-comes-from-experience-experiential-confidence-estimation-from-reasoni]]. Resist and Update supplies",
+      "recommended": "across tasks [[confidence-comes-from-experience-experiential-confidence-estimation-from-reasoni]].\n\nResist and Update supplies",
+      "rationale": "This paragraph runs to about 2,100 chars. The hinge moves from confidence-history works (Kaddour, Barkan, XConf) to evidence-versus-pressure and feedback designs."
+    },
+    {
+      "id": "rec-14",
+      "category": "break-paragraph",
+      "severity": "moderate",
+      "section": "## 4. L3 (### 4.2 Routing)",
+      "current": "[[hard-issue-weak-model-or-bad-runrethinking-failure-prediction-for-coding-agents]]. Adjacent works gate",
+      "recommended": "[[hard-issue-weak-model-or-bad-runrethinking-failure-prediction-for-coding-agents]].\n\nAdjacent works gate",
+      "rationale": "This paragraph runs to about 2,000 chars. It splits the negative routing results from the adjacent works that lack random or oracle arms."
+    },
+    {
+      "id": "rec-15",
+      "category": "break-paragraph",
+      "severity": "moderate",
+      "section": "## 3. L2 (### 3.2 Three confounds, **Provenance.**)",
+      "current": "[[on-the-robustness-of-llms-internal-representation-of-code-correctness]]. The counter-evidence is real:",
+      "recommended": "[[on-the-robustness-of-llms-internal-representation-of-code-correctness]].\n\nThe counter-evidence is real:",
+      "rationale": "This paragraph runs to about 2,000 chars. It splits the provenance argument from the counter-evidence and RQ2."
+    },
+    {
+      "id": "rec-16",
+      "category": "break-paragraph",
+      "severity": "moderate",
+      "section": "## 2. L1 (### 2.2, **Contamination (Q3, Q13).**)",
+      "current": "[[llms-encode-their-failures-predicting-success-from-pre-generation-activations]]. LiveCodeBench supplies",
+      "recommended": "[[llms-encode-their-failures-predicting-success-from-pre-generation-activations]].\n\nLiveCodeBench supplies",
+      "rationale": "This paragraph runs to about 1,900 chars. It splits the survey of who uses which window from the absence finding and the Q3/Q13 verdict."
+    },
+    {
+      "id": "rec-17",
+      "category": "break-paragraph",
+      "severity": "moderate",
+      "section": "## 5. L4: Per-requirement confidence and localization",
+      "current": "[[localized-calibrated-uncertainty-in-code-language-models]]. FLARE localizes from",
+      "recommended": "[[localized-calibrated-uncertainty-in-code-language-models]].\n\nFLARE localizes from",
+      "rationale": "This paragraph runs to about 2,000 chars. It splits the Gros and Devanbu line-level occupant from the other localization works."
+    },
+    {
+      "id": "rec-18",
+      "category": "break-paragraph",
+      "severity": "moderate",
+      "section": "## 5. L4: Per-requirement confidence and localization",
+      "current": "[[falsification-not-exposure-placebo-controlled-decomposition-of-self-repair-feedb]]. FLARE and TokenRepair lack the matched arm",
+      "recommended": "[[falsification-not-exposure-placebo-controlled-decomposition-of-self-repair-feedb]].\n\nFLARE and TokenRepair lack the matched arm",
+      "rationale": "This paragraph runs to about 1,900 chars. It splits the prior repair-versus-resampling evidence from the matched-arm negatives and the shrunken Q2 residual."
+    },
+    {
+      "id": "rec-19",
+      "category": "break-paragraph",
+      "severity": "minor",
+      "section": "## 4. L3 (### 4.2 Routing)",
+      "current": "on math [[capability-self-assessment-in-large-language-models]]. The comparator design itself",
+      "recommended": "on math [[capability-self-assessment-in-large-language-models]].\n\nThe comparator design itself",
+      "rationale": "This paragraph runs to about 1,900 chars. It splits the positive gated results from TRIAGE's comparator design."
+    },
+    {
+      "id": "rec-20",
+      "category": "break-paragraph",
+      "severity": "minor",
+      "section": "## 3. L2 (### 3.7, **Reasoning (Q2b, Q9, Q10).**)",
+      "current": "[[open-the-oyster-empirical-evaluation-and-improvement-of-code-reasoning-confidenc]]. A strict reader rates the same-weights toggle",
+      "recommended": "[[open-the-oyster-empirical-evaluation-and-improvement-of-code-reasoning-confidenc]].\n\nA strict reader rates the same-weights toggle",
+      "rationale": "This paragraph runs to about 1,900 chars. It splits the code evidence from the strict-reader objection and the contested general-NLP direction."
+    },
+    {
+      "id": "rec-21",
+      "category": "break-paragraph",
+      "severity": "minor",
+      "section": "## 2. L1 (### 2.1 The four-family comparison is occupied by union)",
+      "current": "[[an-empirical-study-of-security-calibration-in-large-language-models-for-code]]. The sampling family is crowded:",
+      "recommended": "[[an-empirical-study-of-security-calibration-in-large-language-models-for-code]].\n\nThe sampling family is crowded:",
+      "rationale": "This paragraph runs to about 1,700 chars. It splits the breadth occupants from the crowded sampling family and the Q7 to Q12 verdicts."
+    },
+    {
+      "id": "rec-22",
+      "category": "break-paragraph",
+      "severity": "minor",
+      "section": "## 6. F: Measurement-instrument framing",
+      "current": "[[confident-and-wrong-silent-semantic-failures-in-coding-agents]]. Metrology-proper terms are in use as well",
+      "recommended": "[[confident-and-wrong-silent-semantic-failures-in-coding-agents]].\n\nMetrology-proper terms are in use as well",
+      "rationale": "This paragraph runs to about 1,700 chars. It splits validity and psychometric vocabulary from metrology-proper vocabulary."
+    },
+    {
+      "id": "rec-23",
+      "category": "break-paragraph",
+      "severity": "minor",
+      "section": "## 3. L2 (### 3.3 What the existing controlled comparisons say)",
+      "current": "[[which-signals-of-code-correctness-survive-distribution-shift-hidden-state-and-ca]]. Even pooled, the Qwen3-Coder probe edge",
+      "recommended": "[[which-signals-of-code-correctness-survive-distribution-shift-hidden-state-and-ca]].\n\nEven pooled, the Qwen3-Coder probe edge",
+      "rationale": "This paragraph runs to about 1,550 chars. It splits the within-problem results from the pooled margins (Table IV and V)."
+    },
+    {
+      "id": "rec-24",
+      "category": "break-paragraph",
+      "severity": "minor",
+      "section": "## 2. L1 (### 2.2, **Label oracle (Q10).**)",
+      "current": "[[certified-against-which-oracleexecution-labels-set-the-reported-riskof-conformal]]. All of these rank models, agents, or certificates.",
+      "recommended": "[[certified-against-which-oracleexecution-labels-set-the-reported-riskof-conformal]].\n\nAll of these rank models, agents, or certificates.",
+      "rationale": "This paragraph runs to about 1,650 chars. It splits the oracle-swap precedents from the gap they leave and the Q10 verdict."
+    },
+    {
+      "id": "rec-25",
+      "category": "split-sentence",
+      "severity": "minor",
+      "section": "## 2. L1 (### 2.2, **Estimator (Q5).**)",
+      "current": "The pipeline moves rankings too: switching the parse policy from parse-repair to a fallback of 50 moves CodeLlama-7B CoT ECE from 0.680 to 0.445 while AUROC barely changes, 0.556 to 0.546 (Section 4.4); Linguistic has the lowest ECE in 4 of 6 models, but 3 of those 4 cells are collapsed, with CodeLlama-7B Linguistic putting 359 of 365 answers at confidence 10 (Sections 4.3 and 4.6); and Direct is best on PRR for 4 of 6 models (Table 2).",
+      "recommended": "The pipeline moves rankings too. Switching the parse policy from parse-repair to a fallback of 50 moves CodeLlama-7B CoT ECE from 0.680 to 0.445 while AUROC barely changes, 0.556 to 0.546 (Section 4.4). Linguistic has the lowest ECE in 4 of 6 models, but 3 of those 4 cells are collapsed, with CodeLlama-7B Linguistic putting 359 of 365 answers at confidence 10 (Sections 4.3 and 4.6). Direct is best on PRR for 4 of 6 models (Table 2).",
+      "rationale": "This single sentence of about 420 chars chains three number-dense findings with semicolons. Splitting it into four sentences makes each finding readable on its own, and every number is unchanged."
+    }
+  ],
+  "summary": {
+    "total_recommendations": 25,
+    "by_category": {
+      "cut-duplicate": 10,
+      "merge-paragraphs": 0,
+      "break-paragraph": 14,
+      "make-list": 0,
+      "make-table": 0,
+      "bold-keyterms": 0,
+      "split-sentence": 1,
+      "remove-hr": 0,
+      "add-whitespace": 0
+    },
+    "highest_severity": "major",
+    "expected_net_char_delta": -3550
+  }
+}

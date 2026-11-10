@@ -1,30 +1,26 @@
-# Scaffold — code-llm-probe-verbalize-gap-3d8995
+# Scaffold — code-llm-confidence-positioning-d82d00
 
 ## User Prompt (VERBATIM — gospel)
-See research/query-code-llm-probe-verbalize-gap-3d8995.md (full verbatim query persisted there).
-Assess novelty + AAAI-27 main-track viability of the PIVOTED direction: code LLMs internally encode
-per-requirement correctness (probe ~0.72-0.75) but can't verbalize it (self-report ~0.60) — a
-per-requirement faithfulness gap on code + probe method + downstream utility. Adversarial reviewer-2
-mindset, committed verdict, grounded in our real numbers (oracle 0.805>scalar 0.743, 34% partial-pass,
-probe 0.745 trained/0.706 base, self-report 0.603 ce/0.576 brier).
+See research/query-code-llm-confidence-positioning-d82d00.md (full verbatim canonical query). The binding scope document is docs/s3/POSITIONING_BRIEF_R1.md.
 
 ## Run config
-- vault_tag: code-llm-probe-verbalize-gap-3d8995
-- query_file: research/query-code-llm-probe-verbalize-gap-3d8995.md
-- modality: synthesize (defended verdict with evidence chains) + compare (vs closest prior work)
-- response_format: argumentative (novelty defense at a reviewing bar)
+- vault_tag: code-llm-confidence-positioning-d82d00
+- query_file: research/query-code-llm-confidence-positioning-d82d00.md
+- modality: compare (per-candidate occupancy verdicts + a committed recommendation)
+- response_format: argumentative
 
 ## Modality rationale
-Not enumerative — it's a committed novelty/viability VERDICT grounded in prior-work positioning and our
-real results. Argumentative: must defend residual novelty against the closest scoops (probing/EAGLE/
-faithfulness) and commit accept/borderline/reject with the harshest objection.
+Five candidates are judged against the literature with proportionate depth each, then ranked; the output commits to OCCUPIED/NARROW/CLEAN per component and a recommended spine.
 
 ## Tier rationale
-Likely FULL — adversarial novelty assessment against a dense prior-work cluster (latent-knowledge
-probing, EAGLE, verbalized-confidence faithfulness), committed verdict, high stakes (gates a P2 build).
-Confirm from prompt-decomposition.json after step 1.
+Expected FULL: dense prior-work cluster, adversarial novelty assessment, high stakes (gates paper design). Confirm after step 1.
 
-## Wrapper requirements
-- save path: research/notes/final_report_code-llm-probe-verbalize-gap-3d8995.md
-- citation style: inline
-- terminal sections: prioritized experiments to convert borderline -> clear accept; committed verdict.
+## Wrapper requirements (wave 4 contract, binding)
+- save path: research/notes/final_report_code-llm-confidence-positioning-d82d00.md
+- citation style: inline, with arXiv id or DOI per claim; full-text location (section, table, equation) for every verdict-bearing claim; ABSTRACT-ONLY marker where only an abstract was read.
+- terminal sections: per-candidate verdict table; close-occupant list; ranked recommendation; instrument gaps.
+- Network: headless only, academic APIs only (no WebSearch tool, no Google Scholar, no browser). Allowed hosts: jmlr.org, github.com, openreview.net, api.openreview.net, arxiv.org, export.arxiv.org, api.semanticscholar.org, figures.semanticscholar.org, api.openalex.org, api.crossref.org, doi.org, dblp.org, api.unpaywall.org, aclanthology.org, proceedings.mlr.press, papers.nips.cc, proceedings.neurips.cc, openaccess.thecvf.com, dl.acm.org, ieeexplore.ieee.org, link.springer.com, nature.com, huggingface.co, hal.science, zenodo.org, web.archive.org, plus author or institutional pages linked from a fetched record.
+- Conventions: American spelling, no em-dashes, serial comma; never fabricate a citation, number, or quotation.
+
+## Tier rationale (step 1)
+FULL + argumentative. Five candidates, each with many sub-facets, judged against a dense, fast-moving 2025-2026 prior-work cluster, with verdicts that gate the paper's design. Adversarial depth (critics, patcher) is needed because incorrect novelty claims are a stated TMLR rejection ground.

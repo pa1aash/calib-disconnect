@@ -1,0 +1,70 @@
+[
+ {
+  "claim": "CodeCircuit maps line-level attribution graphs (transcoder-based) to predict code correctness; topological features beat black-box (MaxProb, PPL, entropy, energy) and gray-box (CoE) baselines on Python, Java, C++.",
+  "stance": "supports",
+  "stance_target": "L1/L4: internal-state correctness signals at line level, with causal intervention",
+  "evidence_type": "empirical",
+  "scope_conditions": "MBPP with translated Java/C++ task sets; Gemma-2-2B-it with a transcoder; Table 1",
+  "quoted_support": "Topological features from these internal graphs predict correctness more reliably than surface heuristics and enable targeted causal interventions to fix erroneous logic.",
+  "numbers": [
+   "MaxProb AUROC Python 51.25, Java 56.29, C++ 54.06"
+  ],
+  "entities": [
+   "CodeCircuit",
+   "Gemma-2-2B-it",
+   "MBPP"
+  ],
+  "time_period": "Feb 2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "codecircuit-toward-inferring-llm-generated-code-correctness-via-attribution-grap",
+  "breadth": {
+   "confidence_families": "MaxProb, PPL, entropy, temperature scaling, energy (black-box); CoE-R, CoE-C (gray-box); attribution-graph features (Sec 4.1, Table 1)",
+   "model_families_and_sizes": "Gemma-2-2B-it with transcoder (Sec 4.1)",
+   "base_vs_instruct": "not present (searched: full text, keyword scan)",
+   "post_training_stages": "not present (searched: full text, keyword scan)",
+   "reasoning_models": "not present (searched: full text, keyword scan)",
+   "elicitation_formats": "not present (searched: full text, keyword scan)",
+   "benchmarks": "MBPP; Java/C++ translated versions (Sec 4.1)",
+   "label_source": "GPT-4o line-level judgments (Sec 4.1)",
+   "label_independence": "external LLM labels, not execution",
+   "contamination_split": "not present (searched: contamination)",
+   "calibration_metrics": "AUROC, AUPR, FPR@95 (Sec 4.1, Table 1); no ECE",
+   "granularity": "line-level",
+   "causal_intervention": "yes: targeted node interventions to correct logic (Intro, Sec 4)"
+  }
+ },
+ {
+  "claim": "Ground-truth labels are line-level and derived from GPT-4o rather than test execution.",
+  "stance": "supports",
+  "stance_target": "Label independence weaker than execution ground truth",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec 4.1",
+  "quoted_support": "Ground truth labels are derived from GPT-4o ( OpenAI and others, 2024 ) , where a step is defined as a correct code line.",
+  "numbers": [
+   "MBPP only; Gemma-2-2B-it"
+  ],
+  "entities": [
+   "GPT-4o"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "codecircuit-toward-inferring-llm-generated-code-correctness-via-attribution-grap",
+  "breadth": {
+   "confidence_families": "MaxProb, PPL, entropy, temperature scaling, energy (black-box); CoE-R, CoE-C (gray-box); attribution-graph features (Sec 4.1, Table 1)",
+   "model_families_and_sizes": "Gemma-2-2B-it with transcoder (Sec 4.1)",
+   "base_vs_instruct": "not present (searched: full text, keyword scan)",
+   "post_training_stages": "not present (searched: full text, keyword scan)",
+   "reasoning_models": "not present (searched: full text, keyword scan)",
+   "elicitation_formats": "not present (searched: full text, keyword scan)",
+   "benchmarks": "MBPP; Java/C++ translated versions (Sec 4.1)",
+   "label_source": "GPT-4o line-level judgments (Sec 4.1)",
+   "label_independence": "external LLM labels, not execution",
+   "contamination_split": "not present (searched: contamination)",
+   "calibration_metrics": "AUROC, AUPR, FPR@95 (Sec 4.1, Table 1); no ECE",
+   "granularity": "line-level",
+   "causal_intervention": "yes: targeted node interventions to correct logic (Intro, Sec 4)"
+  }
+ }
+]

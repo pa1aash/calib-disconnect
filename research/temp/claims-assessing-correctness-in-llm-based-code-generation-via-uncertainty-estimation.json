@@ -1,0 +1,75 @@
+{
+ "source_note_id": "assessing-correctness-in-llm-based-code-generation-via-uncertainty-estimation",
+ "claims": [
+  {
+   "claim": "Semantic entropy and mutual information with embedding or CodeBLEU clustering, and token log-probabilities, do not significantly correlate with code correctness on LiveCodeBench.",
+   "stance": "supports",
+   "stance_target": "L1: negative result for transferred NLG UQ on code",
+   "evidence_type": "empirical",
+   "scope_conditions": "gpt-3.5-turbo-instruct, DeepSeek-R1, claude-3-7-sonnet; LiveCodeBench 831 problems",
+   "quoted_support": "Abstract: state-of-the-art techniques [27, 14, 3] fail to exhibit a correlation between estimated uncertainty and correctness when applied to code.",
+   "numbers": [
+    "831 problems (239 Easy/332 Medium/260 Hard)"
+   ],
+   "entities": [
+    "Sharma",
+    "David",
+    "LiveCodeBench"
+   ],
+   "time_period": "2025",
+   "region": "global",
+   "confidence": "high",
+   "source_note_id": "assessing-correctness-in-llm-based-code-generation-via-uncertainty-estimation"
+  },
+  {
+   "claim": "Symbolic-execution clustering restores significant correlation, and uniform-distribution estimates perform comparably, so token probabilities are not essential.",
+   "stance": "supports",
+   "stance_target": "L1",
+   "evidence_type": "empirical",
+   "scope_conditions": "Python, bounded loop unrolling",
+   "quoted_support": "Abstract: We further show that token-level probabilities are not essential - uncertainty estimates assuming uniform distributions perform comparably.",
+   "numbers": [],
+   "entities": [
+    "SE-SymbUniform",
+    "CC-Symb"
+   ],
+   "time_period": "2025",
+   "region": "global",
+   "confidence": "high",
+   "source_note_id": "assessing-correctness-in-llm-based-code-generation-via-uncertainty-estimation"
+  },
+  {
+   "claim": "Symbolic cluster count used as an abstention threshold achieves a false positive rate below 0.02%.",
+   "stance": "supports",
+   "stance_target": "L3: abstention with a sampled signal on code is OCCUPIED (abstention, not execution-budget routing)",
+   "evidence_type": "empirical",
+   "scope_conditions": "LiveCodeBench; Python",
+   "quoted_support": "Abstract: it correlates with correctness and supports highly effective abstention policies, achieving a false positive rate below 0.02%.",
+   "numbers": [
+    "FPR < 0.02%"
+   ],
+   "entities": [
+    "CC-Symb"
+   ],
+   "time_period": "2025",
+   "region": "global",
+   "confidence": "high",
+   "source_note_id": "assessing-correctness-in-llm-based-code-generation-via-uncertainty-estimation"
+  }
+ ],
+ "breadth": {
+  "confidence_families": "semantic entropy, mutual information, LLM-Probability, symbolic cluster count (Abstract, Table 2)",
+  "model_families_and_sizes": "gpt-3.5-turbo-instruct, DeepSeek-R1, claude-3-7-sonnet (Table 2/4)",
+  "base_vs_instruct": "not present (searched: base, instruct)",
+  "post_training_stages": "not present (searched: SFT, RLHF)",
+  "reasoning_models": "DeepSeek-R1 included; reasoning-on status not isolated",
+  "elicitation_formats": "not present (searched: verbalized)",
+  "benchmarks": "LiveCodeBench 831 problems (Dataset selection)",
+  "label_source": "I/O test cases with timeout (Results)",
+  "label_independence": "tests independent of the symbolic executor",
+  "contamination_split": "LiveCodeBench described as contamination-free; no date split stated",
+  "calibration_metrics": "Pearson correlation and p-value (Table 2); FPR/FNR for abstention",
+  "granularity": "whole-solution",
+  "causal_intervention": "not present (searched: probe, steering)"
+ }
+}

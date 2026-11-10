@@ -1,0 +1,78 @@
+{
+ "source_note_id": "beyond-coverage-and-mutation-a-blind-spot-analysis-of-llm-generated-unit-tests",
+ "claims": [
+  {
+   "claim": "BlindSpotEval evaluates LLM-generated unit tests by three obligation metrics (Boundary-Value Adequacy, Control-Flow Adequacy, Oracle Strength) plus execution reliability, on ObligBench with 895 complex and 700 low-complexity Java functions.",
+   "stance": "supports",
+   "stance_target": "self-written test adequacy beyond coverage and mutation",
+   "evidence_type": "empirical",
+   "scope_conditions": "Java, four LLMs, four prompting strategies",
+   "quoted_support": "a complexity-stratified Java benchmark comprising 895 complex and 700 low-complexity functions with source-side obligation annotations.",
+   "numbers": [
+    "895 complex",
+    "700 low-complexity",
+    "3 metrics"
+   ],
+   "entities": [
+    "BlindSpotEval",
+    "ObligBench"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "beyond-coverage-and-mutation-a-blind-spot-analysis-of-llm-generated-unit-tests"
+  },
+  {
+   "claim": "Four LLMs evaluated: GPT-5.4, Gemma-4-31B, Gemini-3.6-flash, Qwen3-Coder-30B.",
+   "stance": "neutral",
+   "stance_target": "model coverage",
+   "evidence_type": "empirical",
+   "scope_conditions": "main experiment",
+   "quoted_support": "we evaluate four LLMs (GPT-5.4, Gemma-4-31B, Gemini-3.6-flash, and Qwen3-Coder-30B)",
+   "numbers": [
+    "4 LLMs"
+   ],
+   "entities": [
+    "GPT-5.4",
+    "Gemma-4-31B",
+    "Gemini-3.6-flash",
+    "Qwen3-Coder-30B"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "beyond-coverage-and-mutation-a-blind-spot-analysis-of-llm-generated-unit-tests"
+  },
+  {
+   "claim": "Aggregate coverage and mutation scores do not distinguish systematic adequacy blind spots, especially inputs needing semantic reasoning about the function's contract.",
+   "stance": "supports",
+   "stance_target": "test adequacy needs finer-grained measurement",
+   "evidence_type": "empirical",
+   "scope_conditions": "Results",
+   "quoted_support": "Our results reveal systematic adequacy blind spots that aggregate coverage and mutation scores do not distinguish.",
+   "numbers": [],
+   "entities": [
+    "BlindSpotEval"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "beyond-coverage-and-mutation-a-blind-spot-analysis-of-llm-generated-unit-tests"
+  }
+ ],
+ "breadth": {
+  "confidence_families": "not present (searched: confidence, calibration, verbal, logit; paper evaluates test adequacy, not confidence)",
+  "model_families_and_sizes": "GPT-5.4, Gemma-4-31B, Gemini-3.6-flash, Qwen3-Coder-30B (Section Experimental Setup).",
+  "base_vs_instruct": "not present (searched: base, instruct)",
+  "post_training_stages": "not present (searched: SFT, RLHF)",
+  "reasoning_models": "not present (searched: reasoning enabled/disabled setting)",
+  "elicitation_formats": "Four prompting strategies including zero-shot and intention-based (main experiment).",
+  "benchmarks": "ObligBench (Java, 1,595 functions); comparisons mention TestGenEval, EvalPlus, SWE-bench.",
+  "label_source": "Source-side obligation annotations and execution/JUnit results.",
+  "label_independence": "Complexity-stratified control set of 700 low-complexity functions; manual stratified sample of 780 BVA instances for validation.",
+  "contamination_split": "not present (searched: training-data contamination analysis; related work notes contamination-mitigating benchmarks)",
+  "calibration_metrics": "not present (searched: ECE, Brier, calibration)",
+  "granularity": "Per-obligation (boundary values, control flow, oracle strength) per function; finer than coverage/mutation aggregates.",
+  "causal_intervention": "Prompting-strategy and complexity-control comparisons; no model-internal intervention."
+ }
+}

@@ -1,0 +1,70 @@
+[
+ {
+  "claim": "P(IK) trained on TriviaQA generalizes in discrimination to Python function synthesis and other OOD tasks but is poorly calibrated there.",
+  "stance": "supports",
+  "stance_target": "early evidence that model-internal self-knowledge extends to code, with miscalibration",
+  "evidence_type": "empirical",
+  "scope_conditions": "up to 52B models; 2022",
+  "quoted_support": "we also find some generalization across tasks, for example from trivia to story completion, math, and code",
+  "numbers": [
+   "52B"
+  ],
+  "entities": [
+   "P(IK)",
+   "Python Function Synthesis",
+   "Codex HumanEval"
+  ],
+  "time_period": "2022",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "language-models-mostly-know-what-they-know-full-text-kadavath-et-al-2022",
+  "breadth": {
+   "confidence_families": "P(True) self-evaluation and P(IK) trained value-head classifier on the model itself (Sec 4-5)",
+   "model_families_and_sizes": "models up to 52B parameters (Fig 1)",
+   "base_vs_instruct": "pretrained models vs RLHF policies (Sec 3.3 'RLHF Policy Miscalibration Can Be Remediated with a Temperature Tuning')",
+   "post_training_stages": "pretrained and RLHF",
+   "reasoning_models": "not present (2022)",
+   "elicitation_formats": "multiple-choice letter probabilities, P(True) on sampled answers, P(IK)",
+   "benchmarks": "TriviaQA, Lambada, Arithmetic, GSM8k, Codex HumanEval, Python function synthesis (Fig 1, Fig 2)",
+   "label_source": "answer correctness / execution for Codex",
+   "label_independence": "task gold labels",
+   "contamination_split": "not present (searched)",
+   "calibration_metrics": "calibration plots, ECE-style, accuracy improvement conditioned on P(True) > 0.5 (Fig 1)",
+   "granularity": "per sample / per question",
+   "causal_intervention": "not present (searched: ablat, patching)"
+  }
+ },
+ {
+  "claim": "P(True) self-evaluation on sampled answers includes Codex HumanEval and improves accuracy when conditioning on P(True) > 0.5.",
+  "stance": "supports",
+  "stance_target": "self-evaluation confidence on code is established prior work",
+  "evidence_type": "empirical",
+  "scope_conditions": "Fig 1: TriviaQA, Lambada, Arithmetic, GSM8k, Codex HumanEval",
+  "quoted_support": "a 52B language model to evaluate its own proposed answers (sampled at unit temperature) to questions from TriviaQA, Lambada, Arithmetic, GSM8k, and Codex",
+  "numbers": [
+   "P(True) > 0.5"
+  ],
+  "entities": [
+   "Kadavath"
+  ],
+  "time_period": "2022",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "language-models-mostly-know-what-they-know-full-text-kadavath-et-al-2022",
+  "breadth": {
+   "confidence_families": "P(True) self-evaluation and P(IK) trained value-head classifier on the model itself (Sec 4-5)",
+   "model_families_and_sizes": "models up to 52B parameters (Fig 1)",
+   "base_vs_instruct": "pretrained models vs RLHF policies (Sec 3.3 'RLHF Policy Miscalibration Can Be Remediated with a Temperature Tuning')",
+   "post_training_stages": "pretrained and RLHF",
+   "reasoning_models": "not present (2022)",
+   "elicitation_formats": "multiple-choice letter probabilities, P(True) on sampled answers, P(IK)",
+   "benchmarks": "TriviaQA, Lambada, Arithmetic, GSM8k, Codex HumanEval, Python function synthesis (Fig 1, Fig 2)",
+   "label_source": "answer correctness / execution for Codex",
+   "label_independence": "task gold labels",
+   "contamination_split": "not present (searched)",
+   "calibration_metrics": "calibration plots, ECE-style, accuracy improvement conditioned on P(True) > 0.5 (Fig 1)",
+   "granularity": "per sample / per question",
+   "causal_intervention": "not present (searched: ablat, patching)"
+  }
+ }
+]

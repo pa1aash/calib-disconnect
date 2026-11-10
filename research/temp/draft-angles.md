@@ -1,0 +1,7 @@
+# Draft angles (step 10)
+
+**Draft A.** Strongest-thesis. Argue the position best supported by the evidence: the uncontrolled L2 headline is OCCUPIED, so the strongest TMLR contribution is one execution-graded measurement paper whose headline is the controlled, within-problem, supervision-matched probe-versus-own-readout test on code, built on an L1 sensitivity protocol (estimator set, augmented-test oracle swap, per-model release split) with an L3 offline routing replay as secondary analysis. Make every verdict concrete and argue it forcefully against the closest occupants.
+
+**Draft B.** Steelman-contrarian. Defend the minority view that the space is effectively occupied: Ribeiro et al. plus Campos et al., NeuroSym-Cal, Tuerlings, Gros and Devanbu, CodeRefuser, and the general-NLP trained-confidence work (Probe-SD, RLCR) leave only model and benchmark swaps, the controlled test may return a null that reviewers find uninteresting, and F is a relabeling. Push every NARROW toward OCCUPIED, apply A21 and A14 strictly, and say what a claims-reduced paper would still offer.
+
+**Draft C.** Synthesis-reconciler. Argue that both readings hold under different boundary conditions: which verdicts depend on the concurrent-work window, on instrument gaps (failed full-text search, exhausted OpenAlex, rate-limited Semantic Scholar), on whether a code-specific A21 reason is accepted, and on what the controlled test returns. Give the conditions under which each ranked contribution is strongest, and what evidence the paper must generate to be defensible either way.

@@ -1,0 +1,175 @@
+[
+ {
+  "claim": "Correctness of Qwen3-4B-Instruct-2507's first-attempt code on 444 LiveCodeBench tasks is linearly decodable from the final-prompt-token hidden state before any output token, with leakage-free held-out AUC 0.881 ± 0.008 over 50 outer splits.",
+  "stance": "supports",
+  "stance_target": "pre-generation probes occupy a facet of L2",
+  "evidence_type": "empirical",
+  "scope_conditions": "Single model, LiveCodeBench, Table 3",
+  "quoted_support": "The correctness of the model’s first-attempt code is linearly decodable from the hidden state at the final prompt token, captured before any output token is generated, with a leakage-free held-out AUC of 0.881 ± 0.008 across 50 outer splits.",
+  "numbers": [
+   "0.881 ± 0.008",
+   "444 tasks",
+   "50 outer splits"
+  ],
+  "entities": [
+   "Qwen3-4B-Instruct-2507",
+   "LiveCodeBench"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "Linear probe on prompt-final hidden state only (PCA 95% + L2 logistic regression); prompt-length baselines (Sec 3.1)",
+   "model_families_and_sizes": "Qwen3-4B-Instruct-2507 only (36 layers, 2560-d) (Sec 2.1, Sec 4 'Single model')",
+   "base_vs_instruct": "not present (searched: single instruct model)",
+   "post_training_stages": "not present (searched: single post-trained checkpoint)",
+   "reasoning_models": "not present (searched: model is the non-thinking Instruct-2507 variant; no reasoning-mode comparison)",
+   "elicitation_formats": "not present (no verbal or sampled readouts; hidden state at last prompt token before generation, Sec 2.2)",
+   "benchmarks": "444 LiveCodeBench tasks, easy/medium/hard (Sec 2.1)",
+   "label_source": "Unit-test pass/fail of first-attempt code (Sec 3.1)",
+   "label_independence": "Label is the probed model's own attempt-0 output (same model)",
+   "contamination_split": "LiveCodeBench cited as contamination-free benchmark (ref [6]) but no release-date vs cutoff split is run; 50 random stratified 80/20 splits with nested CV (Sec 3.1-3.2)",
+   "calibration_metrics": "AUC only: raw 0.881 ± 0.008, residualized 0.842 ± 0.010, prompt-length 0.657 ± 0.014 (Table 3); no ECE/Brier",
+   "granularity": "Whole task (pre-generation, per prompt)",
+   "causal_intervention": "not present (searched: no steering/ablation; residualization against prompt length is a confound control only)"
+  },
+  "source_note_id": "code-correctness-is-linearly-decodable-from-llm-hidden-states-before-generation"
+ },
+ {
+  "claim": "After residualizing each hidden dimension against prompt length the probe retains AUC 0.842 ± 0.010 versus a prompt-length-only baseline of 0.657 ± 0.014; nonlinear prompt-length models (RF 0.642, GB 0.649, MLP 0.657) do not exceed the logistic baseline.",
+  "stance": "supports",
+  "stance_target": "confound control methodology for probes (difficulty/length)",
+  "evidence_type": "empirical",
+  "scope_conditions": "Tables 3-4",
+  "quoted_support": "The probe still achieves an AUC of 0.842 ± 0.010 , substantially above a logistic prompt-length baseline of 0.657 ± 0.014 , and none of the nonlinear models tested improves upon it.",
+  "numbers": [
+   "0.842 ± 0.010",
+   "0.657 ± 0.014",
+   "0.642",
+   "0.649"
+  ],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "Linear probe on prompt-final hidden state only (PCA 95% + L2 logistic regression); prompt-length baselines (Sec 3.1)",
+   "model_families_and_sizes": "Qwen3-4B-Instruct-2507 only (36 layers, 2560-d) (Sec 2.1, Sec 4 'Single model')",
+   "base_vs_instruct": "not present (searched: single instruct model)",
+   "post_training_stages": "not present (searched: single post-trained checkpoint)",
+   "reasoning_models": "not present (searched: model is the non-thinking Instruct-2507 variant; no reasoning-mode comparison)",
+   "elicitation_formats": "not present (no verbal or sampled readouts; hidden state at last prompt token before generation, Sec 2.2)",
+   "benchmarks": "444 LiveCodeBench tasks, easy/medium/hard (Sec 2.1)",
+   "label_source": "Unit-test pass/fail of first-attempt code (Sec 3.1)",
+   "label_independence": "Label is the probed model's own attempt-0 output (same model)",
+   "contamination_split": "LiveCodeBench cited as contamination-free benchmark (ref [6]) but no release-date vs cutoff split is run; 50 random stratified 80/20 splits with nested CV (Sec 3.1-3.2)",
+   "calibration_metrics": "AUC only: raw 0.881 ± 0.008, residualized 0.842 ± 0.010, prompt-length 0.657 ± 0.014 (Table 3); no ECE/Brier",
+   "granularity": "Whole task (pre-generation, per prompt)",
+   "causal_intervention": "not present (searched: no steering/ablation; residualization against prompt length is a confound control only)"
+  },
+  "source_note_id": "code-correctness-is-linearly-decodable-from-llm-hidden-states-before-generation"
+ },
+ {
+  "claim": "Layer choice is made by nested CV: layer 30 is modal (16 of 50 outer splits), layer 29 next (13), layer 33 (8); per-layer test AUC plateau 0.880-0.884 across layers 29-36.",
+  "stance": "neutral",
+  "stance_target": "probe protocol detail",
+  "evidence_type": "empirical",
+  "scope_conditions": "Tables 1-2",
+  "quoted_support": "The modal selection across the 50 splits is layer 30 with C = 0.001 , chosen in 16 of them.",
+  "numbers": [
+   "16 of 50",
+   "13",
+   "8"
+  ],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "Linear probe on prompt-final hidden state only (PCA 95% + L2 logistic regression); prompt-length baselines (Sec 3.1)",
+   "model_families_and_sizes": "Qwen3-4B-Instruct-2507 only (36 layers, 2560-d) (Sec 2.1, Sec 4 'Single model')",
+   "base_vs_instruct": "not present (searched: single instruct model)",
+   "post_training_stages": "not present (searched: single post-trained checkpoint)",
+   "reasoning_models": "not present (searched: model is the non-thinking Instruct-2507 variant; no reasoning-mode comparison)",
+   "elicitation_formats": "not present (no verbal or sampled readouts; hidden state at last prompt token before generation, Sec 2.2)",
+   "benchmarks": "444 LiveCodeBench tasks, easy/medium/hard (Sec 2.1)",
+   "label_source": "Unit-test pass/fail of first-attempt code (Sec 3.1)",
+   "label_independence": "Label is the probed model's own attempt-0 output (same model)",
+   "contamination_split": "LiveCodeBench cited as contamination-free benchmark (ref [6]) but no release-date vs cutoff split is run; 50 random stratified 80/20 splits with nested CV (Sec 3.1-3.2)",
+   "calibration_metrics": "AUC only: raw 0.881 ± 0.008, residualized 0.842 ± 0.010, prompt-length 0.657 ± 0.014 (Table 3); no ECE/Brier",
+   "granularity": "Whole task (pre-generation, per prompt)",
+   "causal_intervention": "not present (searched: no steering/ablation; residualization against prompt length is a confound control only)"
+  },
+  "source_note_id": "code-correctness-is-linearly-decodable-from-llm-hidden-states-before-generation"
+ },
+ {
+  "claim": "Self-repair data are starved: of 266 first-attempt failures only 20 recover within 5 attempts (14 at the first repair); conditional pass rate falls from 40.1% at attempt 0 to 5.3%, 2.0%, 0.4%, 0%.",
+  "stance": "neutral",
+  "stance_target": "L3 observed-failure update: repair signal null",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec 4; one 4B model; repair prompt includes verifier error output",
+  "quoted_support": "Of the 266 tasks whose first attempt fails, only 20 ever recover within the 5-attempt budget, 14 of them at the first repair, and the conditional pass rate among still-unsolved tasks collapses from 40.1% at attempt 0 to 5.3%, 2.0%, 0.4% and 0% at attempts 1 through 4.",
+  "numbers": [
+   "266",
+   "20",
+   "14",
+   "40.1%",
+   "5.3%",
+   "2.0%",
+   "0.4%",
+   "0%"
+  ],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "Linear probe on prompt-final hidden state only (PCA 95% + L2 logistic regression); prompt-length baselines (Sec 3.1)",
+   "model_families_and_sizes": "Qwen3-4B-Instruct-2507 only (36 layers, 2560-d) (Sec 2.1, Sec 4 'Single model')",
+   "base_vs_instruct": "not present (searched: single instruct model)",
+   "post_training_stages": "not present (searched: single post-trained checkpoint)",
+   "reasoning_models": "not present (searched: model is the non-thinking Instruct-2507 variant; no reasoning-mode comparison)",
+   "elicitation_formats": "not present (no verbal or sampled readouts; hidden state at last prompt token before generation, Sec 2.2)",
+   "benchmarks": "444 LiveCodeBench tasks, easy/medium/hard (Sec 2.1)",
+   "label_source": "Unit-test pass/fail of first-attempt code (Sec 3.1)",
+   "label_independence": "Label is the probed model's own attempt-0 output (same model)",
+   "contamination_split": "LiveCodeBench cited as contamination-free benchmark (ref [6]) but no release-date vs cutoff split is run; 50 random stratified 80/20 splits with nested CV (Sec 3.1-3.2)",
+   "calibration_metrics": "AUC only: raw 0.881 ± 0.008, residualized 0.842 ± 0.010, prompt-length 0.657 ± 0.014 (Table 3); no ECE/Brier",
+   "granularity": "Whole task (pre-generation, per prompt)",
+   "causal_intervention": "not present (searched: no steering/ablation; residualization against prompt length is a confound control only)"
+  },
+  "source_note_id": "code-correctness-is-linearly-decodable-from-llm-hidden-states-before-generation"
+ },
+ {
+  "claim": "The paper states it studies one model only and defers cross-model replication; it positions itself against Bui et al. and Ribeiro et al., who read hidden states after generation.",
+  "stance": "supports",
+  "stance_target": "L2 gap: pre-generation vs post-generation, multi-model replication left open",
+  "evidence_type": "expert-opinion",
+  "scope_conditions": "Sec 1, Sec 4",
+  "quoted_support": "In both, the hidden state is read after the model has produced an answer.",
+  "numbers": [],
+  "entities": [
+   "Bui et al. 2501.12934",
+   "Ribeiro et al. 2512.07404"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "Linear probe on prompt-final hidden state only (PCA 95% + L2 logistic regression); prompt-length baselines (Sec 3.1)",
+   "model_families_and_sizes": "Qwen3-4B-Instruct-2507 only (36 layers, 2560-d) (Sec 2.1, Sec 4 'Single model')",
+   "base_vs_instruct": "not present (searched: single instruct model)",
+   "post_training_stages": "not present (searched: single post-trained checkpoint)",
+   "reasoning_models": "not present (searched: model is the non-thinking Instruct-2507 variant; no reasoning-mode comparison)",
+   "elicitation_formats": "not present (no verbal or sampled readouts; hidden state at last prompt token before generation, Sec 2.2)",
+   "benchmarks": "444 LiveCodeBench tasks, easy/medium/hard (Sec 2.1)",
+   "label_source": "Unit-test pass/fail of first-attempt code (Sec 3.1)",
+   "label_independence": "Label is the probed model's own attempt-0 output (same model)",
+   "contamination_split": "LiveCodeBench cited as contamination-free benchmark (ref [6]) but no release-date vs cutoff split is run; 50 random stratified 80/20 splits with nested CV (Sec 3.1-3.2)",
+   "calibration_metrics": "AUC only: raw 0.881 ± 0.008, residualized 0.842 ± 0.010, prompt-length 0.657 ± 0.014 (Table 3); no ECE/Brier",
+   "granularity": "Whole task (pre-generation, per prompt)",
+   "causal_intervention": "not present (searched: no steering/ablation; residualization against prompt length is a confound control only)"
+  },
+  "source_note_id": "code-correctness-is-linearly-decodable-from-llm-hidden-states-before-generation"
+ }
+]

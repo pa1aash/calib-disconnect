@@ -1,0 +1,72 @@
+[
+  {
+    "claim": "Probes trained on intermediate activations of an LLM forecaster achieve substantially better calibration than the model's own verbalized confidence, replicating across three different model backbones.",
+    "stance": "supports",
+    "stance_target": "internal representations encode more reliable confidence information than verbalized self-report",
+    "evidence_type": "empirical",
+    "scope_conditions": "forecasting domain (OpenForesight benchmark), Eternis-Forecaster 8B, GLM-4.7-Flash, GLM-4.5-Air",
+    "quoted_support": "we train representation-pooling probes on intermediate activations and find they achieve substantially better calibration; a result that also holds for GLM-4.7-Flash and GLM-4.5-Air.",
+    "numbers": [],
+    "entities": ["Eternis-Forecaster 8B", "OpenForesight", "GLM-4.7-Flash", "GLM-4.5-Air"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260708046-what-llm-forecasters-know-but-dont-say-probing-internal-representation"
+  },
+  {
+    "claim": "Removing an influential evidence source from the prompt often changes the model's forecast while leaving the chain-of-thought reasoning trace textually unchanged, demonstrating CoT unfaithfulness via causal intervention rather than mere self-report inaccuracy.",
+    "stance": "supports",
+    "stance_target": "verbalized reasoning is not a faithful account of what actually drives the model's decision",
+    "evidence_type": "empirical",
+    "scope_conditions": "forecasting domain, evidence ablation and diversionary injection interventions",
+    "quoted_support": "removing an influential source in the prompt often changes the model's forecast while leaving the reasoning trace untouched.",
+    "numbers": [],
+    "entities": ["chain-of-thought", "evidence ablation", "diversionary injection"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260708046-what-llm-forecasters-know-but-dont-say-probing-internal-representation"
+  },
+  {
+    "claim": "Probe activations track true behavioral shifts caused by causal interventions far better than the verbalized reasoning trace, predicting the direction of change in 84% of cases including when the CoT conceals the perturbation's influence.",
+    "stance": "supports",
+    "stance_target": "probes function as a lie-detector on top of unfaithful verbalization",
+    "evidence_type": "empirical",
+    "scope_conditions": "forecasting domain, causal ablation/injection test",
+    "quoted_support": "their activations track behavioral shifts far better than the reasoning trace does, and they also predict the direction of change in 84% of cases, including when the CoT conceals the perturbation's influence.",
+    "numbers": ["84%"],
+    "entities": ["probe", "chain-of-thought"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260708046-what-llm-forecasters-know-but-dont-say-probing-internal-representation"
+  },
+  {
+    "claim": "Forecasts are largely fixed before reasoning begins: a single pre-reasoning activation pass recovers the committed answer and confidence, and routing questions by the spread of this pre-set answer distribution saves 30-47% of generated tokens with no loss of accuracy.",
+    "stance": "supports",
+    "stance_target": "probe-derived internal signals convert into a concrete downstream deployment utility (token/cost savings via triage), not just a diagnostic AUROC number",
+    "evidence_type": "empirical",
+    "scope_conditions": "forecasting domain, forced-answering / pre-reasoning probe experiment",
+    "quoted_support": "routing questions by the spread of this pre-set answer distribution saves 30-47% of generated tokens, with no loss of accuracy.",
+    "numbers": ["30-47%"],
+    "entities": ["forced answering", "token routing/triage"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260708046-what-llm-forecasters-know-but-dont-say-probing-internal-representation"
+  },
+  {
+    "claim": "The paper positions probing internal representations as a general-purpose practical tool for calibrating, auditing, and triaging language model reasoners, explicitly generalizing beyond forecasting.",
+    "stance": "neutral",
+    "stance_target": "generality of the probe-based faithfulness-gap framing beyond a single task domain",
+    "evidence_type": "theoretical",
+    "scope_conditions": "stated as a general claim in the abstract, empirically demonstrated only in forecasting",
+    "quoted_support": "these results establish probing internal representations as a practical tool for calibrating, auditing, and triaging language model forecasters and reasoning models more broadly.",
+    "numbers": [],
+    "entities": [],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "260708046-what-llm-forecasters-know-but-dont-say-probing-internal-representation"
+  }
+]

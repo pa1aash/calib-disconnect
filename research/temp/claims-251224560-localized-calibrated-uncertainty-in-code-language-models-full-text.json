@@ -1,0 +1,104 @@
+[
+ {
+  "claim": "Probes with small supervisor models give calibrated line-level estimates of which lines a minimal repair will edit; BSS about 0.2, versus negative BSS for token probability and verbalized line ratings before scaling.",
+  "stance": "supports",
+  "stance_target": "probe beats verbal and sampled readouts at line level on code; L4 localization occupied",
+  "evidence_type": "empirical",
+  "scope_conditions": "GPT-4o and Qwen2.5-Coder-7B-Instruct as models under test",
+  "quoted_support": "Table 4 (Qwen): Line Verbalized BSS -0.72 ECE 0.43 AUC 0.71; Probe-7B BSS 0.29 ECE 0.08 AUC 0.83.",
+  "numbers": [
+   "Table 3 GPT-4o: Line Verbalized BSS -0.18 ECE 0.26 AUC 0.75; Probe-7B BSS 0.16 ECE 0.10 AUC 0.78; Probe-0.5B BSS 0.17 ECE 0.05 AUC 0.76",
+   "Table 4 Qwen: Token Prob BSS -1.18 ECE 0.54 AUC 0.55; Multisampling BSS 0.01 ECE 0.17 AUC 0.72; Probe-0.5B BSS 0.30 ECE 0.05 AUC 0.82"
+  ],
+  "entities": [
+   "Gros",
+   "Devanbu",
+   "Probe-7B"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "251224560-localized-calibrated-uncertainty-in-code-language-models-full-text",
+  "breadth": {
+   "confidence_families": "token probability, multisampling consistency, line-level verbalized reflective, white-box probes (Probe-0.5B and Probe-7B supervisors) (Tables 3-4)",
+   "model_families_and_sizes": "models under test GPT-4o and Qwen2.5-Coder-7B-Instruct; probe supervisors 0.5B and 7B (Sec 4; Tables 1-4)",
+   "base_vs_instruct": "not present (searched: base vs instruct pairs); MUT Qwen is Instruct",
+   "post_training_stages": "not present",
+   "reasoning_models": "not present (searched: reasoning)",
+   "elicitation_formats": "line-level verbalized reflective rating; token probs; multisample differencing",
+   "benchmarks": "HumanEval+ 164, MBPP+ 356, LiveCodeBench 1055, RepoCod-s 200 (Tables 1-2)",
+   "label_source": "Minimal Intent Aligning Patches: lines/tokens edited in test-verified repair by Fixer models (Sec 4)",
+   "label_independence": "labels from test-verified repairs, independent of confidence",
+   "contamination_split": "not present (LiveCodeBench used without release-date split; searched: contaminat)",
+   "calibration_metrics": "Brier Skill Score, ECE, AUC-ROC, Platt scaling (Sec 3, Tables 3-4)",
+   "granularity": "token, line, and problem level",
+   "causal_intervention": "not present (searched: steering, ablation); localization-to-repair via minimal patch labels"
+  }
+ },
+ {
+  "claim": "Dataset construction: 1775 problems per MUT; GPT-4o solves 822 (46%), Qwen2.5-Coder-7B-Instruct 608 (34%); repairs produce minimal patches used as localization labels.",
+  "stance": "supports",
+  "stance_target": "repair-derived localization labels",
+  "evidence_type": "empirical",
+  "scope_conditions": "Tables 1-2",
+  "quoted_support": "Table 1 totals: 1775 problems, 822 (46%) pass, 953 fail; Table 2 Qwen: 608 (34%) pass, 1167 fail.",
+  "numbers": [
+   "1775",
+   "822 (46%)",
+   "608 (34%)",
+   "LiveCodeBench pass 34% GPT-4o, 21% Qwen"
+  ],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "251224560-localized-calibrated-uncertainty-in-code-language-models-full-text",
+  "breadth": {
+   "confidence_families": "token probability, multisampling consistency, line-level verbalized reflective, white-box probes (Probe-0.5B and Probe-7B supervisors) (Tables 3-4)",
+   "model_families_and_sizes": "models under test GPT-4o and Qwen2.5-Coder-7B-Instruct; probe supervisors 0.5B and 7B (Sec 4; Tables 1-4)",
+   "base_vs_instruct": "not present (searched: base vs instruct pairs); MUT Qwen is Instruct",
+   "post_training_stages": "not present",
+   "reasoning_models": "not present (searched: reasoning)",
+   "elicitation_formats": "line-level verbalized reflective rating; token probs; multisample differencing",
+   "benchmarks": "HumanEval+ 164, MBPP+ 356, LiveCodeBench 1055, RepoCod-s 200 (Tables 1-2)",
+   "label_source": "Minimal Intent Aligning Patches: lines/tokens edited in test-verified repair by Fixer models (Sec 4)",
+   "label_independence": "labels from test-verified repairs, independent of confidence",
+   "contamination_split": "not present (LiveCodeBench used without release-date split; searched: contaminat)",
+   "calibration_metrics": "Brier Skill Score, ECE, AUC-ROC, Platt scaling (Sec 3, Tables 3-4)",
+   "granularity": "token, line, and problem level",
+   "causal_intervention": "not present (searched: steering, ablation); localization-to-repair via minimal patch labels"
+  }
+ },
+ {
+  "claim": "Authors warn ECE can be misleadingly low under bucket collapse, motivating Brier Skill Score alongside ECE.",
+  "stance": "supports",
+  "stance_target": "metric choice for calibration",
+  "evidence_type": "theoretical",
+  "scope_conditions": "Sec 3",
+  "quoted_support": "it should be noted that ECE can give misleadingly low values when the models suffer 'bucket collapse', i.e., always produce the base-rate confidence for every prediction",
+  "numbers": [],
+  "entities": [
+   "BSS",
+   "ECE"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "251224560-localized-calibrated-uncertainty-in-code-language-models-full-text",
+  "breadth": {
+   "confidence_families": "token probability, multisampling consistency, line-level verbalized reflective, white-box probes (Probe-0.5B and Probe-7B supervisors) (Tables 3-4)",
+   "model_families_and_sizes": "models under test GPT-4o and Qwen2.5-Coder-7B-Instruct; probe supervisors 0.5B and 7B (Sec 4; Tables 1-4)",
+   "base_vs_instruct": "not present (searched: base vs instruct pairs); MUT Qwen is Instruct",
+   "post_training_stages": "not present",
+   "reasoning_models": "not present (searched: reasoning)",
+   "elicitation_formats": "line-level verbalized reflective rating; token probs; multisample differencing",
+   "benchmarks": "HumanEval+ 164, MBPP+ 356, LiveCodeBench 1055, RepoCod-s 200 (Tables 1-2)",
+   "label_source": "Minimal Intent Aligning Patches: lines/tokens edited in test-verified repair by Fixer models (Sec 4)",
+   "label_independence": "labels from test-verified repairs, independent of confidence",
+   "contamination_split": "not present (LiveCodeBench used without release-date split; searched: contaminat)",
+   "calibration_metrics": "Brier Skill Score, ECE, AUC-ROC, Platt scaling (Sec 3, Tables 3-4)",
+   "granularity": "token, line, and problem level",
+   "causal_intervention": "not present (searched: steering, ablation); localization-to-repair via minimal patch labels"
+  }
+ }
+]

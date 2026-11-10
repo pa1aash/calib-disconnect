@@ -1,0 +1,84 @@
+{
+ "source_note_id": "260517029-task-abstention-for-large-language-models-in-code-generation-full-text",
+ "claims": [
+  {
+   "claim": "CODEREFUSER, built on Learn-Then-Test, decides abstention using execution-consistency cluster ratio or semantic entropy over LLM-generated tests, with oracle tests used only in calibration.",
+   "stance": "supports",
+   "stance_target": "L3: risk-controlled abstention with execution-based signals on code is OCCUPIED",
+   "evidence_type": "empirical",
+   "scope_conditions": "HumanEval, MBPP; DeepSeek-Coder-33B, Qwen2.5-Coder-32B, CodeLlama-7B, WizardCoder-33B; alpha=0.2, delta=0.1, k=3",
+   "quoted_support": "At TEST/DEPLOYMENT time, the method uses ONLY LLM-generated test cases and execution-consistency clustering (vault full-text note extraction)",
+   "numbers": [
+    "26.5 pp precision",
+    "11.9 pp F1",
+    "alpha 0.2",
+    "delta 0.1",
+    "60/40 split",
+    "N=64"
+   ],
+   "entities": [
+    "CODEREFUSER",
+    "Learn-Then-Test",
+    "Angelopoulos"
+   ],
+   "time_period": "2026",
+   "region": "global",
+   "confidence": "high",
+   "source_note_id": "260517029-task-abstention-for-large-language-models-in-code-generation-full-text"
+  },
+  {
+   "claim": "At alpha=0.2 on MBPP with Qwen2.5-Coder-32B the CR variant abstains on about 30% of tasks versus over 80% for the PPL baseline.",
+   "stance": "supports",
+   "stance_target": "L3: coverage at a risk level",
+   "evidence_type": "empirical",
+   "scope_conditions": "Fig. 3",
+   "quoted_support": "needs to abstain on only ~30% of tasks ... whereas the PPL static baseline must abstain on over 80% (vault note extraction)",
+   "numbers": [
+    "~30%",
+    "over 80%"
+   ],
+   "entities": [
+    "PPL"
+   ],
+   "time_period": "2026",
+   "region": "global",
+   "confidence": "medium",
+   "source_note_id": "260517029-task-abstention-for-large-language-models-in-code-generation-full-text"
+  },
+  {
+   "claim": "Table 1: HumanEval Qwen2.5-Coder Execution baseline precision 24.29 / F1 38.23 versus CR+STDF 73.33 / 53.85; CodeLlama 72.15/83.82 versus 91.67/91.70.",
+   "stance": "supports",
+   "stance_target": "L3",
+   "evidence_type": "empirical",
+   "scope_conditions": "Precision/F1 of the abstention decision against a 256-sample oracle label",
+   "quoted_support": "Table 1 rows as extracted in the vault note",
+   "numbers": [
+    "73.33",
+    "53.85",
+    "91.67",
+    "91.70"
+   ],
+   "entities": [],
+   "time_period": "2026",
+   "region": "global",
+   "confidence": "high",
+   "source_note_id": "260517029-task-abstention-for-large-language-models-in-code-generation-full-text"
+  }
+ ],
+ "breadth": {
+  "confidence_families": "execution-consistency cluster ratio, cluster-distribution semantic entropy, PPL, NLI, CLM, CodeHalu baselines",
+  "model_families_and_sizes": "DeepSeek-Coder-33B, Qwen2.5-Coder-32B, CodeLlama-7B, WizardCoder-33B-V1.1",
+  "base_vs_instruct": "not present (searched: base, instruct)",
+  "post_training_stages": "not present",
+  "reasoning_models": "not present",
+  "elicitation_formats": "not present (no verbal elicitation)",
+  "benchmarks": "HumanEval 164, MBPP ~1000, Python only",
+  "label_source": "oracle tests on 256 samples give the H@k label",
+  "label_independence": "oracle tests independent of generated tests at deployment",
+  "contamination_split": "60/40 calibration/test; cross-dataset MBPP to HumanEval transfer; no release-date control",
+  "calibration_metrics": "admission risk vs alpha, Precision, F1 (Table 1, Fig 2)",
+  "granularity": "whole-task abstention",
+  "causal_intervention": "not present (searched: probe, steering)"
+ },
+ "note": "existing vault note re-tagged; prior session note body 4,862 words"
+}

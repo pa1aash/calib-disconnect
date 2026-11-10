@@ -7,38 +7,25 @@ tags:
 - hidden-state-probe
 - foundational
 - code-llm-probe-verbalize-gap-3d8995
+- code-llm-confidence-positioning-d82d00
+- duplicate-abstract-only
 created: '2026-07-17T18:36:47.398594Z'
-updated: '2026-07-20T06:36:10.337657Z'
+updated: '2026-11-09T23:28:30.488982Z'
 source: https://arxiv.org/abs/2304.13734
 source_domain: arxiv.org
 fetched_at: '2026-07-17T18:36:47.398167Z'
 fetch_provider: builtin
-status: draft
+status: deprecated
 type: note
 tier: institutional
 content_type: paper
 deprecated: false
-summary: 'Azaria & Mitchell (EMNLP Findings 2023): foundational general-domain (not
-  code-specific) hidden-state probing paper, proposes SAPLMA -- a classifier trained
-  on the LLM''s internal activations at a given layer to predict whether a generated/given
-  statement is true or false, tested on true/false factual statement datasets across
-  six topics. Demonstrates hidden states can reveal truthfulness even for statements
-  the model itself generated (i.e., not just externally-provided text), and that this
-  signal is somewhat modular/separable from the generation process itself. This is
-  the earliest widely-cited general-purpose precedent for "internal states predict
-  correctness," cited by both AutoProbe and Openia as foundational motivation for
-  applying the same idea to code.
-
-
-  Relevance: establishes the general (non-code) version of the internal-signal-exists
-  thesis (684+ citations per Google Scholar), predating and motivating the code-specific
-  AutoProbe/Openia line of work. Useful as a citation anchor for "internal states
-  encode correctness" claims broadly, but does not itself address code generation,
-  AUROC-vs-sampling comparisons, or single-pass-vs-n-sample cost tradeoffs -- those
-  are the code-specific contributions of AutoProbe/Openia. Abstract-only fetch; full
-  paper (SAPLMA architecture, per-topic AUROC/accuracy numbers, layer selection) not
-  pulled since general-domain probing accuracy numbers are less load-bearing for the
-  code-specific AAAI-27 headline than the code papers already covered.'
+summary: 'FULL-TEXT (arXiv PDF extracted locally; vault note also present). Azaria
+  and Mitchell SAPLMA: classifier on hidden-layer activations of OPT-6.7b and LLaMA2
+  labeling statements true or false; 71% to 83% average accuracy depending on base
+  model; beats few-shot prompting and sentence-probability baselines. Text-factual
+  domain, not code; canonical prior for hidden-state probing (L2 background, not an
+  occupant for code).'
 ---
 
 *Suggested by [[model-agnostic-correctness-assessment-for-llm-generated-code-via-dynamic-interna]] — foundational hidden-state truthfulness probing paper cited by AutoProbe as prior white-box work*

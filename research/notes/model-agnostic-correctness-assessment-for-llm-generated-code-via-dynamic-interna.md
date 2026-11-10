@@ -7,61 +7,24 @@ tags:
 - internal-probing
 - hidden-state-probe
 - code-correctness-detection
+- code-llm-confidence-positioning-d82d00
+- close-occupant
 created: '2026-07-17T18:31:01.774857Z'
-updated: '2026-07-17T18:32:54.772871Z'
+updated: '2026-11-09T23:27:43.624859Z'
 source: https://arxiv.org/html/2510.02934
 source_domain: arxiv.org
 fetched_at: '2026-07-17T18:31:01.774050Z'
 fetch_provider: builtin
-status: draft
+status: review
 type: note
 tier: institutional
 content_type: paper
 deprecated: false
-summary: 'AUTOPROBE (Vu et al., Oct 2025, VNU): dynamic attention-weighted probe over
-  LLM hidden states for code correctness assessment, replacing prior white-box SOTA
-  Openia (Sun et al.) which uses only last-token/last-layer representation. Tests
-  6 open code LLMs (DeepSeek-Coder-1.3B/6.7B, CodeLlama-7B/13B, Magicoder-7B, CodeGemma-7B)
-  on HumanEval, MBPP, DevEval (functionality/compilability) and SecurityEval, CWEval,
-  CODEGUARD+, SALLM (security), using 10 samples/task to build labeled train/test
-  sets, then a probing classifier trained on internal states extracted during ONE
-  generation pass (no extra forward passes; extraction runs concurrently with generation,
-  adding no latency).
-
-
-  KEY QUESTION ANSWER: the cheap single-pass internal probe does NOT match the near-perfect
-  signal obtainable from repeated sampling. On independent-unit (HumanEval/MBPP-style)
-  functional correctness, AutoProbe accuracy is only 0.63-0.77 across the six models
-  (DeepSeek-1.3B 0.63, DeepSeek-6.7B 0.71, CodeLlama-7B 0.68, CodeLlama-13B 0.68,
-  Magicoder-7B 0.69, CodeGemma-7B 0.65) -- far below AUROC 0.987 from n-sample pass@k-style
-  repeated sampling cited in the Calibration Disconnect base paper. Even the exhaustive
-  "Oracle" upper bound (best possible layer/token choice per model) only reaches 0.66-0.77
-  accuracy on functionality independent-unit. Interestingly, External LLM-as-Judge
-  (verbalized, using o4-mini) actually BEATS all representation-based probes on independent-unit
-  functionality, averaging 0.94 accuracy (up to 0.97 on CodeLlama-7B) -- but its performance
-  collapses on repo-level code (0.70-0.80), where AutoProbe (0.82 avg) becomes the
-  best method and even exceeds Oracle in some cases. For security assessment, AutoProbe
-  beats Openia by up to 18% (e.g., 0.88 vs 0.75 accuracy on CodeLlama-13B) and gets
-  close to or exceeds Oracle. Inference cost is 0.6ms per code unit (essentially free)
-  vs ~83 minutes to train black-box CodeBERT/CodeT5+ baselines. Boundary-aware token
-  sampling (first/last token, first/last code token) at a subsampled set of layers
-  achieves F1 0.76, beating full-token sampling by 9% while cutting memory 18x and
-  training time >100x.
-
-
-  Central hole this exposes for the Calibration Disconnect extension: single-pass
-  hidden-state probing is a genuinely cheap (single forward pass, sub-millisecond
-  inference) EXPRESSED-uncertainty candidate, but on the exact HumanEval/MBPP-style
-  task the base paper measures 0.987 AUROC via sampling, single-pass probes plateau
-  far below that (max ~0.77 accuracy, and Oracle itself caps at ~0.77) -- suggesting
-  a genuine architectural/informational gap, not just an undertrained probe, for standalone-function
-  code. The one place a cheap proxy rivals expensive sampling is repo-level code,
-  where probes gain (not verbalization) and LLM-as-judge loses badly, hinting that
-  the internal-to-expressed gap might be closed differently depending on code complexity/context
-  length. Also notable: verbalized confidence (LLM-as-judge) is NOT the weak signal
-  the base paper implies in some regimes -- it strongly beats probing on simple, self-contained
-  functions, which complicates the "no expressed interface works" framing and should
-  be checked against the original paper''s exact benchmark/model setup.'
+summary: FULL TEXT (Vu et al. 2025, AutoProbe). Attention-weighted dynamic hidden-state
+  probe for compilability, functionality, security of generated code across six open
+  code LLMs on HumanEval, MBPP, DevEval and security sets; baselines include Openia
+  and external o4-mini LLM-as-judge. Prior art for probe-for-code-correctness at whole-solution
+  granularity.
 ---
 
 *Suggested by [[251002934-model-agnostic-correctness-assessment-for-llm-generated-code-via-dynam]] — full HTML text needed for exact AUROC/accuracy numbers*

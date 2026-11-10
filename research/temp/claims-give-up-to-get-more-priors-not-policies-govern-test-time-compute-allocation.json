@@ -1,0 +1,205 @@
+[
+ {
+  "claim": "The best published difficulty-proportional allocation rule captures half or more of the oracle gain over uniform allocation on workloads the model mostly solves, but at most 13% on hard workloads even when given true pass rates; on CodeContests with Llama-3-8B (mean p 0.021) IAS captures 1% and with Llama-3-70B (mean p 0.074) 2%.",
+  "stance": "supports",
+  "stance_target": "L3 budget-routing vs oracle is partly occupied for pass-rate signals",
+  "evidence_type": "empirical",
+  "scope_conditions": "Offline replay; Table 1, u=16 attempts/problem",
+  "quoted_support": "On public math, code and formal-proof samples, the best published difficulty-proportional rule captures half or more of the oracle gain on benchmarks the model mostly solves, but at most 13% on hard workloads, even given true pass rates.",
+  "numbers": [
+   "at most 13%",
+   "CodeContests Llama-3-8B N=140 mean p 0.021 oracle gain +4.8 pts IAS 1%",
+   "CodeContests Llama-3-70B N=140 mean p 0.074 +6.0 pts IAS 2%"
+  ],
+  "entities": [
+   "IAS",
+   "Thompson Sampling",
+   "round-robin"
+  ],
+  "time_period": "2026-11",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "Difficulty/pass-rate priors (true pass rate, history prior from related model, TF-IDF, LLM-rated difficulty, embeddings, NLL); not verbal confidence or probes (Sec 4-5, Table 3)",
+   "model_families_and_sizes": "Open models 0.5B to 70B (Pythia, Llama-3 8B/70B, Gemma-2B, Qwen2.5), stored GPT-4 (PRM800K) and GPT-4o-mini samples (Intro)",
+   "base_vs_instruct": "not present (searched: base vs instruct comparison; 0 hits relevant)",
+   "post_training_stages": "not present (searched: post-training stage comparison)",
+   "reasoning_models": "not present as experiment; Intro: 'whether the same magnitudes hold for frontier reasoning models remains open'",
+   "elicitation_formats": "not present (searched: verbalized: 0 hits; probe: 2 hits non-experimental)",
+   "benchmarks": "MATH, GSM8K, PRM800K MATH, CodeContests (Llama-3-8B/70B/Gemma-2B), formal proofs (Table 1, Intro)",
+   "label_source": "Programmatic verifier / stored pass-fail samples (Sec 5); unit tests for code",
+   "label_independence": "Verifier error model analyzed: gain needs false acceptance rate well below pass rate (Sec 5)",
+   "contamination_split": "not present (searched: contaminat 0 hits, LiveCodeBench 0 hits)",
+   "calibration_metrics": "Spearman rank correlation of prior with true pass rate (Table 3); captured share of oracle gain (Table 1); solved share",
+   "granularity": "Per problem (input) attempt allocation",
+   "causal_intervention": "not present (offline replay of stored samples; plus fresh Qwen2.5 samples)"
+  },
+  "source_note_id": "give-up-to-get-more-priors-not-policies-govern-test-time-compute-allocation"
+ },
+ {
+  "claim": "With a verifier and a prior from a related model's past runs on the same inputs, Thompson Sampling raises the solved share on the hardest workload from 14% to 27%; without such a prior no tested policy beats round-robin, and the gain vanishes between prior rank correlations of about 0.3 and 0.55.",
+  "stance": "supports",
+  "stance_target": "information (prior quality), not policy, drives routing gain",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec 5; verifier required; novel inputs get no gain",
+  "quoted_support": "With a verifier and a prior from a related model’s past runs on the same inputs, Thompson Sampling raises the solved share on the hardest workload from 14% to 27%; without such a prior, no policy we tested beats round-robin.",
+  "numbers": [
+   "14% to 27%",
+   "0.3 to 0.55",
+   "Spearman 0.05-0.23 for TF-IDF text regression",
+   "0.10-0.46 for LLM features"
+  ],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "Difficulty/pass-rate priors (true pass rate, history prior from related model, TF-IDF, LLM-rated difficulty, embeddings, NLL); not verbal confidence or probes (Sec 4-5, Table 3)",
+   "model_families_and_sizes": "Open models 0.5B to 70B (Pythia, Llama-3 8B/70B, Gemma-2B, Qwen2.5), stored GPT-4 (PRM800K) and GPT-4o-mini samples (Intro)",
+   "base_vs_instruct": "not present (searched: base vs instruct comparison; 0 hits relevant)",
+   "post_training_stages": "not present (searched: post-training stage comparison)",
+   "reasoning_models": "not present as experiment; Intro: 'whether the same magnitudes hold for frontier reasoning models remains open'",
+   "elicitation_formats": "not present (searched: verbalized: 0 hits; probe: 2 hits non-experimental)",
+   "benchmarks": "MATH, GSM8K, PRM800K MATH, CodeContests (Llama-3-8B/70B/Gemma-2B), formal proofs (Table 1, Intro)",
+   "label_source": "Programmatic verifier / stored pass-fail samples (Sec 5); unit tests for code",
+   "label_independence": "Verifier error model analyzed: gain needs false acceptance rate well below pass rate (Sec 5)",
+   "contamination_split": "not present (searched: contaminat 0 hits, LiveCodeBench 0 hits)",
+   "calibration_metrics": "Spearman rank correlation of prior with true pass rate (Table 3); captured share of oracle gain (Table 1); solved share",
+   "granularity": "Per problem (input) attempt allocation",
+   "causal_intervention": "not present (offline replay of stored samples; plus fresh Qwen2.5 samples)"
+  },
+  "source_note_id": "give-up-to-get-more-priors-not-policies-govern-test-time-compute-allocation"
+ },
+ {
+  "claim": "Cheap priors (text regression, LLM-derived features, zero-shot LLM difficulty judgments, dissimilar-model history) correlate weakly with true pass rates and give no gain over round-robin (at most 1.7 points at 16 attempts per problem).",
+  "stance": "supports",
+  "stance_target": "a model-internal or verbal confidence prior must reach rank correlation above about 0.3-0.55 to help; verbal/probe confidence untested here",
+  "evidence_type": "empirical",
+  "scope_conditions": "Table 3",
+  "quoted_support": "Text regressions, LLM-derived features and a dissimilar model’s history all correlate weakly with true pass rates and give no gain, and fresh proxy samples lose because their cost is charged.",
+  "numbers": [
+   "<=1.7 points at 16 attempts per problem",
+   "TF-IDF Spearman 0.05-0.23"
+  ],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "Difficulty/pass-rate priors (true pass rate, history prior from related model, TF-IDF, LLM-rated difficulty, embeddings, NLL); not verbal confidence or probes (Sec 4-5, Table 3)",
+   "model_families_and_sizes": "Open models 0.5B to 70B (Pythia, Llama-3 8B/70B, Gemma-2B, Qwen2.5), stored GPT-4 (PRM800K) and GPT-4o-mini samples (Intro)",
+   "base_vs_instruct": "not present (searched: base vs instruct comparison; 0 hits relevant)",
+   "post_training_stages": "not present (searched: post-training stage comparison)",
+   "reasoning_models": "not present as experiment; Intro: 'whether the same magnitudes hold for frontier reasoning models remains open'",
+   "elicitation_formats": "not present (searched: verbalized: 0 hits; probe: 2 hits non-experimental)",
+   "benchmarks": "MATH, GSM8K, PRM800K MATH, CodeContests (Llama-3-8B/70B/Gemma-2B), formal proofs (Table 1, Intro)",
+   "label_source": "Programmatic verifier / stored pass-fail samples (Sec 5); unit tests for code",
+   "label_independence": "Verifier error model analyzed: gain needs false acceptance rate well below pass rate (Sec 5)",
+   "contamination_split": "not present (searched: contaminat 0 hits, LiveCodeBench 0 hits)",
+   "calibration_metrics": "Spearman rank correlation of prior with true pass rate (Table 3); captured share of oracle gain (Table 1); solved share",
+   "granularity": "Per problem (input) attempt allocation",
+   "causal_intervention": "not present (offline replay of stored samples; plus fresh Qwen2.5 samples)"
+  },
+  "source_note_id": "give-up-to-get-more-priors-not-policies-govern-test-time-compute-allocation"
+ },
+ {
+  "claim": "The gain requires a verifier whose false acceptance rate is well below the workload pass rate: it survives 20% false rejections but all but vanishes at a 5% false acceptance rate.",
+  "stance": "supports",
+  "stance_target": "verifier-quality dependency relevant to self-written tests (L4) and execution budgets (L3)",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec 5 verifier-error model",
+  "quoted_support": "it survives 20% false rejections and charging attempts by length, but it all but vanishes at a 5% false acceptance rate",
+  "numbers": [
+   "20% false rejections",
+   "5% false acceptance"
+  ],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "Difficulty/pass-rate priors (true pass rate, history prior from related model, TF-IDF, LLM-rated difficulty, embeddings, NLL); not verbal confidence or probes (Sec 4-5, Table 3)",
+   "model_families_and_sizes": "Open models 0.5B to 70B (Pythia, Llama-3 8B/70B, Gemma-2B, Qwen2.5), stored GPT-4 (PRM800K) and GPT-4o-mini samples (Intro)",
+   "base_vs_instruct": "not present (searched: base vs instruct comparison; 0 hits relevant)",
+   "post_training_stages": "not present (searched: post-training stage comparison)",
+   "reasoning_models": "not present as experiment; Intro: 'whether the same magnitudes hold for frontier reasoning models remains open'",
+   "elicitation_formats": "not present (searched: verbalized: 0 hits; probe: 2 hits non-experimental)",
+   "benchmarks": "MATH, GSM8K, PRM800K MATH, CodeContests (Llama-3-8B/70B/Gemma-2B), formal proofs (Table 1, Intro)",
+   "label_source": "Programmatic verifier / stored pass-fail samples (Sec 5); unit tests for code",
+   "label_independence": "Verifier error model analyzed: gain needs false acceptance rate well below pass rate (Sec 5)",
+   "contamination_split": "not present (searched: contaminat 0 hits, LiveCodeBench 0 hits)",
+   "calibration_metrics": "Spearman rank correlation of prior with true pass rate (Table 3); captured share of oracle gain (Table 1); solved share",
+   "granularity": "Per problem (input) attempt allocation",
+   "causal_intervention": "not present (offline replay of stored samples; plus fresh Qwen2.5 samples)"
+  },
+  "source_note_id": "give-up-to-get-more-priors-not-policies-govern-test-time-compute-allocation"
+ },
+ {
+  "claim": "A survey of 221 LLM allocation papers finds at least 13 (5.9%) give the hardest inputs the most attempts, with 4 more borderline; one surveyed rule samples until a confidence threshold is met so low-confidence inputs consume more samples.",
+  "stance": "neutral",
+  "stance_target": "literature-map for L3",
+  "evidence_type": "statistical",
+  "scope_conditions": "Sec 3; LLM-assisted coding, authors treat 13 as lower bound",
+  "quoted_support": "Thirteen of the 221 papers (5.9%) meet this strict definition after an LLM-assisted, author-reviewed check of every candidate against its full text, and four more are borderline (17, or 7.7%).",
+  "numbers": [
+   "221 papers",
+   "13 (5.9%)",
+   "3,016 unique records",
+   "1,269",
+   "98 allocate repeated attempts"
+  ],
+  "entities": [
+   "Huang et al. 2025",
+   "Park et al. 2025",
+   "Damani et al. 2025"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "Difficulty/pass-rate priors (true pass rate, history prior from related model, TF-IDF, LLM-rated difficulty, embeddings, NLL); not verbal confidence or probes (Sec 4-5, Table 3)",
+   "model_families_and_sizes": "Open models 0.5B to 70B (Pythia, Llama-3 8B/70B, Gemma-2B, Qwen2.5), stored GPT-4 (PRM800K) and GPT-4o-mini samples (Intro)",
+   "base_vs_instruct": "not present (searched: base vs instruct comparison; 0 hits relevant)",
+   "post_training_stages": "not present (searched: post-training stage comparison)",
+   "reasoning_models": "not present as experiment; Intro: 'whether the same magnitudes hold for frontier reasoning models remains open'",
+   "elicitation_formats": "not present (searched: verbalized: 0 hits; probe: 2 hits non-experimental)",
+   "benchmarks": "MATH, GSM8K, PRM800K MATH, CodeContests (Llama-3-8B/70B/Gemma-2B), formal proofs (Table 1, Intro)",
+   "label_source": "Programmatic verifier / stored pass-fail samples (Sec 5); unit tests for code",
+   "label_independence": "Verifier error model analyzed: gain needs false acceptance rate well below pass rate (Sec 5)",
+   "contamination_split": "not present (searched: contaminat 0 hits, LiveCodeBench 0 hits)",
+   "calibration_metrics": "Spearman rank correlation of prior with true pass rate (Table 3); captured share of oracle gain (Table 1); solved share",
+   "granularity": "Per problem (input) attempt allocation",
+   "causal_intervention": "not present (offline replay of stored samples; plus fresh Qwen2.5 samples)"
+  },
+  "source_note_id": "give-up-to-get-more-priors-not-policies-govern-test-time-compute-allocation"
+ },
+ {
+  "claim": "The paper explicitly makes no claim about learned verifiers, novel user queries, open-ended generation, or frontier reasoning models.",
+  "stance": "neutral",
+  "stance_target": "scope limits leave verbal/probe-confidence routing unexamined",
+  "evidence_type": "expert-opinion",
+  "scope_conditions": "Intro",
+  "quoted_support": "We make no claim about novel user queries, learned verifiers or open-ended generation, and whether the same magnitudes hold for frontier reasoning models remains open.",
+  "numbers": [],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "Difficulty/pass-rate priors (true pass rate, history prior from related model, TF-IDF, LLM-rated difficulty, embeddings, NLL); not verbal confidence or probes (Sec 4-5, Table 3)",
+   "model_families_and_sizes": "Open models 0.5B to 70B (Pythia, Llama-3 8B/70B, Gemma-2B, Qwen2.5), stored GPT-4 (PRM800K) and GPT-4o-mini samples (Intro)",
+   "base_vs_instruct": "not present (searched: base vs instruct comparison; 0 hits relevant)",
+   "post_training_stages": "not present (searched: post-training stage comparison)",
+   "reasoning_models": "not present as experiment; Intro: 'whether the same magnitudes hold for frontier reasoning models remains open'",
+   "elicitation_formats": "not present (searched: verbalized: 0 hits; probe: 2 hits non-experimental)",
+   "benchmarks": "MATH, GSM8K, PRM800K MATH, CodeContests (Llama-3-8B/70B/Gemma-2B), formal proofs (Table 1, Intro)",
+   "label_source": "Programmatic verifier / stored pass-fail samples (Sec 5); unit tests for code",
+   "label_independence": "Verifier error model analyzed: gain needs false acceptance rate well below pass rate (Sec 5)",
+   "contamination_split": "not present (searched: contaminat 0 hits, LiveCodeBench 0 hits)",
+   "calibration_metrics": "Spearman rank correlation of prior with true pass rate (Table 3); captured share of oracle gain (Table 1); solved share",
+   "granularity": "Per problem (input) attempt allocation",
+   "causal_intervention": "not present (offline replay of stored samples; plus fresh Qwen2.5 samples)"
+  },
+  "source_note_id": "give-up-to-get-more-priors-not-policies-govern-test-time-compute-allocation"
+ }
+]

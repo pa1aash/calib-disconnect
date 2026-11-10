@@ -1,0 +1,109 @@
+[
+ {
+  "claim": "Distance-aware sample-based uncertainty (SDE, DSDE) discriminates pass@1 failures with AUROC above 0.8 on LiveCodeBench across four closed models.",
+  "stance": "supports",
+  "stance_target": "L1: execution-graded code-confidence evaluation is partly occupied for sampled readouts",
+  "evidence_type": "empirical",
+  "scope_conditions": "LiveCodeBench Python; closed-source API models plus DeepSeek-Coder-V2; Sec 4.2, Table 2",
+  "quoted_support": "DSDE achieves AUROC above 0.8 in every setting, and both metrics correlate negatively with partial_pass@1",
+  "numbers": [
+   "AUROC > 0.8",
+   "runtime reduction 48-79%"
+  ],
+  "entities": [
+   "SDE",
+   "DSDE",
+   "DiffTrust",
+   "HonestCoder",
+   "Semantic Entropy",
+   "LiveCodeBench"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "using-semantic-distance-to-estimate-uncertainty-in-llm-based-code-generation",
+  "breadth": {
+   "confidence_families": "sample-based behavioural disagreement (SDE, DSDE) vs DiffTrust, HonestCoder, Semantic Entropy baselines (Sec 4.2)",
+   "model_families_and_sizes": "GPT-3.5-Turbo, GPT-4o-mini, Gemini-2.5-Flash-Lite, Claude Opus 4.5, DeepSeek-Coder-V2 (Sec 4.1); sizes undisclosed",
+   "base_vs_instruct": "not present (searched: base, instruct)",
+   "post_training_stages": "not present (searched: full text keyword scan for post training stages)",
+   "reasoning_models": "not present as a factor (Claude Opus 4.5 and Gemini 2.5 used; thinking setting not stated in scanned text)",
+   "elicitation_formats": "sampling K=10 at T=0.6, execution on N=10 fuzz inputs (Sec 4.1)",
+   "benchmarks": "LiveCodeBench, MBPP, HumanEval-X, BigCodeBench (Sec 4.1)",
+   "label_source": "pass@1 and partial_pass@1 from test execution (Sec 4.1)",
+   "label_independence": "uncertainty uses fuzz-input execution of samples, labels use benchmark tests; no separate independence analysis scanned",
+   "contamination_split": "not present (searched: contaminat, release date, cutoff; only LiveCodeBench citation as 'contamination free')",
+   "calibration_metrics": "AUROC, Pearson, Spearman (Sec 4.1); no ECE",
+   "granularity": "whole-program (per task)",
+   "causal_intervention": "not present (no activation intervention)"
+  }
+ },
+ {
+  "claim": "The paper's models and pass@1 rates: GPT-3.5-Turbo 30.83%, GPT-4o-mini 49.24%, Gemini-2.5-Flash-Lite 60.53%, Claude Opus 4.5 82.73%, DeepSeek-Coder-V2 38.14% on LiveCodeBench.",
+  "stance": "neutral",
+  "stance_target": "Breadth of prior code-confidence evaluation",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec 4.1",
+  "quoted_support": "GPT-3.5-Turbo (low), GPT-4o-mini (medium), Gemini-2.5-Flash-Lite (medium), and Claude Opus 4.5 (high), with respective pass@1 success rates of 30.83%, 49.24%, 60.53%, and 82.73% on LiveCodeBench",
+  "numbers": [
+   "30.83%",
+   "49.24%",
+   "60.53%",
+   "82.73%",
+   "38.14%"
+  ],
+  "entities": [
+   "LiveCodeBench"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "using-semantic-distance-to-estimate-uncertainty-in-llm-based-code-generation",
+  "breadth": {
+   "confidence_families": "sample-based behavioural disagreement (SDE, DSDE) vs DiffTrust, HonestCoder, Semantic Entropy baselines (Sec 4.2)",
+   "model_families_and_sizes": "GPT-3.5-Turbo, GPT-4o-mini, Gemini-2.5-Flash-Lite, Claude Opus 4.5, DeepSeek-Coder-V2 (Sec 4.1); sizes undisclosed",
+   "base_vs_instruct": "not present (searched: base, instruct)",
+   "post_training_stages": "not present (searched: full text keyword scan for post training stages)",
+   "reasoning_models": "not present as a factor (Claude Opus 4.5 and Gemini 2.5 used; thinking setting not stated in scanned text)",
+   "elicitation_formats": "sampling K=10 at T=0.6, execution on N=10 fuzz inputs (Sec 4.1)",
+   "benchmarks": "LiveCodeBench, MBPP, HumanEval-X, BigCodeBench (Sec 4.1)",
+   "label_source": "pass@1 and partial_pass@1 from test execution (Sec 4.1)",
+   "label_independence": "uncertainty uses fuzz-input execution of samples, labels use benchmark tests; no separate independence analysis scanned",
+   "contamination_split": "not present (searched: contaminat, release date, cutoff; only LiveCodeBench citation as 'contamination free')",
+   "calibration_metrics": "AUROC, Pearson, Spearman (Sec 4.1); no ECE",
+   "granularity": "whole-program (per task)",
+   "causal_intervention": "not present (no activation intervention)"
+  }
+ },
+ {
+  "claim": "Method requires neither model internals nor LLM-as-judge calls, i.e. it is a black-box sampled readout and says nothing about hidden-state probes.",
+  "stance": "supports",
+  "stance_target": "L2 not occupied by this paper",
+  "evidence_type": "empirical",
+  "scope_conditions": "Abstract",
+  "quoted_support": "The method is practical: it requires neither model internals nor LLM-as-judge calls",
+  "numbers": [],
+  "entities": [
+   "semantic distance"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "using-semantic-distance-to-estimate-uncertainty-in-llm-based-code-generation",
+  "breadth": {
+   "confidence_families": "sample-based behavioural disagreement (SDE, DSDE) vs DiffTrust, HonestCoder, Semantic Entropy baselines (Sec 4.2)",
+   "model_families_and_sizes": "GPT-3.5-Turbo, GPT-4o-mini, Gemini-2.5-Flash-Lite, Claude Opus 4.5, DeepSeek-Coder-V2 (Sec 4.1); sizes undisclosed",
+   "base_vs_instruct": "not present (searched: base, instruct)",
+   "post_training_stages": "not present (searched: full text keyword scan for post training stages)",
+   "reasoning_models": "not present as a factor (Claude Opus 4.5 and Gemini 2.5 used; thinking setting not stated in scanned text)",
+   "elicitation_formats": "sampling K=10 at T=0.6, execution on N=10 fuzz inputs (Sec 4.1)",
+   "benchmarks": "LiveCodeBench, MBPP, HumanEval-X, BigCodeBench (Sec 4.1)",
+   "label_source": "pass@1 and partial_pass@1 from test execution (Sec 4.1)",
+   "label_independence": "uncertainty uses fuzz-input execution of samples, labels use benchmark tests; no separate independence analysis scanned",
+   "contamination_split": "not present (searched: contaminat, release date, cutoff; only LiveCodeBench citation as 'contamination free')",
+   "calibration_metrics": "AUROC, Pearson, Spearman (Sec 4.1); no ECE",
+   "granularity": "whole-program (per task)",
+   "causal_intervention": "not present (no activation intervention)"
+  }
+ }
+]

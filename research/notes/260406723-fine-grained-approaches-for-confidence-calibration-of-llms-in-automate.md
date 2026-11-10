@@ -7,13 +7,15 @@ tags:
 - fine-grained-code-calibration
 - novelty-risk
 - not-probing
+- code-llm-confidence-positioning-d82d00
+- duplicate-abstract-only
 created: '2026-07-20T06:38:49.794315Z'
-updated: '2026-07-20T06:39:51.278644Z'
+updated: '2026-11-09T23:26:04.291040Z'
 source: https://arxiv.org/abs/2604.06723
 source_domain: arxiv.org
 fetched_at: '2026-07-20T06:38:49.793964Z'
 fetch_provider: builtin
-status: draft
+status: deprecated
 type: note
 tier: institutional
 content_type: paper

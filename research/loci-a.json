@@ -1,0 +1,285 @@
+{
+  "analyst_id": "a",
+  "loci": [
+    {
+      "name": "probe-advantage-real-or-confound-on-code",
+      "flavor": "dialectical",
+      "one_line": "On code with execution labels, is the probe-over-verbal advantage (Ribeiro et al. and citers) evidence of a real internal-versus-expressed disconnect, or an artifact of many-shot supervision, input-only features, and problem difficulty, and does a trained-readout / input-only / within-problem control leave a NARROW residual for L2?",
+      "rationale": "Decides L2 verdict and pivot criterion A21/A14. Cluster probe-advantage-real-or-confound: side A (hidden-error-awareness..., llms-know-more-than-they-show, 260722034 small-vlms) reports large probe margins; side B (cognitive-dissonance-why-do-language-model-outputs-disagree, can-llms-introspect-a-reality-check, measurement-validity-and-representation-dynamics) shows a fine-tuned GPT2-XL queried directly beats probing, input-only classifiers match introspective predictions, prompt-only TF-IDF matches probes in 9 of 11 cells. Both are almost entirely general-domain. On code only probing-functional-correctness-in-diffusion-language-models (step-0 probe = prompt difficulty; probe 0.677 vs log-prob 0.703 on Qwen2.5-Coder) and 260614530 (length-residualized AUC 0.842 vs 0.657) address it, and probe-vs-own-readout-on-code side B (which-signals-of-code-correctness-survive-distribution-shift: BCB->LCB probe .480 vs confidence .552) shows ties or losses. The corpus gestures at 'control-less probe wins' being the occupied part and 'controlled probe vs own readout' being the open residual; no fetched work runs the supervised-readout control on code. Residual must satisfy A21 (a label protocol/control, with a concrete code-specific reason: execution labels and function-level difficulty).",
+      "corpus_evidence": [
+        "on-llms-internal-representation-of-code-correctness",
+        "cognitive-dissonance-why-do-language-model-outputs-disagree-with-internal-repres",
+        "can-llms-introspect-a-reality-check",
+        "probing-functional-correctness-in-diffusion-language-models-full-text",
+        "which-signals-of-code-correctness-survive-distribution-shift-hidden-state-and-ca",
+        "260614530-code-correctness-linearly-decodable-from-hidden-states-before-generati",
+        "llms-know-more-than-they-show-on-the-intrinsic-representation-of-llm-hallucinati",
+        "measurement-validity-and-representation-dynamics-ofconfidence-signals-in-large-l"
+      ],
+      "opposing_positions": [
+        {
+          "position": "Real disconnect: probes beat verbal/likelihood readouts on code by large margins (Ribeiro 4 models, OPENIA 2X F1, localized line-level BSS 0.2) and carry signal not expressed.",
+          "sources": [
+            "on-llms-internal-representation-of-code-correctness",
+            "251224560-localized-calibrated-uncertainty-in-code-language-models-full-text",
+            "llms-know-more-than-they-show-on-the-intrinsic-representation-of-llm-hallucinati"
+          ]
+        },
+        {
+          "position": "Partly artifact or setting-dependent: supervised-query, input-only and prompt-only baselines match probes; on code the probe ties or loses to the model's own log-prob/entropy and to a difficulty reference.",
+          "sources": [
+            "cognitive-dissonance-why-do-language-model-outputs-disagree-with-internal-repres",
+            "can-llms-introspect-a-reality-check",
+            "probing-functional-correctness-in-diffusion-language-models-full-text",
+            "which-signals-of-code-correctness-survive-distribution-shift-hidden-state-and-ca"
+          ]
+        }
+      ],
+      "suggested_starting_urls": [
+        "https://arxiv.org/abs/2512.07404",
+        "https://arxiv.org/abs/2611.07876",
+        "https://arxiv.org/abs/2608.08266",
+        "https://arxiv.org/abs/2606.14530",
+        "https://arxiv.org/abs/2607.05188"
+      ],
+      "suggested_searches": [
+        "Ribeiro 2512.07404 baseline controls fine-tuned verbalizer vs probe",
+        "input-only baseline hidden-state probe code correctness",
+        "supervised verbalized confidence versus probe code execution label",
+        "prompt-only baseline pre-generation probe code difficulty"
+      ]
+    },
+    {
+      "name": "within-problem-vs-pooled-discrimination-on-code",
+      "flavor": "dialectical",
+      "one_line": "Do code-confidence methods (probes, verbal, sampling agreement) separate correct from incorrect samples of the same problem, or does pooled AUROC mostly measure problem difficulty, and what does that do to L1 rankings and the L2 Q13 residual?",
+      "rationale": "Decides L1 Q5/Q6 and L2 Q13 (A16), a possible CLEAN or NARROW component. Cluster pooled-vs-within-problem-discrimination: side A (which-signals-of-code-correctness-survive-distribution-shift, disentangling-task-difficulty-from-run-level-failure, hard-issue-weak-model-or-bad-run) reports >99.93% of pooled pairs are cross-problem and a run-blind difficulty oracle reaches 0.945 AUROC (SWE-bench trajectories 0.92 vs predictors 0.62). Side B (a-heckler-in-the-hidden-state, semantic-vs-structural-signals, 260614530, Ribeiro) shows within-problem signal of only 0.67-0.82 AUC on diffusion models or synthetic mutants. Scope mismatch noted by the graph: side A is mostly agents and cross-benchmark transfer, side B single-function and mutants. No fetched work reports within-problem versus pooled AUROC for verbal, probe and sampling agreement on the same function-level samples with multiple samples per problem. That decomposition would be a component of any L1/L2 paper and may be a defensible TMLR measurement contribution.",
+      "corpus_evidence": [
+        "which-signals-of-code-correctness-survive-distribution-shift-hidden-state-and-ca",
+        "disentangling-task-difficulty-from-run-level-failure-in-agent-failure-prediction",
+        "hard-issue-weak-model-or-bad-runrethinking-failure-prediction-for-coding-agents",
+        "a-heckler-in-the-hidden-statecorrectness-signals-in-diffusion-language-models",
+        "semantic-vs-structural-signals-log-probability-and-llm-as-a-judge-for-reference",
+        "260614530-code-correctness-linearly-decodable-from-hidden-states-before-generati"
+      ],
+      "opposing_positions": [
+        {
+          "position": "Mainly difficulty: pooled AUROC is dominated by cross-problem pairs and run-blind difficulty references match or beat predictors.",
+          "sources": [
+            "which-signals-of-code-correctness-survive-distribution-shift-hidden-state-and-ca",
+            "disentangling-task-difficulty-from-run-level-failure-in-agent-failure-prediction",
+            "hard-issue-weak-model-or-bad-runrethinking-failure-prediction-for-coding-agents"
+          ]
+        },
+        {
+          "position": "Real within-problem signal exists (AUC 0.67-0.82; length-residualized 0.842 vs 0.657), so predictors are not only difficulty detectors.",
+          "sources": [
+            "a-heckler-in-the-hidden-statecorrectness-signals-in-diffusion-language-models",
+            "260614530-code-correctness-linearly-decodable-from-hidden-states-before-generati",
+            "semantic-vs-structural-signals-log-probability-and-llm-as-a-judge-for-reference"
+          ]
+        }
+      ],
+      "suggested_starting_urls": [
+        "https://arxiv.org/abs/2606.14530"
+      ],
+      "suggested_searches": [
+        "within-problem AUROC stratified pooled AUROC code confidence",
+        "run-blind difficulty baseline code correctness predictor",
+        "per-problem rank correlation confidence pass@k samples code",
+        "Simpson paradox calibration code LLM problem-level"
+      ]
+    },
+    {
+      "name": "post-training-stage-and-reasoning-effects-on-code-confidence",
+      "flavor": "dialectical",
+      "one_line": "For code, where does the disconnect arise: is it absent in base models, introduced by instruction tuning/RL, or reduced by reasoning, and do existing code studies (token-level base vs instruct; code-reasoning verbal-only) leave a residual factor that is not already in general NLP?",
+      "rationale": "Decides L2 Q2/Q4/Q8-Q10 and pivot criterion A21 (is the unstudied factor's direction already established in NLP, with a code-specific reason?). post-training-and-calibration: general-NLP side A (gpt-4-technical-report Fig 8, trained-on-tokens-calibrated-on-concepts, post-training-shifts-confidence three-stage) says post-training degrades token-probability calibration, replicated; code side only characterizing-overconfident-failure (token level, instruction tuning raises certainty on failing generations, OpenCoder dAUC -0.0136 CI includes 0) and 2610.11300. Side B: mechanistic-interpretability-of-code-correctness-in-llms-via-sparse-autoencoders shows base-model directions survive instruction tuning (F1 0.821 vs 0.772), implying internal signal intact while outputs degrade, which would be the disconnect location. reasoning-and-verbal-calibration: reasoning-models-better-express-their-confidence (33 of 36 settings) and open-the-oyster (code, halves error, verbal only) versus closing-the-confidence-faithfulness-gap (Miao and Ungar, reasoning contamination, orthogonal directions) and do-large-language-models-know-what-they-are-capable-of (no better in-advance confidence on coding). No fetched work compares probes, verbal and sampling on base/instruct pairs or thinking toggles for code (coverage-gaps lists L2 Q8 as thin).",
+      "corpus_evidence": [
+        "characterizing-overconfident-failure-in-llm-based-code-generation-full-text",
+        "mechanistic-interpretability-of-code-correctness-in-llms-via-sparse-autoencoders",
+        "post-training-shifts-confidence-a-three-stage-analysis-of-how-sft-rl-and-opd-sha",
+        "gpt-4-technical-report",
+        "reasoning-models-better-express-their-confidence",
+        "open-the-oyster-empirical-evaluation-and-improvement-of-code-reasoning-confidenc",
+        "closing-the-confidence-faithfulness-gap-in-large-language-models",
+        "do-large-language-models-know-what-they-are-capable-of",
+        "thinking-out-loud-do-reasoning-models-know-when-theyre-right"
+      ],
+      "opposing_positions": [
+        {
+          "position": "Post-training and chain of thought degrade token calibration and break the readout, while reasoning models can state better-calibrated confidence; direction is established in general NLP.",
+          "sources": [
+            "gpt-4-technical-report",
+            "trained-on-tokens-calibrated-on-conceptsthe-emergence-of-semantic-calibration-in",
+            "reasoning-models-better-express-their-confidence",
+            "open-the-oyster-empirical-evaluation-and-improvement-of-code-reasoning-confidenc"
+          ]
+        },
+        {
+          "position": "Not uniform: internal correctness signal survives instruction tuning, reasoning traces hinder self-evaluation and contaminate verbalization, so effects are readout-specific and may differ on code.",
+          "sources": [
+            "mechanistic-interpretability-of-code-correctness-in-llms-via-sparse-autoencoders",
+            "closing-the-confidence-faithfulness-gap-in-large-language-models",
+            "do-large-language-models-know-what-they-are-capable-of",
+            "characterizing-overconfident-failure-in-llm-based-code-generation-full-text"
+          ]
+        }
+      ],
+      "suggested_starting_urls": [],
+      "suggested_searches": [
+        "base versus instruct code LLM calibration execution tests probe",
+        "thinking mode toggle code confidence AUROC verbalized",
+        "RLVR calibration code generation unit tests",
+        "instruction tuning internal representation code correctness retained"
+      ]
+    },
+    {
+      "name": "recalibration-and-trained-verbal-confidence-close-gap",
+      "flavor": "dialectical",
+      "one_line": "Does post-hoc recalibration (Platt, isotonic, multicalibration) or training stated confidence (ConfTuner, Rewarding Doubt, RLCR) close the probe-versus-verbal gap in discrimination (not only calibration) on code, triggering pivot criterion A14 for L2?",
+      "rationale": "Directly the A14 pivot trigger. recalibration-closes-the-gap: multicalibration-for-llm-based-code-generation (Campos) raises Brier skill with groups and reports a Qwen3-Coder single-token probe beating its baselines on CALIBRI, versus characterizing-overconfident-failure where Platt/isotonic sharply cut Brier but BSS stays near zero and no metric exceeds AUC 0.70, and Platt/isotonic is monotone so cannot change AUROC. trained-verbal-confidence-closes-gap: ConfTuner (+14.4% AUROC, +54.7% ECE), Rewarding Doubt, beyond-binary-rewards (RLCR) are all non-code factual/math; none is evaluated on execution labels against a probe. Corpus says calibration is fixable while discrimination is the unresolved question, but does not test whether trained verbal confidence matches a probe on code. Also bears on binned-ece-adequacy (ECE decouples from AUROC: ECE 0.013 with AUROC 0.491).",
+      "corpus_evidence": [
+        "multicalibration-for-llm-based-code-generation",
+        "characterizing-overconfident-failure-in-llm-based-code-generation-full-text",
+        "beyond-binary-rewards-training-lms-to-reason-about-their-uncertainty-2",
+        "rewarding-doubt-a-reinforcement-learning-approach-to-calibrated-confidence-expre-2",
+        "verbalized-uncertainty-in-coding-llms-contamination-aware-calibration-uncertainl",
+        "which-signals-of-code-correctness-survive-distribution-shift-hidden-state-and-ca"
+      ],
+      "opposing_positions": [
+        {
+          "position": "Recalibration and confidence training close the gap: Platt and multicalibration improve code Brier skill; ConfTuner/RLCR raise AUROC and generalize.",
+          "sources": [
+            "multicalibration-for-llm-based-code-generation",
+            "beyond-binary-rewards-training-lms-to-reason-about-their-uncertainty-2",
+            "rewarding-doubt-a-reinforcement-learning-approach-to-calibrated-confidence-expre-2"
+          ]
+        },
+        {
+          "position": "Recalibration fixes mapping, not information: BSS near zero after Platt/isotonic, ECE and AUROC decouple, verbal elicitation stays near chance for several cells; trained methods untested on code.",
+          "sources": [
+            "characterizing-overconfident-failure-in-llm-based-code-generation-full-text",
+            "verbalized-uncertainty-in-coding-llms-contamination-aware-calibration-uncertainl"
+          ]
+        }
+      ],
+      "suggested_starting_urls": [],
+      "suggested_searches": [
+        "ConfTuner code generation execution AUROC",
+        "RL calibration reward unit test verbalized confidence code",
+        "multicalibration code LLM Campos CALIBRI probe",
+        "trained verbalized confidence versus linear probe discrimination"
+      ]
+    },
+    {
+      "name": "confidence-routing-utility-and-feedback-update-l3",
+      "flavor": "dialectical",
+      "one_line": "Does confidence-routed execution/verification budget beat random and approach oracle on code under a matched-random, offline-replay design, and does stated confidence update after an observed failing test; is L3 NARROW or CLEAN?",
+      "rationale": "Decides L3 verdict (Q1, Q2, Q7). confidence-routing-vs-random-and-oracle: side A heteroskedastic-signals-in-budgeted-llm-verification (MBPP Table 1: Rand .551, Thr .636, Oracle 1.00), adaptive-consistency, 261030284 swe-verifier (lacks matched random baseline); side B give-up-to-get-more (priors give no gain over round-robin; best rule captures at most 13% of oracle gain on hard workloads, rank-correlation bar 0.3-0.55), hard-issue-weak-model-or-bad-run, and uncertainty-triggered regeneration hurting Pass@1 in 5 of 6 configs. confidence-update-after-feedback: do-large-language-models-know-what-they-are-capable-of (SWE-bench restated probability, Claude degrades, OpenAI improves), not-one-belief, resist-and-update 260712985; the graph states no source measures confidence change after an observed failing test on the current program. Evidence is thin and scope-split (hard vs solvable workloads; weak vs strong verifier), so a precisely stated residual (verbal/probe confidence from execution-graded code as the routing signal, offline replay with matched random and oracle) may be NARROW or CLEAN (provisional).",
+      "corpus_evidence": [
+        "heteroskedastic-signals-in-budgeted-llm-verificationstructural-heterogeneity-lim",
+        "give-up-to-get-more-priors-not-policies-govern-test-time-compute-allocation",
+        "261030284-swe-verifier-selective-verification-for-coding-agents-full-text",
+        "hard-issue-weak-model-or-bad-runrethinking-failure-prediction-for-coding-agents",
+        "do-large-language-models-know-what-they-are-capable-of",
+        "260712985-resist-and-update-counterfactual-report-coordinates-full-text",
+        "not-one-belief-answer-payloads-persistence-and-dissociated-confidence-signals-in",
+        "lets-sample-step-by-step-adaptive-consistency-for-efficient-reasoning-and-coding"
+      ],
+      "opposing_positions": [
+        {
+          "position": "Confidence-gated allocation beats random/uniform and saves compute; a verifier gate lifts SWE-bench resolve at 1.09x cost.",
+          "sources": [
+            "heteroskedastic-signals-in-budgeted-llm-verificationstructural-heterogeneity-lim",
+            "lets-sample-step-by-stepadaptive-consistency-for-efficient-reasoning-and-coding",
+            "261030284-swe-verifier-selective-verification-for-coding-agents-full-text"
+          ]
+        },
+        {
+          "position": "Little or no routing gain with weak priors on hard workloads; uncertainty-triggered regeneration hurts; confidence does not reliably update after feedback.",
+          "sources": [
+            "give-up-to-get-more-priors-not-policies-govern-test-time-compute-allocation",
+            "hard-issue-weak-model-or-bad-runrethinking-failure-prediction-for-coding-agents",
+            "do-large-language-models-know-what-they-are-capable-of",
+            "not-one-belief-answer-payloads-persistence-and-dissociated-confidence-signals-in"
+          ]
+        }
+      ],
+      "suggested_starting_urls": [],
+      "suggested_searches": [
+        "budgeted verification code unit tests random oracle allocation confidence",
+        "stated confidence after failing test execution feedback code repair",
+        "selective verification coding agents risk coverage oracle routing",
+        "uncertainty-triggered regeneration code pass@1 degradation"
+      ]
+    },
+    {
+      "name": "execution-label-validity-and-contamination-control-l1",
+      "flavor": "convergent",
+      "one_line": "How much do thin test suites, label dependence on the oracle that built the clusters, and release-date contamination change confidence-method rankings on code, and does any fetched study use a release-date split or label independence for calibration rather than accuracy?",
+      "rationale": "Decides L1 Q3, Q4, Q10, Q13 (the components most likely to be NARROW or CLEAN if the comparison itself is OCCUPIED). execution-labels-as-ground-truth: EvalPlus (-19.3 to -28.9% pass@k), swe-abs (78.8 to 62.2), certified-against-which-oracle (text-to-SQL; conformal risk +2.73-10.23 pts under multi-instance labels; every execution-consistency score looks better under its own oracle labels, 16 of 16) establish label error, but side B code practice (code-is-more-than-text, functional-entropy, multicalibration) simply assumes hidden-suite labels, with LiveCodeBench v6 used for leakage only. verbalized-uncertainty-in-coding-llms-contamination-aware-calibration is the nearest contamination-aware code calibration study and needs a breadth-matrix read (models, windows, estimators). Coverage-gaps lists the Zenodo dataset as unreachable. Depth work should read the closest L1 occupants (code-is-more-than-text, functional-entropy, multicalibration, verbalized-uncertainty-in-coding-llms, tce-a-test-based-approach) against the A19 matrix and determine whether label-independence and release-window calibration are NARROW residuals or OCCUPIED.",
+      "corpus_evidence": [
+        "is-your-code-generated-by-chatgpt-really-correct-rigorous-evaluation-of-large-la",
+        "swe-abs-adversarial-benchmark-strengthening-exposes-inflated-success-rates-on-te",
+        "certified-against-which-oracleexecution-labels-set-the-reported-riskof-conformal",
+        "verbalized-uncertainty-in-coding-llms-contamination-aware-calibration-uncertainl",
+        "code-is-more-than-text-uncertainty-estimation-for-code-generation",
+        "functional-entropy-predicting-functional-correctness-in-llm-generated-code-with",
+        "multicalibration-for-llm-based-code-generation",
+        "tce-a-test-based-approach-to-measuring-calibration-error"
+      ],
+      "suggested_starting_urls": [
+        "https://arxiv.org/abs/2605.28500",
+        "https://livecodebench.github.io/",
+        "https://arxiv.org/abs/2305.01210"
+      ],
+      "suggested_searches": [
+        "contamination calibration code LLM release date LiveCodeBench window confidence",
+        "augmented tests EvalPlus calibration ECE ranking change",
+        "label independence confidence evaluation code held-out generation",
+        "benchmark test coverage selective prediction code AURC"
+      ]
+    },
+    {
+      "name": "metrology-framing-F-residual-quantity",
+      "flavor": "convergent",
+      "one_line": "Does formal metrology vocabulary (measurand, readout, instrument; bias, resolution, noise vs an internal reference) yield a quantity not computable from the Murphy decomposition, covariance decomposition or meta-d', given SDT type-2 and psychometric audits already exist for LLM confidence?",
+      "rationale": "Decides F verdict and A24/A9. metrology-framing-occupancy: do-llms-know-what-they-know-measuring-metacognitive-efficiency-with-signal-detec, llms-as-signal-detectors, the-metacognitive-monitoring-battery, measurement-validity-and-representation-dynamics (pre-registered audit: three verbal formats correlate at Spearman 0.126, -0.069, 0.247) and dont-ask occupy SDT/psychometric framing outside code, so the framing hypothesis is likely OCCUPIED in vocabulary. Formal metrology papers (uncertainty-evaluation-bridging-ml-and-measurement-science, a-metrological-framework..., trace) are classification-only and never mention confidence calibration (metrolog 0 hits in one). Residual: readout resolution relative to an internal reference and cross-format readout noise as defined quantities. Foundations (Murphy, Yates, Fleming and Lau, Maniscalco and Lau) are instrument gaps and must be flagged. Depth work should state the candidate quantity beside meta-d' ratio and the Murphy resolution (note 'ECE misleads' claim: sampling agreement 2.02x Murphy resolution) and judge whether F is only framing.",
+      "corpus_evidence": [
+        "do-llms-know-what-they-know-measuring-metacognitive-efficiency-with-signal-detec",
+        "llms-as-signal-detectors-sensitivity-bias-and-the-temperature-criterion-analogy",
+        "measurement-validity-and-representation-dynamics-ofconfidence-signals-in-large-l",
+        "the-metacognitive-monitoring-battery-a-cross-domain-benchmark-for-llm-self-monit",
+        "dont-ask-understanding-what-numeric-self-reports-measure-in-language-models",
+        "uncertainty-evaluation-bridging-machine-learning-and-measurement-science-full-te",
+        "a-metrological-framework-for-uncertainty-evaluation-in-machine-learning-classifi"
+      ],
+      "suggested_starting_urls": [],
+      "suggested_searches": [
+        "meta-d' LLM confidence metacognitive efficiency",
+        "Murphy decomposition resolution LLM verbalized confidence",
+        "measurand readout LLM confidence elicitation metrology",
+        "construct validity LLM self-reported confidence formats"
+      ]
+    }
+  ],
+  "skip_loci": [
+    {
+      "slug": "l4-per-requirement-confidence",
+      "reason": "Both analysts' evidence converges: every fetched L4 neighbor (TokenRepair, FLARE, MGDebugger, SemGuard, localized-calibrated-uncertainty, PtTrust) is token/line level or test-weight based and explicitly lacks per-requirement or test-group confidence; digest notes say 'unoccupied here'. No disagreement in the corpus, so a depth locus would be a search for a negative, which is an instrument gap. Recommend the orchestrator cover it with a convergent locus from analyst b if desired."
+    },
+    {
+      "slug": "sampling-agreement-vs-single-pass",
+      "reason": "Sampling agreement as strongest black-box signal is mostly consistent (functional-entropy, SDE, code-is-more-than-text); the disagreement is mostly folded into the within-problem and L1 label-validity loci."
+    },
+    {
+      "slug": "scale-and-confidence-quality",
+      "reason": "Medium relevance and not an R1 verdict component."
+    },
+    {
+      "slug": "causal-steering-on-correctness-directions",
+      "reason": "Relevant to pivot criterion A15 but corpus causal work (PANL patching, Miao and Ungar steering) is non-code; a negative on code is largely an instrument gap, so low yield for a dedicated depth investigator."
+    }
+  ]
+}

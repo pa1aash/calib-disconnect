@@ -1,0 +1,111 @@
+[
+ {
+  "claim": "Instruction tuning raises ECE by 13.1% on average and the chat template adds another 2.74% (total +15.8% vs base) on MMLU logit-based confidence across six base/instruct pairs.",
+  "stance": "supports",
+  "stance_target": "L2: base versus instruct calibration contrast is established on non-code tasks",
+  "evidence_type": "empirical",
+  "scope_conditions": "MMLU; Llama 3.1 8B/70B, Qwen3 4B/30B, Gemma 3 4B/27B; Table 1",
+  "quoted_support": "On average, instruction tuning boosts accuracy by 3.7% but degrades calibration, increasing ECE by 13.1% and Brier score by 6.5%.",
+  "numbers": [
+   "+3.7% accuracy",
+   "+13.1% ECE",
+   "+6.5% Brier",
+   "+2.74% ECE from chat template",
+   "+15.8% total ECE"
+  ],
+  "entities": [
+   "MMLU",
+   "ownership bias"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "large-language-models-are-overconfident-in-their-own-responses",
+  "breadth": {
+   "confidence_families": "answer-token logits, P(True), verbalized %, linguistic (Sec 3-5, Table 4)",
+   "model_families_and_sizes": "Llama 3.1 8B/70B, Qwen3 4B/30B, Gemma 3 4B/27B, plus GPT-5.2 (Sec 3.1, 5.3.4)",
+   "base_vs_instruct": "yes: base vs instruct vs instruct+chat template (Table 1)",
+   "post_training_stages": "instruction tuning vs chat template decoupled; SFT vs RLHF not separated (searched: Sec 3)",
+   "reasoning_models": "not present (searched: reasoning)",
+   "elicitation_formats": "logit, P(True), verbalized, linguistic (Sec 4-5)",
+   "benchmarks": "MMLU, GSM8K, TruthfulQA, open-ended MMLU",
+   "label_source": "multiple-choice/answer correctness, no code execution",
+   "label_independence": "not present",
+   "contamination_split": "not present (searched: contamination)",
+   "calibration_metrics": "ECE (10 bins), Brier score; Wilcoxon and paired bootstrap tests (Sec 3.1, Table 4)",
+   "granularity": "per-question",
+   "causal_intervention": "answer-framing manipulation (assistant vs user turn), not hidden-state intervention (Sec 5.2)"
+  }
+ },
+ {
+  "claim": "Models assign up to 26% higher confidence to their own responses than to identical user-provided answers; framing the answer as user input improves calibration by up to 26% without retraining.",
+  "stance": "supports",
+  "stance_target": "Self-ownership bias in confidence elicitation",
+  "evidence_type": "empirical",
+  "scope_conditions": "Three elicitation methods (P(True), verbalized, linguistic) on MMLU, GSM8K, TruthfulQA, open-ended MMLU",
+  "quoted_support": "models assign up to 26% higher confidence to their own responses.",
+  "numbers": [
+   "up to 26%"
+  ],
+  "entities": [
+   "ownership bias",
+   "GPT-5.2"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "large-language-models-are-overconfident-in-their-own-responses",
+  "breadth": {
+   "confidence_families": "answer-token logits, P(True), verbalized %, linguistic (Sec 3-5, Table 4)",
+   "model_families_and_sizes": "Llama 3.1 8B/70B, Qwen3 4B/30B, Gemma 3 4B/27B, plus GPT-5.2 (Sec 3.1, 5.3.4)",
+   "base_vs_instruct": "yes: base vs instruct vs instruct+chat template (Table 1)",
+   "post_training_stages": "instruction tuning vs chat template decoupled; SFT vs RLHF not separated (searched: Sec 3)",
+   "reasoning_models": "not present (searched: reasoning)",
+   "elicitation_formats": "logit, P(True), verbalized, linguistic (Sec 4-5)",
+   "benchmarks": "MMLU, GSM8K, TruthfulQA, open-ended MMLU",
+   "label_source": "multiple-choice/answer correctness, no code execution",
+   "label_independence": "not present",
+   "contamination_split": "not present (searched: contamination)",
+   "calibration_metrics": "ECE (10 bins), Brier score; Wilcoxon and paired bootstrap tests (Sec 3.1, Table 4)",
+   "granularity": "per-question",
+   "causal_intervention": "answer-framing manipulation (assistant vs user turn), not hidden-state intervention (Sec 5.2)"
+  }
+ },
+ {
+  "claim": "All experiments are on MMLU, GSM8K, TruthfulQA; no code benchmark or execution ground truth.",
+  "stance": "supports",
+  "stance_target": "Base-vs-instruct calibration on code remains open",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec 3-5",
+  "quoted_support": "Extensive experiments across six recent open-weight LLMs, three benchmarks, and three confidence elicitation methods",
+  "numbers": [
+   "6 model pairs",
+   "3 benchmarks",
+   "3 elicitation methods"
+  ],
+  "entities": [
+   "MMLU",
+   "GSM8K",
+   "TruthfulQA"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "medium",
+  "source_note_id": "large-language-models-are-overconfident-in-their-own-responses",
+  "breadth": {
+   "confidence_families": "answer-token logits, P(True), verbalized %, linguistic (Sec 3-5, Table 4)",
+   "model_families_and_sizes": "Llama 3.1 8B/70B, Qwen3 4B/30B, Gemma 3 4B/27B, plus GPT-5.2 (Sec 3.1, 5.3.4)",
+   "base_vs_instruct": "yes: base vs instruct vs instruct+chat template (Table 1)",
+   "post_training_stages": "instruction tuning vs chat template decoupled; SFT vs RLHF not separated (searched: Sec 3)",
+   "reasoning_models": "not present (searched: reasoning)",
+   "elicitation_formats": "logit, P(True), verbalized, linguistic (Sec 4-5)",
+   "benchmarks": "MMLU, GSM8K, TruthfulQA, open-ended MMLU",
+   "label_source": "multiple-choice/answer correctness, no code execution",
+   "label_independence": "not present",
+   "contamination_split": "not present (searched: contamination)",
+   "calibration_metrics": "ECE (10 bins), Brier score; Wilcoxon and paired bootstrap tests (Sec 3.1, Table 4)",
+   "granularity": "per-question",
+   "causal_intervention": "answer-framing manipulation (assistant vs user turn), not hidden-state intervention (Sec 5.2)"
+  }
+ }
+]

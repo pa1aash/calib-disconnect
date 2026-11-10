@@ -7,47 +7,22 @@ tags:
 - semantic-entropy
 - canonical-sampling-method
 - no-code-validation
+- code-llm-confidence-positioning-d82d00
+- l3-foundation
 created: '2026-07-17T18:33:34.373361Z'
-updated: '2026-07-17T18:34:54.587261Z'
+updated: '2026-11-09T23:27:43.717013Z'
 source: https://www.nature.com/articles/s41586-024-07421-0
 source_domain: www.nature.com
 fetched_at: '2026-07-17T18:33:34.372727Z'
 fetch_provider: builtin
-status: draft
+status: review
 type: note
 tier: unknown
 content_type: unknown
 deprecated: false
-summary: 'Farquhar, Kuhn, Perez-Beltrachini, Gal, et al. (Nature 630, 19 June 2024,
-  DOI 10.1038/s41586-024-07421-0). The canonical semantic entropy (SE) paper -- the
-  exact sampling-based method the AAAI-27 project''s headline AUROC 0.987-on-code
-  finding is built on, and the method SEPs (2406.15927) and Dist2ill (2505.11731)
-  both try to approximate in a single pass. Defines ''confabulations'' (arbitrary,
-  ungrounded LLM outputs) as a distinct hallucination subtype and detects them by
-  clustering multiple sampled generations by bidirectional entailment (DeBERTa-based,
-  or LLM-based) into semantic equivalence classes, then computing entropy over cluster
-  membership rather than token sequences. Introduces a ''discrete'' semantic entropy
-  variant that approximates the entropy directly from generation counts per cluster
-  (law of large numbers), usable when token probabilities are unavailable -- notably
-  this discrete/counting variant is conceptually a semantic-clustering generalization
-  of self-consistency (same multi-sample cost profile).\n\nHeadline numbers: averaged
-  across 30 task x model combinations, semantic entropy achieves AUROC 0.790, beating
-  naive predictive entropy (0.691), a ''P(True)'' self-check baseline (0.698), and
-  an embedding-regression baseline (0.687). Performance is stable (AUROC 0.78-0.81)
-  across LLaMA, Falcon, and Mistral model families and scales from 7B to 70B parameters.
-  A second experiment on GPT-4 paragraph-length biographies (150 manually labeled
-  factual claims across 21 individuals) shows discrete SE beats self-check and P(True)
-  baselines on both AUROC and AURAC (area under rejection-accuracy curve), with the
-  caveat that P(True) briefly edges ahead once >80% of questions are rejected.\n\nEvaluation
-  datasets: TriviaQA, SQuAD 1.1, BioASQ (2023 Task B), SVAMP (math word problems),
-  NQ-Open -- general QA and elementary math, NOT code generation. This is a clean,
-  load-bearing domain gap for the AAAI-27 code-LLM angle: the canonical SE result
-  has never been validated on code, and neither have its cheap single-pass approximations
-  (SEPs, Dist2ill). Method is fully unsupervised, requires no fine-tuning, and needs
-  no task-specific training data, but requires multiple (unspecified exact count in
-  abstract-extractable text, historically ~10) generations per prompt at test time,
-  which is exactly the cost bottleneck the AAAI-27 paper''s cheap single-pass approximation
-  targets.'
+summary: FULL TEXT (Farquhar et al., Nature 2024). Canonical semantic-entropy paper
+  for sampled-agreement uncertainty; no code validation (re-tagged only, no claims
+  file this batch).
 ---
 
 *Suggested by [[240615927-semantic-entropy-probes-robust-and-cheap-hallucination-detection-in-ll]] — canonical semantic entropy paper that SEPs approximate*

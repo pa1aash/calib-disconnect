@@ -1,0 +1,139 @@
+[
+ {
+  "claim": "Across tasks and models, intrinsic LLM confidences are poor predictors of code correctness, with ECE ranging 0.09 to 0.73.",
+  "stance": "neutral",
+  "stance_target": "L1 occupancy: execution-graded calibration of code models",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec. I, Table IV; temperature 0; Codex, GPT-3.5, CodeGen2-16B",
+  "quoted_support": "We observe generally high ECE (Expected Calibration Error, described in Section III-C) across all settings, ranging from 0.09 to 0.73, suggesting intrinsic LLM confidences are poor predictors of code correctness.",
+  "numbers": [
+   "ECE 0.09 to 0.73"
+  ],
+  "entities": [
+   "Spiess",
+   "Codex",
+   "GPT-3.5",
+   "CodeGen2-16B"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "240202047-calibration-and-correctness-of-language-models-for-code",
+  "breadth": {
+   "confidence_families": "intrinsic avg token probability, sequence probability, verbalized self-ask, reflective logit pB/pNB (Sec. III-B); no hidden-state probes",
+   "model_families_and_sizes": "Codex, GPT-3.5, CodeGen2-16B (Sec. III-F)",
+   "base_vs_instruct": "not present (GPT-3.5 instructable vs Codex; no paired base/instruct design)",
+   "post_training_stages": "not present",
+   "reasoning_models": "not present (2022-2023 models; no reasoning)",
+   "elicitation_formats": "token prob, verbalized, reflective logit; few-shot BM25 (Sec. III-B, RQ3)",
+   "benchmarks": "HumanEval, MBPP, line-level completion, SStubs, Defects4J (Sec. III-D, Table II)",
+   "label_source": "tests (all-pass) or exact match; SStubs has no tests (Table II)",
+   "label_independence": "not present (searched: independence of tests from generator)",
+   "contamination_split": "not present (searched: contamin, memoriz, cutoff, leak)",
+   "calibration_metrics": "Brier, skill score, ECE, Platt scaling, temperature rescaling (Sec. III-C)",
+   "granularity": "token, line, function (whole-solution), repair",
+   "causal_intervention": "not present"
+  }
+ },
+ {
+  "claim": "Reflective (verbalized/logit) confidence is inconsistent across settings; rescaling with known correctness labels (Platt) generally improves calibration.",
+  "stance": "neutral",
+  "stance_target": "L2 occupancy: verbal versus sampled readouts on code",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec. I findings; RQ2, RQ3",
+  "quoted_support": "While rescaling generally improves calibration, reflective methods are rather inconsistent, working better in some settings than others.",
+  "numbers": [],
+  "entities": [
+   "Platt scaling",
+   "verbalized self-ask"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "240202047-calibration-and-correctness-of-language-models-for-code",
+  "breadth": {
+   "confidence_families": "intrinsic avg token probability, sequence probability, verbalized self-ask, reflective logit pB/pNB (Sec. III-B); no hidden-state probes",
+   "model_families_and_sizes": "Codex, GPT-3.5, CodeGen2-16B (Sec. III-F)",
+   "base_vs_instruct": "not present (GPT-3.5 instructable vs Codex; no paired base/instruct design)",
+   "post_training_stages": "not present",
+   "reasoning_models": "not present (2022-2023 models; no reasoning)",
+   "elicitation_formats": "token prob, verbalized, reflective logit; few-shot BM25 (Sec. III-B, RQ3)",
+   "benchmarks": "HumanEval, MBPP, line-level completion, SStubs, Defects4J (Sec. III-D, Table II)",
+   "label_source": "tests (all-pass) or exact match; SStubs has no tests (Table II)",
+   "label_independence": "not present (searched: independence of tests from generator)",
+   "contamination_split": "not present (searched: contamin, memoriz, cutoff, leak)",
+   "calibration_metrics": "Brier, skill score, ECE, Platt scaling, temperature rescaling (Sec. III-C)",
+   "granularity": "token, line, function (whole-solution), repair",
+   "causal_intervention": "not present"
+  }
+ },
+ {
+  "claim": "Few-shot reflective GPT-3.5 raises Brier skill score on line-level completion from 0 to 0.15.",
+  "stance": "neutral",
+  "stance_target": "L1/F: Brier skill score reporting with unskilled reference",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec. I, RQ3, line-level completion",
+  "quoted_support": "show that calibration improves substantially from the skill score of 0 to a much higher level of 0.15.",
+  "numbers": [
+   "skill score 0 to 0.15"
+  ],
+  "entities": [
+   "GPT-3.5",
+   "BM25 few-shot"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "240202047-calibration-and-correctness-of-language-models-for-code",
+  "breadth": {
+   "confidence_families": "intrinsic avg token probability, sequence probability, verbalized self-ask, reflective logit pB/pNB (Sec. III-B); no hidden-state probes",
+   "model_families_and_sizes": "Codex, GPT-3.5, CodeGen2-16B (Sec. III-F)",
+   "base_vs_instruct": "not present (GPT-3.5 instructable vs Codex; no paired base/instruct design)",
+   "post_training_stages": "not present",
+   "reasoning_models": "not present (2022-2023 models; no reasoning)",
+   "elicitation_formats": "token prob, verbalized, reflective logit; few-shot BM25 (Sec. III-B, RQ3)",
+   "benchmarks": "HumanEval, MBPP, line-level completion, SStubs, Defects4J (Sec. III-D, Table II)",
+   "label_source": "tests (all-pass) or exact match; SStubs has no tests (Table II)",
+   "label_independence": "not present (searched: independence of tests from generator)",
+   "contamination_split": "not present (searched: contamin, memoriz, cutoff, leak)",
+   "calibration_metrics": "Brier, skill score, ECE, Platt scaling, temperature rescaling (Sec. III-C)",
+   "granularity": "token, line, function (whole-solution), repair",
+   "causal_intervention": "not present"
+  }
+ },
+ {
+  "claim": "Paper defines Brier skill score against an unskilled base-rate predictor and warns ECE can mislead (single-bin base-rate predictor gets ECE near 0).",
+  "stance": "neutral",
+  "stance_target": "F occupancy: metrology-style caveats on ECE",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec. III-C",
+  "quoted_support": "ECE is intuitive, but can mislead; as seen below, a naïve",
+  "numbers": [
+   "Bref = 0.5*(1-0.5) ~ 0.25",
+   "GPT-3.5 passes ~72% of MBPP"
+  ],
+  "entities": [
+   "Brier",
+   "ECE"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "240202047-calibration-and-correctness-of-language-models-for-code",
+  "breadth": {
+   "confidence_families": "intrinsic avg token probability, sequence probability, verbalized self-ask, reflective logit pB/pNB (Sec. III-B); no hidden-state probes",
+   "model_families_and_sizes": "Codex, GPT-3.5, CodeGen2-16B (Sec. III-F)",
+   "base_vs_instruct": "not present (GPT-3.5 instructable vs Codex; no paired base/instruct design)",
+   "post_training_stages": "not present",
+   "reasoning_models": "not present (2022-2023 models; no reasoning)",
+   "elicitation_formats": "token prob, verbalized, reflective logit; few-shot BM25 (Sec. III-B, RQ3)",
+   "benchmarks": "HumanEval, MBPP, line-level completion, SStubs, Defects4J (Sec. III-D, Table II)",
+   "label_source": "tests (all-pass) or exact match; SStubs has no tests (Table II)",
+   "label_independence": "not present (searched: independence of tests from generator)",
+   "contamination_split": "not present (searched: contamin, memoriz, cutoff, leak)",
+   "calibration_metrics": "Brier, skill score, ECE, Platt scaling, temperature rescaling (Sec. III-C)",
+   "granularity": "token, line, function (whole-solution), repair",
+   "causal_intervention": "not present"
+  }
+ }
+]

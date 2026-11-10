@@ -1,0 +1,41 @@
+{
+ "source_note_id": "zero-overhead-introspectionfor-adaptive-test-time-compute",
+ "claims": [
+  {
+   "claim": "ZIP-RC reuses reserved logits to predict a joint distribution over final reward and remaining length at every token and uses it for adaptive sampling, improving accuracy up to 12% over majority voting at equal or lower cost on mixed-difficulty math.",
+   "stance": "supports",
+   "stance_target": "L3: confidence-driven adaptive compute is occupied for math with trained internal heads",
+   "evidence_type": "empirical",
+   "scope_conditions": "AIME 2024, AMC 2023, MATH-500, GSM8K; Qwen3 models; no code benchmark found",
+   "quoted_support": "Abstract: ZIP-RC improves accuracy by up to 12% over majority voting at equal or lower average cost",
+   "numbers": [
+    "up to 12%",
+    "Qwen3-1.7B AIME2024 65.8 vs MV 53.1"
+   ],
+   "entities": [
+    "ZIP-RC",
+    "Qwen3"
+   ],
+   "time_period": "2025",
+   "region": "global",
+   "confidence": "high",
+   "source_note_id": "zero-overhead-introspectionfor-adaptive-test-time-compute"
+  }
+ ],
+ "breadth": {
+  "confidence_families": "trained joint reward/length head on reserved logits; majority vote; weighted BoN with external RM and self-eval",
+  "model_families_and_sizes": "Qwen3 (1.7B in the table excerpt)",
+  "base_vs_instruct": "not present (searched: full text)",
+  "post_training_stages": "not present (searched: full text)",
+  "reasoning_models": "not present (searched: full text)",
+  "elicitation_formats": "not present (searched: full text)",
+  "benchmarks": "AIME 2024, AMC 2023, MATH-500, GSM8K, Mixed (Benchmarks paragraph); no code",
+  "label_source": "final answer correctness (math)",
+  "label_independence": "not present (searched: full text)",
+  "contamination_split": "not present (searched: full text)",
+  "calibration_metrics": "not present (searched: ECE, Brier, AUC)",
+  "granularity": "per-token prefix",
+  "causal_intervention": "meta-actions choose which prefixes to continue (adaptive sampling)"
+ },
+ "note": "RELATED; math only"
+}

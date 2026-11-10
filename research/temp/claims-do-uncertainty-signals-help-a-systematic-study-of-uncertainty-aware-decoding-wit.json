@@ -1,0 +1,42 @@
+[
+ {
+  "claim": "Uncertainty-aware rollback decoding with token-level signals improves over equal-budget restart on seven code LLMs and five benchmarks, but the main gain comes from feedback-guided rollback, and no verbal, probe, random-routing, or oracle-routing arm is present.",
+  "stance": "neutral",
+  "stance_target": "L3 confidence-routed budgets is NARROW; update-after-failing-test is CLEAN",
+  "evidence_type": "empirical",
+  "scope_conditions": "Token-level uncertainty signals, code generation, 7B-class code LLMs",
+  "quoted_support": "A component-controlled ablation further shows that feedback-guided rollback provides the main improvement, while uncertainty localization provides an additional gain when checking, budget, rollback, and branch decay are held fixed.",
+  "numbers": [
+   "gains of up to 0.26 in pass@1",
+   "0.35 in AvgTestPassRate",
+   "6.4% Patch-Aligned Safe Rate",
+   "1,536-token total budget",
+   "768 tokens per attempt"
+  ],
+  "entities": [
+   "DeepSeek-7B",
+   "StarCoder2-7B",
+   "CodeLlama-7B",
+   "Max Token Entropy"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "do-uncertainty-signals-help-a-systematic-study-of-uncertainty-aware-decoding-wit",
+  "breadth": {
+   "confidence_families": "token-level uncertainty signals only (eight signals; Max Token Entropy in the full framework, Table RQ1)",
+   "model_families_and_sizes": "DeepSeek-7B, StarCoder2-7B, Qwen2.5-7B, CodeLlama-7B among seven code LLMs (Table RQ1, same-budget comparison)",
+   "base_vs_instruct": "not present (searched: base, instruct)",
+   "post_training_stages": "not present (searched: RLHF, SFT)",
+   "reasoning_models": "not present (searched: reasoning, thinking)",
+   "elicitation_formats": "not present (searched: verbal, verbalized)",
+   "benchmarks": "five code generation benchmarks plus Dsec-Python (Section: datasets)",
+   "label_source": "hidden unit tests; public tests used for intermediate checks (Section: separation of checks)",
+   "label_independence": "public tests and hidden tests are kept separate (Experimental setup)",
+   "contamination_split": "not present (searched: contamination, release date)",
+   "calibration_metrics": "not present (searched: ECE, AUROC, Brier); pass@1, AvgTestPassRate, PASR",
+   "granularity": "token and error-line localization",
+   "causal_intervention": "not present (searched: intervention, patching, steering)"
+  }
+ }
+]

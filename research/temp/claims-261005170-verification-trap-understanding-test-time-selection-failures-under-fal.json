@@ -1,0 +1,101 @@
+[
+ {
+  "claim": "Under shared false premises, generated-test selection chooses hidden-test-wrong candidates even when a correct candidate exists in the 64-sample pool.",
+  "stance": "neutral",
+  "stance_target": "L4: self-written test adequacy; L3 oracle headroom",
+  "evidence_type": "empirical",
+  "scope_conditions": "Abstract; Table 1; Sec. 4",
+  "quoted_support": "the selector may choose a hidden-test-wrong candidate even when a hidden-test-correct program exists in the pool.",
+  "numbers": [
+   "64 samples"
+  ],
+  "entities": [
+   "Verification Trap",
+   "Selected@64",
+   "Oracle@64"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "261005170-verification-trap-understanding-test-time-selection-failures-under-fal",
+  "breadth": {
+   "confidence_families": "verifier-visible features, generated-test pass patterns, consensus; no verbal or hidden-state confidence",
+   "model_families_and_sizes": "DeepSeek-Coder-6.7B-Instruct, Qwen2.5-Coder-7B/14B/32B-Instruct, GPT-4o-mini (Models paragraph, Sec. 3)",
+   "base_vs_instruct": "not present (instruct only)",
+   "post_training_stages": "not present (searched: full text via local PDF extraction)",
+   "reasoning_models": "not present",
+   "elicitation_formats": "not present",
+   "benchmarks": "HumanEval+, MBPP, LiveCodeBench (Sec. 3)",
+   "label_source": "hidden tests (Selected@64, Oracle@64)",
+   "label_independence": "hidden tests separate from verifier-written tests (core design)",
+   "contamination_split": "not present (searched: contamination of eval sets; paper's 'contaminated' means premise contamination)",
+   "calibration_metrics": "AUROC for trap predictor; no Brier/ECE",
+   "granularity": "whole-solution selection",
+   "causal_intervention": "false-premise injection (premise manipulation), Sec. 3-4"
+  }
+ },
+ {
+  "claim": "A lightweight gold-free predictor from verifier-visible features predicts the trap with 0.846 AUROC.",
+  "stance": "neutral",
+  "stance_target": "L3: predicting selection failure without hidden execution",
+  "evidence_type": "empirical",
+  "scope_conditions": "Abstract; Sec. 5",
+  "quoted_support": "a lightweight gold-free predictor using verifier-visible features reaches 0.846 AUROC.",
+  "numbers": [
+   "AUROC 0.846"
+  ],
+  "entities": [
+   "gold-free predictor"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "261005170-verification-trap-understanding-test-time-selection-failures-under-fal",
+  "breadth": {
+   "confidence_families": "verifier-visible features, generated-test pass patterns, consensus; no verbal or hidden-state confidence",
+   "model_families_and_sizes": "DeepSeek-Coder-6.7B-Instruct, Qwen2.5-Coder-7B/14B/32B-Instruct, GPT-4o-mini (Models paragraph, Sec. 3)",
+   "base_vs_instruct": "not present (instruct only)",
+   "post_training_stages": "not present (searched: full text via local PDF extraction)",
+   "reasoning_models": "not present",
+   "elicitation_formats": "not present",
+   "benchmarks": "HumanEval+, MBPP, LiveCodeBench (Sec. 3)",
+   "label_source": "hidden tests (Selected@64, Oracle@64)",
+   "label_independence": "hidden tests separate from verifier-written tests (core design)",
+   "contamination_split": "not present (searched: contamination of eval sets; paper's 'contaminated' means premise contamination)",
+   "calibration_metrics": "AUROC for trap predictor; no Brier/ECE",
+   "granularity": "whole-solution selection",
+   "causal_intervention": "false-premise injection (premise manipulation), Sec. 3-4"
+  }
+ },
+ {
+  "claim": "Verifier-written tests inherit the premise-level blind spot of the generator.",
+  "stance": "neutral",
+  "stance_target": "L4: self-written test adequacy",
+  "evidence_type": "empirical",
+  "scope_conditions": "Abstract; mechanism analysis",
+  "quoted_support": "Mechanistically, verifier-written tests inherit the premise-level blind spot, reshaping verifier-visible candidate space away from hidden-test correctness.",
+  "numbers": [],
+  "entities": [
+   "verifier-written tests"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "261005170-verification-trap-understanding-test-time-selection-failures-under-fal",
+  "breadth": {
+   "confidence_families": "verifier-visible features, generated-test pass patterns, consensus; no verbal or hidden-state confidence",
+   "model_families_and_sizes": "DeepSeek-Coder-6.7B-Instruct, Qwen2.5-Coder-7B/14B/32B-Instruct, GPT-4o-mini (Models paragraph, Sec. 3)",
+   "base_vs_instruct": "not present (instruct only)",
+   "post_training_stages": "not present (searched: full text via local PDF extraction)",
+   "reasoning_models": "not present",
+   "elicitation_formats": "not present",
+   "benchmarks": "HumanEval+, MBPP, LiveCodeBench (Sec. 3)",
+   "label_source": "hidden tests (Selected@64, Oracle@64)",
+   "label_independence": "hidden tests separate from verifier-written tests (core design)",
+   "contamination_split": "not present (searched: contamination of eval sets; paper's 'contaminated' means premise contamination)",
+   "calibration_metrics": "AUROC for trap predictor; no Brier/ECE",
+   "granularity": "whole-solution selection",
+   "causal_intervention": "false-premise injection (premise manipulation), Sec. 3-4"
+  }
+ }
+]

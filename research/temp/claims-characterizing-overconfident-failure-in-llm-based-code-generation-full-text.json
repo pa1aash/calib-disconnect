@@ -1,0 +1,213 @@
+[
+ {
+  "claim": "Across four 7-8B instruct code models and HumanEval+/MBPP+, no uncertainty metric exceeds AUC 0.70 for pass/fail discrimination.",
+  "stance": "supports",
+  "stance_target": "token-level uncertainty is a weak proxy for execution correctness in code LLMs",
+  "evidence_type": "empirical",
+  "scope_conditions": "four 7-8B instruct models; HumanEval+ and MBPP+; BigCodeBench excluded from Sec 4",
+  "quoted_support": "For generation-stage uncertainty, the best AUC in each model-benchmark pairs ranges from 0.598 to 0.696. No metric exceeds 0.70, and several remain close to random ranking.",
+  "numbers": [
+   "0.598 to 0.696",
+   "0.70"
+  ],
+  "entities": [
+   "CodeLlama",
+   "DeepSeek-Coder",
+   "OpenCoder",
+   "Qwen2.5-Coder"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "characterizing-overconfident-failure-in-llm-based-code-generation-full-text",
+  "breadth": {
+   "confidence_families": "token confidence/entropy and 17 generation-stage plus 6 prefill-stage uncertainty scores (Sec 4, Tables 2-3); Platt/isotonic post-hoc calibration (Sec 6.1); prompted abstention 'I don't know' (Sec 6.3); hidden-state effective rank (Sec 7). No verbalized numeric confidence and no trained probe",
+   "model_families_and_sizes": "CodeLlama-7B-Instruct, DeepSeek-Coder-7B-Instruct, Qwen2.5-Coder-7B-Instruct, OpenCoder-8B-Instruct (Sec 3.1)",
+   "base_vs_instruct": "yes, only OpenCoder and DeepSeek-Coder base vs instruct on MBPP+ (Sec 5.5, Fig 4, paired bootstrap on delta-AUC)",
+   "post_training_stages": "base vs instruction-tuned only (Sec 5.5); no RLHF/RL stage comparison",
+   "reasoning_models": "not present (searched: reasoning, thinking, chain-of-thought; all four models non-reasoning)",
+   "elicitation_formats": "token-probability readouts; one prompted abstention format (answer only if more than 95% confident else 'I don't know') (Sec 6.3); no verbal-confidence format comparison",
+   "benchmarks": "HumanEval+ (164), MBPP+ (378), BigCodeBench (1,140) (Sec 3.1)",
+   "label_source": "EvalPlus/BigCodeBench test-suite execution, pass/fail Z(x,y) (Sec 2.1)",
+   "label_independence": "labels from benchmark tests, independent of model confidence; construct-validity caveat in Sec 10",
+   "contamination_split": "not present (searched: contaminat, release date, cutoff; Sec 10 threats do not mention contamination)",
+   "calibration_metrics": "AUC (Table 3), Brier score and Brier Skill Score (Table 5), selective accuracy vs coverage (Fig 3); no ECE found in the searched lines",
+   "granularity": "whole program and token level (Sec 5.1-5.2); no per-requirement or per-test",
+   "causal_intervention": "not present for hidden states (Sec 7 is correlational effective-rank comparison); calibration and prompting are interventions on readout only"
+  }
+ },
+ {
+  "claim": "Platt scaling and isotonic regression sharply reduce Brier score but give Brier Skill Score near zero, i.e. no skill beyond the benchmark pass rate.",
+  "stance": "supports",
+  "stance_target": "calibration metrics can look good without discrimination in code",
+  "evidence_type": "empirical",
+  "scope_conditions": "MBPP+ and BigCodeBench, 5-fold stratified CV (Sec 6.1, Table 5)",
+  "quoted_support": "Post-hoc calibration substantially improves probability alignment, but calibrated scores provide little predictive skill beyond the benchmark pass rate.",
+  "numbers": [
+   "CodeLlama avg-conf BS 0.459 -> 0.248, BSS approx 0.001 (MBPP+)",
+   "DeepSeekCoder BS 0.300 -> 0.224, BSS approx 0.001"
+  ],
+  "entities": [
+   "Platt scaling",
+   "isotonic regression",
+   "Brier Skill Score"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "characterizing-overconfident-failure-in-llm-based-code-generation-full-text",
+  "breadth": {
+   "confidence_families": "token confidence/entropy and 17 generation-stage plus 6 prefill-stage uncertainty scores (Sec 4, Tables 2-3); Platt/isotonic post-hoc calibration (Sec 6.1); prompted abstention 'I don't know' (Sec 6.3); hidden-state effective rank (Sec 7). No verbalized numeric confidence and no trained probe",
+   "model_families_and_sizes": "CodeLlama-7B-Instruct, DeepSeek-Coder-7B-Instruct, Qwen2.5-Coder-7B-Instruct, OpenCoder-8B-Instruct (Sec 3.1)",
+   "base_vs_instruct": "yes, only OpenCoder and DeepSeek-Coder base vs instruct on MBPP+ (Sec 5.5, Fig 4, paired bootstrap on delta-AUC)",
+   "post_training_stages": "base vs instruction-tuned only (Sec 5.5); no RLHF/RL stage comparison",
+   "reasoning_models": "not present (searched: reasoning, thinking, chain-of-thought; all four models non-reasoning)",
+   "elicitation_formats": "token-probability readouts; one prompted abstention format (answer only if more than 95% confident else 'I don't know') (Sec 6.3); no verbal-confidence format comparison",
+   "benchmarks": "HumanEval+ (164), MBPP+ (378), BigCodeBench (1,140) (Sec 3.1)",
+   "label_source": "EvalPlus/BigCodeBench test-suite execution, pass/fail Z(x,y) (Sec 2.1)",
+   "label_independence": "labels from benchmark tests, independent of model confidence; construct-validity caveat in Sec 10",
+   "contamination_split": "not present (searched: contaminat, release date, cutoff; Sec 10 threats do not mention contamination)",
+   "calibration_metrics": "AUC (Table 3), Brier score and Brier Skill Score (Table 5), selective accuracy vs coverage (Fig 3); no ECE found in the searched lines",
+   "granularity": "whole program and token level (Sec 5.1-5.2); no per-requirement or per-test",
+   "causal_intervention": "not present for hidden states (Sec 7 is correlational effective-rank comparison); calibration and prompting are interventions on readout only"
+  }
+ },
+ {
+  "claim": "Instruction tuning increases certainty on failing generations without reliably improving pass/fail discrimination (OpenCoder dAUC -0.0136, CI [-0.0911, 0.0652]; DeepSeek-Coder AUC 0.4391 to 0.5654).",
+  "stance": "supports",
+  "stance_target": "base vs instruct comparison for code confidence is partially occupied at token level",
+  "evidence_type": "empirical",
+  "scope_conditions": "OpenCoder and DeepSeek-Coder on MBPP+ (Sec 5.5, Fig 4)",
+  "quoted_support": "Confidence AUC changes from 0.5230 to 0.5094, with DeltaAUC = -0.0136 and a 95% confidence interval of [-0.0911, 0.0652].",
+  "numbers": [
+   "0.5230 to 0.5094",
+   "-0.0136",
+   "[-0.0911, 0.0652]",
+   "DeepSeek conf AUC 0.4391 -> 0.5654"
+  ],
+  "entities": [
+   "OpenCoder",
+   "DeepSeek-Coder"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "characterizing-overconfident-failure-in-llm-based-code-generation-full-text",
+  "breadth": {
+   "confidence_families": "token confidence/entropy and 17 generation-stage plus 6 prefill-stage uncertainty scores (Sec 4, Tables 2-3); Platt/isotonic post-hoc calibration (Sec 6.1); prompted abstention 'I don't know' (Sec 6.3); hidden-state effective rank (Sec 7). No verbalized numeric confidence and no trained probe",
+   "model_families_and_sizes": "CodeLlama-7B-Instruct, DeepSeek-Coder-7B-Instruct, Qwen2.5-Coder-7B-Instruct, OpenCoder-8B-Instruct (Sec 3.1)",
+   "base_vs_instruct": "yes, only OpenCoder and DeepSeek-Coder base vs instruct on MBPP+ (Sec 5.5, Fig 4, paired bootstrap on delta-AUC)",
+   "post_training_stages": "base vs instruction-tuned only (Sec 5.5); no RLHF/RL stage comparison",
+   "reasoning_models": "not present (searched: reasoning, thinking, chain-of-thought; all four models non-reasoning)",
+   "elicitation_formats": "token-probability readouts; one prompted abstention format (answer only if more than 95% confident else 'I don't know') (Sec 6.3); no verbal-confidence format comparison",
+   "benchmarks": "HumanEval+ (164), MBPP+ (378), BigCodeBench (1,140) (Sec 3.1)",
+   "label_source": "EvalPlus/BigCodeBench test-suite execution, pass/fail Z(x,y) (Sec 2.1)",
+   "label_independence": "labels from benchmark tests, independent of model confidence; construct-validity caveat in Sec 10",
+   "contamination_split": "not present (searched: contaminat, release date, cutoff; Sec 10 threats do not mention contamination)",
+   "calibration_metrics": "AUC (Table 3), Brier score and Brier Skill Score (Table 5), selective accuracy vs coverage (Fig 3); no ECE found in the searched lines",
+   "granularity": "whole program and token level (Sec 5.1-5.2); no per-requirement or per-test",
+   "causal_intervention": "not present for hidden states (Sec 7 is correlational effective-rank comparison); calibration and prompting are interventions on readout only"
+  }
+ },
+ {
+  "claim": "Prompted abstention does not reliably induce deferral in code LLMs even with an explicit IDK option.",
+  "stance": "supports",
+  "stance_target": "verbal/prompted readouts are weak in code",
+  "evidence_type": "empirical",
+  "scope_conditions": "qualitative across the four subject models (Sec 6.3, Fig 6)",
+  "quoted_support": "Prompt-level abstention does not reliably induce deferral; models can still generate incorrect code even when an IDK option is provided.",
+  "numbers": [
+   "95% confidence threshold in prompt"
+  ],
+  "entities": [
+   "OpenCoder",
+   "MBPP/72"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "medium",
+  "source_note_id": "characterizing-overconfident-failure-in-llm-based-code-generation-full-text",
+  "breadth": {
+   "confidence_families": "token confidence/entropy and 17 generation-stage plus 6 prefill-stage uncertainty scores (Sec 4, Tables 2-3); Platt/isotonic post-hoc calibration (Sec 6.1); prompted abstention 'I don't know' (Sec 6.3); hidden-state effective rank (Sec 7). No verbalized numeric confidence and no trained probe",
+   "model_families_and_sizes": "CodeLlama-7B-Instruct, DeepSeek-Coder-7B-Instruct, Qwen2.5-Coder-7B-Instruct, OpenCoder-8B-Instruct (Sec 3.1)",
+   "base_vs_instruct": "yes, only OpenCoder and DeepSeek-Coder base vs instruct on MBPP+ (Sec 5.5, Fig 4, paired bootstrap on delta-AUC)",
+   "post_training_stages": "base vs instruction-tuned only (Sec 5.5); no RLHF/RL stage comparison",
+   "reasoning_models": "not present (searched: reasoning, thinking, chain-of-thought; all four models non-reasoning)",
+   "elicitation_formats": "token-probability readouts; one prompted abstention format (answer only if more than 95% confident else 'I don't know') (Sec 6.3); no verbal-confidence format comparison",
+   "benchmarks": "HumanEval+ (164), MBPP+ (378), BigCodeBench (1,140) (Sec 3.1)",
+   "label_source": "EvalPlus/BigCodeBench test-suite execution, pass/fail Z(x,y) (Sec 2.1)",
+   "label_independence": "labels from benchmark tests, independent of model confidence; construct-validity caveat in Sec 10",
+   "contamination_split": "not present (searched: contaminat, release date, cutoff; Sec 10 threats do not mention contamination)",
+   "calibration_metrics": "AUC (Table 3), Brier score and Brier Skill Score (Table 5), selective accuracy vs coverage (Fig 3); no ECE found in the searched lines",
+   "granularity": "whole program and token level (Sec 5.1-5.2); no per-requirement or per-test",
+   "causal_intervention": "not present for hidden states (Sec 7 is correlational effective-rank comparison); calibration and prompting are interventions on readout only"
+  }
+ },
+ {
+  "claim": "Hidden-state effective rank differs between passing and failing generations in middle and later layers, offered only as exploratory evidence; no trained probe, no verbal comparison.",
+  "stance": "neutral",
+  "stance_target": "L2 probe-vs-verbal on code: this paper is exploratory at the latent level, not a probe-vs-verbal comparison",
+  "evidence_type": "empirical",
+  "scope_conditions": "CodeLlama and QwenCoder on HumanEval+ (Sec 7, Fig 7)",
+  "quoted_support": "Passing and failing generations differ in latent representation-space geometry even when output confidence remains unreliable.",
+  "numbers": [
+   "effective rank, layerwise"
+  ],
+  "entities": [
+   "effective rank",
+   "CodeLlama",
+   "Qwen2.5-Coder"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "medium",
+  "source_note_id": "characterizing-overconfident-failure-in-llm-based-code-generation-full-text",
+  "breadth": {
+   "confidence_families": "token confidence/entropy and 17 generation-stage plus 6 prefill-stage uncertainty scores (Sec 4, Tables 2-3); Platt/isotonic post-hoc calibration (Sec 6.1); prompted abstention 'I don't know' (Sec 6.3); hidden-state effective rank (Sec 7). No verbalized numeric confidence and no trained probe",
+   "model_families_and_sizes": "CodeLlama-7B-Instruct, DeepSeek-Coder-7B-Instruct, Qwen2.5-Coder-7B-Instruct, OpenCoder-8B-Instruct (Sec 3.1)",
+   "base_vs_instruct": "yes, only OpenCoder and DeepSeek-Coder base vs instruct on MBPP+ (Sec 5.5, Fig 4, paired bootstrap on delta-AUC)",
+   "post_training_stages": "base vs instruction-tuned only (Sec 5.5); no RLHF/RL stage comparison",
+   "reasoning_models": "not present (searched: reasoning, thinking, chain-of-thought; all four models non-reasoning)",
+   "elicitation_formats": "token-probability readouts; one prompted abstention format (answer only if more than 95% confident else 'I don't know') (Sec 6.3); no verbal-confidence format comparison",
+   "benchmarks": "HumanEval+ (164), MBPP+ (378), BigCodeBench (1,140) (Sec 3.1)",
+   "label_source": "EvalPlus/BigCodeBench test-suite execution, pass/fail Z(x,y) (Sec 2.1)",
+   "label_independence": "labels from benchmark tests, independent of model confidence; construct-validity caveat in Sec 10",
+   "contamination_split": "not present (searched: contaminat, release date, cutoff; Sec 10 threats do not mention contamination)",
+   "calibration_metrics": "AUC (Table 3), Brier score and Brier Skill Score (Table 5), selective accuracy vs coverage (Fig 3); no ECE found in the searched lines",
+   "granularity": "whole program and token level (Sec 5.1-5.2); no per-requirement or per-test",
+   "causal_intervention": "not present for hidden states (Sec 7 is correlational effective-rank comparison); calibration and prompting are interventions on readout only"
+  }
+ },
+ {
+  "claim": "Authors state the scope limits: four open 7-8B models, three benchmarks, white-box access, test-suite labels approximate correctness.",
+  "stance": "neutral",
+  "stance_target": "scope of this occupant",
+  "evidence_type": "expert-opinion",
+  "scope_conditions": "Sec 10 threats to validity",
+  "quoted_support": "We evaluate four open-source code LLMs on HumanEval+, MBPP+, and BigCodeBench analyses.",
+  "numbers": [
+   "4 models",
+   "3 benchmarks"
+  ],
+  "entities": [],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "characterizing-overconfident-failure-in-llm-based-code-generation-full-text",
+  "breadth": {
+   "confidence_families": "token confidence/entropy and 17 generation-stage plus 6 prefill-stage uncertainty scores (Sec 4, Tables 2-3); Platt/isotonic post-hoc calibration (Sec 6.1); prompted abstention 'I don't know' (Sec 6.3); hidden-state effective rank (Sec 7). No verbalized numeric confidence and no trained probe",
+   "model_families_and_sizes": "CodeLlama-7B-Instruct, DeepSeek-Coder-7B-Instruct, Qwen2.5-Coder-7B-Instruct, OpenCoder-8B-Instruct (Sec 3.1)",
+   "base_vs_instruct": "yes, only OpenCoder and DeepSeek-Coder base vs instruct on MBPP+ (Sec 5.5, Fig 4, paired bootstrap on delta-AUC)",
+   "post_training_stages": "base vs instruction-tuned only (Sec 5.5); no RLHF/RL stage comparison",
+   "reasoning_models": "not present (searched: reasoning, thinking, chain-of-thought; all four models non-reasoning)",
+   "elicitation_formats": "token-probability readouts; one prompted abstention format (answer only if more than 95% confident else 'I don't know') (Sec 6.3); no verbal-confidence format comparison",
+   "benchmarks": "HumanEval+ (164), MBPP+ (378), BigCodeBench (1,140) (Sec 3.1)",
+   "label_source": "EvalPlus/BigCodeBench test-suite execution, pass/fail Z(x,y) (Sec 2.1)",
+   "label_independence": "labels from benchmark tests, independent of model confidence; construct-validity caveat in Sec 10",
+   "contamination_split": "not present (searched: contaminat, release date, cutoff; Sec 10 threats do not mention contamination)",
+   "calibration_metrics": "AUC (Table 3), Brier score and Brier Skill Score (Table 5), selective accuracy vs coverage (Fig 3); no ECE found in the searched lines",
+   "granularity": "whole program and token level (Sec 5.1-5.2); no per-requirement or per-test",
+   "causal_intervention": "not present for hidden states (Sec 7 is correlational effective-rank comparison); calibration and prompting are interventions on readout only"
+  }
+ }
+]

@@ -1,0 +1,58 @@
+[
+  {
+    "claim": "LLM competitive-programming evaluation in the literature is conducted as whole-submission pass@1 against a handful of public test cases, with no per-test-case/partial-credit granularity reported.",
+    "stance": "supports",
+    "stance_target": "No existing work applies per-requirement/partial-credit evaluation protocols to competitive programming code",
+    "evidence_type": "theoretical",
+    "scope_conditions": "315 Codeforces problems via CodeContests dataset, GPT-4o and Claude Sonnet 4.6, pass@1 against max 3 public test cases",
+    "quoted_support": "Each solution is executed against a maximum of three public test cases... If a solution fails multiple test cases, the worst verdict is recorded based on the following priority list: Compile Error, Runtime Error, Time Limit Exceeded, Wrong Answer, Accepted.",
+    "numbers": ["315 problems", "7 algorithm categories", "3 difficulty tiers", "15 problems per cell", "n=45 per category", "n=105 per tier"],
+    "entities": ["GPT-4o", "Claude Sonnet 4.6", "Codeforces", "CodeContests"],
+    "time_period": "2026",
+    "region": "n/a",
+    "confidence": "high",
+    "source_note_id": "where-do-large-language-models-fail-on-competitive-programming-a-taxonomy-of-fai"
+  },
+  {
+    "claim": "Wrong Answer is the overwhelmingly dominant failure verdict for both GPT-4o and Claude Sonnet 4.6 on competitive programming, not compile or runtime errors.",
+    "stance": "neutral",
+    "stance_target": "Nature of LLM failures on algorithmic/competitive code",
+    "evidence_type": "empirical",
+    "scope_conditions": "315 balanced Codeforces problems, CoT prompting condition",
+    "quoted_support": "Wrong Answer (WA) accounts for 92.0% (183/199) of GPT-4o's failures and 69.6% (80/115) of Claude's failures.",
+    "numbers": ["92.0% GPT-4o WA share", "69.6% Claude WA share", "199 GPT-4o failures", "115 Claude failures"],
+    "entities": ["GPT-4o", "Claude Sonnet 4.6"],
+    "time_period": "2026",
+    "region": "n/a",
+    "confidence": "high",
+    "source_note_id": "where-do-large-language-models-fail-on-competitive-programming-a-taxonomy-of-fai"
+  },
+  {
+    "claim": "Forcing zero-shot Chain-of-Thought prompting degrades GPT-4o's competitive-programming accuracy (46.0% to 36.8% AC rate), reversing the usual CoT benefit seen on NLP reasoning benchmarks.",
+    "stance": "neutral",
+    "stance_target": "CoT prompting effectiveness for algorithmic code generation",
+    "evidence_type": "empirical",
+    "scope_conditions": "GPT-4o, 315 Codeforces problems, T=0.2",
+    "quoted_support": "forcing CoT aggressively penalizes GPT-4o, dropping its pass rate from 46.0% to 36.8% and exacerbating a critical weakness in Greedy logic.",
+    "numbers": ["46.0% Direct AC", "36.8% CoT AC", "-9.2 percentage points", "Greedy category: 28.9% CoT pass rate for GPT-4o"],
+    "entities": ["GPT-4o"],
+    "time_period": "2026",
+    "region": "n/a",
+    "confidence": "high",
+    "source_note_id": "where-do-large-language-models-fail-on-competitive-programming-a-taxonomy-of-fai"
+  },
+  {
+    "claim": "Both frontier models collapse to near-zero pass rates on Hard-tier dynamic programming and binary search problems regardless of prompting strategy.",
+    "stance": "neutral",
+    "stance_target": "Algorithmic difficulty ceiling for LLM code generation",
+    "evidence_type": "empirical",
+    "scope_conditions": "Hard tier (Codeforces Elo 1901-3500), CoT prompting",
+    "quoted_support": "GPT-4o's collapse at the Hard tier is most severe in DP and Binary Search, where it fails every problem (0%).",
+    "numbers": ["0% GPT-4o Hard DP", "20% Claude Hard DP", "0% GPT-4o Hard Binary Search", "27% Claude Hard Binary Search"],
+    "entities": ["GPT-4o", "Claude Sonnet 4.6"],
+    "time_period": "2026",
+    "region": "n/a",
+    "confidence": "medium",
+    "source_note_id": "where-do-large-language-models-fail-on-competitive-programming-a-taxonomy-of-fai"
+  }
+]

@@ -1,44 +1,69 @@
 [
-  {
-    "claim": "A linear/shallow classifier (SAPLMA) trained on an LLM's hidden-layer activations while it reads or generates a statement predicts the statement's truth value with 71-83% accuracy depending on base LLM, for both externally-provided and model-generated statements.",
-    "stance": "supports",
-    "stance_target": "internal hidden states encode correctness/truthfulness information not fully reflected in surface output",
-    "evidence_type": "empirical",
-    "scope_conditions": "General-domain true/false factual statements across six topics; whole-statement granularity; non-code",
-    "quoted_support": "Our approach is to train a classifier that outputs the probability that a statement is truthful, based on the hidden layer activations of the LLM as it reads or generates the statement... our trained classifier achieves an average of 71% to 83% accuracy labeling which sentences are true versus false, depending on the LLM base model.",
-    "numbers": ["71-83% accuracy", "six topics"],
-    "entities": ["Amos Azaria", "Tom Mitchell", "SAPLMA"],
-    "time_period": "2023",
-    "region": null,
-    "confidence": "high",
-    "source_note_id": "230413734-the-internal-state-of-an-llm-knows-when-its-lying"
-  },
-  {
-    "claim": "The LLM-assigned token/sentence probability is a weaker and confounded truthfulness signal (biased by sentence length and word frequency) compared to the hidden-state probe classifier.",
-    "stance": "supports",
-    "stance_target": "probes on hidden states are a more reliable correctness signal than naive model-output-derived signals (e.g. sequence probability)",
-    "evidence_type": "empirical",
-    "scope_conditions": "General factual statements; whole-statement level",
-    "quoted_support": "while LLM-assigned sentence probability is related to sentence truthfulness, this probability is also dependent on sentence length and the frequencies of words in the sentence, resulting in our trained classifier providing a more reliable approach to detecting truthfulness",
-    "numbers": [],
-    "entities": ["SAPLMA"],
-    "time_period": "2023",
-    "region": null,
-    "confidence": "high",
-    "source_note_id": "230413734-the-internal-state-of-an-llm-knows-when-its-lying"
-  },
-  {
-    "claim": "SAPLMA is the earliest widely-cited work establishing that a model's internal state, not just its output text or output probability, can reveal whether a generated or read statement is true, but it does not test code generation or per-requirement/per-claim decomposition of an answer.",
-    "stance": "neutral",
-    "stance_target": "does prior latent-knowledge work already scoop per-requirement code-correctness probing?",
-    "evidence_type": "theoretical",
-    "scope_conditions": "General NLP truthfulness only; whole-statement granularity; no code tasks",
-    "quoted_support": "This includes both statements provided to the LLM, and statements that the LLM itself generates.",
-    "numbers": [],
-    "entities": ["SAPLMA"],
-    "time_period": "2023",
-    "region": null,
-    "confidence": "high",
-    "source_note_id": "230413734-the-internal-state-of-an-llm-knows-when-its-lying"
+ {
+  "claim": "A classifier on hidden-layer activations labels statements true/false with 71% to 83% average accuracy depending on the base LLM.",
+  "stance": "neutral",
+  "stance_target": "L2 background: probes read internal truthfulness",
+  "evidence_type": "empirical",
+  "scope_conditions": "Abstract; Sec. 5; factual statements, not code",
+  "quoted_support": "our trained classifier achieves an average of 71% to 83% accuracy labeling which sentences are true versus false, depending on the LLM base model.",
+  "numbers": [
+   "71% to 83%",
+   "86.4% (OPT-6.7b layer 20 listed)"
+  ],
+  "entities": [
+   "SAPLMA",
+   "OPT-6.7b",
+   "LLaMA2"
+  ],
+  "time_period": "2023",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "230413734-the-internal-state-of-an-llm-knows-when-its-lying",
+  "breadth": {
+   "confidence_families": "hidden-state probe (SAPLMA), few-shot prompting, sentence probability",
+   "model_families_and_sizes": "OPT-6.7b, LLaMA2 (Sec. 4-5)",
+   "base_vs_instruct": "not present",
+   "post_training_stages": "not present (searched: full text via local PDF extraction)",
+   "reasoning_models": "not present",
+   "elicitation_formats": "few-shot true/false prompting vs probe",
+   "benchmarks": "true-false dataset of statements across topics (not code)",
+   "label_source": "human-curated truth labels",
+   "label_independence": "not code",
+   "contamination_split": "held-out topic split",
+   "calibration_metrics": "accuracy",
+   "granularity": "sentence",
+   "causal_intervention": "not present"
   }
+ },
+ {
+  "claim": "Sentence probability is related to truthfulness but confounded by length and word frequency, so probes carry additional signal.",
+  "stance": "neutral",
+  "stance_target": "L2: probe vs probability readout",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec. 1",
+  "quoted_support": "Therefore, sentence probabilities provide",
+  "numbers": [],
+  "entities": [
+   "sentence probability"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "medium",
+  "source_note_id": "230413734-the-internal-state-of-an-llm-knows-when-its-lying",
+  "breadth": {
+   "confidence_families": "hidden-state probe (SAPLMA), few-shot prompting, sentence probability",
+   "model_families_and_sizes": "OPT-6.7b, LLaMA2 (Sec. 4-5)",
+   "base_vs_instruct": "not present",
+   "post_training_stages": "not present (searched: full text via local PDF extraction)",
+   "reasoning_models": "not present",
+   "elicitation_formats": "few-shot true/false prompting vs probe",
+   "benchmarks": "true-false dataset of statements across topics (not code)",
+   "label_source": "human-curated truth labels",
+   "label_independence": "not code",
+   "contamination_split": "held-out topic split",
+   "calibration_metrics": "accuracy",
+   "granularity": "sentence",
+   "causal_intervention": "not present"
+  }
+ }
 ]

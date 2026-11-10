@@ -1,0 +1,102 @@
+[
+ {
+  "claim": "DeepSeek-Reasoner has best verbal-confidence reliability on code reasoning, up to 0.680 ECE, 0.636 Brier better than other models.",
+  "stance": "neutral",
+  "stance_target": "R1 candidate occupancy",
+  "evidence_type": "empirical",
+  "scope_conditions": "Abstract",
+  "quoted_support": "DeepSeek-Reasoner achieves the best performance across various tasks, outperforming other models by up to 0.680, 0.636, and 13.652 in terms of ECE, Brier Score, and Performance Score, respectively.",
+  "numbers": [
+   "0.680",
+   "0.636",
+   "13.652"
+  ],
+  "entities": [],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "open-the-oyster-empirical-evaluation-and-improvement-of-code-reasoning-confidenc",
+  "candidate_component_bearing": "L1 (execution-based code-reasoning labels; no release-date control) and L2 partially (reasoning vs non-reasoning DeepSeek-V3/R1; verbal only, no probes). Core claim on code with execution labels: partial; code-reasoning tasks (I/O prediction), not code generation.",
+  "breadth": {
+   "confidence_families": "verbalized intrinsic confidence, reassess (self-doubt) confidence, reflective LLM confidence, Platt scaling (Sec. 3.2-3.3)",
+   "model_families_and_sizes": "DeepSeek-V3, DeepSeek-R1, Qwen3-1.7B/14B/32B, GPT-3.5 Turbo (Sec. 4.3)",
+   "base_vs_instruct": "not present (searched: base vs instruct pair)",
+   "post_training_stages": "not present (searched: SFT/RL stage comparison)",
+   "reasoning_models": "yes: DeepSeek-R1 vs V3 (Sec. 4.3); reasoning enabled via R1 model",
+   "elicitation_formats": "answer plus confidence in one prompt; reassess re-prompt; separate reflective LLM (Sec. 3.3, Fig. 2)",
+   "benchmarks": "REval (3,152; CCP, PSP, EPP, OP) and CRUXEval (800; I and O) (Table 1)",
+   "label_source": "exact-match correctness of code-reasoning answers (Sec. 3.2); no code generation test execution",
+   "label_independence": "not present (searched: oracle audit)",
+   "contamination_split": "not present (searched: contamination, cutoff); temperature 0 (Sec. 4.3)",
+   "calibration_metrics": "ECE, Brier, Performance Score (Abstract)",
+   "granularity": "per-question answer (code reasoning)",
+   "causal_intervention": "no hidden-state intervention; prompt and Platt only"
+  }
+ },
+ {
+  "claim": "Hybrid reassess-prompt plus Platt scaling improves ECE by up to 0.541 and Brier by up to 0.628.",
+  "stance": "neutral",
+  "stance_target": "R1 candidate occupancy",
+  "evidence_type": "empirical",
+  "scope_conditions": "Abstract; Sec. 3.3",
+  "quoted_support": "The hybrid strategy combining the reassess prompt strategy and Platt Scaling achieves improvements of up to 0.541, 0.628, and 15.084 over the original performance",
+  "numbers": [
+   "0.541",
+   "0.628",
+   "15.084"
+  ],
+  "entities": [],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "open-the-oyster-empirical-evaluation-and-improvement-of-code-reasoning-confidenc",
+  "candidate_component_bearing": "L1 (execution-based code-reasoning labels; no release-date control) and L2 partially (reasoning vs non-reasoning DeepSeek-V3/R1; verbal only, no probes). Core claim on code with execution labels: partial; code-reasoning tasks (I/O prediction), not code generation.",
+  "breadth": {
+   "confidence_families": "verbalized intrinsic confidence, reassess (self-doubt) confidence, reflective LLM confidence, Platt scaling (Sec. 3.2-3.3)",
+   "model_families_and_sizes": "DeepSeek-V3, DeepSeek-R1, Qwen3-1.7B/14B/32B, GPT-3.5 Turbo (Sec. 4.3)",
+   "base_vs_instruct": "not present (searched: base vs instruct pair)",
+   "post_training_stages": "not present (searched: SFT/RL stage comparison)",
+   "reasoning_models": "yes: DeepSeek-R1 vs V3 (Sec. 4.3); reasoning enabled via R1 model",
+   "elicitation_formats": "answer plus confidence in one prompt; reassess re-prompt; separate reflective LLM (Sec. 3.3, Fig. 2)",
+   "benchmarks": "REval (3,152; CCP, PSP, EPP, OP) and CRUXEval (800; I and O) (Table 1)",
+   "label_source": "exact-match correctness of code-reasoning answers (Sec. 3.2); no code generation test execution",
+   "label_independence": "not present (searched: oracle audit)",
+   "contamination_split": "not present (searched: contamination, cutoff); temperature 0 (Sec. 4.3)",
+   "calibration_metrics": "ECE, Brier, Performance Score (Abstract)",
+   "granularity": "per-question answer (code reasoning)",
+   "causal_intervention": "no hidden-state intervention; prompt and Platt only"
+  }
+ },
+ {
+  "claim": "Reasoning vs non-reasoning (DeepSeek-R1 vs V3) reduces calibration error by over 50% on input-output prediction; only verbal confidence is evaluated, no probes or hidden states.",
+  "stance": "neutral",
+  "stance_target": "R1 candidate occupancy",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec. 1, Sec. 4.3",
+  "quoted_support": "the confidence calibration error of DeepSeek-Reasoner on input-output prediction tasks is reduced by more than 50% compared to the non-reasoning model, i.e., DeepSeek-Chat",
+  "numbers": [
+   "50%"
+  ],
+  "entities": [],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "open-the-oyster-empirical-evaluation-and-improvement-of-code-reasoning-confidenc",
+  "candidate_component_bearing": "L1 (execution-based code-reasoning labels; no release-date control) and L2 partially (reasoning vs non-reasoning DeepSeek-V3/R1; verbal only, no probes). Core claim on code with execution labels: partial; code-reasoning tasks (I/O prediction), not code generation.",
+  "breadth": {
+   "confidence_families": "verbalized intrinsic confidence, reassess (self-doubt) confidence, reflective LLM confidence, Platt scaling (Sec. 3.2-3.3)",
+   "model_families_and_sizes": "DeepSeek-V3, DeepSeek-R1, Qwen3-1.7B/14B/32B, GPT-3.5 Turbo (Sec. 4.3)",
+   "base_vs_instruct": "not present (searched: base vs instruct pair)",
+   "post_training_stages": "not present (searched: SFT/RL stage comparison)",
+   "reasoning_models": "yes: DeepSeek-R1 vs V3 (Sec. 4.3); reasoning enabled via R1 model",
+   "elicitation_formats": "answer plus confidence in one prompt; reassess re-prompt; separate reflective LLM (Sec. 3.3, Fig. 2)",
+   "benchmarks": "REval (3,152; CCP, PSP, EPP, OP) and CRUXEval (800; I and O) (Table 1)",
+   "label_source": "exact-match correctness of code-reasoning answers (Sec. 3.2); no code generation test execution",
+   "label_independence": "not present (searched: oracle audit)",
+   "contamination_split": "not present (searched: contamination, cutoff); temperature 0 (Sec. 4.3)",
+   "calibration_metrics": "ECE, Brier, Performance Score (Abstract)",
+   "granularity": "per-question answer (code reasoning)",
+   "causal_intervention": "no hidden-state intervention; prompt and Platt only"
+  }
+ }
+]

@@ -9,13 +9,15 @@ tags:
 - scoop-risk
 - novelty-risk
 - steering-fix
+- code-llm-confidence-positioning-d82d00
+- duplicate-abstract-only
 created: '2026-07-20T06:38:22.486534Z'
-updated: '2026-07-20T06:40:00.206555Z'
+updated: '2026-11-09T23:25:58.299192Z'
 source: https://arxiv.org/abs/2603.25052
 source_domain: arxiv.org
 fetched_at: '2026-07-20T06:38:22.486104Z'
 fetch_provider: builtin
-status: draft
+status: deprecated
 type: note
 tier: institutional
 content_type: paper

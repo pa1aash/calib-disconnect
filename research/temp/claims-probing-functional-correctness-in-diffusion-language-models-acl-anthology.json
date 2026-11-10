@@ -1,0 +1,100 @@
+{
+ "source_note_id": "probing-functional-correctness-in-diffusion-language-models-acl-anthology",
+ "claims": [
+  {
+   "claim": "Linear probes on LLaDA-8B and Dream-7B hidden states predict functional correctness; step-0 signal is comparable to an AR Qwen-2.5-7B last-prompt-token probe, so it reflects prompt difficulty.",
+   "stance": "supports",
+   "stance_target": "L2: hidden-state correctness probes with MBPP exist only for diffusion LMs, one of four tasks",
+   "evidence_type": "empirical",
+   "scope_conditions": "Full text read from the ACL Anthology PDF (curl into scratchpad); vault note is ABSTRACT-ONLY because the CLI rejected the PDF as junk",
+   "quoted_support": "Sec 6: An AR baseline probe on Qwen-2.5-7B's last prompt token achieves comparable AUC on most tasks (Appendix F), suggesting that much of the step-0 signal reflects prompt difficulty detectable by any model.",
+   "numbers": [
+    "step-0 AUC 0.61-0.80"
+   ],
+   "entities": [
+    "LLaDA-8B-Instruct",
+    "Dream-7B-Instruct"
+   ],
+   "time_period": "2026",
+   "region": "global",
+   "confidence": "high",
+   "source_note_id": "probing-functional-correctness-in-diffusion-language-models-acl-anthology"
+  },
+  {
+   "claim": "Probe confidence for selective generation saves 36-98% of denoising compute in an offline simulation (tau=0.80); on MBPP LLaDA saves 95.5% and Dream 97.8%, with classifier accuracy 66.5% and 70.0% against majority 59.1% and 55.6%.",
+   "stance": "supports",
+   "stance_target": "L3: probe-routed compute saving exists for MBPP in DLMs (simulation, not execution budget)",
+   "evidence_type": "empirical",
+   "scope_conditions": "offline; probe cost not included",
+   "quoted_support": "Table 2: LLaDA MBPP Compute saved 95.5%, Clf. accuracy 66.5%, Majority acc. 59.1%; Dream MBPP 97.8%, 70.0%, 55.6%",
+   "numbers": [
+    "95.5%",
+    "97.8%",
+    "66.5%",
+    "70.0%",
+    "36-98%"
+   ],
+   "entities": [
+    "MBPP"
+   ],
+   "time_period": "2026",
+   "region": "global",
+   "confidence": "high",
+   "source_note_id": "probing-functional-correctness-in-diffusion-language-models-acl-anthology"
+  },
+  {
+   "claim": "The probe outperforms raw softmax entropy and max-prob baselines by 5-20 pp classification accuracy at tau=0.80, and a text-feature probe in 7 of 8 settings.",
+   "stance": "supports",
+   "stance_target": "L2: probe-beats-readout comparison in DLMs",
+   "evidence_type": "empirical",
+   "scope_conditions": "8 (dataset, model) settings",
+   "quoted_support": "Sec 5.3: the probe outperforms the best raw signal in classification accuracy at tau = 0.80 by 5-20 percentage points",
+   "numbers": [
+    "5-20 pp",
+    "7 of 8 settings",
+    "AUC gap 0.12 avg, 0.25 max"
+   ],
+   "entities": [
+    "LR-entropy"
+   ],
+   "time_period": "2026",
+   "region": "global",
+   "confidence": "high",
+   "source_note_id": "probing-functional-correctness-in-diffusion-language-models-acl-anthology"
+  },
+  {
+   "claim": "Probes use PCA to 64 components and logistic regression with 5-fold CV; shuffled-label controls give AUC 0.53-0.58 versus 0.65-0.88 real; MBPP has 257 sanitized test instances.",
+   "stance": "neutral",
+   "stance_target": "L2 rigor comparison",
+   "evidence_type": "empirical",
+   "scope_conditions": "Sec 3, 4",
+   "quoted_support": "Sec 3: shuffled-label controls yield 0.53-0.58 across all eight (dataset, model) settings, well below the actual probe AUCs of 0.65-0.88",
+   "numbers": [
+    "257 MBPP instances",
+    "128 denoising steps",
+    "7 checkpoint steps"
+   ],
+   "entities": [],
+   "time_period": "2026",
+   "region": "global",
+   "confidence": "high",
+   "source_note_id": "probing-functional-correctness-in-diffusion-language-models-acl-anthology"
+  }
+ ],
+ "breadth": {
+  "confidence_families": "logistic-regression hidden-state probe; softmax entropy/max-prob baselines (Sec 3, 5.3)",
+  "model_families_and_sizes": "LLaDA-8B-Instruct, Dream-7B-Instruct, plus Qwen-2.5-7B AR control (Sec 4, 6)",
+  "base_vs_instruct": "not present (instruct models only)",
+  "post_training_stages": "Dream fine-tuned from Qwen-2.5 vs LLaDA trained from scratch, discussed correlationally (Sec 6)",
+  "reasoning_models": "not present (searched: reasoning model)",
+  "elicitation_formats": "not present (no verbal readout)",
+  "benchmarks": "JSON schema 272, GSM8K 1,319, MBPP 257, ARC-Challenge 1,172 (Sec 4)",
+  "label_source": "MBPP: passes all provided test assertions (Sec 4)",
+  "label_independence": "tests independent of the probe",
+  "contamination_split": "5-fold stratified CV; no release-date control",
+  "calibration_metrics": "AUC, classification accuracy, compute saved (Table 2); no ECE",
+  "granularity": "whole-output, per denoising step, per layer, 4 position regions",
+  "causal_intervention": "not present (steering cited as other work, none performed)"
+ },
+ "fulltext_status": "vault note ABSTRACT-ONLY; full text read from the aclanthology PDF via curl and pdftotext in the scratchpad"
+}

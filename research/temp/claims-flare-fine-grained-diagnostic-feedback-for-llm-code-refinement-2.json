@@ -1,0 +1,111 @@
+[
+ {
+  "claim": "FLARE trains a 6-layer, 8-head transformer encoder on generator token probabilities, embeddings, and syntactic token types to predict line-level suspiciousness, then searches top-k regions and selects by execution outcome.",
+  "stance": "neutral",
+  "stance_target": "L4: localization and targeted repair",
+  "evidence_type": "empirical",
+  "scope_conditions": "LiveCodeBench, BigCodeBench; Qwen3-8B, Qwen2.5-Coder-7B, Llama-3.1-8B, Llama-3.3-70B, GPT-4o-mini",
+  "quoted_support": "we present Flare, an iterative framework with a lightweight diagnostic model that predicts line-level suspiciousness signals for bug localization and code refinement.",
+  "numbers": [
+   "k=10",
+   "N=5 iterations",
+   "67% Top-1 and 89% Top-10 localization accuracy"
+  ],
+  "entities": [
+   "FLARE",
+   "NL-Debugging",
+   "Self-Debugging",
+   "Self-Refine"
+  ],
+  "time_period": "Jun 2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "flare-fine-grained-diagnostic-feedback-for-llm-code-refinement-2",
+  "breadth": {
+   "confidence_families": "generator token probabilities as features to a trained diagnostic encoder (Sec 2.1)",
+   "model_families_and_sizes": "Qwen3-8B, Qwen2.5-Coder-7B, Llama-3.1-8B, Llama-3.3-70B, GPT-4o-mini (Sec 3.1)",
+   "base_vs_instruct": "not present (searched: full text, keyword scan)",
+   "post_training_stages": "not present (searched: full text, keyword scan)",
+   "reasoning_models": "not present (searched: full text, keyword scan)",
+   "elicitation_formats": "not present (searched: full text, keyword scan)",
+   "benchmarks": "LiveCodeBench, BigCodeBench (Sec 3.1)",
+   "label_source": "ground-truth bug locations and test execution (Sec 2.1, 3.1)",
+   "label_independence": "not present (searched: independence)",
+   "contamination_split": "LiveCodeBench described as mitigating contamination; no explicit date split stated (Sec 3.1)",
+   "calibration_metrics": "Pass@1, Top-1/Top-10 localization accuracy; no ECE",
+   "granularity": "line-level / lexical-unit",
+   "causal_intervention": "not present"
+  }
+ },
+ {
+  "claim": "FLARE (k=1) gains 1.72% to 7.42% absolute pass@1 over NL-Debugging; k=10 gives 8.50% average improvement over no candidate search; on LiveCodeBench Llama-3.3-70B goes from 46.86 (alone) to 64.57 (k=1) and 76.57 (k=10).",
+  "stance": "supports",
+  "stance_target": "L4: localized repair beats regeneration/self-critique baselines",
+  "evidence_type": "empirical",
+  "scope_conditions": "Table 1",
+  "quoted_support": "Even without expanded search, Flare (k=1) still outperforms Self-Debugging and Self-Refine in all settings and surpasses NL-Debugging in 9 of the 10 settings.",
+  "numbers": [
+   "46.86",
+   "64.57",
+   "76.57",
+   "1.72% to 7.42%",
+   "8.50%"
+  ],
+  "entities": [
+   "Llama-3.3-70B",
+   "LiveCodeBench"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "flare-fine-grained-diagnostic-feedback-for-llm-code-refinement-2",
+  "breadth": {
+   "confidence_families": "generator token probabilities as features to a trained diagnostic encoder (Sec 2.1)",
+   "model_families_and_sizes": "Qwen3-8B, Qwen2.5-Coder-7B, Llama-3.1-8B, Llama-3.3-70B, GPT-4o-mini (Sec 3.1)",
+   "base_vs_instruct": "not present (searched: full text, keyword scan)",
+   "post_training_stages": "not present (searched: full text, keyword scan)",
+   "reasoning_models": "not present (searched: full text, keyword scan)",
+   "elicitation_formats": "not present (searched: full text, keyword scan)",
+   "benchmarks": "LiveCodeBench, BigCodeBench (Sec 3.1)",
+   "label_source": "ground-truth bug locations and test execution (Sec 2.1, 3.1)",
+   "label_independence": "not present (searched: independence)",
+   "contamination_split": "LiveCodeBench described as mitigating contamination; no explicit date split stated (Sec 3.1)",
+   "calibration_metrics": "Pass@1, Top-1/Top-10 localization accuracy; no ECE",
+   "granularity": "line-level / lexical-unit",
+   "causal_intervention": "not present"
+  }
+ },
+ {
+  "claim": "Confidence enters only as input features to a supervised localizer; no calibration metric (ECE, Brier) of line-level or requirement-level confidence is reported, and the signals come from the generator's token probabilities, not hidden states or verbal confidence.",
+  "stance": "supports",
+  "stance_target": "L4 calibrated per-requirement confidence not occupied by FLARE",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec 2.1",
+  "quoted_support": "we use the LLM's confidence signals, token embeddings, and syntactic token types as inputs to the diagnostic model.",
+  "numbers": [
+   "0 ECE/Brier reported (keyword scan)"
+  ],
+  "entities": [
+   "FLARE"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "medium",
+  "source_note_id": "flare-fine-grained-diagnostic-feedback-for-llm-code-refinement-2",
+  "breadth": {
+   "confidence_families": "generator token probabilities as features to a trained diagnostic encoder (Sec 2.1)",
+   "model_families_and_sizes": "Qwen3-8B, Qwen2.5-Coder-7B, Llama-3.1-8B, Llama-3.3-70B, GPT-4o-mini (Sec 3.1)",
+   "base_vs_instruct": "not present (searched: full text, keyword scan)",
+   "post_training_stages": "not present (searched: full text, keyword scan)",
+   "reasoning_models": "not present (searched: full text, keyword scan)",
+   "elicitation_formats": "not present (searched: full text, keyword scan)",
+   "benchmarks": "LiveCodeBench, BigCodeBench (Sec 3.1)",
+   "label_source": "ground-truth bug locations and test execution (Sec 2.1, 3.1)",
+   "label_independence": "not present (searched: independence)",
+   "contamination_split": "LiveCodeBench described as mitigating contamination; no explicit date split stated (Sec 3.1)",
+   "calibration_metrics": "Pass@1, Top-1/Top-10 localization accuracy; no ECE",
+   "granularity": "line-level / lexical-unit",
+   "causal_intervention": "not present"
+  }
+ }
+]

@@ -1,0 +1,104 @@
+[
+ {
+  "claim": "A compact set of MLP blocks and attention heads in middle-to-late layers writes the confidence-inflation signal at the final token for verbalized confidence in two 3B instruct models.",
+  "stance": "supports",
+  "stance_target": "causal/mechanistic evidence on verbalized confidence exists outside code",
+  "evidence_type": "empirical",
+  "scope_conditions": "Qwen2.5-3B-Instruct, Llama-3.2-3B-Instruct; PopQA, NQOpen, MMLU",
+  "quoted_support": "we find that a compact set of MLP blocks and attention heads, concentrated in middle-to-late layers, consistently writes the confidence-inflation signal at the final token position.",
+  "numbers": [
+   "top-3,000 edges <0.6% (Qwen) and <0.5% (Llama) of 527,743 / 693,267",
+   "ablation removes 74-79% of baseline TSLD (Table 2)"
+  ],
+  "entities": [
+   "Qwen2.5-3B-Instruct",
+   "Llama-3.2-3B-Instruct",
+   "TSLD"
+  ],
+  "time_period": "2026 (COLM 2026, v3 27 Jul 2026)",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "wired-for-overconfidence-a-mechanistic-perspective-on-inflated-verbalized-confid",
+  "breadth": {
+   "confidence_families": "verbalized integer confidence 0-99 after answer (two-step elicitation, Fig 1, Sec 2); internal logit-gap proxy TSLD",
+   "model_families_and_sizes": "Qwen2.5-3B-Instruct, Llama-3.2-3B-Instruct; scale check on Qwen2.5-7B-Instruct (Sec 2, Appendix A)",
+   "base_vs_instruct": "not present (searched: base model, instruct comparison; only instruct models)",
+   "post_training_stages": "not present (instruct only)",
+   "reasoning_models": "not present (searched: reasoning model, thinking)",
+   "elicitation_formats": "one format: verbalized 0-99 integer after the model's own factual answer (Fig 1)",
+   "benchmarks": "PopQA, NQOpen, MMLU (factual QA); no code benchmark",
+   "label_source": "factual answer correctness against dataset gold answers",
+   "label_independence": "dataset gold labels, independent of model",
+   "contamination_split": "not present (searched: contaminat)",
+   "calibration_metrics": "ECE and Brier before/after intervention (Table 3); TSLD",
+   "granularity": "per-question final token position; circuit components (MLP blocks, attention heads)",
+   "causal_intervention": "yes: edge attribution patching with integrated gradients, mean ablation, activation steering; circuit completeness 74-79% (Table 2); steering lowers ECE (Table 3)"
+  }
+ },
+ {
+  "claim": "Steering or ablation on the discovered circuit substantially lowers ECE of verbalized confidence.",
+  "stance": "supports",
+  "stance_target": "causal interventions on the confidence readout improve calibration",
+  "evidence_type": "empirical",
+  "scope_conditions": "factual QA only; Table 3 and scale check on Qwen2.5-7B",
+  "quoted_support": "steering on this circuit reduces ECE from 0.647 to 0.068 on PopQA",
+  "numbers": [
+   "ECE 0.647 -> 0.068 (Qwen2.5-7B, PopQA)",
+   "Qwen2.5-3B steering alpha 0.5: ECE 0.111, 77.5% improvement"
+  ],
+  "entities": [
+   "Qwen2.5-7B-Instruct"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "wired-for-overconfidence-a-mechanistic-perspective-on-inflated-verbalized-confid",
+  "breadth": {
+   "confidence_families": "verbalized integer confidence 0-99 after answer (two-step elicitation, Fig 1, Sec 2); internal logit-gap proxy TSLD",
+   "model_families_and_sizes": "Qwen2.5-3B-Instruct, Llama-3.2-3B-Instruct; scale check on Qwen2.5-7B-Instruct (Sec 2, Appendix A)",
+   "base_vs_instruct": "not present (searched: base model, instruct comparison; only instruct models)",
+   "post_training_stages": "not present (instruct only)",
+   "reasoning_models": "not present (searched: reasoning model, thinking)",
+   "elicitation_formats": "one format: verbalized 0-99 integer after the model's own factual answer (Fig 1)",
+   "benchmarks": "PopQA, NQOpen, MMLU (factual QA); no code benchmark",
+   "label_source": "factual answer correctness against dataset gold answers",
+   "label_independence": "dataset gold labels, independent of model",
+   "contamination_split": "not present (searched: contaminat)",
+   "calibration_metrics": "ECE and Brier before/after intervention (Table 3); TSLD",
+   "granularity": "per-question final token position; circuit components (MLP blocks, attention heads)",
+   "causal_intervention": "yes: edge attribution patching with integrated gradients, mean ablation, activation steering; circuit completeness 74-79% (Table 2); steering lowers ECE (Table 3)"
+  }
+ },
+ {
+  "claim": "The study covers factual QA only and does not test code, execution labels, or probe-vs-verbal comparison; it therefore does not occupy L2 on code.",
+  "stance": "neutral",
+  "stance_target": "L2 occupancy on code",
+  "evidence_type": "expert-opinion",
+  "scope_conditions": "searched full text for code, HumanEval, MBPP, execution: none",
+  "quoted_support": "Across two instruction-tuned LLMs on three datasets",
+  "numbers": [
+   "2 models",
+   "3 datasets"
+  ],
+  "entities": [],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "medium",
+  "source_note_id": "wired-for-overconfidence-a-mechanistic-perspective-on-inflated-verbalized-confid",
+  "breadth": {
+   "confidence_families": "verbalized integer confidence 0-99 after answer (two-step elicitation, Fig 1, Sec 2); internal logit-gap proxy TSLD",
+   "model_families_and_sizes": "Qwen2.5-3B-Instruct, Llama-3.2-3B-Instruct; scale check on Qwen2.5-7B-Instruct (Sec 2, Appendix A)",
+   "base_vs_instruct": "not present (searched: base model, instruct comparison; only instruct models)",
+   "post_training_stages": "not present (instruct only)",
+   "reasoning_models": "not present (searched: reasoning model, thinking)",
+   "elicitation_formats": "one format: verbalized 0-99 integer after the model's own factual answer (Fig 1)",
+   "benchmarks": "PopQA, NQOpen, MMLU (factual QA); no code benchmark",
+   "label_source": "factual answer correctness against dataset gold answers",
+   "label_independence": "dataset gold labels, independent of model",
+   "contamination_split": "not present (searched: contaminat)",
+   "calibration_metrics": "ECE and Brier before/after intervention (Table 3); TSLD",
+   "granularity": "per-question final token position; circuit components (MLP blocks, attention heads)",
+   "causal_intervention": "yes: edge attribution patching with integrated gradients, mean ablation, activation steering; circuit completeness 74-79% (Table 2); steering lowers ECE (Table 3)"
+  }
+ }
+]

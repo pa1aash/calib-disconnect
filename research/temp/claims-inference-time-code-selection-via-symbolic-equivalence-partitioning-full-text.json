@@ -1,0 +1,99 @@
+[
+ {
+  "claim": "SEP raises average selection accuracy from 0.754 to 0.826 on HumanEval+ and 0.565 to 0.647 on LiveCodeBench at N=10 across seven models without learned verifiers.",
+  "stance": "supports",
+  "stance_target": "verification-utility baselines exist as selection methods, not confidence",
+  "evidence_type": "empirical",
+  "scope_conditions": "N=10; seven models 4B-20B",
+  "quoted_support": "At N = 10, SEP improves average accuracy from 0.754 to 0.826 on HumanEval+ and from 0.565 to 0.647 on LiveCodeBench",
+  "numbers": [
+   "0.754 -> 0.826",
+   "0.565 -> 0.647",
+   "best or tied-best in 40 of 42 settings"
+  ],
+  "entities": [
+   "SEP",
+   "CodeT",
+   "SRank"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "inference-time-code-selection-via-symbolic-equivalence-partitioning-full-text",
+  "breadth": {
+   "confidence_families": "not present (searched: confidence, calibrat, ECE); selection by symbolic functional agreement",
+   "model_families_and_sizes": "seven models, 4B-20B: Qwen3-4B, Qwen3-4B-Instruct-2507, Qwen3-14B, Llama-3.1-8B-Instruct, gpt-oss-20b and others (Sec 4.1.2, Tables 1-2)",
+   "base_vs_instruct": "Qwen3-4B vs Qwen3-4B-Instruct-2507 appear in tables but not as a studied factor",
+   "post_training_stages": "not present",
+   "reasoning_models": "mix of reasoning and non-reasoning (Sec 4.1.2); settings in Appendix E",
+   "elicitation_formats": "not present (selection, not confidence)",
+   "benchmarks": "HumanEval+ and 438 filtered LiveCodeBench problems (Sec 4.1.1)",
+   "label_source": "hidden test suites / LiveCodeBench tests",
+   "label_independence": "tests independent of selector",
+   "contamination_split": "LiveCodeBench described as 'a contamination-resistant benchmark of recent contest-style programming problems'; no own release-date split",
+   "calibration_metrics": "selection accuracy vs Pass@1 and Pass@10 only",
+   "granularity": "candidate program among N in {5,10,20}",
+   "causal_intervention": "constraint-injection ablation (Sec 4.4), not on confidence"
+  }
+ },
+ {
+  "claim": "Consensus can fail because models produce correlated wrong solutions, which bounds agreement-based confidence in code.",
+  "stance": "supports",
+  "stance_target": "agreement is not correctness",
+  "evidence_type": "theoretical",
+  "scope_conditions": "Introduction",
+  "quoted_support": "consensus alone is not sufficient for correctness, because models can also produce correlated wrong solutions that implement the same mistaken behavior.",
+  "numbers": [],
+  "entities": [],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "medium",
+  "source_note_id": "inference-time-code-selection-via-symbolic-equivalence-partitioning-full-text",
+  "breadth": {
+   "confidence_families": "not present (searched: confidence, calibrat, ECE); selection by symbolic functional agreement",
+   "model_families_and_sizes": "seven models, 4B-20B: Qwen3-4B, Qwen3-4B-Instruct-2507, Qwen3-14B, Llama-3.1-8B-Instruct, gpt-oss-20b and others (Sec 4.1.2, Tables 1-2)",
+   "base_vs_instruct": "Qwen3-4B vs Qwen3-4B-Instruct-2507 appear in tables but not as a studied factor",
+   "post_training_stages": "not present",
+   "reasoning_models": "mix of reasoning and non-reasoning (Sec 4.1.2); settings in Appendix E",
+   "elicitation_formats": "not present (selection, not confidence)",
+   "benchmarks": "HumanEval+ and 438 filtered LiveCodeBench problems (Sec 4.1.1)",
+   "label_source": "hidden test suites / LiveCodeBench tests",
+   "label_independence": "tests independent of selector",
+   "contamination_split": "LiveCodeBench described as 'a contamination-resistant benchmark of recent contest-style programming problems'; no own release-date split",
+   "calibration_metrics": "selection accuracy vs Pass@1 and Pass@10 only",
+   "granularity": "candidate program among N in {5,10,20}",
+   "causal_intervention": "constraint-injection ablation (Sec 4.4), not on confidence"
+  }
+ },
+ {
+  "claim": "No calibration or confidence-readout analysis; relevant to L1 only as LiveCodeBench usage and to L3 as a non-confidence selection baseline.",
+  "stance": "neutral",
+  "stance_target": "L1/L3 occupancy",
+  "evidence_type": "expert-opinion",
+  "scope_conditions": "searched full text",
+  "quoted_support": "LiveCodeBench Jain et al. [2025], a contamination-resistant benchmark of recent contest-style programming problems.",
+  "numbers": [],
+  "entities": [
+   "LiveCodeBench"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "medium",
+  "source_note_id": "inference-time-code-selection-via-symbolic-equivalence-partitioning-full-text",
+  "breadth": {
+   "confidence_families": "not present (searched: confidence, calibrat, ECE); selection by symbolic functional agreement",
+   "model_families_and_sizes": "seven models, 4B-20B: Qwen3-4B, Qwen3-4B-Instruct-2507, Qwen3-14B, Llama-3.1-8B-Instruct, gpt-oss-20b and others (Sec 4.1.2, Tables 1-2)",
+   "base_vs_instruct": "Qwen3-4B vs Qwen3-4B-Instruct-2507 appear in tables but not as a studied factor",
+   "post_training_stages": "not present",
+   "reasoning_models": "mix of reasoning and non-reasoning (Sec 4.1.2); settings in Appendix E",
+   "elicitation_formats": "not present (selection, not confidence)",
+   "benchmarks": "HumanEval+ and 438 filtered LiveCodeBench problems (Sec 4.1.1)",
+   "label_source": "hidden test suites / LiveCodeBench tests",
+   "label_independence": "tests independent of selector",
+   "contamination_split": "LiveCodeBench described as 'a contamination-resistant benchmark of recent contest-style programming problems'; no own release-date split",
+   "calibration_metrics": "selection accuracy vs Pass@1 and Pass@10 only",
+   "granularity": "candidate program among N in {5,10,20}",
+   "causal_intervention": "constraint-injection ablation (Sec 4.4), not on confidence"
+  }
+ }
+]

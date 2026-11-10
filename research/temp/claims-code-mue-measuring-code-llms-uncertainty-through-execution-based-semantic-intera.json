@@ -1,0 +1,110 @@
+[
+ {
+  "claim": "Code-MUE is a black-box uncertainty measure: Von Neumann entropy of an execution-based semantic interaction graph over N=100 sampled programs executed on K=20 probe inputs.",
+  "stance": "neutral",
+  "stance_target": "L1: execution-grounded confidence measurement",
+  "evidence_type": "empirical",
+  "scope_conditions": "HumanEval, MBPP200, QuixBugs, CodeNet200; eight LLMs; ISSTA 2026",
+  "quoted_support": "Code-MUE grounds uncertainty in observable runtime behavior, calculating the Von Neumann entropy of the solution space to quantify global semantic diversity.",
+  "numbers": [
+   "N=100 candidates",
+   "K=20 probe inputs",
+   "Spearman up to -0.98",
+   "AUROC > 0.85 on multiple benchmarks"
+  ],
+  "entities": [
+   "Code-MUE",
+   "Von Neumann entropy",
+   "ISSTA 2026"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "code-mue-measuring-code-llms-uncertainty-through-execution-based-semantic-intera",
+  "breadth": {
+   "confidence_families": "sampling-consistency over execution behavior (Sec 3-4); lexical, embedding, length, logit baselines (Table 2)",
+   "model_families_and_sizes": "GPT-4.1-mini, GPT-4.1-nano, Claude-3-Haiku, Gemini-2.5-Flash-Lite, Llama 3.1-8B-Instruct, Mistral-7B-Instruct-v0.3, DeepSeek-Coder-6.7b etc. (Table 1)",
+   "base_vs_instruct": "not present (searched: base, pretrained); instruct and code-specialized models mixed",
+   "post_training_stages": "not present",
+   "reasoning_models": "not present (searched: reasoning, thinking)",
+   "elicitation_formats": "no verbalized confidence evaluated; sampling at T=1.0 (Sec 7)",
+   "benchmarks": "HumanEval, MBPP200, QuixBugs, CodeNet200 (Sec 5.1, Table 1)",
+   "label_source": "test execution (pass-all-tests); Solved if any of N passes (Sec 5.2.1)",
+   "label_independence": "probe inputs used only to compare behavior, not generate labels (Sec 7)",
+   "contamination_split": "not present (searched: contaminat, leak, memoriz)",
+   "calibration_metrics": "Spearman rho, AUROC (Table 2); selective prediction",
+   "granularity": "problem-level",
+   "causal_intervention": "not present"
+  }
+ },
+ {
+  "claim": "Evaluation excludes white/grey-box signals by design and compares only black-box multi-sample baselines (lexical, embedding, length, logit where available), so no probe-versus-verbal comparison exists.",
+  "stance": "supports",
+  "stance_target": "L2 remains unoccupied by Code-MUE",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec 5.1 Baselines",
+  "quoted_support": "We therefore exclude white-box or grey-box approaches that rely on token-level logits or internal activation states, as such signals are frequently inaccessible in commercial API-based services.",
+  "numbers": [
+   "8 LLMs",
+   "4 datasets"
+  ],
+  "entities": [
+   "Code-MUE"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "code-mue-measuring-code-llms-uncertainty-through-execution-based-semantic-intera",
+  "breadth": {
+   "confidence_families": "sampling-consistency over execution behavior (Sec 3-4); lexical, embedding, length, logit baselines (Table 2)",
+   "model_families_and_sizes": "GPT-4.1-mini, GPT-4.1-nano, Claude-3-Haiku, Gemini-2.5-Flash-Lite, Llama 3.1-8B-Instruct, Mistral-7B-Instruct-v0.3, DeepSeek-Coder-6.7b etc. (Table 1)",
+   "base_vs_instruct": "not present (searched: base, pretrained); instruct and code-specialized models mixed",
+   "post_training_stages": "not present",
+   "reasoning_models": "not present (searched: reasoning, thinking)",
+   "elicitation_formats": "no verbalized confidence evaluated; sampling at T=1.0 (Sec 7)",
+   "benchmarks": "HumanEval, MBPP200, QuixBugs, CodeNet200 (Sec 5.1, Table 1)",
+   "label_source": "test execution (pass-all-tests); Solved if any of N passes (Sec 5.2.1)",
+   "label_independence": "probe inputs used only to compare behavior, not generate labels (Sec 7)",
+   "contamination_split": "not present (searched: contaminat, leak, memoriz)",
+   "calibration_metrics": "Spearman rho, AUROC (Table 2); selective prediction",
+   "granularity": "problem-level",
+   "causal_intervention": "not present"
+  }
+ },
+ {
+  "claim": "Labels are problem-level: Solved if at least one of N sampled candidates passes all tests; correlation is with Pass@1. Benchmarks are HumanEval, MBPP200, QuixBugs, CodeNet200 with no release-date split; the text has no contamination discussion.",
+  "stance": "supports",
+  "stance_target": "L1: release-date contamination control not occupied",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec 5.2",
+  "quoted_support": "we assign each instance a binary label: Solved if at least one of the N N sampled candidates passes all tests, and Unsolved otherwise.",
+  "numbers": [
+   "0 occurrences of 'contaminat' in full text"
+  ],
+  "entities": [
+   "HumanEval",
+   "MBPP",
+   "QuixBugs",
+   "CodeNet"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "medium",
+  "source_note_id": "code-mue-measuring-code-llms-uncertainty-through-execution-based-semantic-intera",
+  "breadth": {
+   "confidence_families": "sampling-consistency over execution behavior (Sec 3-4); lexical, embedding, length, logit baselines (Table 2)",
+   "model_families_and_sizes": "GPT-4.1-mini, GPT-4.1-nano, Claude-3-Haiku, Gemini-2.5-Flash-Lite, Llama 3.1-8B-Instruct, Mistral-7B-Instruct-v0.3, DeepSeek-Coder-6.7b etc. (Table 1)",
+   "base_vs_instruct": "not present (searched: base, pretrained); instruct and code-specialized models mixed",
+   "post_training_stages": "not present",
+   "reasoning_models": "not present (searched: reasoning, thinking)",
+   "elicitation_formats": "no verbalized confidence evaluated; sampling at T=1.0 (Sec 7)",
+   "benchmarks": "HumanEval, MBPP200, QuixBugs, CodeNet200 (Sec 5.1, Table 1)",
+   "label_source": "test execution (pass-all-tests); Solved if any of N passes (Sec 5.2.1)",
+   "label_independence": "probe inputs used only to compare behavior, not generate labels (Sec 7)",
+   "contamination_split": "not present (searched: contaminat, leak, memoriz)",
+   "calibration_metrics": "Spearman rho, AUROC (Table 2); selective prediction",
+   "granularity": "problem-level",
+   "causal_intervention": "not present"
+  }
+ }
+]

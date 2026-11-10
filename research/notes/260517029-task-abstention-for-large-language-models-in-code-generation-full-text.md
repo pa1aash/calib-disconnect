@@ -7,26 +7,21 @@ tags:
 - locus-fallback-utility-of-collapsed-confidence
 - abstention
 - selective-generation
+- code-llm-confidence-positioning-d82d00
 created: '2026-07-17T19:02:32.812171Z'
+updated: '2026-11-09T23:27:43.882987Z'
 source: http://arxiv.org/pdf/2605.17029
-status: draft
+status: review
 type: note
 tier: institutional
 content_type: paper
 deprecated: false
-summary: 'Full-text PDF extraction of the CODEREFUSER paper (companion to the abstract-only
-  stub, which gave no numbers). Benchmarks: HumanEval + MBPP, 4 open-source code LLMs
-  (DeepSeek-Coder-33B, Qwen2.5-Coder-32B, CodeLlama-7B, WizardCoder-33B). Zero-oracle
-  AT TEST TIME confirmed (oracle tests used only once offline during calibration;
-  deployment uses purely LLM-generated tests + execution-consistency clustering with
-  a sample-test dual-filtering mechanism). Default alpha=0.2, delta=0.1 (90% conf.),
-  k=3, 60/40 cal/test split, N=64 samples. Headline: 26.5pt absolute precision improvement,
-  11.9pt F1 improvement over best baseline, averaged. Best single number for a coverage/alpha
-  comparison: at alpha=0.2 on MBPP+Qwen2.5-Coder-32B, method abstains on only ~30%
-  of tasks (~70% coverage) vs. >80% abstention for the PPL baseline at the same risk
-  level. Metric is abstention-decision Precision/F1 against a 256-sample oracle-derived
-  ground-truth label, NOT a direct FDR/accepted-output-accuracy number like the CIC
-  paper -- a format mismatch to flag when cross-comparing.'
+summary: 'CODEREFUSER (Zhou et al., arXiv 2605.17029): Learn-Then-Test risk-controlled
+  abstention with execution-consistency cluster ratio/semantic entropy over generated
+  tests; HumanEval and MBPP, four open code LLMs 7B-33B; +26.5 pp precision, +11.9
+  pp F1 vs best baseline; MBPP Qwen2.5-Coder-32B at alpha=0.2 abstains ~30% vs >80%
+  for PPL. Full text. CLOSE occupant for L3 abstention/selective use, not execution-budget
+  routing vs random/oracle, no verbal update after failures.'
 ---
 
 *Suggested by [[260517029-task-abstention-for-large-language-models-in-code-generation]] — Full-text follow-up fetch of the PDF; the original note only captured the arXiv abstract page, which gave no concrete accuracy/coverage numbers. This note extracts the concrete results tables.*

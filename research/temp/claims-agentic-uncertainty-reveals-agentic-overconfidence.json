@@ -1,0 +1,67 @@
+[
+ {
+  "claim": "Mid-execution agents (same model as coding agent) lower stated success probability as partial work is observed, but the doubt is uninformative: equal for successes and failures; AUROC GPT ~0.53 stable, Gemini 0.49 to 0.64, Claude 0.62 to 0.52 across 25/50/75% checkpoints.",
+  "stance": "supports",
+  "stance_target": "verbal confidence does not reliably track evidence accrued during agent execution",
+  "evidence_type": "empirical",
+  "scope_conditions": "SWE-bench Pro, n=100, read-only sandbox so no observed test failures",
+  "quoted_support": "Sec 3 'Mid-Execution: Uninformative Doubt'; Table 1; intro: 'confidence decreases as they observe their partial work, but this doubt is uninformative, occurring equally for successes and failures.'",
+  "numbers": [
+   "GPT ~0.53",
+   "Gemini 0.49->0.64",
+   "Claude 0.62->0.52"
+  ],
+  "entities": [],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "agentic-uncertainty-reveals-agentic-overconfidence",
+  "breadth": {
+   "confidence_families": "stated success probability only (Sec 2.2)",
+   "model_families_and_sizes": "GPT-5.2-Codex, Gemini-3-Pro, Claude Opus 4.5 (Sec 3)",
+   "base_vs_instruct": "not present (searched: full text of fetched HTML)",
+   "post_training_stages": "not present (searched: full text of fetched HTML)",
+   "reasoning_models": "not controlled (frontier agents)",
+   "elicitation_formats": "pre/mid/post-execution and adversarial 'find bugs' framing (Sec 2.2, Table 2)",
+   "benchmarks": "100 SWE-bench Pro tasks (Sec 3)",
+   "label_source": "SWE-bench Pro tests",
+   "label_independence": "not present (searched: full text of fetched HTML)",
+   "contamination_split": "not present (searched: full text of fetched HTML)",
+   "calibration_metrics": "AUROC, overconfidence, ECE (Tables 1-2)",
+   "granularity": "trajectory checkpoints 25/50/75% (Sec 2.2.2); read-only repo, agent cannot run tests",
+   "causal_intervention": "adversarial prompt framing only; no model-internal intervention"
+  }
+ },
+ {
+  "claim": "Post-execution agents predict ~73% success vs 35% true for GPT-5.2-Codex; adversarial framing reduces overconfidence by up to 15 pp.",
+  "stance": "supports",
+  "stance_target": "agentic stated confidence is systematically overconfident",
+  "evidence_type": "empirical",
+  "scope_conditions": "SWE-bench Pro, n=100",
+  "quoted_support": "Intro bullets; Table 2",
+  "numbers": [
+   "73% vs 35%",
+   "up to 15 pp"
+  ],
+  "entities": [],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "agentic-uncertainty-reveals-agentic-overconfidence",
+  "breadth": {
+   "confidence_families": "not present (searched: full text of fetched HTML)",
+   "model_families_and_sizes": "not present (searched: full text of fetched HTML)",
+   "base_vs_instruct": "not present (searched: full text of fetched HTML)",
+   "post_training_stages": "not present (searched: full text of fetched HTML)",
+   "reasoning_models": "not present (searched: full text of fetched HTML)",
+   "elicitation_formats": "not present (searched: full text of fetched HTML)",
+   "benchmarks": "not present (searched: full text of fetched HTML)",
+   "label_source": "not present (searched: full text of fetched HTML)",
+   "label_independence": "not present (searched: full text of fetched HTML)",
+   "contamination_split": "not present (searched: full text of fetched HTML)",
+   "calibration_metrics": "not present (searched: full text of fetched HTML)",
+   "granularity": "not present (searched: full text of fetched HTML)",
+   "causal_intervention": "not present (searched: full text of fetched HTML)"
+  }
+ }
+]

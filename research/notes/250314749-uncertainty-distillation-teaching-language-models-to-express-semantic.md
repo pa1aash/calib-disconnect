@@ -5,7 +5,7 @@ id: 250314749-uncertainty-distillation-teaching-language-models-to-express-seman
 tags:
 - code-llm-calibration-aaai27-eabf3f
 created: '2026-07-17T18:30:18.267217Z'
-updated: '2026-07-17T18:33:02.038586Z'
+updated: '2026-11-10T09:27:37.241447Z'
 source: http://arxiv.org/abs/2503.14749
 source_domain: arxiv.org
 fetched_at: '2026-07-17T18:30:18.266699Z'
@@ -15,6 +15,8 @@ type: note
 tier: institutional
 content_type: paper
 deprecated: false
+summary: Deprecated duplicate or empty-body record (arXiv metadata only); superseded
+  by a full-text note of the same paper or out of scope
 ---
 
 [2503.14749] Uncertainty Distillation: Teaching Language Models to Express Semantic Confidence

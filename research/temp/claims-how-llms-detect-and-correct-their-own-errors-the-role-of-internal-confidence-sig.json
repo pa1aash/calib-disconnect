@@ -1,0 +1,90 @@
+{
+ "source_note_id": "how-llms-detect-and-correct-their-own-errors-the-role-of-internal-confidence-sig",
+ "r1_bearing": "L2 analogue (probe vs verbal, causal patching) on factual QA; not code",
+ "makes_core_claim_on_code_with_execution_labels": false,
+ "verdict": "NOT a code occupant. Bears on L2 (probe-over-verbal, causal evidence) on factual QA/NLI only; supports that L2 on code would be a domain transfer, not a new mechanism.",
+ "claims": [
+  {
+   "claim": "On Gemma 3 27B TriviaQA, verbal confidence and answer log-probs predict first-attempt correctness at AUROC 0.74 and 0.76 with ECE 0.13 and 0.20.",
+   "stance": "neutral",
+   "stance_target": "R1 candidates L1-L4/F occupancy; L2 analogue (probe vs verbal, causal patching) on factual QA; not code",
+   "evidence_type": "empirical",
+   "scope_conditions": "non-code; NOT a code occupant. Bears on L2 (probe-over-verbal, causal evidence) on factual QA/NLI only; supports that L2 on code would be a domain transfer, not a new mechanism.",
+   "quoted_support": "Verbal confidence and the log-probabilities of the answer tokens yielded an AUROC of 0.74 and 0.76 for predicting A1 correctness, respectively; expected calibration error (ECE) was 0.13 and 0.20, respectively.",
+   "numbers": [
+    "75.5%",
+    "AUROC 0.74",
+    "AUROC 0.76",
+    "ECE 0.13",
+    "ECE 0.20"
+   ],
+   "entities": [],
+   "time_period": "2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "how-llms-detect-and-correct-their-own-errors-the-role-of-internal-confidence-sig"
+  },
+  {
+   "claim": "PANL activations predict error detection beyond verbal confidence, and patching shows causal sufficiency.",
+   "stance": "neutral",
+   "stance_target": "R1 candidates L1-L4/F occupancy; L2 analogue (probe vs verbal, causal patching) on factual QA; not code",
+   "evidence_type": "empirical",
+   "scope_conditions": "non-code; NOT a code occupant. Bears on L2 (probe-over-verbal, causal evidence) on factual QA/NLI only; supports that L2 on code would be a domain transfer, not a new mechanism.",
+   "quoted_support": "Activation patching confirms that PANL is causally sufficient to rescue error detection when answer information is corrupted",
+   "numbers": [
+    "layer 30"
+   ],
+   "entities": [],
+   "time_period": "2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "how-llms-detect-and-correct-their-own-errors-the-role-of-internal-confidence-sig"
+  },
+  {
+   "claim": "Findings replicate across Gemma 3 27B and Qwen 2.5 7B on TriviaQA and MNLI.",
+   "stance": "neutral",
+   "stance_target": "R1 candidates L1-L4/F occupancy; L2 analogue (probe vs verbal, causal patching) on factual QA; not code",
+   "evidence_type": "empirical",
+   "scope_conditions": "non-code; NOT a code occupant. Bears on L2 (probe-over-verbal, causal evidence) on factual QA/NLI only; supports that L2 on code would be a domain transfer, not a new mechanism.",
+   "quoted_support": "All key findings replicate in Gemma 3 27B and Qwen 2.5 7B, using the TriviaQA and MNLI datasets, suggesting a domain-general evaluative mechanism.",
+   "numbers": [
+    "TriviaQA",
+    "MNLI"
+   ],
+   "entities": [],
+   "time_period": "2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "how-llms-detect-and-correct-their-own-errors-the-role-of-internal-confidence-sig"
+  },
+  {
+   "claim": "PANL activations predict which answer revisions will succeed where behavioral signals cannot (probe predicts correction success).",
+   "stance": "neutral",
+   "stance_target": "R1 candidates L1-L4/F occupancy; L2 analogue (probe vs verbal, causal patching) on factual QA; not code",
+   "evidence_type": "empirical",
+   "scope_conditions": "non-code; NOT a code occupant. Bears on L2 (probe-over-verbal, causal evidence) on factual QA/NLI only; supports that L2 on code would be a domain transfer, not a new mechanism.",
+   "quoted_support": "PANL activations predict which answer revisions will succeed\u2014where no combination of behavioural signals will\u2014indicating that the model internally encodes information about its ability to improve that it does not communicate in its over",
+   "numbers": [],
+   "entities": [],
+   "time_period": "2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "how-llms-detect-and-correct-their-own-errors-the-role-of-internal-confidence-sig"
+  }
+ ],
+ "breadth": {
+  "confidence_families": "token log-probs, verbal confidence, linear probe on PANL activations (Sec 3; Fig 2-3)",
+  "model_families_and_sizes": "Gemma 3 27B-it (primary), Qwen 2.5 7B (replication) (Sec 2)",
+  "base_vs_instruct": "instruct-tuned primary (google/gemma-3-27b-it); base only suggested as future use; no pair comparison",
+  "post_training_stages": "not present (searched: HumanEval, MBPP, LiveCodeBench, unit test, execution, code)",
+  "reasoning_models": "no; factual QA without chain-of-thought (Intro)",
+  "elicitation_formats": "verbal confidence rating plus Y/N verification and self-correction prompt (Fig 1 left)",
+  "benchmarks": "TriviaQA, MNLI (Abstract, Sec 2)",
+  "label_source": "answer correctness vs gold (QA), not execution",
+  "label_independence": "gold answers",
+  "contamination_split": "not present (searched: HumanEval, MBPP, LiveCodeBench, unit test, execution, code)",
+  "calibration_metrics": "AUROC, ECE (Sec 3 results)",
+  "granularity": "whole-answer",
+  "causal_intervention": "yes: activation patching and joint ablation at PANL (Abstract, Sec 5)"
+ }
+}

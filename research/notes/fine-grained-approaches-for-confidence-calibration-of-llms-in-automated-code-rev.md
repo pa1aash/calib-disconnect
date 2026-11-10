@@ -8,35 +8,23 @@ tags:
 - internal-logit-signal
 - post-hoc-platt-scaling
 - code-revision-not-generation
+- code-llm-confidence-positioning-d82d00
+- close-occupant
 created: '2026-07-17T18:57:44.640325Z'
-updated: '2026-07-17T19:01:24.784058Z'
+updated: '2026-11-09T23:27:43.840611Z'
 source: https://arxiv.org/html/2604.06723
 source_domain: arxiv.org
 fetched_at: '2026-07-17T18:57:44.639768Z'
 fetch_provider: builtin
-status: draft
+status: review
 type: note
 tier: institutional
 content_type: paper
 deprecated: false
-summary: 'Lin, Liu, Gao, Thongtanunam & Treude (Univ. Melbourne/Singapore Management
-  Univ., arXiv 2604.06723, cs.SE). Studies confidence calibration for automated code
-  revision (ACR: program repair, vulnerability repair, code refinement/review-comment
-  resolution) across 14 models. The confidence signal is entirely INTERNAL/LOGIT-DERIVED,
-  never verbalized: they compare sequence-level scores (normalised sequence likelihood,
-  average token probability) against three new fine-grained scores (minimum token
-  probability, lowest-K token probability, attention-weighted uncertainty), all read
-  off the softmax over the model''s own generated tokens. Calibration method is POST-HOC
-  (local vs. global Platt-scaling fit per task/cluster on held-out data), not train-time
-  and not RL/SFT on the model''s confidence expression. Discrimination is measured
-  via Wasserstein-1 distance (W1) and Kendall''s tau_b rank correlation between the
-  confidence-score distributions of correct vs incorrect revisions -- NOT AUROC. Key
-  numbers: minimum token probability gives the widest separation (Exact-Match W1:
-  0.13-0.26; Edit-Pass W1: 0.13-0.20) vs 0.01-0.03 for sequence-level scores; minimum-token-probability
-  tau_b of 0.26-0.45 (EM) / 0.24-0.37 (EP). Relevant as a negative case: confirms
-  that even the most code-specific 2026 calibration paper in this space still treats
-  confidence purely as an internal/post-hoc-calibrated signal, not as something trained
-  into the model''s verbalized output.'
+summary: FULL TEXT (arXiv 2604.06723). Local Platt scaling of token/edit-level confidence
+  vs global sequence-level Platt scaling for automated code revision (program repair,
+  vulnerability repair, code refinement), 14 models. L4 occupant for per-edit recalibration
+  of logit confidence; not per-requirement test groups or verbal/probe readouts.
 ---
 
 Fine-grained Approaches for Confidence Calibration of LLMs in Automated Code Revision

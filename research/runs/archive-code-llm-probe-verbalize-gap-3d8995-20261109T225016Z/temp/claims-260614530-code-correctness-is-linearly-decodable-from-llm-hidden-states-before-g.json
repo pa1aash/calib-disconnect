@@ -1,0 +1,44 @@
+[
+  {
+    "claim": "Whether a code LLM's first-attempt solution will pass all tests on a LiveCodeBench task is linearly decodable, before any code token is generated, from the hidden state at the final prompt token, with held-out AUC 0.881 +/- 0.008 across 50 outer splits.",
+    "stance": "supports",
+    "stance_target": "code LLMs internally encode code-correctness information not yet reflected in any generated output",
+    "evidence_type": "empirical",
+    "scope_conditions": "Qwen3-4B-Instruct-2507, 444 tasks from LiveCodeBench, pre-generation probing on final prompt token hidden state, whole-solution (all-tests-pass) granularity",
+    "quoted_support": "The correctness of the model's first-attempt code is linearly decodable from the hidden state at the final prompt token, captured before any output token is generated, with a leakage-free held-out AUC of 0.881 +/- 0.008 across 50 outer splits.",
+    "numbers": ["AUC 0.881 +/- 0.008", "444 tasks", "50 outer splits"],
+    "entities": ["Carlo Di Cicco", "Qwen3-4B-Instruct-2507", "LiveCodeBench"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260614530-code-correctness-is-linearly-decodable-from-llm-hidden-states-before-g"
+  },
+  {
+    "claim": "The pre-generation code-correctness probe signal is not merely a proxy for prompt length: after residualizing hidden-state dimensions against their linear effect of prompt length, the probe retains AUC 0.842 +/- 0.010, far above a prompt-length-only logistic baseline of AUC 0.657 +/- 0.014.",
+    "stance": "supports",
+    "stance_target": "the internal correctness signal is a genuine correctness-related representation, not a length confound",
+    "evidence_type": "empirical",
+    "scope_conditions": "Same LiveCodeBench setup, confound-control diagnostic via residualization",
+    "quoted_support": "The probe still achieves an AUC of 0.842 +/- 0.010, substantially above a logistic prompt-length baseline of 0.657 +/- 0.014, and none of the nonlinear models tested improves upon it.",
+    "numbers": ["AUC 0.842 +/- 0.010", "baseline AUC 0.657 +/- 0.014"],
+    "entities": ["Carlo Di Cicco"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260614530-code-correctness-is-linearly-decodable-from-llm-hidden-states-before-g"
+  },
+  {
+    "claim": "This paper probes CODE correctness at whole-solution (all-tests-pass) granularity only, does not decompose a task's multiple unit tests/requirements into separately-probed targets, and makes no comparison to the model's own verbalized/self-reported confidence -- so it does not establish or test a per-requirement internal-knowledge-vs-verbalization faithfulness gap on code.",
+    "stance": "neutral",
+    "stance_target": "does this paper scoop per-requirement code-correctness probe-vs-verbalization gap?",
+    "evidence_type": "theoretical",
+    "scope_conditions": "Comparison of this paper's scope (code, whole-task, no verbalization comparison) against the proposed AAAI-27 pivot (code, per-requirement, faithfulness gap vs trained self-report)",
+    "quoted_support": "A companion question about whether self-repair leaves a geometric signature in the model's hidden states could not be answered, because successful repairs following a failed first attempt are too rare in this setting to support the analysis.",
+    "numbers": [],
+    "entities": ["Carlo Di Cicco"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260614530-code-correctness-is-linearly-decodable-from-llm-hidden-states-before-g"
+  }
+]

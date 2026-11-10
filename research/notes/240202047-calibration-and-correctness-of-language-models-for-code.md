@@ -3,8 +3,9 @@ title: '[2402.02047] Calibration and Correctness of Language Models for Code'
 id: 240202047-calibration-and-correctness-of-language-models-for-code
 tags:
 - code-llm-calibration-aaai27-eabf3f
+- code-llm-confidence-positioning-d82d00
 created: '2026-07-17T18:31:11.751491Z'
-updated: '2026-07-17T18:34:42.727746Z'
+updated: '2026-11-09T23:12:39.043027Z'
 source: https://arxiv.org/abs/2402.02047
 source_domain: arxiv.org
 fetched_at: '2026-07-17T18:31:11.750877Z'
@@ -14,6 +15,14 @@ type: note
 tier: institutional
 content_type: paper
 deprecated: false
+summary: 'FULL-TEXT (read from arXiv PDF extracted locally; vault note body is shorter).
+  Spiess et al. (ICSE-era, arXiv Feb 2024): calibration of Codex, GPT-3.5, CodeGen2-16B
+  on function synthesis (HumanEval, MBPP), line-level completion, and program repair
+  (Defects4J, SStubs), using intrinsic token probability, verbalized self-ask, and
+  reflective logit measures; Platt scaling; Brier skill score and ECE. No hidden-state
+  probes, no base/instruct pairs, no release-date contamination control. Close occupant
+  for L1 (execution-graded calibration measurement) but not for L2/L4. Intrinsic ECE
+  0.09-0.73; GPT-3.5 few-shot reflective skill score 0 to 0.15.'
 ---
 
 [2402.02047] Calibration and Correctness of Language Models for Code

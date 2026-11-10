@@ -1,0 +1,68 @@
+{
+  "critic_type": "dialectic",
+  "findings": [
+    {
+      "severity": "critical",
+      "location": "Section 6 (F), paragraph beginning 'The vocabulary is in use too': 'Only metrology-proper terms (measurand, GUM uncertainty budget, traceability) are unused for LLM confidence, and the two formal metrology papers treat classifiers'",
+      "issue": "The draft asserts metrology-proper vocabulary is unused for LLM confidence, but the authoritative VERDICTS challenge resolution moved F Q1 to OCCUPIED because Zabolotnii, Holinko, and Antonenko 2604.26671 (full text, Sec 1 applies VIM and GUM terms such as measurand and traceability; Sec 10 treats stated-confidence calibration error as an instrument's systematic error) and TRACE 2605.03838 (GUM, VIM, ISO 17025 vocabulary) already use it.",
+      "evidence": "research/positioning/w4/VERDICTS.md (F Q1 row; Challenge resolutions 'F Q1 metrology-proper vocabulary: Accepted'); research/positioning/w4/parts/critic-A/CHALLENGES.md lines 213-219; vault note trace-a-metrologically-grounded-engineering-frameworkfor-trustworthy-agentic-ai",
+      "recommendation": "Replace the 'unused' claim with a statement that metrology-proper terms are already applied to LLM stated-confidence calibration at conceptual depth (cite 2604.26671, preprint, April 2026, Sec 1 and Sec 10, and TRACE [[trace-a-metrologically-grounded-engineering-frameworkfor-trustworthy-agentic-ai]]); state that any exposition using 'measurand' or 'readout' must cite them. Keep the sentence that unused-or-not, vocabulary is not a contribution."
+    },
+    {
+      "severity": "critical",
+      "location": "Section 8 verdict table, row 'F | Q1 vocabulary | OCCUPIED (validity, psychometric); Prov. (metrology-proper terms)'; also Section 10 G-FT row listing 'F Q1 (metrology-proper terms)'",
+      "issue": "The verdict table and the instrument-gap table still carry F Q1 metrology-proper as CLEAN (provisional), contradicting the finalized VERDICTS resolution (OCCUPIED via 2604.26671).",
+      "evidence": "research/positioning/w4/VERDICTS.md F table Q1 and Challenge resolutions",
+      "recommendation": "Change the F Q1 verdict cell to OCCUPIED (including metrology-proper terms), add 2604.26671 Sec 1, Sec 10 and TRACE 2605.03838 to the load-bearing column, and remove F Q1 from the G-FT 'Verdicts it weakens' list. Also check that Section 6's closing line and executive summary F bullet say the framing is used 'including metrology proper'."
+    },
+    {
+      "severity": "major",
+      "location": "Section 4.2, paragraph beginning 'A strict reader rates routing OCCUPIED (union)': 'no fetched work gates on elicited verbal or probe confidence with both random and label-sorted oracle arms on clean labels'; also Section 8 L3 Q1/Q4/Q5 row and Section 7.3 table",
+      "issue": "The draft never mentions TRIAGE 2605.13414 (concurrent, full text, Sec 3, Eq. 1 to 3), which already normalizes self-directed budget allocation on LiveCodeBench between a random-permutation reference and a knapsack oracle, so the random-to-oracle comparator design on code is published and the residual must be restated as the VERDICTS resolution requires.",
+      "evidence": "research/positioning/w4/VERDICTS.md L3 Q1/Q4/Q5 row and Challenge resolutions ('Accepted as restatement'); research/positioning/w4/parts/critic-A/CHALLENGES.md lines 116-119",
+      "recommendation": "Insert a sentence in Section 4.2 acknowledging TRIAGE as the closest occupant on the comparator side (random-permutation to knapsack-oracle normalization of a model's self-written token-budget plan on LiveCodeBench), and restate the residual so it names the gate (elicited verbal or probe confidence) and the unit (execution budget per candidate, matched-budget per-item routing), not the comparator design. Add TRIAGE to the L3 row of the Section 8 table and to the Section 7.3 occupant table (concurrent)."
+    },
+    {
+      "severity": "major",
+      "location": "Section 5, paragraph beginning 'Three residuals survive': 'Targeted repair versus matched-budget regeneration (Q2) is NARROW: Olausson et al. find ... and the targeted-repair papers lack the matched arm'",
+      "issue": "The draft omits 2609.00854 (concurrent, ABSTRACT-ONLY), a placebo-controlled study where spectrum-based localization plus infilling loses to blind resampling at matched attempts (3:40, p = 3.0 x 10^-9) across three 26-32B models, and Verma 2607.26117 (full text in vault) where blind resampling beats or ties execution-feedback repair on MBPP+; both shrink the Q2 residual and lower the prior that confidence-guided targeted repair wins.",
+      "evidence": "research/positioning/w4/VERDICTS.md L4 Q2 row ('NARROW (residual shrinks)'); critic-A/CHALLENGES.md lines 192-194; vault note try-again-dont-look-backblind-resampling-outperforms-self-repair-in-small-code-m",
+      "recommendation": "Add a sentence that matched-budget localization-versus-resampling with a random-span placebo is now published with a negative result (2609.00854, ABSTRACT-ONLY, flagged as such), and cite [[try-again-dont-look-backblind-resampling-outperforms-self-repair-in-small-code-m]] for the anchoring effect of conditioning on a failed attempt. Restate the residual as only that localization comes from the model's own per-requirement confidence, and note the prior that it wins is lower. Update the L4 Q2 row in Section 8 to 'NARROW (residual shrinks)' with 2609.00854, and amend Section 1.1's claim that NeuroSym-Cal is 'the one load-bearing record' that is ABSTRACT-ONLY."
+    },
+    {
+      "severity": "major",
+      "location": "Section 4.3, opening: 'No fetched record measures stated confidence before and after the model sees a failing test on its own program'; and Section 9.3 Rank 3",
+      "issue": "The draft presents the update-after-failure component as CLEAN (provisional) without naming the near neighbors the VERDICTS resolution says must be read before any novelty sentence: LADDER 2610.34737 (now in vault in full text; self-assessment under unreliable feedback, with a HumanEval extension) and 2610.19226 (Agentic Self-Awareness, reconsideration of stated feasibility after a challenge on Terminal-Bench).",
+      "evidence": "research/positioning/w4/VERDICTS.md Challenge resolutions ('Leads to read before any novelty sentence: LADDER 2610.34737 and 2610.19226'); critic-A/CHALLENGES.md line 137; vault note ladder-diagnosing-domain-level-self-assessment-under-noisy-feedback",
+      "recommendation": "Add a sentence naming LADDER [[ladder-diagnosing-domain-level-self-assessment-under-noisy-feedback]] as the closest analogue to the spurious-failure arm (unreliable interaction feedback, including HumanEval, but domain-level self-assessment rather than per-program confidence after a failing test) and 2610.19226 as a coding-adjacent reconsideration probe on task feasibility; state that both must be read in full before a novelty claim for Rank 3."
+    },
+    {
+      "severity": "major",
+      "location": "Executive summary: 'Every code comparison that scores a probe against the model's own confidence within problem on self-generated samples finds a tie or a small, model-dependent margin'; Section 3.3 opening: 'all tie or favor the readout'",
+      "issue": "The draft's own Section 3.3 exceptions paragraph and the Campos full text contradict 'all tie or favor the readout': for gpt-oss in distribution the trained methods reach 0.69-0.78 within-problem AUROC, and a causally localized probe stays 0.09 AUROC ahead of output confidence for Qwen3-Coder under language shift.",
+      "evidence": "which-signals-of-code-correctness-survive-distribution-shift-hidden-state-and-ca (Sec VI-C: 'The trained methods reach higher within-problem AUROCs of 0.69-0.78 only for gpt-oss in distribution, but lose this advantage under shift')",
+      "recommendation": "Qualify the Section 3.3 opening so it says the comparisons tie or favor the readout under shift and on the small diffusion and autoregressive samples, with one in-distribution exception (gpt-oss) where trained internal methods lead within problem. Keep the executive-summary wording 'small, model-dependent margin' but drop 'Every ... finds a tie'. Also reconcile the count ('Three code comparisons' while only Miglani and Campos are described)."
+    },
+    {
+      "severity": "minor",
+      "location": "Section 2.2, Contamination paragraph: 'no fetched work, and none of 2,100 LiveCodeBench citers screened by title and abstract, compares calibration on pre-cutoff versus post-cutoff problems'",
+      "issue": "The draft omits the open lead the VERDICTS resolution names for L1 Q13: Crossref record 10.1109/tse.2026.3713834 (contamination in code generation, TSE 2026, title only), which could contain a confidence analysis.",
+      "evidence": "research/positioning/w4/VERDICTS.md Challenge resolutions (L1 Q13 lead); critic-A/CHALLENGES.md lines 168-170",
+      "recommendation": "Add a clause that one title-only TSE 2026 record on contamination in code generation (10.1109/tse.2026.3713834) was not fetched and must be checked for a confidence analysis before the Q13 novelty sentence is written; optionally list it in the Section 10 G-FCS or G-FT row."
+    },
+    {
+      "severity": "minor",
+      "location": "Section 7.3 'Other close occupants' table",
+      "issue": "The occupant table omits the three works the challenge resolutions added as closest occupants (TRIAGE 2605.13414 for L3 routing, 2609.00854 for L4 Q2, 2604.26671 for F Q1), so a reader using the table as the citation checklist would miss them.",
+      "evidence": "research/positioning/w4/VERDICTS.md Challenge resolutions",
+      "recommendation": "Add one row each: TRIAGE (concurrent; random-to-oracle normalized self-directed budget allocation on LiveCodeBench; leaves open elicited or probe gate and execution budget unit), 2609.00854 (concurrent, ABSTRACT-ONLY; matched-budget localization vs resampling with placebo; leaves open confidence-derived localization), 2604.26671 (preprint, April 2026; metrology-proper vocabulary for stated-confidence calibration; leaves open any empirical decomposition)."
+    },
+    {
+      "severity": "minor",
+      "location": "Section 6 opening: 'F is the one candidate whose verdict moves under no switch'",
+      "issue": "As drafted, F Q1 metrology-proper was CLEAN (provisional) and therefore moved under switch S2, so the sentence was internally inconsistent; it becomes true only once F Q1 is OCCUPIED per VERDICTS.",
+      "evidence": "research/positioning/w4/VERDICTS.md F Q1",
+      "recommendation": "After applying the F Q1 correction, keep the sentence but anchor it: F's verdict moves under no switch because every component, including metrology-proper vocabulary (2604.26671), is OCCUPIED on fetched full text."
+    }
+  ]
+}

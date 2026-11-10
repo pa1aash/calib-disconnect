@@ -4,7 +4,7 @@ id: wayback-machine
 tags:
 - code-llm-calibration-aaai27-eabf3f
 created: '2026-07-17T18:32:03.051643Z'
-updated: '2026-07-17T18:32:13.139134Z'
+updated: '2026-11-10T09:27:38.740773Z'
 source: https://web.archive.org/web/20260701000000*/aaai.org/conference/aaai/aaai-27/areas-and-topics/
 source_domain: web.archive.org
 fetched_at: '2026-07-17T18:32:03.051100Z'
@@ -14,6 +14,8 @@ type: note
 tier: unknown
 content_type: unknown
 deprecated: false
+summary: 'Deprecated: Wayback Machine capture of an AAAI-27 topics page, off scope
+  for this run'
 ---
 
 Wayback Machine

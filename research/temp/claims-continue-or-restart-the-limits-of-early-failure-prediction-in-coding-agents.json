@@ -1,0 +1,68 @@
+{
+ "source_note_id": "continue-or-restart-the-limits-of-early-failure-prediction-in-coding-agents",
+ "arxiv": "2610.35971",
+ "full_text": true,
+ "claims": [
+  {
+   "claim": "Learned early stopping's gain over matched random restarting (up to 1.98 pp) comes from between-task allocation, not within-task attempt selection, and continuation dominates restarts.",
+   "stance": "neutral",
+   "stance_target": "R1 candidate L3; component verdict: NARROW-context",
+   "evidence_type": "empirical",
+   "scope_conditions": "see breadth",
+   "quoted_support": "an exact decomposition proving that learned stopping's gain over matched random restarting (up to 1.98 percentage points) stems from between-task stopping allocation rather than within-task attempt selection",
+   "numbers": [
+    "1.98 pp",
+    "216 of 224",
+    "111 of 112"
+   ],
+   "entities": [
+    "2610.35971"
+   ],
+   "time_period": "2024-2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "continue-or-restart-the-limits-of-early-failure-prediction-in-coding-agents",
+   "candidate": "L3",
+   "verdict": "NARROW-context",
+   "makes_core_claim_on_code_with_execution_labels": false
+  },
+  {
+   "claim": "Early prefixes yield near-chance within-task discrimination even after tests were invoked.",
+   "stance": "neutral",
+   "stance_target": "R1 candidate L3; component verdict: NARROW-context",
+   "evidence_type": "empirical",
+   "scope_conditions": "see breadth",
+   "quoted_support": "near-chance within-task discrimination (AUC_within approx 0.50) ... even though 87.51% of primary-corpus runs have already invoked tests and 32.80% have edited code by 20k tokens",
+   "numbers": [
+    "87.51%",
+    "32.80%",
+    "147,002"
+   ],
+   "entities": [
+    "2610.35971"
+   ],
+   "time_period": "2024-2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "continue-or-restart-the-limits-of-early-failure-prediction-in-coding-agents",
+   "candidate": "L3",
+   "verdict": "NARROW-context",
+   "makes_core_claim_on_code_with_execution_labels": false
+  }
+ ],
+ "breadth": {
+  "confidence_families": "count models, frozen text embeddings, task-conditional rankers, fine-tuned Qwen3-0.6B monitor; no hidden-state probe of the acting model",
+  "model_families_and_sizes": "Qwen3-Coder-480B-A35B-Instruct (OpenHands), Qwen3.5-122B-A10B (SWE-agent, OpenHands), MiniMax-M2.5; fine-tuned Qwen3-0.6B monitor (Sec. III-A, III-C)",
+  "base_vs_instruct": "not present (searched: base/instruct pairs)",
+  "post_training_stages": "not present (searched: base/instruct)",
+  "reasoning_models": "not present (searched: reasoning on/off)",
+  "elicitation_formats": "not present (searched: verbal elicitation format variants)",
+  "benchmarks": "Nebius SWE-rebench, NVIDIA Open-SWE-Traces (Sec. III-A table: 67,074; 15,098; 30,957; 33,873 runs)",
+  "label_source": "terminal task resolution via repo tests",
+  "label_independence": "execution-based",
+  "contamination_split": "not present (searched: release-date split, contamination)",
+  "calibration_metrics": "log loss, pooled AUC, within-task AUC, TOST (Sec. III-B)",
+  "granularity": "whole-run with prefix landmarks 5k-60k tokens",
+  "causal_intervention": "not present (searched: steering, patching, ablation)"
+ }
+}

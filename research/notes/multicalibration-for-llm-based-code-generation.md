@@ -6,44 +6,25 @@ tags:
 - multicalibration
 - post-hoc-calibration
 - brier-skill-score
+- code-llm-confidence-positioning-d82d00
 created: '2026-07-17T18:30:49.732341Z'
-updated: '2026-07-17T18:33:19.314325Z'
+updated: '2026-11-09T23:27:43.607065Z'
 source: https://arxiv.org/html/2512.08810
 source_domain: arxiv.org
 fetched_at: '2026-07-17T18:30:49.731663Z'
 fetch_provider: builtin
-status: draft
+status: review
 type: note
 tier: institutional
 content_type: paper
 deprecated: false
-summary: 'RheinMain University team (Campos, Kuschnereit, Ulges), accepted at AI-SQE
-  2026 workshop. First study of multicalibration (Hebert-Johnson et al. 2018) for
-  code LLM confidence, using Qwen3-Coder-30B-A3B-Instruct, GPT-OSS-20B, DeepSeek-R1-Distill-Qwen-32B
-  on MultiPL-E (HumanEval-based, 2,952 samples), McEval, and LiveCodeBench (release_v6,
-  1,055 problems). Initial confidence = average token likelihood / inverse perplexity
-  (avg_prob, code_prob, tail_prob variants); avg_prob over the full generation (including
-  reasoning trace) calibrates best. Groups model-conditioned calibration on complexity,
-  output length, and programming language via 4 methods: Group-Conditional Unbiased
-  Regression (linear/logistic: LINR/LOGR), Iterative Grouped Histogram Binning (IGHB),
-  and Iterative Grouped Linear Binning (IGLB), compared against Platt scaling and
-  Histogram Binning baselines. Headline: multicalibration beats uncalibrated scores
-  by +1.03 Brier Skill Score and group-agnostic Platt/HB baselines by +0.37; binary
-  accuracy (thresholded at p=0.5) rises from near-random (~0.5, sometimes 0.21-0.61
-  uncalibrated) to 72.5%-95.5% after calibration, up to +58.4% in one case (DeepSeek-R1-Distill
-  on McEval). Ablation: programming-language grouping contributes most, complexity
-  least; combining all three group types is best despite redundancy between complexity
-  and length. CRITICAL GAP for our thesis: this paper reports ACC and Brier Skill
-  Score / ECE but never reports AUROC -- it cannot distinguish whether multicalibration
-  is improving genuine rank-discrimination or merely relocating the decision threshold
-  and shrinking bin-wise miscalibration, exactly the ECE-improves/AUROC-degrades conflation
-  our paper''s post-hoc calibration section targets. It also only tests a single-generation
-  token-likelihood signal (never repeated-sampling empirical pass rate), so it never
-  engages with the internal-vs-expressed disconnect at all -- multicalibration groups
-  are applied on top of the already-weak expressed log-prob channel rather than the
-  near-perfect internal signal. Directly citable both as related work on post-hoc
-  calibration for code LLMs and as a methodological caveat (missing AUROC evaluation)
-  to differentiate our contribution.'
+summary: 'Multicalibration for LLM-based Code Generation (arXiv 2512.08810): four
+  group-conditional calibrators on token likelihoods for Qwen3 Coder, GPT-OSS, DeepSeek-R1-Distill
+  over LiveCodeBench v6, MultiPL-E, McEval; correctness from benchmark unit tests.
+  FULL TEXT (HTML, ~7.7k words). Verdict: L1 near occupant (post-hoc calibration of
+  code correctness on execution labels, LiveCodeBench release_v6 as leakage control);
+  does not cover probes, verbal, or routing. L4 slight (group = complexity, length,
+  language, not per-requirement).'
 ---
 
 Multicalibration for LLM-based Code Generation

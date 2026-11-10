@@ -7,8 +7,9 @@ tags:
 - internal-signal
 - abstention-not-verbalized
 - early-stage-position-paper
+- code-llm-confidence-positioning-d82d00
 created: '2026-07-17T19:00:32.285506Z'
-updated: '2026-07-17T19:01:31.301188Z'
+updated: '2026-11-09T23:29:04.612418Z'
 source: https://arxiv.org/html/2605.19369
 source_domain: arxiv.org
 fetched_at: '2026-07-17T19:00:32.284939Z'

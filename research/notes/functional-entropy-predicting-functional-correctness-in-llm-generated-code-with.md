@@ -9,42 +9,24 @@ tags:
 - sampling-uq
 - locus-code-verbal-calibration-occupied-or-open
 - aaai-bar-eval-dprc-d78e07
+- code-llm-confidence-positioning-d82d00
 created: '2026-07-17T18:30:44.016388Z'
-updated: '2026-07-19T20:13:26.316080Z'
+updated: '2026-11-09T23:27:43.603732Z'
 source: https://arxiv.org/html/2605.28500
 source_domain: arxiv.org
 fetched_at: '2026-07-17T18:30:44.015551Z'
 fetch_provider: builtin
-status: draft
+status: review
 type: note
 tier: institutional
 content_type: paper
 deprecated: false
-summary: 'CVS Health team (Bouchard, Chauhan, Ahmad, Ra) systematically evaluates
-  UQ methods for code correctness prediction across 3 languages (Python/LiveCodeBench,
-  Java/MultiPL-E, SQL/LiveSQLBench), 5 closed-API LLMs (GPT-4o, GPT-4o-mini, Gemini-2.5-Pro/Flash/Flash-Lite),
-  and 1,711 problems. Central diagnosis: NLI-based semantic entropy/sets (the standard
-  sampling-based UQ signal, using deberta-large-mnli) collapses to near-chance AUROC
-  (0.47-0.58 SQL, 0.48-0.56 Java, 0.50-0.53 Python) because NLI models cannot distinguish
-  functionally different code and assign nearly all samples to one cluster -- the
-  equivalence-assessment step is the bottleneck, not the sampling-consistency principle
-  itself. Fix: replace NLI equivalence with an LLM-judge functional-equivalence check
-  (does code produce the same outputs for all valid inputs), yielding three new scorers
-  (Functional Equivalence Rate, Functional Entropy, Functional Sets Confidence) that
-  hit top AUROC in 11/15 model-benchmark combos (up to 0.87 Python, 0.84 SQL) and
-  best calibration in most settings with NO explicit calibration step. Verbalized
-  confidence is inconsistent (AUROC 0.52-0.80); reflexive P(True) is occasionally
-  strong (0.82-0.84) but erratic. Requires m=5-10 extra samples plus per-pair LLM-judge
-  calls (93-97% precision vs execution ground truth); m=5 recovers most of the AUROC
-  gain. Explicitly does NOT test open-weight models (Qwen, Llama, Mistral, DeepSeek
-  excluded as a stated limitation) -- direct gap for a Qwen2.5-Coder/DeepSeek-Coder
-  study. Relation to disconnect thesis: this paper improves the INTERNAL signal itself
-  (better equivalence clustering) rather than solving the expressed-interface problem
-  -- it still requires costly resampling + external LLM-judge calls, not a lightweight
-  single-generation confidence a user could read off the model. Positions functional/AST-style
-  equivalence clustering as an upper bound on what pure-embedding or NLI-based semantic-entropy
-  proxies can achieve, useful as an oracle baseline against which a cheaper expressed-confidence
-  method should be judged.'
+summary: Full text (HTML, 13.7k words) of Bouchard et al. arXiv 2605.28500 (CVS Health).
+  UQ for code on 5 closed models over LiveCodeBench/MultiPL-E/LiveSQLBench (1,711
+  problems); NLI semantic entropy near chance (0.47-0.58 AUROC), LLM-judged functional
+  entropy top AUROC in 11/15 combos (0.867 Python); verbalized confidence AUROC 0.597-0.795.
+  No open-weight, probes, base/instruct, or routing; future work names UQ-triggered
+  execution. CLOSE occupant for L1 (execution-graded UQ on code), not L2/L3.
 ---
 
 Functional Entropy: Predicting Functional Correctness in LLM-Generated Code with Uncertainty Quantification

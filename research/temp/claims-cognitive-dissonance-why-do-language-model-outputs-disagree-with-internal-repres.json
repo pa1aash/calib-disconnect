@@ -1,0 +1,105 @@
+{
+ "source_note_id": "cognitive-dissonance-why-do-language-model-outputs-disagree-with-internal-repres",
+ "claims": [
+  {
+   "claim": "Query-probe disagreement in GPT2-XL and GPT-J is mostly explained by confabulation and heterogeneity; confident-contradiction 'deception' cases are rare except on CREAK.",
+   "stance": "supports",
+   "stance_target": "probe-vs-output gap reflects calibration/uncertainty rather than lying",
+   "evidence_type": "empirical",
+   "scope_conditions": "BoolQ, SciQ, CREAK; GPT2-XL, GPT-J; linear probes",
+   "quoted_support": "In many cases, the superiority of probes is simply attributable to better calibration on uncertain answers rather than a greater fraction of correct, high-confidence answers.",
+   "numbers": [
+    "3 datasets",
+    "2 models"
+   ],
+   "entities": [
+    "GPT2-XL",
+    "GPT-J",
+    "BoolQ",
+    "SciQ",
+    "CREAK"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "cognitive-dissonance-why-do-language-model-outputs-disagree-with-internal-repres"
+  },
+  {
+   "claim": "Probes beat queries in accuracy (GPT-J: BoolQ 62.5 vs 61.8, SciQ 88.6 vs 84.1, CREAK 71.0 vs 50.4) and are substantially better calibrated.",
+   "stance": "supports",
+   "stance_target": "probe beats output-probability readout",
+   "evidence_type": "empirical",
+   "scope_conditions": "Table 1, Figure 2",
+   "quoted_support": "Probes are well calibrated, while queries are reasonably well calibrated on SciQ but poorly calibrated on other datasets.",
+   "numbers": [
+    "62.9/62.5",
+    "78.8/88.6",
+    "63.5/71.0",
+    "query 61.8/61.8, 76.1/84.1, 51.1/50.4"
+   ],
+   "entities": [
+    "GPT-J"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "cognitive-dissonance-why-do-language-model-outputs-disagree-with-internal-repres"
+  },
+  {
+   "claim": "Ensembling probe and query probabilities improves accuracy in 4 of 6 cases (SciQ GPT-J 90.5, CREAK GPT-J 71.3).",
+   "stance": "supports",
+   "stance_target": "probe and output readouts are complementary",
+   "evidence_type": "empirical",
+   "scope_conditions": "lambda chosen on 500 validation examples per dataset, Eq. 1",
+   "quoted_support": "Surprisingly, by ensembling probes and queries together, it is possible in 4 of 6 cases to obtain further improvements.",
+   "numbers": [
+    "4 of 6",
+    "90.5",
+    "71.3",
+    "500 validation examples"
+   ],
+   "entities": [
+    "GPT-J"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "cognitive-dissonance-why-do-language-model-outputs-disagree-with-internal-repres"
+  },
+  {
+   "claim": "A fine-tuned GPT2-XL queried directly beats probing the pretrained model on SciQ (+6.9%) and CREAK (+4.0%), so probe superiority partly reflects many-shot training of probes versus zero-shot queries.",
+   "stance": "neutral",
+   "stance_target": "probe advantage is partly a supervision confound",
+   "evidence_type": "empirical",
+   "scope_conditions": "Section 3 discussion",
+   "quoted_support": "Probe predictions exhibited 1.7% better accuracy than fine-tuned model queries on BoolQ. However, querying the fine-tuned model had 6.9% and 4.0% better accuracy on SciQ and CREAK.",
+   "numbers": [
+    "1.7%",
+    "6.9%",
+    "4.0%"
+   ],
+   "entities": [
+    "GPT2-XL"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "cognitive-dissonance-why-do-language-model-outputs-disagree-with-internal-repres"
+  }
+ ],
+ "breadth": {
+  "confidence_families": "Linear hidden-state probe p_probe(correct|h) versus direct query probability p_LM(a|q) (Section 2 Extracting answers from LMs); ensemble of the two (Eq. 1, Section 5). No verbal or sampling consistency.",
+  "model_families_and_sizes": "GPT2-XL and GPT-J (Section 3 Models); autoregressive LMs only.",
+  "base_vs_instruct": "not present (searched: instruct, RLHF, chat); only pretrained base LMs plus one fine-tuned GPT2-XL control (Section 3).",
+  "post_training_stages": "not present beyond a supervised fine-tune of GPT2-XL on true QA pairs (Section 3 end); no RLHF/DPO.",
+  "reasoning_models": "not present (searched: reasoning, chain-of-thought, thinking); reasoning not enabled, models are GPT2-XL/GPT-J.",
+  "elicitation_formats": "Query: rank yes/no or answers by p_LM(a|q); probe: final-layer hidden state of [q,a] (Section 2, Section 3 Probes). Footnote 3: alternative query formats tried with 'no striking changes'.",
+  "benchmarks": "BoolQ, SciQ (one distractor retained), CREAK (Section 3 Datasets); all factual QA, no code.",
+  "label_source": "Dataset gold labels for correctness; probes trained on train splits (Section 3 Probes).",
+  "label_independence": "Train/test splits of each dataset; ensemble lambda on 500 validation examples (Section 5). No grouped independence analysis.",
+  "contamination_split": "not present (searched: contamination, pretraining overlap, release date).",
+  "calibration_metrics": "Calibration plot of confidence vs empirical accuracy for GPT-J (Figure 2); accuracy (Table 1); probe entropy / query confidence taxonomy (Figure 1, 3). No ECE/Brier number reported (searched: ECE, Brier).",
+  "granularity": "Per-question/per-statement binary correctness.",
+  "causal_intervention": "not present (searched: steering, ablation, patching). Footnote 4 cautions a successful probe does not show the LM uses the feature."
+ }
+}

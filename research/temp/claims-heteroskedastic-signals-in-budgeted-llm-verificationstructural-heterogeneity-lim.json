@@ -1,0 +1,69 @@
+{
+ "source_note_id": "heteroskedastic-signals-in-budgeted-llm-verificationstructural-heterogeneity-lim",
+ "arxiv": "2606.15841",
+ "full_text": true,
+ "claims": [
+  {
+   "claim": "Budgeted-verification policies are compared against Random and Oracle allocation on MBPP with unit-test labels; a threshold on a logit-based proxy beats random (Table 1: MBPP Qwen3 10%: Rand .551, Thr .636, CST .671, Oracle 1.00).",
+   "stance": "neutral",
+   "stance_target": "R1 candidate L3; component verdict: NARROW (partial occupant)",
+   "evidence_type": "empirical",
+   "scope_conditions": "see breadth",
+   "quoted_support": "MBPP Qwen3 err=.558 rho=.178 10% .551 .636 .671 .622 .597 .656 1.00 +3.4 [-0.2,+7.0]",
+   "numbers": [
+    "Rand .551",
+    "Thr .636",
+    "CST .671",
+    "Oracle 1.00",
+    "+3.4 to +17.0 pp"
+   ],
+   "entities": [
+    "2606.15841"
+   ],
+   "time_period": "2024-2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "heteroskedastic-signals-in-budgeted-llm-verificationstructural-heterogeneity-lim",
+   "candidate": "L3",
+   "verdict": "NARROW (partial occupant)",
+   "makes_core_claim_on_code_with_execution_labels": false
+  },
+  {
+   "claim": "Setup uses injected 10% Bernoulli label noise and Gaussian proxy noise, with N=500 MBPP and error rates 55.8% (Qwen3), 64.4% (LLaMA3), 52.8% (GPT-4o-mini).",
+   "stance": "neutral",
+   "stance_target": "R1 candidate L3; component verdict: NARROW",
+   "evidence_type": "empirical",
+   "scope_conditions": "see breadth",
+   "quoted_support": "We add 10% Bernoulli label noise and Gaussian proxy noise (sigma=0.1).",
+   "numbers": [
+    "N=500",
+    "10 seeds"
+   ],
+   "entities": [
+    "2606.15841"
+   ],
+   "time_period": "2024-2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "heteroskedastic-signals-in-budgeted-llm-verificationstructural-heterogeneity-lim",
+   "candidate": "L3",
+   "verdict": "NARROW",
+   "makes_core_claim_on_code_with_execution_labels": false
+  }
+ ],
+ "breadth": {
+  "confidence_families": "logit-derived proxy signals (mean token NLL, logit margin) as the shared score; no verbal, no probe (Sec. 3)",
+  "model_families_and_sizes": "Qwen3-8B, LLaMA3-8B, GPT-4o-mini (Sec. 5.1)",
+  "base_vs_instruct": "not present (searched: base/instruct pairs)",
+  "post_training_stages": "not present (searched: pre vs post-training comparison)",
+  "reasoning_models": "not present (searched: reasoning on/off)",
+  "elicitation_formats": "token-statistics only",
+  "benchmarks": "MBPP N=500 (unit tests), MATH N=5000 (answer matching) (Sec. 5.1)",
+  "label_source": "MBPP unit-test feedback, with 10% injected Bernoulli label noise (Sec. 5.1)",
+  "label_independence": "execution-based, noised",
+  "contamination_split": "not present (searched: release-date split, contamination)",
+  "calibration_metrics": "hit rate under budget beta 10-50%, Student-t 95% CI over 10 seeds (Table 1); no ECE/Brier",
+  "granularity": "whole-solution",
+  "causal_intervention": "not present (searched: steering, patching, ablation)"
+ }
+}

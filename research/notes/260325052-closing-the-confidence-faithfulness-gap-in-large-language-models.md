@@ -5,13 +5,15 @@ tags:
 - code-llm-calibration-aaai27-eabf3f
 - mechanistic-interpretability
 - verbal-confidence-failure
+- code-llm-confidence-positioning-d82d00
+- duplicate-abstract-only
 created: '2026-07-17T18:30:45.993782Z'
-updated: '2026-07-17T18:31:40.508159Z'
+updated: '2026-11-09T23:25:58.790842Z'
 source: http://arxiv.org/abs/2603.25052
 source_domain: arxiv.org
 fetched_at: '2026-07-17T18:30:45.993117Z'
 fetch_provider: builtin
-status: draft
+status: deprecated
 type: note
 tier: institutional
 content_type: paper

@@ -1,0 +1,106 @@
+[
+ {
+  "claim": "AutoProbe dynamically selects layers and token positions via attention for probing code correctness (compilability, functionality, security) and beats a fixed last-token-last-layer probe (Openia).",
+  "stance": "supports",
+  "stance_target": "probe beats fixed-layer probe on code correctness",
+  "evidence_type": "empirical",
+  "scope_conditions": "6 open code LLMs, instruct versions",
+  "quoted_support": "AutoProbe consistently outperforms the baselines. For security assessment, AUTOPROBE surpasses the state-of-the-art white-box approach by 18%.",
+  "numbers": [
+   "up to 18% (security)",
+   "up to 19% (compilability)",
+   "up to 111% (functionality) vs other approaches",
+   "CodeLlama-13B accuracy 0.88 vs Openia 0.75"
+  ],
+  "entities": [
+   "AutoProbe",
+   "Openia",
+   "Code Llama",
+   "DeepSeek Coder",
+   "Magicoder"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "251002934-autoprobe-model-agnostic-correctness-assessment-full-text",
+  "breadth": {
+   "confidence_families": "white-box hidden-state probe (AutoProbe attention-weighted layer/token selection), Openia last-token-last-layer probe, black-box CodeBERT/CodeT5+ classifiers, in-house and external (o4-mini) LLM-as-judge (Sec 4.3)",
+   "model_families_and_sizes": "DeepSeek Coder 1.3B/6.7B, Code Llama 7B/13B, CodeGemma 7B, Magicoder 7B (Sec 4.2, Table 3)",
+   "base_vs_instruct": "not present: instruction-tuned versions only (Sec 4.2)",
+   "post_training_stages": "not present (searched: base, RLHF)",
+   "reasoning_models": "not present as studied subjects; o4-mini used only as external judge (Sec 4.3)",
+   "elicitation_formats": "zero-shot judge prompts (in-house and external); no numeric verbal confidence elicitation",
+   "benchmarks": "HumanEval, MBPP, DevEval, SecurityEval, CWEval, CodeGuard+, SALLM (Sec 4.1)",
+   "label_source": "compilation, test execution, Bandit/CodeQL static analysis for security (Sec 4.1)",
+   "label_independence": "labels from execution/static analysis independent of probes",
+   "contamination_split": "not present (searched: contamination, release date)",
+   "calibration_metrics": "accuracy, precision, recall, F1 only; no ECE/Brier (searched: calibrat)",
+   "granularity": "whole-solution / function-level; repo-level setting (DevEval) also",
+   "causal_intervention": "ablation of selector module only (RQ2); no causal intervention on hidden states"
+  }
+ },
+ {
+  "claim": "In-house LLM-as-judge (the generator assessing its own output) is far weaker than probes on the security criterion.",
+  "stance": "supports",
+  "stance_target": "probe beats self-judging on code",
+  "evidence_type": "empirical",
+  "scope_conditions": "Table 4",
+  "quoted_support": "Table 4: DeepSeek Coder-1.3B In-house LLM-AJ F1 0.21, External LLM-AJ 0.63, Openia 0.81, AutoProbe 0.89.",
+  "numbers": [
+   "In-house LLM-AJ accuracy 0.38 / F1 0.21 (DSC-1.3B)",
+   "In-house accuracy 0.48 / F1 0.32 (DSC-6.7B)",
+   "AutoProbe accuracy 0.90 / F1 0.89 (DSC-1.3B)"
+  ],
+  "entities": [
+   "Table 4"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "251002934-autoprobe-model-agnostic-correctness-assessment-full-text",
+  "breadth": {
+   "confidence_families": "white-box hidden-state probe (AutoProbe attention-weighted layer/token selection), Openia last-token-last-layer probe, black-box CodeBERT/CodeT5+ classifiers, in-house and external (o4-mini) LLM-as-judge (Sec 4.3)",
+   "model_families_and_sizes": "DeepSeek Coder 1.3B/6.7B, Code Llama 7B/13B, CodeGemma 7B, Magicoder 7B (Sec 4.2, Table 3)",
+   "base_vs_instruct": "not present: instruction-tuned versions only (Sec 4.2)",
+   "post_training_stages": "not present (searched: base, RLHF)",
+   "reasoning_models": "not present as studied subjects; o4-mini used only as external judge (Sec 4.3)",
+   "elicitation_formats": "zero-shot judge prompts (in-house and external); no numeric verbal confidence elicitation",
+   "benchmarks": "HumanEval, MBPP, DevEval, SecurityEval, CWEval, CodeGuard+, SALLM (Sec 4.1)",
+   "label_source": "compilation, test execution, Bandit/CodeQL static analysis for security (Sec 4.1)",
+   "label_independence": "labels from execution/static analysis independent of probes",
+   "contamination_split": "not present (searched: contamination, release date)",
+   "calibration_metrics": "accuracy, precision, recall, F1 only; no ECE/Brier (searched: calibrat)",
+   "granularity": "whole-solution / function-level; repo-level setting (DevEval) also",
+   "causal_intervention": "ablation of selector module only (RQ2); no causal intervention on hidden states"
+  }
+ },
+ {
+  "claim": "The paper reports no calibration metrics (no ECE or Brier), no base-vs-instruct pairs, and no release-date contamination control.",
+  "stance": "neutral",
+  "stance_target": "gap left open for L1/L2",
+  "evidence_type": "empirical",
+  "scope_conditions": "searched full text for calibrat, ECE, Brier, contamination",
+  "quoted_support": "Evaluation uses Accuracy, Precision, Recall and F1 (Table 4).",
+  "numbers": [],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "medium",
+  "source_note_id": "251002934-autoprobe-model-agnostic-correctness-assessment-full-text",
+  "breadth": {
+   "confidence_families": "white-box hidden-state probe (AutoProbe attention-weighted layer/token selection), Openia last-token-last-layer probe, black-box CodeBERT/CodeT5+ classifiers, in-house and external (o4-mini) LLM-as-judge (Sec 4.3)",
+   "model_families_and_sizes": "DeepSeek Coder 1.3B/6.7B, Code Llama 7B/13B, CodeGemma 7B, Magicoder 7B (Sec 4.2, Table 3)",
+   "base_vs_instruct": "not present: instruction-tuned versions only (Sec 4.2)",
+   "post_training_stages": "not present (searched: base, RLHF)",
+   "reasoning_models": "not present as studied subjects; o4-mini used only as external judge (Sec 4.3)",
+   "elicitation_formats": "zero-shot judge prompts (in-house and external); no numeric verbal confidence elicitation",
+   "benchmarks": "HumanEval, MBPP, DevEval, SecurityEval, CWEval, CodeGuard+, SALLM (Sec 4.1)",
+   "label_source": "compilation, test execution, Bandit/CodeQL static analysis for security (Sec 4.1)",
+   "label_independence": "labels from execution/static analysis independent of probes",
+   "contamination_split": "not present (searched: contamination, release date)",
+   "calibration_metrics": "accuracy, precision, recall, F1 only; no ECE/Brier (searched: calibrat)",
+   "granularity": "whole-solution / function-level; repo-level setting (DevEval) also",
+   "causal_intervention": "ablation of selector module only (RQ2); no causal intervention on hidden states"
+  }
+ }
+]

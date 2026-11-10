@@ -6,13 +6,15 @@ tags:
 - hidden-state-probe
 - whole-program-granularity
 - verbalized-vs-internal-comparison
+- code-llm-confidence-positioning-d82d00
+- duplicate-abstract-only
 created: '2026-07-20T06:36:31.399806Z'
-updated: '2026-07-20T06:39:14.387819Z'
+updated: '2026-11-09T23:26:00.285118Z'
 source: https://arxiv.org/abs/2512.07404
 source_domain: arxiv.org
 fetched_at: '2026-07-20T06:36:31.399404Z'
 fetch_provider: builtin
-status: draft
+status: deprecated
 type: note
 tier: institutional
 content_type: paper

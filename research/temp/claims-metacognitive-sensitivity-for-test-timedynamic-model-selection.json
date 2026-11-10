@@ -1,0 +1,75 @@
+[
+ {
+  "claim": "Introduces meta-d' as a metacognitive sensitivity measure and feeds it to a LinUCB/LinTS bandit arbiter for test-time model selection between two image models.",
+  "stance": "neutral",
+  "stance_target": "F: metrology/metacognition framing of calibration",
+  "evidence_type": "empirical",
+  "scope_conditions": "Image classification (CIFAR-10, PACS+CIFAR-10); CNNs and VLMs; not code, not LLM text",
+  "quoted_support": "We introduce meta-d', a psychologically-grounded measure of metacognitive sensitivity, to characterise how reliably a model's confidence predicts its own accuracy.",
+  "numbers": [
+   "Burn-in B=100",
+   "Window W=100",
+   "Update F=50"
+  ],
+  "entities": [
+   "meta-d'",
+   "LinUCB",
+   "LinTS",
+   "CIFAR-10",
+   "PACS"
+  ],
+  "time_period": "Dec 2025",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "metacognitive-sensitivity-for-test-timedynamic-model-selection",
+  "breadth": {
+   "confidence_families": "meta-d' over model confidence scores (Sec 1, 3, 4)",
+   "model_families_and_sizes": "AlexNet, GoogleNet, EfficientNet, ViT (Table 1); CLIP, ALIGN, SigLIP, MetaCLIP (Table 2); no LLM",
+   "base_vs_instruct": "not present (searched: full text, keyword scan)",
+   "post_training_stages": "not present (searched: full text, keyword scan)",
+   "reasoning_models": "not present (searched: full text, keyword scan)",
+   "elicitation_formats": "not present (searched: full text, keyword scan)",
+   "benchmarks": "CIFAR-10 (Table 1); CIFAR-10+PACS (Table 2); no code",
+   "label_source": "ground-truth image labels (Eq. 1)",
+   "label_independence": "not present (searched: full text, keyword scan)",
+   "contamination_split": "not present (searched: full text, keyword scan)",
+   "calibration_metrics": "meta-d' (sensitivity); accuracy of selector; no ECE reported",
+   "granularity": "per-image",
+   "causal_intervention": "not present (searched: intervention, patching)"
+  }
+ },
+ {
+  "claim": "Joint framework gains over best individual model are +7.1% to +8.2% at 300 trials but shrink to 1.4%-3.5% at 1000 trials on CIFAR-10 (Table 1).",
+  "stance": "supports",
+  "stance_target": "L3: confidence-routed selection yields modest gains",
+  "evidence_type": "empirical",
+  "scope_conditions": "CIFAR-10, AlexNet/ViT/GoogleNet/EfficientNet pairs",
+  "quoted_support": "Table 1 shows that the joint framework's accuracy is significantly improved in the early trials and then stabilises at 1.4%\u20133.5% higher than that of the individual models.",
+  "numbers": [
+   "AlexNet-ViT 62.4 -> 69.5 (+7.1%) at 300 trials",
+   "1.4%-3.5% at 1000 trials"
+  ],
+  "entities": [
+   "CIFAR-10"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "medium",
+  "source_note_id": "metacognitive-sensitivity-for-test-timedynamic-model-selection",
+  "breadth": {
+   "confidence_families": "meta-d' over model confidence scores (Sec 1, 3, 4)",
+   "model_families_and_sizes": "AlexNet, GoogleNet, EfficientNet, ViT (Table 1); CLIP, ALIGN, SigLIP, MetaCLIP (Table 2); no LLM",
+   "base_vs_instruct": "not present (searched: full text, keyword scan)",
+   "post_training_stages": "not present (searched: full text, keyword scan)",
+   "reasoning_models": "not present (searched: full text, keyword scan)",
+   "elicitation_formats": "not present (searched: full text, keyword scan)",
+   "benchmarks": "CIFAR-10 (Table 1); CIFAR-10+PACS (Table 2); no code",
+   "label_source": "ground-truth image labels (Eq. 1)",
+   "label_independence": "not present (searched: full text, keyword scan)",
+   "contamination_split": "not present (searched: full text, keyword scan)",
+   "calibration_metrics": "meta-d' (sensitivity); accuracy of selector; no ECE reported",
+   "granularity": "per-image",
+   "causal_intervention": "not present (searched: intervention, patching)"
+  }
+ }
+]

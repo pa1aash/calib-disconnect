@@ -1,0 +1,115 @@
+[
+ {
+  "claim": "On the same 3,000 questions and same weights, M-ratio profiles across four domains are uncorrelated between Q5_K_M and f16 (Spearman rho = 0.00), while Type-2 AUROC profiles are perfectly rank-stable (rho = 1.00).",
+  "stance": "supports",
+  "stance_target": "Instrument/metric choice determines format sensitivity of confidence diagnostics",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec 4.1-4.2, Tables 3-4; one model, TriviaQA, four domains",
+  "quoted_support": "M-ratio profiles across four knowledge domains are uncorrelated between formats (Spearman rho=0.00) ... Type-2 AUROC profiles are perfectly stable across formats (rho=1.00)",
+  "numbers": [
+   "rho=0.00",
+   "rho=1.00",
+   "Arts M-ratio 0.606 (Q5_K_M) to 1.542 (f16)",
+   "Geography 1.210 to 0.798",
+   "3,000 questions"
+  ],
+  "entities": [
+   "Llama-3-8B-Instruct",
+   "M-ratio",
+   "Type-2 AUROC",
+   "Q5_K_M",
+   "f16"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "quantisation-reshapes-the-metacognitivegeometry-of-language-models",
+  "breadth": {
+   "confidence_families": "mean token log-probability (NLP) as confidence; Type-2 SDT M-ratio, meta-d', AUROC2 (Sec 3.3)",
+   "model_families_and_sizes": "Llama-3-8B-Instruct only (Sec 3.3); Mistral-7B replication not run (Sec 5.6)",
+   "base_vs_instruct": "instruct only; no base comparison",
+   "post_training_stages": "LoRA SFT confidence-amplification variants (Table 1, 7 conditions)",
+   "reasoning_models": "not present (non-reasoning; no reasoning enabled)",
+   "elicitation_formats": "token-logprob only; quantisation format Q5_K_M vs f16 varied (Sec 3.4-3.5)",
+   "benchmarks": "TriviaQA, 4 classifier-assigned domains (Sec 3.2); no code",
+   "label_source": "TriviaQA answer correctness (not execution)",
+   "label_independence": "not present (searched: independence of labels, Sec 3.2)",
+   "contamination_split": "disjoint sets A/B/C1 (5,000/5,000/3,000) (Table 2); no release-date split",
+   "calibration_metrics": "M-ratio, meta-d', d', Type-2 AUROC, NLP gap (Tables 3-7); no ECE/Brier",
+   "granularity": "question-level, domain-aggregated",
+   "causal_intervention": "SFT training intervention with wrong-prescription control (Sec 3.1); no activation intervention"
+  }
+ },
+ {
+  "claim": "Pre-registered confidence-amplification SFT doubled the Science NLP gap (0.076 to 0.152) but did not improve meta-d' (all four confirmatory hypotheses null), showing a first-moment confidence gap can rise without better discrimination structure.",
+  "stance": "neutral",
+  "stance_target": "Confidence training effects need rank-based discrimination metrics",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec 4.3-4.4, Tables 5-6",
+  "quoted_support": "The training successfully reshaped confidence distributions, doubling the NLP gap in Science from 0.076 to 0.152, but did not improve meta-d'",
+  "numbers": [
+   "0.076",
+   "0.152",
+   "H1 delta meta-d' -0.118 CI [-0.539,0.348]",
+   "651 SFT pairs",
+   "10,000 bootstrap resamples seed 42"
+  ],
+  "entities": [
+   "LoRA SFT",
+   "Llama-3-8B-Instruct"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "quantisation-reshapes-the-metacognitivegeometry-of-language-models",
+  "breadth": {
+   "confidence_families": "mean token log-probability (NLP) as confidence; Type-2 SDT M-ratio, meta-d', AUROC2 (Sec 3.3)",
+   "model_families_and_sizes": "Llama-3-8B-Instruct only (Sec 3.3); Mistral-7B replication not run (Sec 5.6)",
+   "base_vs_instruct": "instruct only; no base comparison",
+   "post_training_stages": "LoRA SFT confidence-amplification variants (Table 1, 7 conditions)",
+   "reasoning_models": "not present (non-reasoning; no reasoning enabled)",
+   "elicitation_formats": "token-logprob only; quantisation format Q5_K_M vs f16 varied (Sec 3.4-3.5)",
+   "benchmarks": "TriviaQA, 4 classifier-assigned domains (Sec 3.2); no code",
+   "label_source": "TriviaQA answer correctness (not execution)",
+   "label_independence": "not present (searched: independence of labels, Sec 3.2)",
+   "contamination_split": "disjoint sets A/B/C1 (5,000/5,000/3,000) (Table 2); no release-date split",
+   "calibration_metrics": "M-ratio, meta-d', d', Type-2 AUROC, NLP gap (Tables 3-7); no ECE/Brier",
+   "granularity": "question-level, domain-aggregated",
+   "causal_intervention": "SFT training intervention with wrong-prescription control (Sec 3.1); no activation intervention"
+  }
+ },
+ {
+  "claim": "Author recommends format-stable rank metrics (AUROC2, NLP gap) over M-ratio when diagnosis and deployment may use different inference formats.",
+  "stance": "supports",
+  "stance_target": "Metric choice as measurement-validity issue",
+  "evidence_type": "expert-opinion",
+  "scope_conditions": "Sec 5.2",
+  "quoted_support": "diagnostic-guided systems should prefer format-stable metrics (AUROC2, NLP gap) over format-sensitive ones (M-ratio) when diagnosis and deployment may use different inference formats",
+  "numbers": [
+   "rho=1.00 AUROC2"
+  ],
+  "entities": [
+   "AUROC2",
+   "M-ratio"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "quantisation-reshapes-the-metacognitivegeometry-of-language-models",
+  "breadth": {
+   "confidence_families": "mean token log-probability (NLP) as confidence; Type-2 SDT M-ratio, meta-d', AUROC2 (Sec 3.3)",
+   "model_families_and_sizes": "Llama-3-8B-Instruct only (Sec 3.3); Mistral-7B replication not run (Sec 5.6)",
+   "base_vs_instruct": "instruct only; no base comparison",
+   "post_training_stages": "LoRA SFT confidence-amplification variants (Table 1, 7 conditions)",
+   "reasoning_models": "not present (non-reasoning; no reasoning enabled)",
+   "elicitation_formats": "token-logprob only; quantisation format Q5_K_M vs f16 varied (Sec 3.4-3.5)",
+   "benchmarks": "TriviaQA, 4 classifier-assigned domains (Sec 3.2); no code",
+   "label_source": "TriviaQA answer correctness (not execution)",
+   "label_independence": "not present (searched: independence of labels, Sec 3.2)",
+   "contamination_split": "disjoint sets A/B/C1 (5,000/5,000/3,000) (Table 2); no release-date split",
+   "calibration_metrics": "M-ratio, meta-d', d', Type-2 AUROC, NLP gap (Tables 3-7); no ECE/Brier",
+   "granularity": "question-level, domain-aggregated",
+   "causal_intervention": "SFT training intervention with wrong-prescription control (Sec 3.1); no activation intervention"
+  }
+ }
+]

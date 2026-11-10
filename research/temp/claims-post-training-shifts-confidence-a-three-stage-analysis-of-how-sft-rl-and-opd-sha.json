@@ -1,0 +1,112 @@
+[
+ {
+  "claim": "Pre-CoT token-confidence AUROC averages 0.644 for OPD, 0.594 Instruct, 0.526 SFT, 0.320 RL; RL is below 0.5 on all four benchmarks.",
+  "stance": "supports",
+  "stance_target": "Post-training stage changes confidence informativeness",
+  "evidence_type": "empirical",
+  "scope_conditions": "Table 1; math only; single backbone",
+  "quoted_support": "Qwen-OPD achieves the strongest overall Pre-CoT calibration, with the highest average AUROC of 0.644 and the highest average PRR of 0.345.",
+  "numbers": [
+   "OPD 0.644",
+   "Instruct 0.594",
+   "SFT 0.526",
+   "RL 0.320",
+   "PRR OPD 0.345, RL -0.478"
+  ],
+  "entities": [
+   "Qwen2.5-7B-Instruct",
+   "OPD",
+   "RL (GRPO)",
+   "SFT"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "post-training-shifts-confidence-a-three-stage-analysis-of-how-sft-rl-and-opd-sha",
+  "breadth": {
+   "confidence_families": "token-level predictive statistics (top-k mean negative log-prob), group confidence, PosConf (Sec 3)",
+   "model_families_and_sizes": "Qwen2.5-7B-Instruct backbone; teacher DeepSeek-R1-Distill-Qwen-32B",
+   "base_vs_instruct": "Qwen-Instruct reference vs post-trained variants; no base-model pair",
+   "post_training_stages": "SFT, RL (GRPO), OPD (on-policy distillation) controlled from same backbone/data (Intro, Sec 4)",
+   "reasoning_models": "reasoning-oriented post-trained variants with CoT; Instruct as non-reasoning reference",
+   "elicitation_formats": "token-probability only; limitation says other signals left to future work",
+   "benchmarks": "AIME 2024, AIME 2025, AMC 2023, MATH500",
+   "label_source": "final-answer correctness (math)",
+   "label_independence": "not present",
+   "contamination_split": "not present (searched: contamination, split)",
+   "calibration_metrics": "AUROC, PRR (Table 1), accuracy vs token budget",
+   "granularity": "query (Pre-CoT), prefix/position (Intra-CoT), trace (Post-CoT)",
+   "causal_intervention": "post-training comparison under fixed data (training-level, not activation-level)"
+  }
+ },
+ {
+  "claim": "Post-CoT: confidence-filtered voting helps RL (Top-10% avg 62.8, +5.4 over majority vote 57.4) but not SFT or OPD, whose confidence-based strategies underperform majority vote.",
+  "stance": "supports",
+  "stance_target": "Confidence-routed compute depends on post-training",
+  "evidence_type": "empirical",
+  "scope_conditions": "Post-CoT table",
+  "quoted_support": "Qwen-RL benefits the most from confidence filtering: its Top-10% confidence voting reaches an average accuracy of 62.8%, improving over its own majority-vote baseline by 5.4 percentage points.",
+  "numbers": [
+   "RL 62.8 vs 57.4",
+   "SFT MV 59.8",
+   "OPD MV 58.5",
+   "early-stop 100% to 30% budget AIME24 18.84 to 26.90"
+  ],
+  "entities": [
+   "PosConf",
+   "majority voting"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "post-training-shifts-confidence-a-three-stage-analysis-of-how-sft-rl-and-opd-sha",
+  "breadth": {
+   "confidence_families": "token-level predictive statistics (top-k mean negative log-prob), group confidence, PosConf (Sec 3)",
+   "model_families_and_sizes": "Qwen2.5-7B-Instruct backbone; teacher DeepSeek-R1-Distill-Qwen-32B",
+   "base_vs_instruct": "Qwen-Instruct reference vs post-trained variants; no base-model pair",
+   "post_training_stages": "SFT, RL (GRPO), OPD (on-policy distillation) controlled from same backbone/data (Intro, Sec 4)",
+   "reasoning_models": "reasoning-oriented post-trained variants with CoT; Instruct as non-reasoning reference",
+   "elicitation_formats": "token-probability only; limitation says other signals left to future work",
+   "benchmarks": "AIME 2024, AIME 2025, AMC 2023, MATH500",
+   "label_source": "final-answer correctness (math)",
+   "label_independence": "not present",
+   "contamination_split": "not present (searched: contamination, split)",
+   "calibration_metrics": "AUROC, PRR (Table 1), accuracy vs token budget",
+   "granularity": "query (Pre-CoT), prefix/position (Intra-CoT), trace (Post-CoT)",
+   "causal_intervention": "post-training comparison under fixed data (training-level, not activation-level)"
+  }
+ },
+ {
+  "claim": "Authors state limitation: math benchmarks only, one Qwen2.5-7B-Instruct backbone, token-probability confidence only.",
+  "stance": "neutral",
+  "stance_target": "Gap left open for L2 (code, probes, verbal)",
+  "evidence_type": "expert-opinion",
+  "scope_conditions": "Limitations",
+  "quoted_support": "Our study focuses on mathematical reasoning benchmarks and models derived from a single Qwen2.5-7B-Instruct backbone.",
+  "numbers": [
+   "single backbone"
+  ],
+  "entities": [
+   "Qwen2.5-7B-Instruct"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "post-training-shifts-confidence-a-three-stage-analysis-of-how-sft-rl-and-opd-sha",
+  "breadth": {
+   "confidence_families": "token-level predictive statistics (top-k mean negative log-prob), group confidence, PosConf (Sec 3)",
+   "model_families_and_sizes": "Qwen2.5-7B-Instruct backbone; teacher DeepSeek-R1-Distill-Qwen-32B",
+   "base_vs_instruct": "Qwen-Instruct reference vs post-trained variants; no base-model pair",
+   "post_training_stages": "SFT, RL (GRPO), OPD (on-policy distillation) controlled from same backbone/data (Intro, Sec 4)",
+   "reasoning_models": "reasoning-oriented post-trained variants with CoT; Instruct as non-reasoning reference",
+   "elicitation_formats": "token-probability only; limitation says other signals left to future work",
+   "benchmarks": "AIME 2024, AIME 2025, AMC 2023, MATH500",
+   "label_source": "final-answer correctness (math)",
+   "label_independence": "not present",
+   "contamination_split": "not present (searched: contamination, split)",
+   "calibration_metrics": "AUROC, PRR (Table 1), accuracy vs token budget",
+   "granularity": "query (Pre-CoT), prefix/position (Intra-CoT), trace (Post-CoT)",
+   "causal_intervention": "post-training comparison under fixed data (training-level, not activation-level)"
+  }
+ }
+]

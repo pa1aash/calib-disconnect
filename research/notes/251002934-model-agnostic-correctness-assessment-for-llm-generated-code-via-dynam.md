@@ -4,8 +4,10 @@ title: '[2510.02934] Model-Agnostic Correctness Assessment for LLM-Generated Cod
 id: 251002934-model-agnostic-correctness-assessment-for-llm-generated-code-via-dynam
 tags:
 - code-llm-calibration-aaai27-eabf3f
+- code-llm-confidence-positioning-d82d00
+- close-occupant
 created: '2026-07-17T18:29:46.904843Z'
-updated: '2026-07-17T18:32:28.289883Z'
+updated: '2026-11-09T23:13:17.227910Z'
 source: http://arxiv.org/abs/2510.02934
 source_domain: arxiv.org
 fetched_at: '2026-07-17T18:29:46.903979Z'
@@ -15,6 +17,9 @@ type: note
 tier: institutional
 content_type: paper
 deprecated: false
+summary: Existing abstract-level note for arXiv 2510.02934 (AutoProbe); full text
+  is in note 251002934-autoprobe-model-agnostic-correctness-assessment-full-text.
+  Re-tagged only.
 ---
 
 [2510.02934] Model-Agnostic Correctness Assessment for LLM-Generated Code via Dynamic Internal Representation Selection

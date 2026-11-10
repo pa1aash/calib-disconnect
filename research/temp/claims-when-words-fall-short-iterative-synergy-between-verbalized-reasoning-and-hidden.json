@@ -1,0 +1,65 @@
+{
+ "source_note_id": "when-words-fall-short-iterative-synergy-between-verbalized-reasoning-and-hidden",
+ "r1_bearing": "L2 general-domain analogue; not code",
+ "makes_core_claim_on_code_with_execution_labels": false,
+ "verdict": "NOT a code occupant of L2 on code, but a close general-domain occupant of the probe/estimator-beats-verbal claim for reasoning/QA with trained verbalization baselines.",
+ "claims": [
+  {
+   "claim": "A dedicated hidden-state confidence estimator can substantially outperform verbalized confidence on math and QA.",
+   "stance": "neutral",
+   "stance_target": "R1 candidates L1-L4/F occupancy; L2 general-domain analogue; not code",
+   "evidence_type": "empirical",
+   "scope_conditions": "non-code; NOT a code occupant of L2 on code, but a close general-domain occupant of the probe/estimator-beats-verbal claim for reasoning/QA with trained verbalization baselines.",
+   "quoted_support": "Our empirical study shows that a dedicated confidence estimator can substantially outperform verbalized confidence, indicating that LLMs' internal representations contain richer confidence signals.",
+   "numbers": [],
+   "entities": [],
+   "time_period": "2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "when-words-fall-short-iterative-synergy-between-verbalized-reasoning-and-hidden"
+  },
+  {
+   "claim": "The estimator is a linear head on the last non-padding token hidden state trained with squared error to correctness; verbalized RL reward adds a Brier-style term.",
+   "stance": "neutral",
+   "stance_target": "R1 candidates L1-L4/F occupancy; L2 general-domain analogue; not code",
+   "evidence_type": "theoretical",
+   "scope_conditions": "non-code; NOT a code occupant of L2 on code, but a close general-domain occupant of the probe/estimator-beats-verbal claim for reasoning/QA with trained verbalization baselines.",
+   "quoted_support": "by applying a linear head to the hidden state of the last non-padding token",
+   "numbers": [],
+   "entities": [],
+   "time_period": "2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "when-words-fall-short-iterative-synergy-between-verbalized-reasoning-and-hidden"
+  },
+  {
+   "claim": "Prior claims that RL-trained verbalized confidence beats estimators may stem from estimator overfitting at a single training endpoint.",
+   "stance": "neutral",
+   "stance_target": "R1 candidates L1-L4/F occupancy; L2 general-domain analogue; not code",
+   "evidence_type": "empirical",
+   "scope_conditions": "non-code; NOT a code occupant of L2 on code, but a close general-domain occupant of the probe/estimator-beats-verbal claim for reasoning/QA with trained verbalization baselines.",
+   "quoted_support": "We hypothesize that estimator overfitting may explain the previously claimed advantage of verbalized confidence.",
+   "numbers": [],
+   "entities": [],
+   "time_period": "2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "when-words-fall-short-iterative-synergy-between-verbalized-reasoning-and-hidden"
+  }
+ ],
+ "breadth": {
+  "confidence_families": "trained hidden-state linear estimator vs RL-trained verbalized confidence (Sec 3; Fig 1)",
+  "model_families_and_sizes": "Qwen and Llama backbones, e.g. Qwen3-8B-Base, Llama-3.1-8B-Instruct (Sec 5)",
+  "base_vs_instruct": "Qwen3-8B-Base and Llama-3.1-8B-Instruct used as backbones; no matched pair analysis",
+  "post_training_stages": "RL (policy optimization) with estimator feedback (Sec 4)",
+  "reasoning_models": "verbalized reasoning traces from RL-trained policies (Abstract)",
+  "elicitation_formats": "verbalized reasoning plus confidence; estimator on hidden state",
+  "benchmarks": "HotpotQA, Big-Math training; math and QA eval (Sec 5 Datasets)",
+  "label_source": "answer equivalence z=I[a equiv a*] (non-code)",
+  "label_independence": "not present (searched: HumanEval, MBPP, LiveCodeBench, unit test, execution, code)",
+  "contamination_split": "not present (searched: HumanEval, MBPP, LiveCodeBench, unit test, execution, code)",
+  "calibration_metrics": "AUROC, Brier (Fig 1a)",
+  "granularity": "whole-answer",
+  "causal_intervention": "not present (searched: patching, steering, ablation); training-loop feedback only"
+ }
+}

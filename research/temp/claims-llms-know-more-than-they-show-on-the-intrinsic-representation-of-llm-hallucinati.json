@@ -1,0 +1,95 @@
+[
+ {
+  "claim": "Truthfulness information in hidden states concentrates at the exact answer tokens, and probes there improve error detection over logit baselines across models.",
+  "stance": "supports",
+  "stance_target": "L2 probe vs readout (non-code)",
+  "evidence_type": "empirical",
+  "scope_conditions": "Mistral-7b, Mistral-7b-instruct-v0.2, Llama3-8b, Llama3-8b-instruct; 10 datasets (Sec 3.2)",
+  "quoted_support": "We find that truthfulness information is concentrated in the exact answer tokens",
+  "numbers": [
+   "10 datasets",
+   "4 LLMs"
+  ],
+  "entities": [
+   "Orgad",
+   "Technion"
+  ],
+  "time_period": "2024",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "llms-know-more-than-they-show-on-the-intrinsic-representation-of-llm-hallucinati",
+  "breadth": {
+   "confidence_families": "logits-based baselines (Logits-mean, -exact), probing classifiers on exact answer tokens (Sec 3, Table 1)",
+   "model_families_and_sizes": "Mistral-7b, Mistral-7b-instruct-v0.2, Llama3-8b, Llama3-8b-instruct (Sec 3.2)",
+   "base_vs_instruct": "yes: base and instruct for both families (Sec 3.2)",
+   "post_training_stages": "base vs instruct only",
+   "reasoning_models": "not present (searched: reasoning models)",
+   "elicitation_formats": "free-form generation; exact-answer token vs other positions (Sec 3.1-3.3)",
+   "benchmarks": "10 datasets incl. TriviaQA, HotpotQA, Natural Questions, Winobias, Winogrande, Math (Sec 3.2); no code seen in the portion read",
+   "label_source": "heuristic or instruct-LLM comparison to gold answer (Sec 3.1, App A.2)",
+   "label_independence": "per-model generated answers labeled against gold; probe train/test splits",
+   "contamination_split": "not present (searched: release date, contamination)",
+   "calibration_metrics": "AUC (Table 1)",
+   "granularity": "answer-token level within a single response",
+   "causal_intervention": "answer-choice experiment (Sec 6); steering not found (searched: steer)"
+  }
+ },
+ {
+  "claim": "Error detectors (probes) fail to generalize across tasks; truthfulness encoding is skill-specific, not universal.",
+  "stance": "supports",
+  "stance_target": "L2: probe transfer limits",
+  "evidence_type": "empirical",
+  "scope_conditions": "Section 4",
+  "quoted_support": "Generalization occurs only within tasks requiring similar skills (e.g., factual retrieval), indicating the truthfulness information is “skill-specific” and varies across different tasks.",
+  "numbers": [],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "llms-know-more-than-they-show-on-the-intrinsic-representation-of-llm-hallucinati",
+  "breadth": {
+   "confidence_families": "logits-based baselines (Logits-mean, -exact), probing classifiers on exact answer tokens (Sec 3, Table 1)",
+   "model_families_and_sizes": "Mistral-7b, Mistral-7b-instruct-v0.2, Llama3-8b, Llama3-8b-instruct (Sec 3.2)",
+   "base_vs_instruct": "yes: base and instruct for both families (Sec 3.2)",
+   "post_training_stages": "base vs instruct only",
+   "reasoning_models": "not present (searched: reasoning models)",
+   "elicitation_formats": "free-form generation; exact-answer token vs other positions (Sec 3.1-3.3)",
+   "benchmarks": "10 datasets incl. TriviaQA, HotpotQA, Natural Questions, Winobias, Winogrande, Math (Sec 3.2); no code seen in the portion read",
+   "label_source": "heuristic or instruct-LLM comparison to gold answer (Sec 3.1, App A.2)",
+   "label_independence": "per-model generated answers labeled against gold; probe train/test splits",
+   "contamination_split": "not present (searched: release date, contamination)",
+   "calibration_metrics": "AUC (Table 1)",
+   "granularity": "answer-token level within a single response",
+   "causal_intervention": "answer-choice experiment (Sec 6); steering not found (searched: steer)"
+  }
+ },
+ {
+  "claim": "Models may encode the correct answer internally yet consistently generate an incorrect one.",
+  "stance": "supports",
+  "stance_target": "L2 disconnect framing (non-code)",
+  "evidence_type": "empirical",
+  "scope_conditions": "Section 6",
+  "quoted_support": "they may encode the correct answer, yet consistently generate an incorrect one.",
+  "numbers": [],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "llms-know-more-than-they-show-on-the-intrinsic-representation-of-llm-hallucinati",
+  "breadth": {
+   "confidence_families": "logits-based baselines (Logits-mean, -exact), probing classifiers on exact answer tokens (Sec 3, Table 1)",
+   "model_families_and_sizes": "Mistral-7b, Mistral-7b-instruct-v0.2, Llama3-8b, Llama3-8b-instruct (Sec 3.2)",
+   "base_vs_instruct": "yes: base and instruct for both families (Sec 3.2)",
+   "post_training_stages": "base vs instruct only",
+   "reasoning_models": "not present (searched: reasoning models)",
+   "elicitation_formats": "free-form generation; exact-answer token vs other positions (Sec 3.1-3.3)",
+   "benchmarks": "10 datasets incl. TriviaQA, HotpotQA, Natural Questions, Winobias, Winogrande, Math (Sec 3.2); no code seen in the portion read",
+   "label_source": "heuristic or instruct-LLM comparison to gold answer (Sec 3.1, App A.2)",
+   "label_independence": "per-model generated answers labeled against gold; probe train/test splits",
+   "contamination_split": "not present (searched: release date, contamination)",
+   "calibration_metrics": "AUC (Table 1)",
+   "granularity": "answer-token level within a single response",
+   "causal_intervention": "answer-choice experiment (Sec 6); steering not found (searched: steer)"
+  }
+ }
+]

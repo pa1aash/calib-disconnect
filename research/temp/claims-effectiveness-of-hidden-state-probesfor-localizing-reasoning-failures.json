@@ -1,0 +1,70 @@
+{
+ "source_note_id": "effectiveness-of-hidden-state-probesfor-localizing-reasoning-failures",
+ "r1_bearing": "L4 analogue (failing-step localization) on math; not code",
+ "makes_core_claim_on_code_with_execution_labels": false,
+ "verdict": "NOT a code occupant. Bears on L4 localization (step-level, math) and as a caution on probe claims; no per-requirement code localization.",
+ "claims": [
+  {
+   "claim": "On incorrect 8B traces a calibrated correctness probe misses 81% of single-step unrecoverable cases and 47% of cases where another attempt would succeed.",
+   "stance": "neutral",
+   "stance_target": "R1 candidates L1-L4/F occupancy; L4 analogue (failing-step localization) on math; not code",
+   "evidence_type": "empirical",
+   "scope_conditions": "non-code; NOT a code occupant. Bears on L4 localization (step-level, math) and as a caution on probe claims; no per-requirement code localization.",
+   "quoted_support": "the confidence probe, a calibrated correctness probe at a midpoint cutoff, misses 81% of cases in which a single step makes the trace unrecoverable and 47% of cases in which another attempt would succeed",
+   "numbers": [
+    "81%",
+    "47%"
+   ],
+   "entities": [],
+   "time_period": "2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "effectiveness-of-hidden-state-probesfor-localizing-reasoning-failures"
+  },
+  {
+   "claim": "No single tested probe locates the failing step more accurately than a trace-length rule, and at 4B a trained step probe fails to beat it in any of 10 runs.",
+   "stance": "neutral",
+   "stance_target": "R1 candidates L1-L4/F occupancy; L4 analogue (failing-step localization) on math; not code",
+   "evidence_type": "empirical",
+   "scope_conditions": "non-code; NOT a code occupant. Bears on L4 localization (step-level, math) and as a caution on probe claims; no per-requirement code localization.",
+   "quoted_support": "no single tested probe locates the failing step more accurately than a rule based only on trace length, and at 4B a probe trained to predict that step fails to outperform this rule in any of 10 runs on identical traces",
+   "numbers": [
+    "10 runs"
+   ],
+   "entities": [],
+   "time_period": "2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "effectiveness-of-hidden-state-probesfor-localizing-reasoning-failures"
+  },
+  {
+   "claim": "Failure-type ordering of the probe depends on training design.",
+   "stance": "neutral",
+   "stance_target": "R1 candidates L1-L4/F occupancy; L4 analogue (failing-step localization) on math; not code",
+   "evidence_type": "empirical",
+   "scope_conditions": "non-code; NOT a code occupant. Bears on L4 localization (step-level, math) and as a caution on probe claims; no per-requirement code localization.",
+   "quoted_support": "A probe with a different training design over the same states reverses the ordering of these two kinds of failure",
+   "numbers": [],
+   "entities": [],
+   "time_period": "2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "effectiveness-of-hidden-state-probesfor-localizing-reasoning-failures"
+  }
+ ],
+ "breadth": {
+  "confidence_families": "hidden-state probes (confidence probe, step-localization probes), transcoder activations (Abstract; Sec 3)",
+  "model_families_and_sizes": "Qwen3-4B, Qwen3-8B (Intro)",
+  "base_vs_instruct": "not present (searched: HumanEval, MBPP, LiveCodeBench, unit test, execution, code)",
+  "post_training_stages": "not present (searched: HumanEval, MBPP, LiveCodeBench, unit test, execution, code)",
+  "reasoning_models": "yes, thinking mode (Intro)",
+  "elicitation_formats": "not present (searched: HumanEval, MBPP, LiveCodeBench, unit test, execution, code)",
+  "benchmarks": "DeepMath-103k, Hendrycks MATH train split (Intro)",
+  "label_source": "final-answer correctness plus Monte Carlo rollout continuation values (Intro; Sec 4)",
+  "label_independence": "rollout-derived labels from same model",
+  "contamination_split": "not present (searched: HumanEval, MBPP, LiveCodeBench, unit test, execution, code)",
+  "calibration_metrics": "calibrated probe, miss rates (Abstract)",
+  "granularity": "step-level within trace",
+  "causal_intervention": "not present (searched: patching, steering)"
+ }
+}

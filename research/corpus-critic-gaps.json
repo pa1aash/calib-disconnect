@@ -1,0 +1,76 @@
+{
+  "gaps": [
+    {
+      "type": "overturning",
+      "target_position": "Tensions 1 and 2 / L2 residual: trained stated confidence (verbal head or RL-trained) on execution labels with AUROC reported is CLEAN (provisional) on code; pivot criterion 3 open, not triggered",
+      "search_queries": [
+        "arXiv export API: abs:\"verbalized confidence\" AND abs:\"code generation\" AND (abs:\"reinforcement learning\" OR abs:\"fine-tuning\" OR abs:\"calibration training\")",
+        "arXiv export API: abs:\"calibrated\" AND abs:\"code\" AND abs:\"unit tests\" AND (abs:\"reward\" OR abs:\"confidence head\")",
+        "Semantic Scholar lookup (not search): citations of RLCR (Beyond Binary Rewards), ConfTuner, and Rewarding Doubt, screened for code or execution-graded tasks"
+      ],
+      "source_type": "academic",
+      "priority": "critical",
+      "rationale": "Two loci rest the recommendation on this being unrun on code. A single code paper that trains stated confidence on execution labels and reports AUROC or Brier against a probe would trigger pivot 3 and reshape the L2 spine. The search is metadata only, so a miss stays an instrument gap. Use citation screens (lookup works) as the main route, not keyword search."
+    },
+    {
+      "type": "overturning",
+      "target_position": "Probe-confound: controlled within-problem probe margin is at most about 0.05 AUROC on code; Ribeiro (2512.07404) probe advantage is uncontrolled",
+      "search_queries": [
+        "Semantic Scholar lookup: full citation list of arXiv:2512.07404, paged, filtered for within-problem, difficulty-controlled, or input-only baseline analyses",
+        "Semantic Scholar lookup: citation list of arXiv:2608.08266 (robustness follow-up) and arXiv:2606.14530, read for supervision-matched readout baselines",
+        "arXiv export API: abs:\"hidden states\" AND abs:\"code correctness\" AND (abs:\"difficulty\" OR abs:\"confound\" OR abs:\"prompt-only\" OR abs:\"within-problem\")"
+      ],
+      "source_type": "academic",
+      "priority": "critical",
+      "rationale": "The close-citer set is only four papers and was built from title and abstract recall. A full citation sweep of the occupant and its robustness follow-up is the one cheap instrument that works. It could find a study that already runs the difficulty-matched or supervision-matched control (which would make L2 OCCUPIED) or a larger within-problem margin than 0.05 (which would remove the premise for a null-result framing)."
+    },
+    {
+      "type": "overturning",
+      "target_position": "L3 routing by elicited verbal or probe confidence with random and label-sorted oracle arms is NARROW; closest occupants SWE-Verifier, Heteroskedastic, Give-Up never citation-screened",
+      "search_queries": [
+        "Semantic Scholar lookup: citations of Give-Up (priors not policies govern test-time compute allocation), SWE-Verifier, and Heteroskedastic Signals in Budgeted LLM Verification",
+        "arXiv export API: abs:\"confidence\" AND abs:\"adaptive\" AND (abs:\"test-time compute\" OR abs:\"sampling budget\") AND abs:\"code generation\" AND abs:\"verbalized\"",
+        "arXiv export API: abs:\"execution budget\" OR abs:\"selective execution\" OR abs:\"test execution\" AND abs:\"confidence\" AND abs:\"routing\" AND abs:\"code\""
+      ],
+      "source_type": "academic",
+      "priority": "critical",
+      "rationale": "The L3 notes list the citation screens of the three closest occupants as not run because of the 429s. Lookups work, so this is runnable today. One code paper with elicited-confidence routing plus random and oracle arms moves L3 to OCCUPIED, and the L3 rank in the recommendation depends on that."
+    },
+    {
+      "type": "overturning",
+      "target_position": "Update-after-failing-test (verbal confidence revision after an observed test failure, with spurious-failure and placebo arms) is CLEAN (provisional), 45 to 55 percent confidence",
+      "search_queries": [
+        "arXiv export API: abs:\"self-repair\" AND (abs:\"confidence\" OR abs:\"self-assessment\") AND (abs:\"execution feedback\" OR abs:\"test feedback\" OR abs:\"failing test\")",
+        "arXiv export API: abs:\"verbalized confidence\" AND abs:\"feedback\" AND (abs:\"belief update\" OR abs:\"sycophancy\" OR abs:\"capitulation\") AND abs:\"code\"",
+        "Semantic Scholar lookup: citations of Resist-and-Update (counterfactual report coordinates) and of Is Self-Repair a Silver Bullet for Code Generation (2306.09896), screened for confidence after feedback"
+      ],
+      "source_type": "academic",
+      "priority": "high",
+      "rationale": "This is the lowest-confidence CLEAN call in the set and the nearest work is only non-code. Coding-agent and self-repair work often logs the model's self-assessment after a test result without framing it as calibration. A hit would change the hedged probe into a replication, or sharpen it."
+    },
+    {
+      "type": "overturning",
+      "target_position": "L1 Q3 release-date split for calibration (not accuracy) is NARROW across non-verbal families; contamination effect on calibration residual rests on Tuerlings (verbal-only) and 2512.08810 (token-likelihood)",
+      "search_queries": [
+        "arXiv export API: abs:\"contamination\" AND (abs:\"calibration\" OR abs:\"overconfidence\" OR abs:\"uncertainty\") AND abs:\"code\" AND (abs:\"post-cutoff\" OR abs:\"release date\" OR abs:\"LiveCodeBench\")",
+        "arXiv export API: abs:\"memorization\" AND abs:\"confidence\" AND abs:\"code language models\" AND abs:\"calibration\"",
+        "Semantic Scholar lookup: citations of LiveCodeBench (arXiv:2403.07974) and of Tuerlings (verbalized uncertainty, contamination-aware), screened for hidden-state or sampling-based confidence"
+      ],
+      "source_type": "academic",
+      "priority": "high",
+      "rationale": "Release-date control is the headline of L1. If a paper already compares probe, sampling, or token confidence across pre- and post-cutoff problems, the L1 residual shrinks to the label-oracle swap alone. The vault shows only two near neighbors, both single-family, which is thin for a CLEAN-leaning call."
+    },
+    {
+      "type": "independent-verification",
+      "target_position": "L1 Q4 label independence and test-insufficiency effect on calibration: NARROW, supported by Liu 2609.25938 (SQL) and 2610.11300 (token-only, strengthened tests)",
+      "search_queries": [
+        "arXiv export API: abs:\"EvalPlus\" OR abs:\"HumanEval+\" AND (abs:\"calibration\" OR abs:\"ECE\" OR abs:\"AUROC\") AND abs:\"confidence\" AND abs:\"false positive\"",
+        "arXiv export API: abs:\"test insufficiency\" OR abs:\"weak tests\" OR abs:\"incorrect programs pass\" AND abs:\"uncertainty\" AND abs:\"code generation\"",
+        "Semantic Scholar lookup: citations of 2610.11300 and of Liu 2609.25938, and of SWE-ABS (adversarial benchmark strengthening), screened for confidence-estimation rankings under original versus strengthened tests"
+      ],
+      "source_type": "academic",
+      "priority": "high",
+      "rationale": "The base versus augmented-test oracle swap is the most concrete, cheapest L1 control and the one the recommendation can run without new models. Support rests on two papers from other settings. A direct code study ranking confidence families under both test suites would move this to OCCUPIED. The loci notes flag the claim as untested, so independent confirmation or a miss is worth one fetch pass."
+    }
+  ]
+}

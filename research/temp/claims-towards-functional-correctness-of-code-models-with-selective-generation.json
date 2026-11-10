@@ -1,0 +1,103 @@
+[
+ {
+  "claim": "A selective code generator that abstains based on fuzz-generated unit-test correctness controls the false discovery rate of code errors (FDR-CE) with statistical guarantees.",
+  "stance": "neutral",
+  "stance_target": "L3: selective generation / abstention with risk control on code",
+  "evidence_type": "theoretical",
+  "scope_conditions": "i.i.d. assumption; GPT-4o, Gemini-1.5 Pro, DeepSeek R1, CodeLlama 13B Instruct",
+  "quoted_support": "We propose a selective code generator that abstains from uncertain generations - based on the functional correctness evaluated by generated unit tests - to theoretically control the correctness among non-abstained answers, i.e., the false discovery rate.",
+  "numbers": [
+   "alpha = 0.35",
+   "delta_S = 0.1",
+   "epsilon_E = 0.05",
+   "GPT-4o APPS-f 1-pass@1 0.436 baseline vs 0.227 SCG",
+   "FDR-CE 0.431 vs 0.224"
+  ],
+  "entities": [
+   "Sangdon Park",
+   "POSTECH",
+   "trustml-lab"
+  ],
+  "time_period": "2025",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "towards-functional-correctness-of-code-models-with-selective-generation",
+  "breadth": {
+   "confidence_families": "learned selection score over generated-test-graded correctness with FDR control (Sec 4); self-consistency-style baselines not enumerated in text reached",
+   "model_families_and_sizes": "GPT-4o, Gemini-1.5 Pro, DeepSeek R1, CodeLlama 13B Instruct (Fig 2, Sec 5)",
+   "base_vs_instruct": "not present (searched: base/instruct comparison)",
+   "post_training_stages": "DeepSeek R1 result described as applied on top of GRPO-based fine-tuning (Sec 1.1)",
+   "reasoning_models": "DeepSeek R1 (Fig 2c); reasoning-mode toggle not stated",
+   "elicitation_formats": "not present (searched: verbal confidence prompt)",
+   "benchmarks": "APPS-f, Mercury-f, HumanEval-f, MBPP-f (Table 1)",
+   "label_source": "fuzzing-generated unit tests (FuzzEval), Sec 4.3-5",
+   "label_independence": "tests replace built-in tests for learning and evaluation (same source)",
+   "contamination_split": "not present (searched: release date, contamination; i.i.d. assumption in Limitations)",
+   "calibration_metrics": "FDR-CE, selection efficiency, 1-pass@1 (Table 1); no ECE",
+   "granularity": "whole-solution",
+   "causal_intervention": "not present (searched: steering, probe)"
+  }
+ },
+ {
+  "claim": "Evaluation uses fuzzing-generated tests (APPS-f, Mercury-f, HumanEval-f, MBPP-f) replacing built-in tests for both learning and evaluation, a different label regime from hidden benchmark tests.",
+  "stance": "neutral",
+  "stance_target": "L1 label independence",
+  "evidence_type": "empirical",
+  "scope_conditions": "Section 4-5",
+  "quoted_support": "We construct APPS-f, Mercury-f, HumanEval-f, and MBPP-f, where for each dataset, we replace the built in unit tests from each problem with automatically generated unit tests via fuzzing for both learning and evaluation.",
+  "numbers": [
+   "4 code generators",
+   "4 datasets",
+   "4 programming languages"
+  ],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "towards-functional-correctness-of-code-models-with-selective-generation",
+  "breadth": {
+   "confidence_families": "learned selection score over generated-test-graded correctness with FDR control (Sec 4); self-consistency-style baselines not enumerated in text reached",
+   "model_families_and_sizes": "GPT-4o, Gemini-1.5 Pro, DeepSeek R1, CodeLlama 13B Instruct (Fig 2, Sec 5)",
+   "base_vs_instruct": "not present (searched: base/instruct comparison)",
+   "post_training_stages": "DeepSeek R1 result described as applied on top of GRPO-based fine-tuning (Sec 1.1)",
+   "reasoning_models": "DeepSeek R1 (Fig 2c); reasoning-mode toggle not stated",
+   "elicitation_formats": "not present (searched: verbal confidence prompt)",
+   "benchmarks": "APPS-f, Mercury-f, HumanEval-f, MBPP-f (Table 1)",
+   "label_source": "fuzzing-generated unit tests (FuzzEval), Sec 4.3-5",
+   "label_independence": "tests replace built-in tests for learning and evaluation (same source)",
+   "contamination_split": "not present (searched: release date, contamination; i.i.d. assumption in Limitations)",
+   "calibration_metrics": "FDR-CE, selection efficiency, 1-pass@1 (Table 1); no ECE",
+   "granularity": "whole-solution",
+   "causal_intervention": "not present (searched: steering, probe)"
+  }
+ },
+ {
+  "claim": "The paper states selection efficiency depends on generator quality and the i.i.d. guarantee limits use under distribution shift, which bears on contamination or release-date splits.",
+  "stance": "supports",
+  "stance_target": "L1/L3: distribution shift caveat",
+  "evidence_type": "theoretical",
+  "scope_conditions": "Limitations",
+  "quoted_support": "Moreover, the i.i.d. assumption for the FDR controllability guarantee limits its applicability in distribution-shifting environments.",
+  "numbers": [],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "towards-functional-correctness-of-code-models-with-selective-generation",
+  "breadth": {
+   "confidence_families": "learned selection score over generated-test-graded correctness with FDR control (Sec 4); self-consistency-style baselines not enumerated in text reached",
+   "model_families_and_sizes": "GPT-4o, Gemini-1.5 Pro, DeepSeek R1, CodeLlama 13B Instruct (Fig 2, Sec 5)",
+   "base_vs_instruct": "not present (searched: base/instruct comparison)",
+   "post_training_stages": "DeepSeek R1 result described as applied on top of GRPO-based fine-tuning (Sec 1.1)",
+   "reasoning_models": "DeepSeek R1 (Fig 2c); reasoning-mode toggle not stated",
+   "elicitation_formats": "not present (searched: verbal confidence prompt)",
+   "benchmarks": "APPS-f, Mercury-f, HumanEval-f, MBPP-f (Table 1)",
+   "label_source": "fuzzing-generated unit tests (FuzzEval), Sec 4.3-5",
+   "label_independence": "tests replace built-in tests for learning and evaluation (same source)",
+   "contamination_split": "not present (searched: release date, contamination; i.i.d. assumption in Limitations)",
+   "calibration_metrics": "FDR-CE, selection efficiency, 1-pass@1 (Table 1); no ECE",
+   "granularity": "whole-solution",
+   "causal_intervention": "not present (searched: steering, probe)"
+  }
+ }
+]

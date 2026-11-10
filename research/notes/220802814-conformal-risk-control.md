@@ -6,28 +6,22 @@ tags:
 - conformal-prediction
 - foundational
 - closest-theory-template
+- code-llm-confidence-positioning-d82d00
+- duplicate
+- duplicate-abstract-only
 created: '2026-07-20T07:43:35.913354Z'
-updated: '2026-07-20T07:46:12.572646Z'
+updated: '2026-11-09T23:25:59.279902Z'
 source: https://arxiv.org/abs/2208.02814
 source_domain: arxiv.org
 fetched_at: '2026-07-20T07:43:35.913049Z'
 fetch_provider: builtin
-status: draft
+status: deprecated
 type: note
 tier: institutional
 content_type: paper
 deprecated: false
-summary: 'Conformal Risk Control (Angelopoulos, Bates, Fisch, Lei, Schuster; arXiv:2208.02814).
-  Foundational theorem extending split-conformal prediction from miscoverage control
-  to control of any bounded, monotone loss function''s expectation at a user-specified
-  level alpha, via a single calibrated threshold with a finite-sample distribution-free
-  guarantee (exchangeability-only assumption). Demonstrated on image segmentation
-  (false-negative-rate control) and multi-label classification (recall control). This
-  is the exact theorem a per-requirement risk-control result would specialize: define
-  the loss as the fraction of accepted requirements per generated solution that fail
-  their unit test, and show a calibrated threshold on a hidden-state probe score controls
-  E[loss] <= alpha at the requirement-set level. General/domain-agnostic; not applied
-  to code or to structured/sub-claim decomposition of a single generation.'
+summary: Abstract-length older duplicate of conformal-risk-control; use that full-text
+  note.
 ---
 
 *Suggested by [[260517029-task-abstention-for-large-language-models-in-code-generation-2]] — foundational conformal risk control theorem this lane would repurpose for per-requirement guarantees*

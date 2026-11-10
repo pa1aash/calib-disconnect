@@ -1,0 +1,69 @@
+[
+ {
+  "claim": "Pre-generation hidden state at the last prompt token linearly predicts first-attempt correctness: AUC 0.881 +- 0.008 over 50 splits; residualized for prompt length 0.842 +- 0.010 versus length-only baseline 0.657 +- 0.014.",
+  "stance": "supports",
+  "stance_target": "probes read correctness before generation",
+  "evidence_type": "empirical",
+  "scope_conditions": "single model Qwen3-4B-Instruct-2507, 444 LCB tasks",
+  "quoted_support": "A linear probe ... predicts pass/fail on held-out tasks with mean test area under the ROC curve (AUC) of 0.881 +- 0.008 over 50 random splits, well above a prompt-length baseline of 0.657 +- 0.014.",
+  "numbers": [
+   "0.881 +- 0.008",
+   "0.842 +- 0.010",
+   "0.657 +- 0.014",
+   "444 tasks",
+   "50 outer splits"
+  ],
+  "entities": [
+   "Qwen3-4B-Instruct-2507",
+   "LiveCodeBench"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "260614530-code-correctness-linearly-decodable-from-hidden-states-before-generati",
+  "breadth": {
+   "confidence_families": "linear probe (standardize, PCA 95%, L2 logistic regression) on final-prompt-token hidden state (Sec 3.1)",
+   "model_families_and_sizes": "Qwen3-4B-Instruct-2507 only, 36 layers, dim 2560 (Sec 2.1)",
+   "base_vs_instruct": "not present: instruct only",
+   "post_training_stages": "not present",
+   "reasoning_models": "not present (non-thinking instruct)",
+   "elicitation_formats": "not present (no verbal elicitation)",
+   "benchmarks": "444 LiveCodeBench tasks (Sec 2.1)",
+   "label_source": "unit test pass/fail of attempt-0 code",
+   "label_independence": "probe uses prompt-only forward pass; labels from execution",
+   "contamination_split": "not present (no release-date split; searched: contaminat)",
+   "calibration_metrics": "AUC only (no ECE/Brier)",
+   "granularity": "whole-solution, pre-generation",
+   "causal_intervention": "residualization against prompt length (confound control), not a causal intervention"
+  }
+ },
+ {
+  "claim": "Repair-geometry question was null: successful repairs after a failed first attempt are too rare to analyze.",
+  "stance": "neutral",
+  "stance_target": "self-repair signature",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec 4",
+  "quoted_support": "A companion question about whether self-repair leaves a geometric signature in the model's hidden states could not be answered, because successful repairs following a failed first attempt are too rare",
+  "numbers": [],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "260614530-code-correctness-linearly-decodable-from-hidden-states-before-generati",
+  "breadth": {
+   "confidence_families": "linear probe (standardize, PCA 95%, L2 logistic regression) on final-prompt-token hidden state (Sec 3.1)",
+   "model_families_and_sizes": "Qwen3-4B-Instruct-2507 only, 36 layers, dim 2560 (Sec 2.1)",
+   "base_vs_instruct": "not present: instruct only",
+   "post_training_stages": "not present",
+   "reasoning_models": "not present (non-thinking instruct)",
+   "elicitation_formats": "not present (no verbal elicitation)",
+   "benchmarks": "444 LiveCodeBench tasks (Sec 2.1)",
+   "label_source": "unit test pass/fail of attempt-0 code",
+   "label_independence": "probe uses prompt-only forward pass; labels from execution",
+   "contamination_split": "not present (no release-date split; searched: contaminat)",
+   "calibration_metrics": "AUC only (no ECE/Brier)",
+   "granularity": "whole-solution, pre-generation",
+   "causal_intervention": "residualization against prompt length (confound control), not a causal intervention"
+  }
+ }
+]

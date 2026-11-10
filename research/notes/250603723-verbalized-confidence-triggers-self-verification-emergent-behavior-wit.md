@@ -5,7 +5,7 @@ id: 250603723-verbalized-confidence-triggers-self-verification-emergent-behavior
 tags:
 - code-llm-calibration-aaai27-eabf3f
 created: '2026-07-17T18:30:34.008427Z'
-updated: '2026-07-17T18:33:12.048352Z'
+updated: '2026-11-10T09:27:38.234956Z'
 source: http://arxiv.org/abs/2506.03723
 source_domain: arxiv.org
 fetched_at: '2026-07-17T18:30:34.007766Z'
@@ -15,6 +15,8 @@ type: note
 tier: institutional
 content_type: paper
 deprecated: false
+summary: Deprecated duplicate or empty-body record (arXiv metadata only); superseded
+  by a full-text note of the same paper or out of scope
 ---
 
 [2506.03723] Verbalized Confidence Triggers Self-Verification: Emergent Behavior Without Explicit Reasoning Supervision

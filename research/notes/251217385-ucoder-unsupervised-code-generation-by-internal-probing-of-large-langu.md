@@ -5,7 +5,7 @@ id: 251217385-ucoder-unsupervised-code-generation-by-internal-probing-of-large-l
 tags:
 - code-llm-calibration-aaai27-eabf3f
 created: '2026-07-17T18:29:49.663857Z'
-updated: '2026-07-17T18:32:29.575940Z'
+updated: '2026-11-10T09:27:36.741999Z'
 source: http://arxiv.org/abs/2512.17385
 source_domain: arxiv.org
 fetched_at: '2026-07-17T18:29:49.663376Z'
@@ -15,6 +15,8 @@ type: note
 tier: institutional
 content_type: paper
 deprecated: false
+summary: Deprecated duplicate or empty-body record (arXiv metadata only); superseded
+  by a full-text note of the same paper or out of scope
 ---
 
 [2512.17385] UCoder: Unsupervised Code Generation by Internal Probing of Large Language Models

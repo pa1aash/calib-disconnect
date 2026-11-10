@@ -6,57 +6,23 @@ tags:
 - verbalized-confidence-elicitation
 - proper-scoring-rule
 - conftuner
+- code-llm-confidence-positioning-d82d00
 created: '2026-07-17T18:36:58.173337Z'
-updated: '2026-07-17T18:38:06.638979Z'
+updated: '2026-11-09T23:27:43.773254Z'
 source: https://arxiv.org/html/2508.18847
 source_domain: arxiv.org
 fetched_at: '2026-07-17T18:36:58.171859Z'
 fetch_provider: builtin
-status: draft
+status: review
 type: note
 tier: institutional
 content_type: paper
 deprecated: false
-summary: 'Li, Xiong, Wu & Hooi (NUS, arXiv 2508.18847, NeurIPS 2025). HIGH-VALUE METHODOLOGICAL
-  PRECEDENT for the target paper: introduces "tokenized Brier score," a fine-tuning
-  loss that treats the LLM''s next-token probability distribution over confidence
-  levels 0-100 as a classifier output and applies the classical Brier score (a proper
-  scoring rule) directly at the token level, then proves theoretically (Theorem, Section
-  on proper scoring rules) that this loss is itself a proper scoring rule for verbalized
-  confidence — meaning the loss-minimizing model provably places probability mass
-  on the confidence token closest to the true conditional correctness probability.
-  Critically, ConfTuner needs NO ground-truth confidence labels, NO proxy scores (e.g.
-  group-level accuracy or self-consistency sampling), and NO repeated sampling at
-  train or inference time — a fundamentally different, more label-free mechanism than
-  the "distill the sampling signal" approach used by Uncertainty Distillation, ORCE,
-  and CSFT (all fetched in this batch), since it only needs binary correctness of
-  the single generated answer.
-
-
-  Trained/evaluated on Llama-3.1-8B-Instruct, Qwen2.5-7B-Instruct, and Ministral-8B-Instruct-2410
-  — all single-GPU 7-8B scale models, directly matching the target paper''s feasibility
-  constraint. Datasets: HotpotQA (train, in-distribution), TriviaQA, StrategyQA, GSM8K,
-  TruthfulQA (out-of-distribution eval) — NO code-generation benchmark tested, a clear
-  gap. Baselines compared: Base (no tuning), Ensemble (3x sampling + averaging), SaySelf,
-  LACIE (both re-trained on the same base models/HotpotQA for fairness). Results:
-  ConfTuner achieves up to 54.7% relative improvement in ECE and 14.4% relative improvement
-  in AUROC over the best baseline, consistently across all three base models and both
-  in- and out-of-distribution datasets. Also generalizes to (a) linguistic confidence
-  expressions (high/medium/low) despite being trained only on numeric 0-100%, (b)
-  fully implicit confidence expressions (natural-language hedging phrases, evaluated
-  via GPT-4o as judge), and (c) black-box models like GPT-4o via distillation-style
-  tuning. Downstream utility shown for self-correction and model cascade decisions
-  gated on calibrated confidence.
-
-
-  Open problems / gaps directly relevant to the target angle: (1) never tested on
-  code; (2) relies on binary exact-match correctness signal from a SINGLE generation
-  rather than the richer sampling-based reliability estimate (κ_s / self-consistency)
-  used by ORCE/UD/CSFT — an open question is whether tokenized-Brier-score training
-  could be combined with a sampling-derived correctness estimate for code (where unit
-  tests give cheap, reliable binary labels) to sharpen calibration further; (3) running-time/data-size
-  comparison (Section 4.4) is reported but not summarized here — worth pulling if
-  the target paper needs an efficiency baseline table.'
+summary: 'ConfTuner (arXiv 2508.18847): tokenized Brier-score loss fine-tuning for
+  verbalized confidence; up to 54.7% ECE and 14.4% AUROC improvement; trained on HotpotQA,
+  three base LLMs including Llama-3.1-8B-Instruct; downstream self-correction and
+  cascade gains. Non-code. FULL TEXT. Verdict: L2/L3 adjacent: verbal-confidence training
+  and cascade utility, non-code.'
 ---
 
 *Suggested by [[orce-order-aware-alignment-of-verbalized-confidence-in-large-language-models]] — cited as key prior RL/SFT verbal-confidence tuning baseline (tokenized Brier score)*

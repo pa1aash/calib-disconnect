@@ -7,55 +7,30 @@ tags:
 - internal-probing
 - hidden-state-probe
 - code-correctness-detection
+- code-llm-confidence-positioning-d82d00
+- probe
+- code-correctness
+- l2-occupant
+- primary-chase
+- close-occupant
 created: '2026-07-17T18:38:02.644391Z'
-updated: '2026-07-17T18:38:42.164409Z'
+updated: '2026-11-09T23:27:43.816313Z'
 source: https://arxiv.org/html/2501.12934
 source_domain: arxiv.org
 fetched_at: '2026-07-17T18:38:02.643670Z'
 fetch_provider: builtin
-status: draft
+status: review
 type: note
 tier: institutional
 content_type: paper
 deprecated: false
-summary: 'OPENIA (Bui, Vu, Nguyen, Nguyen, Vo; VNU, Jan 2025, JSS 2025): the direct
-  predecessor to AutoProbe and the SOTA white-box baseline it supersedes. Proposes
-  using the internal hidden state of the LAST generated token at the LAST layer as
-  a fixed, single representation for a probing classifier to predict code correctness
-  (compilability/functionality/security), tested on DeepSeek-Coder, CodeLlama, Magicoder
-  on HumanEval (164 tasks), MBPP (500 tasks), and DevEval (1,825 repo-level tasks).
-  Compares against In-house/External LLM-as-Judge, CodeBERT/CodeT5+ classification,
-  and LLM-Check (a general hallucination-detection baseline).
-
-
-  On independent-unit code (Table 2), Openia accuracy ranges 0.56-0.79 depending on
-  model/train-test split (cross-benchmark: train MBPP, test HumanEval; cross-task:
-  different split within a benchmark), e.g. DeepSeek-1.3B cross-benchmark 0.66, DeepSeek-6.7B
-  cross-benchmark 0.65/cross-task 0.79, CodeLlama-7B 0.69/0.75, CodeLlama-13B 0.64/0.78,
-  Magicoder-7B 0.56/0.78 -- consistently far below the 0.987 AUROC benchmark from
-  n-sample repeated sampling, confirming the AutoProbe paper''s finding that even
-  before AutoProbe''s dynamic layer/token selection, single-pass probing plateaus
-  well short of the sampling-based signal. External LLM-AJ is again the strongest
-  single-pass method on independent-unit code in many settings (0.75-0.97 accuracy),
-  while In-house LLM-AJ (self-judging) is weak (0.27-0.68), consistent with overconfidence
-  bias. Ablation shows the LAST LAYER is not always optimal: middle layers (16-28
-  of 32) offer consistently strong, sometimes comparable, results, and representations
-  from early layers are highly sensitive to which token is chosen while last-layer
-  representations are more robust regardless of token choice -- this is the exact
-  empirical motivation AutoProbe cites for building a dynamic, model-agnostic selector
-  instead of Openia''s fixed last-token/last-layer heuristic. Training-set size matters:
-  accuracy/F1 climb from 0.71/0.67 (1 fold) to 0.77/0.77 (3 folds) then plateau.
-
-
-  Relevance: this is the direct prior-SOTA whose limitations (fixed representation
-  location, degraded performance under cross-benchmark/cross-task/cross-model shift)
-  motivate AutoProbe''s dynamic selection, and both papers converge on the same headline
-  conclusion needed for the new AAAI-27 paper: cheap single-forward-pass internal
-  probing, even at its best (dynamic AutoProbe or fixed-position Openia), does not
-  close the gap to the ~0.987 AUROC achievable via expensive repeated sampling on
-  standalone-function code -- this is a real, load-bearing empirical hole, not an
-  artifact of an under-designed probe.'
+summary: FULL TEXT (Bui et al., Openia, JSS 2025, arXiv 2501.12934). Last-token last-layer
+  probe on DeepSeek-Coder, CodeLlama, Magicoder predicts correctness on HumanEval,
+  MBPP, DevEval; up to 2X standalone and 3X repository gains over baselines incl.
+  LLM-as-judge. Direct prior art to Ribeiro et al.
 ---
+
+*Suggested by [[on-llms-internal-representation-of-code-correctness]] — cited as directly prior work on code-model confidence/probes*
 
 *Suggested by [[250112934-correctness-assessment-of-code-generated-by-large-language-models-usin]] — full HTML text for exact AUROC/accuracy numbers*
 

@@ -1,0 +1,40 @@
+[
+ {
+  "claim": "Adaptive-Consistency stops sampling when answer agreement is sufficient, cutting sample budget up to 7.9x with under 0.1% average accuracy drop across 17 reasoning and code datasets and three LLMs.",
+  "stance": "neutral",
+  "stance_target": "L3: agreement-based adaptive budget allocation (precedent for confidence-routed compute)",
+  "evidence_type": "empirical",
+  "scope_conditions": "Vicuna-13B, code-davinci-002, GPT-3.5-turbo; HumanEval, MBPP, APPS, CodeContests among tasks",
+  "quoted_support": "Adaptive-Consistency reduces sample budget by up to 7.9 times with an average accuracy drop of less than 0.1%.",
+  "numbers": [
+   "7.9x",
+   "<0.1%",
+   "3.4x on code-davinci-002",
+   "1.9x on Vicuna-13B",
+   "17 datasets"
+  ],
+  "entities": [
+   "Aggarwal",
+   "Mausam"
+  ],
+  "time_period": "2023",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "lets-sample-step-by-stepadaptive-consistency-for-efficient-reasoning-and-coding",
+  "breadth": {
+   "confidence_families": "majority-vote agreement stopping criterion (Sec 3)",
+   "model_families_and_sizes": "Vicuna-13B, code-davinci-002, GPT-3.5-turbo (Sec 1)",
+   "base_vs_instruct": "not present (searched: base/instruct)",
+   "post_training_stages": "not present (searched: stages)",
+   "reasoning_models": "CoT sampling on non-reasoning models",
+   "elicitation_formats": "sampled answers",
+   "benchmarks": "17 tasks incl. HumanEval, MBPP, APPS, CodeContests (code subset)",
+   "label_source": "answer/test correctness",
+   "label_independence": "not assessed",
+   "contamination_split": "not present (searched: contamination)",
+   "calibration_metrics": "accuracy vs sample count (no ECE)",
+   "granularity": "per-question",
+   "causal_intervention": "not present"
+  }
+ }
+]

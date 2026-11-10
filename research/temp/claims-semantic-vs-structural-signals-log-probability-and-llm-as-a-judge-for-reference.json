@@ -1,0 +1,77 @@
+[
+ {
+  "claim": "Log-probability gives weak pass-vs-fail discrimination on generated code (ROC-AUC 0.499 to 0.619) while strong explicit judges reach 0.971 and 0.905.",
+  "stance": "neutral",
+  "stance_target": "L1/L2: logprob vs verbal-judge readouts against execution truth",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec. 4.1-4.2, Table 1; HumanEval-X",
+  "quoted_support": "ROC-AUC for binary pass-vs-fail discrimination ranges from 0.499 (Llama3) to 0.619 (Gemma3) across the same five models.",
+  "numbers": [
+   "0.499",
+   "0.619",
+   "0.971",
+   "0.905",
+   "0.855 (Phi4)",
+   "0.817 (Gemma3)"
+  ],
+  "entities": [
+   "gpt-oss-120B",
+   "Qwen3-Coder-80B",
+   "Phi4",
+   "Gemma3",
+   "Llama3"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "semantic-vs-structural-signals-log-probability-and-llm-as-a-judge-for-reference",
+  "breadth": {
+   "confidence_families": "log P(code|task) and explicit LLM-judge score (Sec. 3.2)",
+   "model_families_and_sizes": "Qwen3, Llama-3.1, DeepSeek-V2, Gemma3, Phi4, 8-16B; judges also gpt-oss-120B, Qwen3-Coder-80B (Sec. 3.1, Table 1)",
+   "base_vs_instruct": "not present (searched: base vs instruct); log-prob scorer is frozen model, judges instruction-conditioned",
+   "post_training_stages": "not present (searched: full text via local PDF extraction)",
+   "reasoning_models": "not stated",
+   "elicitation_formats": "log-prob vs explicit score (Sec. 3.2)",
+   "benchmarks": "HumanEval-X, 164 problems x 5 languages (Sec. 3.1)",
+   "label_source": "pass@1 binary from provided test suites (Sec. 3.1)",
+   "label_independence": "benchmark tests; same models generate and judge (self-evaluation failure noted Sec. 4.2)",
+   "contamination_split": "not present (searched: contamin)",
+   "calibration_metrics": "ROC-AUC, pairwise accuracy; no Brier/ECE (Sec. 3.3)",
+   "granularity": "whole-solution",
+   "causal_intervention": "functional mutation of canonical solutions (universalmutator), Sec. 3.1"
+  }
+ },
+ {
+  "claim": "Log-probability is weak on generated code yet separates canonical from minimally mutated solutions with >97% within-task pairwise accuracy; explicit judges fail on mutated ones (discrimination-ranking dissociation).",
+  "stance": "neutral",
+  "stance_target": "L2: readout families capture different aspects of correctness",
+  "evidence_type": "empirical",
+  "scope_conditions": "Abstract; Sec. 4.3, Table 2",
+  "quoted_support": "These results reveal a discrimination–ranking dissociation and show that the two paradigms provide complementary, non-interchangeable signals",
+  "numbers": [
+   ">97% pairwise accuracy"
+  ],
+  "entities": [
+   "canonical vs mutated"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "semantic-vs-structural-signals-log-probability-and-llm-as-a-judge-for-reference",
+  "breadth": {
+   "confidence_families": "log P(code|task) and explicit LLM-judge score (Sec. 3.2)",
+   "model_families_and_sizes": "Qwen3, Llama-3.1, DeepSeek-V2, Gemma3, Phi4, 8-16B; judges also gpt-oss-120B, Qwen3-Coder-80B (Sec. 3.1, Table 1)",
+   "base_vs_instruct": "not present (searched: base vs instruct); log-prob scorer is frozen model, judges instruction-conditioned",
+   "post_training_stages": "not present (searched: full text via local PDF extraction)",
+   "reasoning_models": "not stated",
+   "elicitation_formats": "log-prob vs explicit score (Sec. 3.2)",
+   "benchmarks": "HumanEval-X, 164 problems x 5 languages (Sec. 3.1)",
+   "label_source": "pass@1 binary from provided test suites (Sec. 3.1)",
+   "label_independence": "benchmark tests; same models generate and judge (self-evaluation failure noted Sec. 4.2)",
+   "contamination_split": "not present (searched: contamin)",
+   "calibration_metrics": "ROC-AUC, pairwise accuracy; no Brier/ECE (Sec. 3.3)",
+   "granularity": "whole-solution",
+   "causal_intervention": "functional mutation of canonical solutions (universalmutator), Sec. 3.1"
+  }
+ }
+]

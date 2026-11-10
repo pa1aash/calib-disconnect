@@ -1,0 +1,147 @@
+[
+ {
+  "claim": "OPENIA claims up to 2X F1 improvement over baselines in standalone and 3X in repository-level code generation using hidden-state probes.",
+  "stance": "neutral",
+  "stance_target": "L2 occupancy: probe beats verbal/zero-shot readouts on code",
+  "evidence_type": "empirical",
+  "scope_conditions": "Abstract; Sec. 5.1, Tables 2-3; instruct 1.3B-13B models",
+  "quoted_support": "OPENIA consistently outperforms baseline models, achieving higher accuracy, precision, recall, and F1-Scores with up to a 2X improvement in standalone code generation and a 3X enhancement in repository-specific scenarios.",
+  "numbers": [
+   "2X standalone",
+   "3X repository-level"
+  ],
+  "entities": [
+   "OPENIA",
+   "DeepSeek-Coder",
+   "Code Llama",
+   "Magicoder"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "250112934-correctness-assessment-of-code-generated-by-large-language-models-usin",
+  "breadth": {
+   "confidence_families": "hidden-state probe (last token, last layer; layer/token ablation RQ2, Fig. 5); LLM-CHECK; zero-shot LLM-as-judge (Sec. 4.3); no token-probability calibration",
+   "model_families_and_sizes": "DeepSeek-Coder 1.3B/6.7B, Code Llama 7B/13B, Magicoder-7B (Sec. 4.2); o4-mini external judge",
+   "base_vs_instruct": "not present: instruction-tuned variants only (Sec. 4.2)",
+   "post_training_stages": "not present",
+   "reasoning_models": "o4-mini used only as external judge; reasoning setting not stated",
+   "elicitation_formats": "zero-shot correctness query (judge) vs probe (Sec. 4.3)",
+   "benchmarks": "HumanEval 164, MBPP 500, DevEval 1,825 (Sec. 4.1)",
+   "label_source": "benchmark test cases, 10 samples per task (Sec. 4.1); correct iff passes all tests (Sec. 3.1)",
+   "label_independence": "benchmark-provided tests; not independent of benchmark-level leakage; not discussed",
+   "contamination_split": "cross-benchmark MBPP-to-HumanEval and 9:1 task split (Sec. 4.3); no release-date control (searched: contamin)",
+   "calibration_metrics": "not present (accuracy, precision, recall, F1 only; searched: Brier, ECE, calibrat)",
+   "granularity": "whole-solution; repo-level",
+   "causal_intervention": "not present"
+  }
+ },
+ {
+  "claim": "Baselines include in-house zero-shot LLM-as-judge and external o4-mini judge; probe is a 2-hidden-layer MLP (128, 64) on last-layer last-token state.",
+  "stance": "neutral",
+  "stance_target": "L2 occupancy: verbal-style readout comparison",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec. 4.3",
+  "quoted_support": "we adopt a zero-shot prompting strategy using the same prompt design, where the model is directly queried regarding the correctness of a given code snippet.",
+  "numbers": [
+   "layers 128 and 64",
+   "50 epochs",
+   "batch 32",
+   "lr 1e-3"
+  ],
+  "entities": [
+   "LLM-CHECK",
+   "CodeBERT",
+   "CodeT5",
+   "o4-mini"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "250112934-correctness-assessment-of-code-generated-by-large-language-models-usin",
+  "breadth": {
+   "confidence_families": "hidden-state probe (last token, last layer; layer/token ablation RQ2, Fig. 5); LLM-CHECK; zero-shot LLM-as-judge (Sec. 4.3); no token-probability calibration",
+   "model_families_and_sizes": "DeepSeek-Coder 1.3B/6.7B, Code Llama 7B/13B, Magicoder-7B (Sec. 4.2); o4-mini external judge",
+   "base_vs_instruct": "not present: instruction-tuned variants only (Sec. 4.2)",
+   "post_training_stages": "not present",
+   "reasoning_models": "o4-mini used only as external judge; reasoning setting not stated",
+   "elicitation_formats": "zero-shot correctness query (judge) vs probe (Sec. 4.3)",
+   "benchmarks": "HumanEval 164, MBPP 500, DevEval 1,825 (Sec. 4.1)",
+   "label_source": "benchmark test cases, 10 samples per task (Sec. 4.1); correct iff passes all tests (Sec. 3.1)",
+   "label_independence": "benchmark-provided tests; not independent of benchmark-level leakage; not discussed",
+   "contamination_split": "cross-benchmark MBPP-to-HumanEval and 9:1 task split (Sec. 4.3); no release-date control (searched: contamin)",
+   "calibration_metrics": "not present (accuracy, precision, recall, F1 only; searched: Brier, ECE, calibrat)",
+   "granularity": "whole-solution; repo-level",
+   "causal_intervention": "not present"
+  }
+ },
+ {
+  "claim": "Best-of-10 reranking by the probe improves average pass@1 by about 7%, and filtering raises passed-test rates 6%-86%.",
+  "stance": "neutral",
+  "stance_target": "L3 occupancy: probe-based selection utility",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec. 5.1, Table 5",
+  "quoted_support": "By selecting the highest-scoring candidates predicted by OPENIA, the average pass@1 of the code LLMs across different settings improves by about 7%.",
+  "numbers": [
+   "about 7% pass@1",
+   "6%-86% test-pass improvement"
+  ],
+  "entities": [
+   "OPENIA",
+   "CG2"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "250112934-correctness-assessment-of-code-generated-by-large-language-models-usin",
+  "breadth": {
+   "confidence_families": "hidden-state probe (last token, last layer; layer/token ablation RQ2, Fig. 5); LLM-CHECK; zero-shot LLM-as-judge (Sec. 4.3); no token-probability calibration",
+   "model_families_and_sizes": "DeepSeek-Coder 1.3B/6.7B, Code Llama 7B/13B, Magicoder-7B (Sec. 4.2); o4-mini external judge",
+   "base_vs_instruct": "not present: instruction-tuned variants only (Sec. 4.2)",
+   "post_training_stages": "not present",
+   "reasoning_models": "o4-mini used only as external judge; reasoning setting not stated",
+   "elicitation_formats": "zero-shot correctness query (judge) vs probe (Sec. 4.3)",
+   "benchmarks": "HumanEval 164, MBPP 500, DevEval 1,825 (Sec. 4.1)",
+   "label_source": "benchmark test cases, 10 samples per task (Sec. 4.1); correct iff passes all tests (Sec. 3.1)",
+   "label_independence": "benchmark-provided tests; not independent of benchmark-level leakage; not discussed",
+   "contamination_split": "cross-benchmark MBPP-to-HumanEval and 9:1 task split (Sec. 4.3); no release-date control (searched: contamin)",
+   "calibration_metrics": "not present (accuracy, precision, recall, F1 only; searched: Brier, ECE, calibrat)",
+   "granularity": "whole-solution; repo-level",
+   "causal_intervention": "not present"
+  }
+ },
+ {
+  "claim": "Probe transfers worse across benchmarks (MBPP to HumanEval) due to prompt-template shift; per-language F1 for Python 0.67 vs TypeScript 0.88.",
+  "stance": "neutral",
+  "stance_target": "L2: generalization limits of probes",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec. 5.3, Table 2, Table 6",
+  "quoted_support": "OPENIA’s F1-Score for predicting the correctness of Python code is 0.67, which is 12% lower than its average score.",
+  "numbers": [
+   "F1 0.67 (Python)",
+   "F1 0.88 (TypeScript)"
+  ],
+  "entities": [
+   "OPENIA"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "250112934-correctness-assessment-of-code-generated-by-large-language-models-usin",
+  "breadth": {
+   "confidence_families": "hidden-state probe (last token, last layer; layer/token ablation RQ2, Fig. 5); LLM-CHECK; zero-shot LLM-as-judge (Sec. 4.3); no token-probability calibration",
+   "model_families_and_sizes": "DeepSeek-Coder 1.3B/6.7B, Code Llama 7B/13B, Magicoder-7B (Sec. 4.2); o4-mini external judge",
+   "base_vs_instruct": "not present: instruction-tuned variants only (Sec. 4.2)",
+   "post_training_stages": "not present",
+   "reasoning_models": "o4-mini used only as external judge; reasoning setting not stated",
+   "elicitation_formats": "zero-shot correctness query (judge) vs probe (Sec. 4.3)",
+   "benchmarks": "HumanEval 164, MBPP 500, DevEval 1,825 (Sec. 4.1)",
+   "label_source": "benchmark test cases, 10 samples per task (Sec. 4.1); correct iff passes all tests (Sec. 3.1)",
+   "label_independence": "benchmark-provided tests; not independent of benchmark-level leakage; not discussed",
+   "contamination_split": "cross-benchmark MBPP-to-HumanEval and 9:1 task split (Sec. 4.3); no release-date control (searched: contamin)",
+   "calibration_metrics": "not present (accuracy, precision, recall, F1 only; searched: Brier, ECE, calibrat)",
+   "granularity": "whole-solution; repo-level",
+   "causal_intervention": "not present"
+  }
+ }
+]

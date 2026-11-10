@@ -6,44 +6,24 @@ tags:
 - multicalibration
 - group-formation
 - icml2024
+- code-llm-confidence-positioning-d82d00
+- paper-related-l1
 created: '2026-07-17T18:37:42.677682Z'
-updated: '2026-07-17T18:38:53.959638Z'
+updated: '2026-11-09T23:27:43.800554Z'
 source: https://arxiv.org/html/2404.04689
 source_domain: arxiv.org
 fetched_at: '2026-07-17T18:37:42.676862Z'
 fetch_provider: builtin
-status: draft
+status: review
 type: note
 tier: institutional
 content_type: paper
 deprecated: false
-summary: 'Detommaso, Bertran, Fogliato, Roth (ICML 2024), arXiv:2404.04689. Foundational
-  methodological ancestor of the code-LLM multicalibration paper (arXiv:2512.08810),
-  which directly adopts this paper''s Iterative Grouped Linear Binning (IGLB) and
-  Group-Conditional Unbiased Linear Regression (GCULR) algorithms. Domain: hallucination/correctness
-  detection in question-answering (MMLU, OpenBookQA, etc.), NOT code generation. Core
-  idea: multicalibration requires ''groups'' of prompt/completion pairs correlated
-  with correctness probability; since QA lacks explicit demographic-style features,
-  the paper introduces two group-formation strategies -- (1) clustering prompt embeddings,
-  and (2) self-annotation, where the LLM itself answers yes/no questions about the
-  prompt (e.g. ''does this require high-school-level knowledge?'', ''is this ambiguous?'')
-  to define interpretable, extensible groups at higher compute/latency cost. Introduces
-  overfitting remedies for iterative multicalibration algorithms (larger overlapping
-  bins instead of disjoint bins, early stopping via held-out validation MSE) -- exactly
-  the IGLB innovation the code paper reuses. Reports that IGLB and GCULR consistently
-  outperform standard (marginal) calibration methods (Histogram Binning, Platt/logistic
-  scaling) and the non-overfitting-corrected IGHB baseline across multiple LLMs and
-  QA datasets, in both group average squared calibration error (gASCE) and accuracy.
-  Relation to disconnect thesis: this is the calibration-methodology precursor for
-  the code-domain multicalibration paper; it demonstrates that self-annotation (LLM-generated
-  yes/no features) is a richer, more interpretable group-formation strategy than the
-  purely structural groups (complexity/length/language) used in the code paper --
-  an unexplored extension opportunity: could code-specific self-annotation questions
-  (e.g. ''does this require recursion?'', ''does this involve floating-point precision?'')
-  define better multicalibration groups than syntactic features alone? Like the code-multicalibration
-  paper, this work''s evaluation metrics are calibration-error and accuracy based
-  (gASCE, MSE, ECE) rather than AUROC/discrimination, so it shares the same methodological
-  blind spot regarding calibration-vs-discrimination conflation.'
+summary: 'Detommaso, Bertran, Fogliato, Roth (ICML 2024, arXiv 2404.04689). Multicalibration
+  for LLM confidence: groups via prompt-embedding clustering or LLM self-annotation;
+  IGLB and GCULR beat histogram binning and Platt scaling on QA by gASCE, ECE, Brier.
+  QA only, not code. Methodological ancestor of arXiv 2512.08810. Full text (20k-word
+  note); duplicate -2 deprecated.'
 ---
 
 *Suggested by [[multicalibration-for-llm-based-code-generation]] — foundational multicalibration-for-LLM-confidence paper that the code-multicalibration paper directly extends*

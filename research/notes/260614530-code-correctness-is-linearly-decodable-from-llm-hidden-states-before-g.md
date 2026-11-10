@@ -9,13 +9,15 @@ tags:
 - pre-generation-probe
 - code-correctness-probe
 - scoop-risk
+- code-llm-confidence-positioning-d82d00
+- duplicate-abstract-only
 created: '2026-07-20T06:36:26.516780Z'
-updated: '2026-07-20T06:39:55.749273Z'
+updated: '2026-11-09T23:26:02.243860Z'
 source: https://arxiv.org/abs/2606.14530
 source_domain: arxiv.org
 fetched_at: '2026-07-20T06:36:26.516186Z'
 fetch_provider: builtin
-status: draft
+status: deprecated
 type: note
 tier: institutional
 content_type: paper

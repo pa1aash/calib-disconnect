@@ -1,0 +1,3096 @@
+---
+title: 'SWE-Router: Routing in Multi-turn Agentic Software Engineering Tasks'
+id: swe-router-routing-in-multi-turn-agentic-software-engineering-tasks
+tags:
+- code-llm-confidence-positioning-d82d00
+- close-occupant
+- l3
+- routing
+- agentic-swe
+created: '2026-11-09T23:08:30.613420Z'
+updated: '2026-11-09T23:27:44.457691Z'
+source: https://arxiv.org/html/2607.00053
+source_domain: arxiv.org
+fetched_at: '2026-11-09T23:08:30.612965Z'
+fetch_provider: builtin
+status: review
+type: note
+tier: institutional
+content_type: paper
+deprecated: false
+summary: 'Son et al. (UCL, arXiv 2607.00053, 30 Jun 2026, full text). Value-based
+  temporal router: a cheap model (gpt-5-mini or deepseek-v3.2) runs a few exploratory
+  turns in mini-SWE-agent, a Qwen2.5-Coder-7B-Instruct value head (LoRA, 2-class)
+  reads the partial trajectory and predicts eventual success; escalate to gemini-3-pro-preview
+  if above a cost-adjusted threshold. Includes a Bayes-optimality theorem (partial
+  trajectory never hurts routing) and a route-AUC metric against a random-assignment
+  reference band and prompt-only baselines; evaluated on SWE-Smith and SWE-Bench Verified.
+  Occupies cost-aware routing with random baseline in agentic SWE, but uses a trained
+  learned value head, not verbal or hidden-state confidence of the generating model,
+  no oracle-routing upper bound found, and no execution-budget allocation across test
+  runs. Closest to L3 as a routing-vs-random comparator.'
+---
+
+SWE-Router: Routing in Multi-turn Agentic Software Engineering Tasks
+Title:
+Content selection saved. Describe the issue below:
+Description:
+arXiv is now an independent nonprofit!
+Learn more
+×
+License: CC BY 4.0
+arXiv:2607.00053v1 [cs.SE] 30 Jun 2026
+SWE-Router: Routing in Multi-turn Agentic Software Engineering Tasks
+Seongho Son
+Affiliation:
+University College London, United Kingdom
+Correspondence to:
+seong.son.22@ucl.ac.uk
+Sangwoong Yoon
+Affiliation:
+Ulsan National Institute of Science and Technology, South Korea
+Jiahua Tang
+Affiliation:
+PSL Research University, France
+Shuhan Wang
+Affiliation:
+University College London, United Kingdom
+Lorenz Wolf
+Affiliation:
+University College London, United Kingdom
+Ilija Bogunovic
+Affiliation:
+University College London, United Kingdom
+Affiliation:
+University of Basel, Switzerland
+Abstract
+Large language models (LLMs) embedded in multi-turn agentic harnesses are reshaping software engineering (SWE), but routing every task to a frontier model is wasteful when many issues admit cheap fixes. Existing LLM routers operate on the task description alone, which inherits an information-theoretic Bayes-error floor in agentic settings: a similar issue can hide either a localized typo or a multi-module refactor, and the prompt does not separate the two.
+We introduce
+SWE-Router
+, a value-based
+temporal
+approach that lets a cheap model run for a few exploratory turns and reads the resulting partial trajectory before deciding whether to continue cheaply or to escalate to an expensive model. We provide a Bayes-optimality theorem showing that conditioning on the partial trajectory never harms routing and is strictly better whenever exploration is informative.
+Across the LLM pairs of weak and strong models spanning the contemporary cost–capability frontier, we show that SWE-Router greatly improves the cost efficiency of SWE tasks, while maintaining the majority of the performances of the stronger model. We additionally release a multi-LLM trajectory dataset which allows reproduction of our trajectory-level routing.
+Keywords:
+Software Engineering, Large Language Models, Routing
+1
+Introduction
+Large language models (LLMs) embedded in multi-turn agentic harnesses
+(
+Yang et al., 2024c
+;
+Wang et al., 2024b
+;
+Xia et al., 2024
+;
+Zhang et al., 2024b
+)
+are achieving state-of-the-art resolution rates on repository-scale coding benchmarks
+(
+Liu et al., 2023
+;
+Jimenez et al., 2024
+;
+Zhuo et al., 2024
+)
+. However, their per-task inference cost exceeds that of competitive open-weight alternatives by an order of magnitude or more, while only a minority of the existing tasks truly require frontier capability. Routing every instance to a frontier model is therefore wasteful in expectation, which motivates
+LLM routing
+(
+Ong et al., 2025
+;
+Chen et al., 2024a
+;
+Jitkrittum et al., 2025
+;
+Hu et al., 2024
+)
+: selecting a model per instance so that expensive inference is reserved for cases in which it is necessary.
+Existing routers operate as classifiers or calibrated probability estimators over the task description
+q
+q
+(
+Ong et al., 2025
+;
+Jitkrittum et al., 2025
+;
+Ding et al., 2024
+;
+Aggarwal et al., 2023
+;
+Hu et al., 2024
+)
+, picking the cheapest model whose cost-adjusted success probability is highest. This is poorly matched to multi-turn agentic SWE: a similar issue description can specify a localized typo or a multi-module refactor, and the distinction is often not identifiable from
+q
+q
+alone.
+The information that resolves this ambiguity is
+generated by the agent itself
+: SWE agents follow ReAct-style loops
+(
+Yao et al., 2023
+)
+of thoughts, actions, and observations, and a substantial fraction of their turns are spent on bug localization rather than patch synthesis
+(
+Xia et al., 2024
+;
+Zhang et al., 2024b
+)
+. The intermediate observations — failed tests, retrieved file contents, stack traces — supply structural signal that no prompt-only router can access.
+SWE-Router
+, our value-based
+temporal
+routing framework, operationalises this insight (
+Figure
+1
+): a cheap weak model
+m
+1
+m_{1}
+runs for a few exploratory turns, then a learned value head reads the resulting partial trajectory and predicts whether
+m
+1
+m_{1}
+will eventually solve the task; if this prediction exceeds a cost-adjusted threshold,
+m
+1
+m_{1}
+continues, otherwise we escalate to a stronger
+m
+2
+m_{2}
+. The value head is supervised by binary trajectory rewards and is closely related to execution-free reward models
+(
+SHUM et al., 2026
+)
+, but operates on
+incomplete
+trajectories and feeds a routing rule.
+We also provide a Bayes-optimality result (
+Theorem
+4.1
+) showing that partial-trajectory conditioning never harms routing and is strictly better when exploration is informative.
+Figure 1
+:
+SWE-Router overview.
+A weak (cheap) model
+m
+1
+m_{1}
+runs for several exploratory turns; a learned value head reads the resulting partial trajectory and predicts whether
+m
+1
+m_{1}
+will eventually solve the task. If the predicted probability exceeds a cost-adjusted threshold,
+m
+1
+m_{1}
+continues; otherwise the strong (expensive) model
+m
+2
+m_{2}
+is invoked from the original prompt
+q
+q
+. Conditioning on the partial trajectory — rather than on
+q
+q
+alone — breaks the information-theoretic ceiling that prompt-only routers face (
+Theorem
+4.1
+).
+Contributions.
+(i) We identify a Bayes-error floor that any prompt-conditioned router inherits in multi-turn agentic SWE, and introduce
+temporal routing
+on the partial trajectory; (ii) we instantiate this in
+SWE-Router
+, the first routing framework conditioning on the agent’s own intermediate observations;
+(iii) on SWEBench-Verified, SWE-Router achieves substantial cost reductions at matched resolution relative to strong prompt-only baselines.
+2
+Preliminary
+2.1
+Multi-turn Trajectories in Agentic Tasks
+In
+agentic
+systems, the LLM autonomously interacts with an environment before producing a final outcome, such as the ReAct framework
+(
+Yao et al., 2023
+)
+producing a thought
+z
+t
+z_{t}
+, an action
+a
+t
+a_{t}
+, and an observation
+o
+t
+o_{t}
+each turn
+(
+Yang et al., 2024c
+;
+Yang et al., 2024a
+)
+.
+Given a problem description
+q
+q
+, a complete SWE-agent trajectory
+𝒯
+\mathcal{T}
+takes the form
+𝒯
+(
+m
+)
+=
+[
+q
+,
+(
+z
+1
+,
+a
+1
+,
+o
+1
+)
+,
+…
+,
+(
+z
+T
+,
+a
+T
+,
+o
+T
+)
+]
+,
+\displaystyle\mathcal{T}(m)=[q,\quad(z_{1},a_{1},o_{1}),\quad\ldots,\quad(z_{T},a_{T},o_{T})],
+(1)
+where
+m
+m
+denotes the LLM that generated the trajectory. The final action
+a
+T
+a_{T}
+is
+submit
+, whose observation
+o
+T
+o_{T}
+is a git patch. The patch is checked against the repository’s unit tests and assigned a verifiable binary reward
+r
+∈
+{
+0
+,
+1
+}
+r\in\{0,1\}
+.
+2.2
+LLM Routing
+An LLM router improves the cost–performance Pareto frontier by invoking a minimum-cost model with sufficient capability. In the binary setting it picks between a
+weak
+model
+m
+1
+m_{1}
+and a
+strong
+model
+m
+2
+m_{2}
+given
+q
+q
+(“weak/strong” refers to cost–capability rather than parameter count); model-indexed quantities are subscripted
+1
+,
+2
+1,2
+. The router invokes
+m
+1
+m_{1}
+when its cost-adjusted expected success rate exceeds
+m
+2
+m_{2}
+’s:
+Invoke
+​
+{
+m
+1
+​
+if
+​
+r
+^
+1
+​
+(
+q
+)
+−
+λ
+​
+c
+1
+>
+r
+^
+2
+​
+(
+q
+)
+−
+λ
+​
+c
+2
+m
+2
+​
+otherwise,
+\displaystyle\text{Invoke }\begin{cases}m_{1}\text{ if }\hat{r}_{1}(q)-\lambda c_{1}>\hat{r}_{2}(q)-\lambda c_{2}\\
+m_{2}\text{ otherwise, }\end{cases}
+(2)
+where
+r
+^
+i
+​
+(
+q
+)
+∈
+[
+0
+,
+1
+]
+\hat{r}_{i}(q)\in[0,1]
+is the estimated probability
+m
+i
+m_{i}
+resolves
+q
+q
+,
+c
+i
+>
+0
+c_{i}>0
+is its expected inference cost (USD; on long agentic trajectories cost is model-dominated, so we treat
+c
+i
+c_{i}
+as
+q
+q
+-independent). Costs are converted into success-probability units by
+λ
+>
+0
+\lambda>0
+; tuning
+λ
+\lambda
+traces the cost–quality Pareto curve
+(
+Ong et al., 2025
+;
+Jitkrittum et al., 2025
+)
+.
+In agentic settings
+q
+q
+often does not pin down task difficulty: early turns reveal feedback (file structure, error patterns, search depth) that the issue text lacks.
+The decision in
+Equation
+2
+therefore frequently inherits large Bayes error, motivating a router that can read the partial trajectory.
+3
+Value-Based Temporal Routing
+We run
+m
+1
+m_{1}
+for
+K
+K
+turns to collect
+𝒯
+≤
+K
+,
+1
+=
+[
+q
+,
+(
+z
+1
+,
+a
+1
+,
+o
+1
+)
+,
+…
+,
+(
+z
+K
+,
+a
+K
+,
+o
+K
+)
+]
+\mathcal{T}_{\leq K,1}=[q,(z_{1},a_{1},o_{1}),\ldots,(z_{K},a_{K},o_{K})]
+and train a value function
+r
+^
+1
+​
+(
+𝒯
+≤
+K
+,
+1
+)
+\hat{r}_{1}(\mathcal{T}_{\leq K,1})
+as a pretrained LLM with a small classification head, supervised by the binary reward
+r
+r
+via cross-entropy. On escalation,
+m
+2
+m_{2}
+restarts
+from
+q
+q
+: continuation rules need expensive online
+m
+2
+m_{2}
+inference, and conditioning
+m
+2
+m_{2}
+on
+m
+1
+m_{1}
+’s reasoning has been seen to bias
+m
+2
+m_{2}
+toward
+m
+1
+m_{1}
+’s mistakes. The
+K
+K
+weak-model turns are paid up-front and counted in any escalated run’s cost. With per-turn weak cost
+c
+<
+c
+1
+c<c_{1}
+, the rule is
+{
+Continue with
+m
+1
+if
+y
+1
+≥
+y
+2
+Switch to
+m
+2
+from the
+K
+-th step
+otherwise
+,
+\displaystyle\begin{cases}\text{Continue with $m_{1}$}&\text{if}\quad y_{1}\geq y_{2}\\
+\text{Switch to $m_{2}$ from the $K$-th step}&\text{otherwise},\end{cases}
+(3)
+where
+y
+1
+=
+r
+^
+1
+​
+(
+𝒯
+≤
+K
+,
+1
+)
+−
+λ
+⁡
+(
+c
+1
+−
+K
+​
+c
+)
+y_{1}=\hat{r}_{1}(\mathcal{T}_{\leq K,1})-\lambda(c_{1}-Kc)
+and
+y
+2
+=
+r
+^
+2
+​
+(
+q
+)
+−
+λ
+​
+c
+2
+y_{2}=\hat{r}_{2}(q)-\lambda c_{2}
+.
+SWE agents typically spend their early turns locating files and isolating failures — exploration cheaper than patch synthesis, so delegating it to
+m
+1
+m_{1}
+is a useful division of labor. Two simplifications turn
+Equation
+3
+into a one-hyperparameter rule:
+(i) Threshold reduction:
+absorb
+λ
+⁡
+(
+c
+1
+−
+c
+2
+−
+K
+​
+c
+)
+\lambda(c_{1}{-}c_{2}{-}Kc)
+into a single scalar
+λ
+′
+\lambda^{\prime}
+tuned on validation, so “continue iff
+r
+^
+1
+−
+r
+^
+2
+​
+(
+q
+)
+≥
+λ
+′
+\hat{r}_{1}-\hat{r}_{2}(q)\geq\lambda^{\prime}
+”;
+(ii) One-sided routing:
+treat
+r
+^
+2
+\hat{r}_{2}
+as an unknown trajectory-independent constant, giving “continue iff
+r
+^
+1
+≥
+λ
+′′
+\hat{r}_{1}\geq\lambda^{\prime\prime}
+”. We use one-sided routing for all reported experiments.
+Algorithm
+1
+summarizes the deployment-time decision procedure.
+4
+Theoretical Results
+Viewing routing as a one-step Bayesian decision problem, the Bayes-optimal expected utility is monotone in the conditioning
+σ
+\sigma
+-algebra. This is the classical “information never hurts” principle for Bayes decision rules
+(
+DeGroot, 1962
+;
+Blackwell, 1953
+)
+, instantiated in our trajectory-conditioning setting. Let
+Q
+Q
+be the random task description and
+S
+t
+≔
+[
+Q
+,
+(
+Z
+1
+,
+A
+1
+,
+O
+1
+)
+,
+…
+,
+(
+Z
+t
+,
+A
+t
+,
+O
+t
+)
+]
+S_{t}\coloneqq[Q,(Z_{1},A_{1},O_{1}),\dots,(Z_{t},A_{t},O_{t})]
+the partial trajectory after
+t
+t
+weak-model turns; by construction
+Q
+Q
+is a function of
+S
+t
+S_{t}
+, so
+S
+t
+S_{t}
+carries strictly more information than
+Q
+Q
+. The improvement is strict whenever the conditional gap
+𝔼
+⁡
+[
+U
+1
+−
+U
+2
+∣
+S
+t
+]
+\mathbb{E}[U_{1}-U_{2}\mid S_{t}]
+is not
+σ
+⁡
+(
+Q
+)
+\sigma(Q)
+-measurable.
+Theorem 4.1
+(More informative signals improve Bayes-optimal routing)
+.
+Let
+U
+1
+,
+U
+2
+U_{1},U_{2}
+be integrable latent cost-adjusted utilities of routing to
+m
+1
+,
+m
+2
+m_{1},m_{2}
+, and define
+V
+⁡
+(
+Z
+)
+≔
+𝔼
+⁡
+[
+max
+⁡
+{
+𝔼
+⁡
+[
+U
+1
+∣
+Z
+]
+,
+𝔼
+⁡
+[
+U
+2
+∣
+Z
+]
+}
+]
+V(Z)\coloneqq\mathbb{E}[\max\{\mathbb{E}[U_{1}\mid Z],\mathbb{E}[U_{2}\mid Z]\}]
+for any signal
+Z
+Z
+(the Bayes-optimal expected utility under
+Z
+Z
+). If
+Q
+Q
+is determined by
+S
+t
+S_{t}
+, then
+V
+⁡
+(
+S
+t
+)
+≥
+V
+⁡
+(
+Q
+)
+V(S_{t})\geq V(Q)
+.
+Proof sketch.
+The identity
+max
+⁡
+{
+a
+,
+b
+}
+=
+1
+2
+​
+(
+a
++
+b
++
+|
+a
+−
+b
+|
+)
+\max\{a,b\}=\tfrac{1}{2}(a+b+|a-b|)
+gives
+V
+⁡
+(
+Z
+)
+=
+1
+2
+​
+𝔼
+​
+[
+U
+1
++
+U
+2
+]
++
+1
+2
+​
+𝔼
+​
+[
+|
+𝔼
+⁡
+[
+U
+1
+−
+U
+2
+∣
+Z
+]
+|
+]
+V(Z)=\tfrac{1}{2}\mathbb{E}[U_{1}+U_{2}]+\tfrac{1}{2}\mathbb{E}[|\mathbb{E}[U_{1}{-}U_{2}\mid Z]|]
+.
+Since
+Q
+Q
+is a function of
+S
+t
+S_{t}
+, the tower rule yields
+𝔼
+⁡
+[
+U
+1
+−
+U
+2
+∣
+Q
+]
+=
+𝔼
+⁡
+[
+𝔼
+⁡
+[
+U
+1
+−
+U
+2
+∣
+S
+t
+]
+∣
+Q
+]
+\mathbb{E}[U_{1}{-}U_{2}\mid Q]=\mathbb{E}[\mathbb{E}[U_{1}{-}U_{2}\mid S_{t}]\mid Q]
+, and the conditional Jensen inequality applied to
+|
+⋅
+|
+|{\cdot}|
+gives
+|
+𝔼
+⁡
+[
+𝔼
+⁡
+[
+U
+1
+−
+U
+2
+∣
+S
+t
+]
+∣
+Q
+]
+|
+≤
+𝔼
+⁡
+[
+|
+𝔼
+⁡
+[
+U
+1
+−
+U
+2
+∣
+S
+t
+]
+|
+∣
+Q
+]
+|\mathbb{E}[\mathbb{E}[U_{1}{-}U_{2}\mid S_{t}]\mid Q]|\leq\mathbb{E}[|\mathbb{E}[U_{1}{-}U_{2}\mid S_{t}]|\mid Q]
+. Taking expectations yields
+V
+⁡
+(
+S
+t
+)
+≥
+V
+⁡
+(
+Q
+)
+V(S_{t})\geq V(Q)
+. The full proof is in
+Appendix
+C
+.
+Practical reading.
+The decomposition above clarifies why temporal routing helps. Prompt-only routers operate at the resolution of
+𝔼
+⁡
+[
+U
+1
+−
+U
+2
+∣
+Q
+]
+\mathbb{E}[U_{1}{-}U_{2}\mid Q]
+, which averages out fine-grained difficulty cues only observable after a few exploratory turns.
+The partial trajectory
+S
+t
+S_{t}
+refines this gap: instances on which the two models would make similar predictions get routed cheaply, while hard instances are escalated. The improvement is strict whenever exploration is informative for the cost–benefit comparison;
+it vanishes only when the prompt already determines the optimal choice.
+Algorithm 1
+SWE-Router: one-sided routing (deployment).
+0:
+problem
+q
+q
+; weak model
+m
+1
+m_{1}
+, strong model
+m
+2
+m_{2}
+; value head
+r
+^
+1
+\hat{r}_{1}
+; exploration budget
+K
+K
+; threshold
+λ
+′′
+\lambda^{\prime\prime}
+(tuned on validation).
+1:
+Initialise
+𝒯
+←
+[
+q
+]
+\mathcal{T}\leftarrow[q]
+.
+2:
+for
+t
+=
+1
+t=1
+to
+K
+K
+do
+3:
+Run
+m
+1
+m_{1}
+for one step: append
+(
+z
+t
+,
+a
+t
+,
+o
+t
+)
+(z_{t},a_{t},o_{t})
+to
+𝒯
+\mathcal{T}
+.
+4:
+if
+a
+t
+=
+submit
+a_{t}=\texttt{submit}
+then
+5:
+Return
+m
+1
+m_{1}
+’s patch (early termination).
+6:
+end
+if
+7:
+end
+for
+8:
+Compute
+r
+^
+1
+​
+(
+𝒯
+)
+\hat{r}_{1}(\mathcal{T})
+from the value head’s last-token logits.
+9:
+if
+r
+^
+1
+​
+(
+𝒯
+)
+≥
+λ
+′′
+\hat{r}_{1}(\mathcal{T})\geq\lambda^{\prime\prime}
+then
+10:
+Continue with
+m
+1
+m_{1}
+from turn
+K
++
+1
+K{+}1
+until
+a
+T
+=
+submit
+a_{T}=\texttt{submit}
+;
+Return
+its patch.
+11:
+else
+12:
+Restart with
+m
+2
+m_{2}
+from
+q
+q
+;
+Return
+m
+2
+m_{2}
+’s patch.
+13:
+end
+if
+5
+Experiments
+In this section, we explain how the experiments are implemented and evaluated. We provide further details of experiment in
+Appendix
+A
+and
+Appendix
+B
+.
+5.1
+Evaluation Metrics
+Threshold-free metrics.
+AUROC
+is the standard ROC-AUC of
+r
+^
+1
+​
+(
+𝒯
+≤
+K
+,
+1
+)
+\hat{r}_{1}(\mathcal{T}_{\leq K,1})
+as a binary classifier of
+r
+r
+and measures only the value head’s discriminative quality.
+Route-AUC
+is the normalised area under the cost–vs–resolved-rate curve obtained by sweeping the routing threshold; both axes are normalised so the all-weak point is
+(
+0
+,
+0
+)
+(0,0)
+and the all-strong point is
+(
+1
+,
+1
+)
+(1,1)
+. Hence
+0
+0
+corresponds to cost-proportional interpolation between the two LLMs and
+1
+1
+matches the strong model’s resolved rate at the weak model’s cost.
+5.2
+Experiment Setting
+Datasets.
+We use both SWE-Smith and SWE-Bench for training and test split. We only use SWE-Smith for the validation split. See
+Appendix
+A
+for further details.
+LLM agents and pairs.
+We generate trajectories from four LLMs in mini-SWE-agent
+(
+Yang et al., 2024a
+)
+and form two (weak, strong) pairs: weak
+∈
+\in
+{
+gpt-5-mini
+,
+deepseek-v3.2
+}, and
+gemini-3-pro-preview
+for the strong model. The weak model has both lower per-instance cost and lower resolved rate in every pair (
+Table
+1
+).
+Value head and training.
+For the value function
+r
+^
+1
+\hat{r}_{1}
+, we use
+Qwen2.5-Coder-7B-Instruct
+with a 2-class classification head fine-tuned via LoRA
+(
+Hu et al., 2021
+)
+.
+Baselines.
+Three prompt-only routers in the
+Equation
+2
+family — logistic regression,
+k
+k
+-NN, and XGBoost on OpenAI
+text-embedding-3-large
+embeddings of
+q
+q
+— and our
+non-temporal router
+(
+K
+=
+0
+K{=}0
+instance of our framework, conditioning only on
+q
+q
+) are used as baselines.
+5.3
+Results
+We evaluate routing on two (weak, strong) LLM pairs on the test splits of SWE-Smith and SWE-Bench datasets. We visualize the curve of routing results in
+Figure
+2
+and compare the efficiency of SWE-Router against the baselines. The gray bands in the plots indicate the
+random-assignment
+reference, computed over
+400
+400
+Monte-Carlo permutations of the per-instance routing decision. We also use
+×
+\times
+and
+★
+\bigstar
+to mark the all-weak and all-strong endpoints.
+Figure 2
+:
+Cost-vs.-resolved
+routing curves
+on the held-out SWE-Bench Verified for the two (weak, strong) pairs. Each colored curve is the threshold sweep of the corresponding router; the gray band is the
+random-assignment
+reference, computed as the per-cost-level mean (
+±
+1
+​
+σ
+\pm 1\sigma
+) over
+400
+400
+Monte-Carlo permutations of the per-instance routing decision;
+×
+\times
+and
+★
+\bigstar
+mark the all-weak and all-strong endpoints. The curves of SWE-Router (
+K
+=
+3
+K{=}3
+, green) are above the gray bands, and even exceed the strong-model marker for some thresholds, indicating the synergistic effect of using the weak model for resolving tasks that the strong model could not.
+Does conditioning on the partial trajectory improve over prompt-only baselines?
+The cost–resolved routing curves in
+Figure
+2
+gives a clear summary of the advantage of using partial trajectory for temporal routing. SWE-Router (green) sits above the random-assignment band in both pairs and traces a Pareto frontier that strictly dominates the embedding-baseline curves over most of the cost range.
+The picture also holds qualitatively for
+deepseek-v3.2
+→
+\to
+gemini-3-pro-preview
+, where the green curve again passes above the random band at intermediate cost.
+We also present the computed ROC-AUC and Route-AUC values of each method in
+Table
+2
+. In the test split of SWE-Bench Verified, both pairs show significant improvement in Route-AUC over the baselines. When
+deepseek-v3.2
+is used as
+m
+1
+m_{1}
+, SWE-Router shows Route-AUC of
+0.780
+0.780
+, which is a
++
+15.3
++15.3
+pp improvement over the non-temporal routing baseline (
+K
+=
+0
+K=0
+). While the router trained with
+gpt-5-mini
+’s trajectories for
+m
+1
+m_{1}
+also exhibits
++
+12
++12
+pp improvement over the strongest baseline. AUROC evaluations in the test split of SWE-Bench Verified show that the accuracy of value functions are not strongly correlated to actual routing performances, as can be shown from the AUROC of non-temporal router in the
+deepseek-v3.2
+→
+\to
+gemini-3-pro-preview
+pair.
+We further note that on both pairs the SWE-Router curve briefly passes
+above
+the all-strong
+★
+\bigstar
+. This synergy is feasible because weak and strong solve non-identical instance subsets, so correctly routing the easy instances to
+m
+1
+m_{1}
+resolves cases on which always-strong fails. The overall shape of the routing curves, also measured through AUC metrics in
+Table
+2
+, is evidence that the value-head ranking captures a useful complementarity signal for efficient temporal routing.
+6
+Related Work
+Building on agentic frameworks like ReAct
+(
+Yao et al., 2023
+)
+, recent work equips LLMs to operate on real repositories. SWE-agent
+(
+Yang et al., 2024c
+;
+Yang et al., 2024a
+)
+introduces an agent–computer interface for browsing, editing, and executing code.
+Code benchmarks have moved from self-contained problems
+(
+Chen et al., 2021
+;
+Austin et al., 2021
+;
+Hendrycks et al., 2021
+)
+to repository-level evaluation. SWE-bench
+(
+Jimenez et al., 2024
+)
+pioneered repository-scale issue resolution against hidden tests with a curated subset
+(
+OpenAI, 2024
+)
+.
+FrugalGPT
+(
+Chen et al., 2024a
+)
+introduced cost-aware cascades, and RouteLLM
+(
+Ong et al., 2025
+)
+formalized binary routing from preference data for Pareto cost–quality gains. All the existing methods condition on the prompt alone; SWE-Router differs by conditioning on the partial agent trajectory. We provide more related works in
+Appendix
+D
+.
+7
+Conclusion
+We introduced
+SWE-Router
+, a value-based routing framework that conditions on a short partial trajectory of a cheap weak model rather than on the task description alone. A simple Bayes-optimality result (
+Theorem
+4.1
+) shows that this conditioning never harms routing and is strictly better when exploration is informative. We evaluated our approach using two pairs of popular LLMs, and showed that SWE-Router improves Route-AUC by at least
++
+12
++12
+pp on the test split of SWE-Bench Verified over the strongest baseline, also presenting the routing curve of methods where SWE-Router achieves the greatest overall performance.
+Impact Statement
+Our approach provides a clear positive impact of reduced frontier-model inference cost and energy use with minimal tradeoff in the overall performance. However, our proposed approach of utilizing partial trajectories can be misused to bypass safety-focused frontier models for malicious purposes. Considering multiple objectives for routing, such as considering the safety of the given task together during routing, is an important and interesting direction for future work.
+References
+Aggarwal
+et al.
+(2023)
+P. Aggarwal, A. Madaan, A. Anand, S. P. Potharaju, S. Mishra, P. Zhou, A. Gupta, D. Rajagopal, K. Kappaganthu, Y. Yang,
+et al.
+Automix: automatically mixing language models
+.
+arXiv preprint arXiv:2310.12963
+.
+Cited by:
+Appendix D
+,
+§1
+.
+Aleithan
+et al.
+(2024)
+R. Aleithan
+et al.
+SWE-bench+: enhanced coding benchmark for llms
+.
+arXiv preprint arXiv:2410.06992
+.
+Cited by:
+Appendix D
+.
+Austin
+et al.
+(2021)
+J. Austin, A. Odena, M. Nye, M. Bosma, H. Michalewski, D. Dohan, E. Jiang, C. Cai, M. Terry, Q. Le, and C. Sutton
+Program synthesis with large language models
+.
+arXiv preprint arXiv:2108.07732
+.
+Cited by:
+§6
+.
+Bairi
+et al.
+(2024)
+R. Bairi, A. Sonwane, A. Kanade, D. Vageesh, A. Iyer, S. Parthasarathy, S. Rajamani, B. Ashok, and S. Shet
+CodePlan: repository-level coding using llms and planning
+.
+Proceedings of the ACM on Software Engineering
+.
+Cited by:
+Appendix D
+.
+Blackwell (1953)
+D. Blackwell
+Equivalent comparisons of experiments
+.
+The Annals of Mathematical Statistics
+24
+(
+2
+),
+pp. 265–272
+.
+Cited by:
+§4
+.
+Chen
+et al.
+(2024a)
+L. Chen, M. Zaharia, and J. Zou
+FrugalGPT: how to use large language models while reducing cost and improving performance
+.
+Transactions on Machine Learning Research
+.
+Note:
+External Links:
+ISSN 2835-8856
+,
+Link
+Cited by:
+§1
+,
+§6
+.
+Chen
+et al.
+(2021)
+M. Chen, J. Tworek, H. Jun, Q. Yuan, H. Ponde, J. Kaplan, H. Edwards, Y. Burda, N. Joseph, G. Brockman,
+et al.
+Evaluating large language models trained on code
+.
+arXiv preprint arXiv:2107.03374
+.
+Cited by:
+§6
+.
+Chen
+et al.
+(2024b)
+S. Chen, W. Jiang, B. Lin, J. Kwok, and Y. Zhang
+Routerdc: query-based router by dual contrastive learning for assembling large language models
+.
+Advances in Neural Information Processing Systems
+37
+,
+pp. 66305–66328
+.
+Cited by:
+Appendix D
+.
+Da
+et al.
+(2025)
+J. Da, C. J. Wang, X. Deng, Y. Ma, N. Barhate, and S. M. Hendryx
+Agent-rlvr: training software engineering agents via guidance and environment rewards
+.
+ArXiv
+abs/2506.11425
+.
+External Links:
+Link
+Cited by:
+Appendix D
+.
+DeGroot (1962)
+M. H. DeGroot
+Uncertainty, information, and sequential experiments
+.
+The Annals of Mathematical Statistics
+33
+(
+2
+),
+pp. 404–419
+.
+Cited by:
+§4
+.
+Deng
+et al.
+(2024)
+C. Deng, Y. Zhao, X. Tang, M. Gerstein, and A. Cohan
+Investigating data contamination in modern benchmarks for large language models
+.
+In
+Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers)
+,
+Mexico City, Mexico
+,
+pp. 8706–8719
+.
+Cited by:
+Appendix D
+.
+Deng
+et al.
+(2025)
+X. Deng, J. Da, E. Pan, Y. Y. He, C. Ide, K. Garg, N. Lauffer, A. Park, N. Pasari, C. Rane,
+et al.
+Swe-bench pro: can ai agents solve long-horizon software engineering tasks?
+.
+arXiv preprint arXiv:2509.16941
+.
+Cited by:
+Appendix D
+.
+Ding
+et al.
+(2024)
+D. Ding, A. Mallick, C. Wang, R. Sim, S. Mukherjee, V. Ruhle, L. V. Lakshmanan, and A. H. Awadallah
+Hybrid llm: cost-efficient and quality-aware query routing
+.
+arXiv preprint arXiv:2404.14618
+.
+Cited by:
+Appendix D
+,
+§1
+.
+Ding
+et al.
+(2023)
+Y. Ding, Z. Wang, W. U. Ahmad, H. Ding, M. Tan, N. Jain, M. K. Ramanathan, R. Nallapati, P. Bhatia, D. Roth, and B. Xiang
+CrossCodeEval: a diverse and multilingual benchmark for cross-file code completion
+.
+In
+Neural Information Processing Systems
+,
+Cited by:
+Appendix D
+.
+Feng
+et al.
+(2025)
+A. Feng, Z. Xu, X. Wu, K. Zhou, S. Guan, Y. Chen, N. Kulkarni, Y. Zhou, B. Srinivasan, H. Ding,
+et al.
+IPR: intelligent prompt routing with user-controlled quality-cost trade-offs
+.
+arXiv preprint arXiv:2509.06274
+.
+Cited by:
+Appendix D
+.
+Feng
+et al.
+(2024)
+T. Feng, Y. Shen, and J. You
+Graphrouter: a graph-based router for llm selections
+.
+arXiv preprint arXiv:2410.03834
+.
+Cited by:
+Appendix D
+.
+Guo
+et al.
+(2026)
+H. Guo, T. Wei, D. Wang, Y. Du, Z. Wang, J. Zhang, and Z. Sun
+Think when needed: model-aware reasoning routing for llm-based ranking
+.
+External Links:
+2601.18146
+,
+Link
+Cited by:
+Appendix D
+.
+Hari and Thomson (2023)
+S. N. Hari and M. Thomson
+Tryage: real-time, intelligent routing of user prompts to large language models
+.
+arXiv preprint arXiv:2308.11601
+.
+Cited by:
+Appendix D
+.
+He
+et al.
+(2025)
+X. He, Q. Liu, M. Du, L. Yan, Z. Fan, Y. Huang, Z. Yuan, and Z. Ma
+SWE-perf: can language models optimize code performance on real-world repositories?
+.
+ArXiv
+abs/2507.12415
+.
+External Links:
+Link
+Cited by:
+Appendix D
+.
+Hendrycks
+et al.
+(2021)
+D. Hendrycks, S. Basart, S. Kadavath, M. Mazeika, A. Arora, E. Guo, C. Burns, S. Puranik, H. He, D. Song, and J. Steinhardt
+Measuring coding challenge competence with apps
+.
+In
+Neural Information Processing Systems
+,
+Cited by:
+§6
+.
+Hu
+et al.
+(2021)
+E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen
+LoRA: low-rank adaptation of large language models
+.
+External Links:
+2106.09685
+,
+Link
+Cited by:
+§5.2
+.
+Hu
+et al.
+(2024)
+Q. J. Hu, J. Bieker, X. Li, N. Jiang, B. Keigwin, G. Ranganath, K. Keutzer, and S. K. Upadhyay
+Routerbench: a benchmark for multi-llm routing system
+.
+arXiv preprint arXiv:2403.12031
+.
+Cited by:
+Appendix D
+,
+§1
+,
+§1
+.
+Huang
+et al.
+(2023)
+D. Huang, Q. Bu, J. M. Zhang, M. Luck, and H. Cui
+AgentCoder: multi-agent-based code generation with iterative testing and optimisation
+.
+arXiv preprint arXiv:2312.13010
+.
+Cited by:
+Appendix D
+.
+Huang
+et al.
+(2025)
+Z. Huang, G. Ling, Y. Lin, Y. Chen, S. Zhong, H. Wu, and L. Lin
+Routereval: a comprehensive benchmark for routing llms to explore model-level scaling up in llms
+.
+arXiv preprint arXiv:2503.10657
+.
+Cited by:
+Appendix D
+.
+Jiang
+et al.
+(2023)
+D. Jiang, X. Ren, and B. Y. Lin
+Llm-blender: ensembling large language models with pairwise ranking and generative fusion
+.
+arXiv preprint arXiv:2306.02561
+.
+Cited by:
+Appendix D
+.
+Jimenez
+et al.
+(2024)
+C. E. Jimenez, J. Yang, A. Wettig, S. Yao, K. Pei, O. Press, and K. Narasimhan
+SWE-bench: can language models resolve real-world github issues?
+.
+In
+The Twelfth International Conference on Learning Representations
+,
+External Links:
+Link
+Cited by:
+Appendix D
+,
+§1
+,
+§6
+.
+Jitkrittum
+et al.
+(2025)
+W. Jitkrittum, H. Narasimhan, A. S. Rawat, J. Juneja, C. Wang, Z. Wang, A. Go, C. Lee, P. Shenoy, R. Panigrahy,
+et al.
+Universal model routing for efficient llm inference
+.
+arXiv preprint arXiv:2502.08773
+.
+Cited by:
+Appendix D
+,
+§1
+,
+§1
+,
+§2.2
+.
+Liu
+et al.
+(2023)
+T. Liu, C. Xu, and J. McAuley
+RepoBench: benchmarking repository-level code auto-completion systems
+.
+arXiv preprint arXiv:2306.03091
+.
+Cited by:
+Appendix D
+,
+§1
+.
+Lu
+et al.
+(2025)
+Y. Lu, R. Liu, J. Yuan, X. Cui, S. Zhang, H. Liu, and J. Xing
+RouterArena: an open platform for comprehensive comparison of llm routers
+.
+arXiv preprint arXiv:2510.00202
+.
+Cited by:
+Appendix D
+.
+Ma
+et al.
+(2025)
+W. Ma, J. He, C. Snell, T. Griggs, S. Min, and M. Zaharia
+Reasoning models can be effective without thinking
+.
+arXiv preprint arXiv:2504.09858
+.
+Cited by:
+Appendix D
+.
+Mei
+et al.
+(2025)
+K. Mei, W. Xu, S. Lin, and Y. Zhang
+OmniRouter: budget and performance controllable multi-llm routing
+.
+arXiv preprint arXiv:2502.20576
+.
+Cited by:
+Appendix D
+.
+Ong
+et al.
+(2025)
+I. Ong, A. Almahairi, V. Wu, W. Chiang, T. Wu, J. E. Gonzalez, M. W. Kadous, and I. Stoica
+RouteLLM: learning to route LLMs from preference data
+.
+In
+The Thirteenth International Conference on Learning Representations
+,
+External Links:
+Link
+Cited by:
+§1
+,
+§1
+,
+§2.2
+,
+§6
+.
+OpenAI (2024)
+OpenAI
+External Links:
+Link
+Cited by:
+§6
+.
+Pan
+et al.
+(2025)
+Z. Pan, K. Zhang, Y. Zhao, and Y. Han
+Route to reason: adaptive routing for llm and reasoning strategy selection
+.
+arXiv preprint arXiv:2505.19435
+.
+Cited by:
+Appendix D
+.
+Šakota
+et al.
+(2024)
+M. Šakota, M. Peyrard, and R. West
+Fly-swat or cannon? cost-effective language model choice via meta-modeling
+.
+In
+Proceedings of the 17th ACM International Conference on Web Search and Data Mining
+,
+pp. 606–615
+.
+Cited by:
+Appendix D
+.
+Shao
+et al.
+(2025)
+C. Shao, X. Liu, Y. Lin, F. Xu, and Y. Li
+Route-and-reason: scaling large language model reasoning with reinforced model router
+.
+arXiv preprint arXiv:2506.05901
+.
+Cited by:
+Appendix D
+.
+Shirkavand
+et al.
+(2025)
+R. Shirkavand, S. Gao, P. Yu, and H. Huang
+Cost-aware contrastive routing for llms
+.
+arXiv preprint arXiv:2508.12491
+.
+Cited by:
+Appendix D
+.
+SHUM
+et al.
+(2026)
+K. SHUM, B. Hui, J. Chen, L. Zhang, X. W., J. Yang, Y. Huang, J. Lin, and J. He
+SWE-RM: execution-free feedback for software engineering agents
+.
+In
+The Fourteenth International Conference on Learning Representations
+,
+External Links:
+Link
+Cited by:
+Appendix D
+,
+§1
+.
+Somerstep
+et al.
+(2025)
+S. Somerstep, F. M. Polo, A. F. M. de Oliveira, P. Mangal, M. Silva, O. Bhardwaj, M. Yurochkin, and S. Maity
+Carrot: a cost aware rate optimal router
+.
+arXiv preprint arXiv:2502.03261
+.
+Cited by:
+Appendix D
+.
+Song
+et al.
+(2025)
+W. Song, Z. Huang, C. Cheng, W. Gao, B. Xu, G. Zhao, F. Wang, and R. Wu
+IRT-router: effective and interpretable multi-llm routing via item response theory
+.
+arXiv preprint arXiv:2506.01048
+.
+Cited by:
+Appendix D
+.
+Wang
+et al.
+(2025)
+C. Wang, X. Liu, Y. Liu, Y. Zhu, X. Mo, J. Jiang, and H. Chen
+When to reason: semantic router for vllm
+.
+arXiv preprint arXiv:2510.08731
+.
+Cited by:
+Appendix D
+.
+Wang
+et al.
+(2024a)
+X. Wang, Y. Chen, L. Yuan, Y. Zhang, Y. Li, H. Peng, and H. Ji
+Executable code actions elicit better llm agents
+.
+In
+International Conference on Machine Learning
+,
+Cited by:
+Appendix D
+.
+Wang
+et al.
+(2024b)
+X. Wang, B. Li, Y. Song, F. F. Xu, X. Tang, M. Zhuge, J. Pan, Y. Song, B. Li, J. Singh,
+et al.
+OpenHands: an open platform for ai software developers as generalist agents
+.
+arXiv preprint arXiv:2407.16741
+.
+Cited by:
+Appendix D
+,
+§1
+.
+White
+et al.
+(2024)
+C. White, S. Dooley, ManleyRoberts, A. Pal, B. Feuer, S. Jain, R. Shwartz-Ziv, N. Jain, K. Saifullah, S. Naidu, C. Hegde, Y. LeCun, T. Goldstein, W. Neiswanger, M. Goldblum, Abacus.AI, Nyu, and Nvidia
+LiveBench: a challenging, contamination-free llm benchmark
+.
+ArXiv
+abs/2406.19314
+.
+External Links:
+Link
+Cited by:
+Appendix D
+.
+Xia
+et al.
+(2024)
+C. S. Xia, Y. Deng, S. Dunn, and L. Zhang
+Agentless: demystifying llm-based software engineering agents
+.
+arXiv preprint arXiv:2407.01489
+.
+Cited by:
+Appendix D
+,
+§1
+,
+§1
+.
+Xu
+et al.
+(2024)
+C. Xu, J. Guan, X. Zhao, C. Fu, Q. Xin, Z. Wang, L. Li, J. Fu, H. Wang, and J. Liu
+Benchmark data contamination of large language models: a survey
+.
+arXiv preprint arXiv:2406.04244
+.
+Cited by:
+Appendix D
+.
+Yang
+et al.
+(2024a)
+J. Yang, C. E. Jimenez, A. Wettig, K. Lieret, S. Yao, K. Narasimhan, and O. Press
+SWE-agent: agent-computer interfaces enable automated software engineering
+.
+In
+Neural Information Processing Systems
+,
+Cited by:
+§2.1
+,
+§5.2
+,
+§6
+.
+Yang
+et al.
+(2024b)
+J. Yang, C. E. Jimenez, A. Wettig, K. Narasimhan, and O. Press
+SWE-bench multimodal: do ai systems generalize to visual software domains?
+.
+arXiv preprint arXiv:2410.03859
+.
+Cited by:
+Appendix D
+.
+Yang
+et al.
+(2024c)
+J. Yang, C. E. Jimenez, A. Wettig, K. Lieret, S. Yao, K. Narasimhan, and O. Press
+SWE-agent: agent-computer interfaces enable automated software engineering
+.
+In
+Advances in Neural Information Processing Systems
+,
+A. Globerson, L. Mackey, D. Belgrave, A. Fan, U. Paquet, J. Tomczak, and C. Zhang (Eds.)
+,
+Vol.
+37
+,
+pp. 50528–50652
+.
+External Links:
+Document
+,
+Link
+Cited by:
+§1
+,
+§2.1
+,
+§6
+.
+Yang
+et al.
+(2025)
+J. Yang, K. Lieret, C. E. Jimenez, A. Wettig, K. Khandpur, Y. Zhang, B. Hui, O. Press, L. Schmidt, and D. Yang
+SWE-smith: scaling data for software engineering agents
+.
+In
+The Thirty-ninth Annual Conference on Neural Information Processing Systems Datasets and Benchmarks Track
+,
+External Links:
+Link
+Cited by:
+§A.1
+,
+Appendix D
+.
+Yao
+et al.
+(2023)
+S. Yao, J. Zhao, D. Yu, N. Du, I. Shafran, K. R. Narasimhan, and Y. Cao
+ReAct: synergizing reasoning and acting in language models
+.
+In
+The Eleventh International Conference on Learning Representations
+,
+External Links:
+Link
+Cited by:
+§1
+,
+§2.1
+,
+§6
+.
+Yue
+et al.
+(2024)
+M. Yue, J. Zhao, M. Zhang, L. Du, and Z. Yao
+Large language model cascades with mixture of thought representations for cost-efficient reasoning
+.
+In
+The Twelfth International Conference on Learning Representations
+,
+External Links:
+Link
+Cited by:
+Appendix D
+.
+Zan
+et al.
+(2024)
+D. Zan, Z. Huang, W. Liu, H. Chen, L. Zhang, S. Xin, L. Chen, Q. Liu, X. Zhong, A. Li,
+et al.
+Multi-swe-bench: a multilingual benchmark for issue resolving
+.
+arXiv preprint arXiv:2404.02605
+.
+Cited by:
+Appendix D
+.
+Zhang
+et al.
+(2025)
+C. Zhang
+et al.
+SWE-bench goes live!
+.
+arXiv preprint arXiv:2505.23419
+.
+Cited by:
+Appendix D
+.
+Zhang
+et al.
+(2025)
+H. Zhang, T. Feng, and J. You
+Router-r1: teaching llms multi-round routing and aggregation via reinforcement learning
+.
+In
+The Thirty-ninth Annual Conference on Neural Information Processing Systems
+,
+Cited by:
+Appendix D
+.
+Zhang
+et al.
+(2024a)
+H. Zhang, J. Da, D. Lee, V. Robinson, C. Wu, W. Song, T. Zhao, P. Raja, D. Slack, Q. Lyu, S. M. Hendryx, R. Kaplan, M. Lunati, and S. Yue
+A careful examination of large language model performance on grade school arithmetic
+.
+ArXiv
+abs/2405.00332
+.
+External Links:
+Link
+Cited by:
+Appendix D
+.
+Zhang
+et al.
+(2024b)
+Y. Zhang, H. Ruan, Z. Fan, and A. Roychoudhury
+AutoCodeRover: autonomous program improvement
+.
+In
+ACM SIGSOFT International Symposium on Software Testing and Analysis
+,
+Cited by:
+Appendix D
+,
+§1
+,
+§1
+.
+Zhuang
+et al.
+(2025)
+R. Zhuang, T. Wu, Z. Wen, A. Li, J. Jiao, and K. Ramchandran
+EmbedLLM: learning compact representations of large language models
+.
+In
+The Thirteenth International Conference on Learning Representations
+,
+External Links:
+Link
+Cited by:
+Appendix D
+.
+Zhuo
+et al.
+(2024)
+T. Y. Zhuo, M. C. Vu, J. Chim, H. Hu, W. Yu, R. Widyasari, I. N. B. Yusuf, H. Zhan, J. He, I. Paul,
+et al.
+BigCodeBench: benchmarking code generation with diverse function calls and complex instructions
+.
+arXiv preprint arXiv:2406.15877
+.
+Cited by:
+Appendix D
+,
+§1
+.
+Appendix A
+Additional Experimental Settings
+A.1
+Data Collection
+Training value functions requires labeled trajectory data from weaker LLMs; since SWE-smith only ships
+claude-3.7-sonnet
+trajectories
+(
+Yang et al., 2025
+)
+, we generate our own and release them.
+Table
+1
+summarizes the collected splits.
+Dataset / Split
+gpt-5-mini
+deepseek-v3.2
+gemini-3-pro
+SWE-Smith Train
+1,692 / 33.5 / $70.1
+1,755 / 31.9 / $85.7
+—
+SWE-Smith Val
+203 / 31.0 / $7.7
+210 / 27.5 / $8.9
+210 / 32.3 / $121.3
+SWE-Smith Test
+339 / 48.7 / $11.0
+346 / 42.7 / $13.3
+173 / 55.4 / $95.6
+SWE-Bench Verified
+500 / 55.6 / $16.6
+500 / 62.4 / $22.6
+500 / 70.4 / $391.3
+Total cost ($)
+105.4
+130.5
+608.2
+Table 1
+:
+Data collection (mix-1 constitution;
+Section
+A.2
+). Each cell shows
+instances
+/
+resolved %
+/
+cost (USD)
+, from running each LLM in mini-SWE-agent with a 75-step budget. “—” marks splits not collected for that LLM.
+gemini-3-pro-preview
+does not have training split because SWE-Router only needs it from weak models used for
+m
+1
+m_{1}
+.
+SWE-Smith instances.
+We sub-sample SWE-smith into three repository-disjoint partitions:
+train
+(
+∼
+\sim
+1.7k trajectories per weak LLM),
+val
+(
+∼
+\sim
+210, used for threshold tuning), and
+test
+(
+∼
+\sim
+170–346, drawn from yet another repository set). Resolved/unresolved labels come from running the SWE-smith unit tests against the agent’s submitted patch.
+SWE-Bench instances.
+For cross-distribution evaluation we collect trajectories on SWE-bench Verified (
+500
+500
+issues, all four LLMs). Under mix-1 (
+Section
+A.2
+),
+4
+/
+5
+4/5
+of these instances enter training, so the genuinely held-out slice consists of 100 instances.
+A.2
+Experiment Designs
+Mix-1 split constitution.
+Train
+merges SWE-Smith train trajectories with
+4
+/
+5
+4/5
+of a 5-fold-CV partition of SWE-Bench Verified. We construct a validation split using the tasks from SWE-Smith, while having two separate test split from each of SWE-Smith and SWE-Bench Verified.
+Value head and training.
+The LoRA adapter for
+r
+^
+1
+\hat{r}_{1}
+uses
+r
+=
+32
+r{=}32
+,
+α
+=
+64
+\alpha{=}64
+, dropout
+0.05
+0.05
+on attention/MLP projections. For training, we use
+5
+5
+epochs, lr
+5
+×
+10
+−
+5
+5\times 10^{-5}
+cosine with
+50
+50
+-step warmup, effective batch
+16
+16
+, and context length limit of
+8192
+8192
+tokens. We use a
+packed
+procedure: one row per trajectory and the head is applied at every user-turn boundary
+K
+∈
+{
+0
+,
+…
+,
+K
+max
+}
+K\in\{0,\dots,K_{\max}\}
+via a single shared forward pass. Each
+q
+q
+is replaced by a uniformly-sampled paraphrase from a 3-way LLM rephrasing during training and validation, and we set
+K
+max
+=
+4
+K_{\max}=4
+.
+Baselines.
+Three prompt-only routers in the
+Equation
+2
+family — logistic regression,
+k
+k
+-NN, and XGBoost on OpenAI
+text-embedding-3-large
+embeddings of
+q
+q
+— and our
+non-temporal router
+(
+K
+=
+0
+K{=}0
+instance of our framework, conditioning only on
+q
+q
+).
+Appendix B
+Additional Experiment Results
+Table
+2
+reports the full set of routing experiment results. Rows are grouped by the (weak, strong) model pair and list, in order: three prompt-only embedding baselines (
+Embed+LR
+,
+Embed+kNN
+,
+Embed+XGB
+); our non-temporal variant (
+K
+=
+0
+K{=}0
+); SWE-Router with fixed budgets
+K
+∈
+{
+1
+,
+2
+,
+3
+,
+4
+}
+K\in\{1,2,3,4\}
+. Metric semantics and the splits used in the experiment are explained in
+Section
+5
+and
+Appendix
+A
+.
+Table 2
+:
+Threshold-free routing metrics (AUROC and Route-AUC) on three splits (SWE-Smith val, SWE-Smith test, SWE-Bench Verified test). “—” indicates an experiment not run or a metric not produced by the corresponding evaluation script. SWE-Router significantly outperforms all the baselines in SWE-Bench Verified test split in Route-AUC, while in SWE-Smith test split, the router trained with
+gpt-5-mini
+as
+m
+1
+m_{1}
+does not show higher Route-AUC than the baselines. As the Route-AUC between the validation split and test split of SWE-Smith is not consistently correlated in the case of router with
+deepseek-v3.2
+as
+m
+1
+m_{1}
+as well, we attribute this phenomenon to a distribution shift between the splits while separating them based on the code repositories the tasks are derived from.
+AUROC
+Route-AUC
+Method
+val
+SS-test
+SB-V
+val
+SS-test
+SB-V
+m
+1
+m_{1}
+:
+gpt-5-mini
+m
+2
+m_{2}
+:
+gemini-3-pro-preview
+Embed+LR
+0.635
+0.692
+0.527
+1.140
+0.591
+0.565
+Embed+kNN
+0.629
+0.664
+0.563
+-0.301
+0.604
+0.530
+Embed+XGB
+0.585
+0.589
+0.567
+0.782
+0.521
+0.517
+Non-temporal Router (ours,
+K
+=
+0
+K{=}0
+)
+0.599
+0.702
+0.613
+1.644
+0.626
+0.549
+SWE-Router fixed (
+K
+=
+1
+K{=}1
+)
+0.622
+0.679
+0.597
+2.358
+0.493
+0.702
+SWE-Router fixed (
+K
+=
+2
+K{=}2
+)
+0.634
+0.678
+0.594
+1.928
+0.482
+0.703
+SWE-Router fixed (
+K
+=
+3
+K{=}3
+)
+0.631
+0.684
+0.586
+1.982
+0.547
+0.694
+SWE-Router fixed (
+K
+=
+4
+K{=}4
+)
+0.636
+0.685
+0.617
+2.243
+0.546
+0.709
+m
+1
+m_{1}
+:
+deepseek-v3.2
+m
+2
+m_{2}
+:
+gemini-3-pro-preview
+Embed+LR
+0.628
+0.660
+0.477
+0.455
+0.508
+0.476
+Embed+kNN
+0.600
+0.590
+0.489
+0.385
+0.444
+0.371
+Embed+XGB
+0.591
+0.618
+0.526
+0.430
+0.555
+0.465
+Non-temporal Router (ours,
+K
+=
+0
+K{=}0
+)
+0.628
+0.638
+0.620
+0.663
+0.555
+0.627
+SWE-Router fixed (
+K
+=
+1
+K{=}1
+)
+0.658
+0.649
+0.597
+0.646
+0.571
+0.768
+SWE-Router fixed (
+K
+=
+2
+K{=}2
+)
+0.670
+0.654
+0.605
+0.720
+0.567
+0.780
+SWE-Router fixed (
+K
+=
+3
+K{=}3
+)
+0.666
+0.655
+0.603
+0.738
+0.547
+0.750
+SWE-Router fixed (
+K
+=
+4
+K{=}4
+)
+0.651
+0.669
+0.596
+0.668
+0.569
+0.718
+Appendix C
+Proof of
+Theorem
+4.1
+Proof.
+Let
+Δ
+≔
+U
+1
+−
+U
+2
+\Delta\coloneqq U_{1}-U_{2}
+. Using the identity
+max
+⁡
+{
+a
+,
+b
+}
+=
+1
+2
+​
+(
+a
++
+b
++
+|
+a
+−
+b
+|
+)
+,
+\max\{a,b\}=\tfrac{1}{2}(a+b+|a-b|),
+we obtain, for any signal
+Z
+Z
+,
+V
+⁡
+(
+Z
+)
+=
+1
+2
+​
+𝔼
+​
+[
+U
+1
++
+U
+2
+]
++
+1
+2
+​
+𝔼
+​
+[
+|
+𝔼
+⁡
+[
+Δ
+∣
+Z
+]
+|
+]
+.
+V(Z)\;=\;\tfrac{1}{2}\mathbb{E}[U_{1}+U_{2}]\;+\;\tfrac{1}{2}\,\mathbb{E}\!\left[\,\big|\mathbb{E}[\Delta\mid Z]\big|\,\right].
+The first term does not depend on
+Z
+Z
+, so
+V
+⁡
+(
+S
+t
+)
+−
+V
+⁡
+(
+Q
+)
+=
+1
+2
+​
+(
+𝔼
+⁡
+[
+|
+𝔼
+⁡
+[
+Δ
+∣
+S
+t
+]
+|
+]
+−
+𝔼
+⁡
+[
+|
+𝔼
+⁡
+[
+Δ
+∣
+Q
+]
+|
+]
+)
+.
+V(S_{t})-V(Q)\;=\;\tfrac{1}{2}\left(\mathbb{E}\!\left[|\mathbb{E}[\Delta\mid S_{t}]|\right]\;-\;\mathbb{E}\!\left[|\mathbb{E}[\Delta\mid Q]|\right]\right).
+Since
+Q
+Q
+is a function of
+S
+t
+S_{t}
+, the tower property of conditional expectation gives
+𝔼
+⁡
+[
+Δ
+∣
+Q
+]
+=
+𝔼
+⁡
+[
+𝔼
+⁡
+[
+Δ
+∣
+S
+t
+]
+|
+Q
+]
+.
+\mathbb{E}[\Delta\mid Q]\;=\;\mathbb{E}\!\left[\,\mathbb{E}[\Delta\mid S_{t}]\,\big|\,Q\,\right].
+Applying Jensen’s inequality with the convex function
+φ
+⁡
+(
+x
+)
+=
+|
+x
+|
+\varphi(x)=|x|
+conditionally on
+Q
+Q
+,
+|
+𝔼
+⁡
+[
+Δ
+∣
+S
+t
+]
+∣
+​
+Q
+|
+≤
+𝔼
+⁡
+[
+|
+𝔼
+⁡
+[
+Δ
+∣
+S
+t
+]
+|
+|
+Q
+]
+,
+\big|\mathbb{E}[\Delta\mid S_{t}]\mid Q\,\big|\;\leq\;\mathbb{E}\!\left[\,|\mathbb{E}[\Delta\mid S_{t}]|\,\big|\,Q\,\right],
+and taking outer expectations on both sides yields
+𝔼
+⁡
+[
+|
+𝔼
+⁡
+[
+Δ
+∣
+Q
+]
+|
+]
+≤
+𝔼
+⁡
+[
+|
+𝔼
+⁡
+[
+Δ
+∣
+S
+t
+]
+|
+]
+.
+\mathbb{E}\!\left[|\mathbb{E}[\Delta\mid Q]|\right]\;\leq\;\mathbb{E}\!\left[|\mathbb{E}[\Delta\mid S_{t}]|\right].
+Hence
+V
+⁡
+(
+S
+t
+)
+≥
+V
+⁡
+(
+Q
+)
+V(S_{t})\geq V(Q)
+, and equality holds iff
+𝔼
+⁡
+[
+Δ
+∣
+S
+t
+]
+\mathbb{E}[\Delta\mid S_{t}]
+is
+σ
+⁡
+(
+Q
+)
+\sigma(Q)
+-measurable, i.e., the partial trajectory carries no information about
+Δ
+\Delta
+beyond the prompt.
+∎
+Appendix D
+Additional Related Work
+LLMs for software engineering.
+OpenHands
+(
+Wang et al., 2024b
+)
+provides an open platform for generalist software agents. Other approaches localize and patch bugs via program structure
+(
+Zhang et al., 2024b
+)
+, simple two-stage pipelines
+(
+Xia et al., 2024
+)
+, planning
+(
+Bairi et al., 2024
+)
+, multi-agent testing
+(
+Huang et al., 2023
+)
+, or executable code actions
+(
+Wang et al., 2024a
+)
+. For training, SWE-smith
+(
+Yang et al., 2025
+)
+synthesizes bug-and-fix data by injecting defects into repositories, and Agent-RLVR
+(
+Da et al., 2025
+)
+uses execution-based RL rewards. SWE-RM
+(
+SHUM et al., 2026
+)
+instead provides execution-free reward signals for patch scoring; our value head is related but operates on
+partial
+trajectories.
+Software engineering benchmarks.
+Repository-level evaluations often involve cross-file completion
+(
+Ding et al., 2023
+;
+Liu et al., 2023
+)
+and complex tool use
+(
+Zhuo et al., 2024
+)
+. SWE-bench
+(
+Jimenez et al., 2024
+)
+now has extensions to multimodal
+(
+Yang et al., 2024b
+)
+, multilingual
+(
+Zan et al., 2024
+)
+, higher-rigor
+(
+Aleithan and others, 2024
+)
+, live
+(
+Zhang and others, 2025
+)
+, and performance
+(
+He et al., 2025
+)
+settings. Since these tasks are scraped from public code, contamination is a recurring concern
+(
+Xu et al., 2024
+;
+Deng et al., 2024
+)
+, motivating contamination-resistant alternatives
+(
+White et al., 2024
+;
+Zhang et al., 2024a
+)
+; SWE-bench Pro
+(
+Deng et al., 2025
+)
+addresses this with private repositories.
+LLM routing.
+Existing approaches to routing between LLMs combine models of differing capability via hybrid routing
+(
+Ding et al., 2024
+)
+, mixing
+(
+Aggarwal et al., 2023
+)
+, meta-modeling
+(
+Šakota et al., 2024
+)
+, or output ensembling
+(
+Jiang et al., 2023
+)
+. Subsequent routers use contrastive embeddings
+(
+Chen et al., 2024b
+)
+, real-time prompt classification
+(
+Hari and Thomson, 2023
+)
+, graph formulations
+(
+Feng et al., 2024
+)
+, and explicit cost or budget controls
+(
+Shirkavand et al., 2025
+;
+Somerstep et al., 2025
+;
+Mei et al., 2025
+;
+Feng et al., 2025
+)
+; others target reasoning vs. non-reasoning routing
+(
+Ma et al., 2025
+;
+Pan et al., 2025
+;
+Shao et al., 2025
+;
+Wang et al., 2025
+;
+Guo et al., 2026
+)
+and thought-level cascades
+(
+Yue et al., 2024
+)
+. To handle unseen models, EmbedLLM
+(
+Zhuang et al., 2025
+)
+and universal model routing
+(
+Jitkrittum et al., 2025
+)
+embed both prompts and LLMs so routers generalize beyond training. RL-based routers
+(
+Zhang et al., 2025
+;
+Song et al., 2025
+)
+learn multi-round or interpretable selection policies, and benchmarks
+(
+Hu et al., 2024
+;
+Huang et al., 2025
+;
+Lu et al., 2025
+)
+consolidate the field.

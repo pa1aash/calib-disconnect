@@ -5,13 +5,15 @@ tags:
 - code-llm-calibration-aaai27-eabf3f
 - aaai-bar-eval-dprc-d78e07
 - code-llm-probe-verbalize-gap-3d8995
+- code-llm-confidence-positioning-d82d00
+- duplicate-abstract-only
 created: '2026-07-17T19:24:36.741756Z'
-updated: '2026-07-20T06:38:09.714849Z'
+updated: '2026-11-09T23:25:59.766127Z'
 source: https://arxiv.org/abs/2606.03852
 source_domain: arxiv.org
 fetched_at: '2026-07-17T19:24:36.741441Z'
 fetch_provider: builtin
-status: draft
+status: deprecated
 type: note
 tier: institutional
 content_type: paper

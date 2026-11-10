@@ -7,8 +7,10 @@ tags:
 - no-code-eval-gap
 - proper-scoring-rule
 - locus-collapse-proof-training-objective
+- code-llm-confidence-positioning-d82d00
+- w3-4
 created: '2026-07-17T18:32:34.408377Z'
-updated: '2026-07-17T19:00:34.705353Z'
+updated: '2026-11-10T08:25:06.944991Z'
 source: https://arxiv.org/html/2507.16806v2
 source_domain: arxiv.org
 fetched_at: '2026-07-17T18:32:34.407644Z'

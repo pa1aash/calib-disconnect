@@ -6,57 +6,26 @@ tags:
 - symbolic-clustering
 - ast-proxy
 - abstention-policy
+- code-llm-confidence-positioning-d82d00
 created: '2026-07-17T18:37:35.495970Z'
-updated: '2026-07-17T18:38:31.244461Z'
+updated: '2026-11-09T23:27:43.796739Z'
 source: https://arxiv.org/html/2502.11620
 source_domain: arxiv.org
 fetched_at: '2026-07-17T18:37:35.495176Z'
 fetch_provider: builtin
-status: draft
+status: review
 type: note
 tier: institutional
 content_type: paper
 deprecated: false
-summary: 'Sharma and David (2025), arXiv:2502.11620. Directly load-bearing for the
-  disconnect thesis''s AST/symbolic-clustering-proxy category. Tests whether standard
-  NLG uncertainty-quantification techniques (semantic entropy SE, mutual information
-  MI, token log-probabilities) transfer to code generation on LiveCodeBench (831 problems:
-  239 Easy/332 Medium/260 Hard) using gpt-3.5-turbo-instruct, DeepSeek-R1, and claude-3-7-sonnet.
-  Central finding: semantic entropy and mutual-information methods -- even when adapted
-  with code-specific embeddings (text-embedding-ada-002) or CodeBLEU similarity --
-  show NO statistically significant correlation with correctness; token-level log-probabilities
-  (LLM-Probability) likewise show NO statistically significant correlation with correctness.
-  The fix is symbolic clustering: using symbolic execution (treating inputs as symbolic
-  variables, comparing programs'' symbolic input-output relations) to precisely group
-  semantically-equivalent code outputs restores statistically significant correlation
-  for both SE and MI (SE-SymbNorm, SE-SymbUniform, MI-SymbNorm, MI-SymbUniform). Crucially,
-  this correlation holds even when completely discarding the LLM''s output-probability
-  distribution and assuming a UNIFORM distribution over sampled outputs -- meaning
-  the discriminative power comes entirely from precise equivalence clustering, not
-  from the log-prob channel. From this the authors distill a minimal correctness proxy,
-  symbolic cluster count (CC-Symb, just the number of distinct symbolic-execution
-  clusters among samples), which alone correlates with correctness and, when used
-  as an abstention-policy threshold (LLM abstains above threshold), achieves false
-  positive rate below 0.02% (essentially never presenting incorrect code) with false
-  negative rates of 11.9%-20.3%. A code-embedding-based cluster-count baseline (CC-CodeEmbed)
-  does NOT show significant correlation, confirming precision of the equivalence check
-  (not mere clustering) is what matters. Limitation: symbolic execution is bounded
-  (loop unrolling with a timeout), risking false-equivalence for programs whose behavioral
-  differences only manifest beyond the unrolling limit; scoped to Python via a lightweight
-  in-process symbolic-execution library. Relation to disconnect thesis: this is the
-  strongest existing evidence that (a) token log-probabilities carry essentially no
-  correctness signal for code (stronger than our paper''s AUROC 0.668 -- this paper
-  finds no significant correlation at all), and (b) among proxy/expressed interfaces,
-  only PRECISE (symbolic-execution-grounded) equivalence clustering recovers a usable
-  signal -- embedding-based and CodeBLEU-based AST-adjacent proxies fail just as badly
-  as log-probs. This sets a much higher bar for any AST-clustering proxy claim: coarse
-  structural/embedding equivalence is insufficient; only execution-grounded equivalence
-  works, which is expensive and Python/loop-bounded. Directly frames a testable open
-  question: does symbolic cluster count on Qwen2.5-Coder-7B/DeepSeek-Coder-6.7B/HumanEval
-  reproduce this near-zero-log-prob-correlation and near-zero-false-positive abstention
-  result, and can it be approximated at a lower cost than full symbolic execution
-  for a single-GPU budget?'
+summary: 'Full text (HTML) of Sharma and David arXiv 2502.11620: NLG semantic entropy,
+  MI, and log-probs show no significant correlation with correctness on LiveCodeBench
+  (831 problems; gpt-3.5-turbo-instruct, DeepSeek-R1, claude-3-7-sonnet); symbolic-execution
+  clustering restores it; symbolic cluster count abstention FPR <0.02%. CLOSE for
+  L1 and abstention part of L3.'
 ---
+
+*Suggested by [[1introduction]] — cited as prior work on code uncertainty / SEP probes*
 
 *Suggested by [[functional-entropy-predicting-functional-correctness-in-llm-generated-code-with]] — cited as symbolic/AST-clustering uncertainty method for code, directly relevant to AST-clustering proxy in disconnect thesis*
 

@@ -10,34 +10,22 @@ tags:
 - no-code-eval-gap
 - locus-code-verbal-calibration-occupied-or-open
 - locus-collapse-proof-training-objective
+- code-llm-confidence-positioning-d82d00
+- l1-foundation
 created: '2026-07-17T18:32:27.660198Z'
-updated: '2026-07-17T18:58:56.715104Z'
+updated: '2026-11-09T23:27:43.694594Z'
 source: https://arxiv.org/html/2503.02623v6
 source_domain: arxiv.org
 fetched_at: '2026-07-17T18:32:27.659408Z'
 fetch_provider: builtin
-status: draft
+status: review
 type: note
 tier: institutional
 content_type: paper
 deprecated: false
-summary: 'Full text of Bani-Harouni et al. (TU Munich), ''Rewarding Doubt'' (arXiv:2503.02623,
-  RL reward = -log-scoring-rule loss on a verbalized confidence token, integrated
-  into generation, not a decoupled probe). Base model: Meta-Llama-3-8B-Instruct, 4-bit
-  quantized (Unsloth), LoRA fine-tuned, trained on a SINGLE Nvidia A40 GPU (7 days
-  for the multi-answer QAMPARI setting; single-answer TriviaQA setting is faster)
-  -- directly single-GPU-7B/8B feasible. Metrics are ECE AND AUROC together; on TriviaQA
-  (single-answer) achieves ECE=0.0226, AUROC=0.8592, beating zero-shot and DPO-based
-  LACIE baselines; a ''Trained Probe'' SFT baseline gets a slightly lower ECE (0.0189)
-  but a lower AUROC, and the paper explicitly argues this shows Rewarding Doubt is
-  MORE DISCRIMINATIVE, not just calibrated -- ECE alone can hide a model that assigns
-  moderate confidence everywhere. On QAMPARI (multi-answer) ECE=0.0816, AUROC=0.6947.
-  Generalizes zero-shot to MedQA and CommonsenseQA and across model families (Qwen2.5
-  3B/7B, Gemma-2 9B, Llama-3.1-8B) without degrading downstream accuracy. Never tested
-  on code -- all evaluation is factual QA (TriviaQA, QAMPARI, MedQA, CommonsenseQA).
-  This is the strongest existing counter-example to the claim that verbalized RL-trained
-  confidence can''t be discriminative, but it has no code evaluation and no reasoning-chain/process-level
-  confidence (single confidence score per final answer).'
+summary: FULL TEXT (Stangel et al., arXiv 2503.02623). RL fine-tuning with logarithmic-scoring-rule
+  reward to emit calibrated verbal confidence on factual QA; generalizes to unseen
+  tasks. Non-code.
 ---
 
 *Suggested by [[250302623-rewarding-doubt-a-reinforcement-learning-approach-to-calibrated-confid]] — full text HTML for detailed extraction*

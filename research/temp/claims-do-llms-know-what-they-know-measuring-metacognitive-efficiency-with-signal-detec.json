@@ -1,0 +1,110 @@
+[
+ {
+  "claim": "An SDT Type-2 decomposition of LLM confidence separates discrimination from calibration level and reveals unequal-variance structure invisible to ECE.",
+  "stance": "supports",
+  "stance_target": "F: measurement-instrument framing of calibration is already occupied for factual QA",
+  "evidence_type": "empirical",
+  "scope_conditions": "Four 7-9B open-weight models, TriviaQA and Natural Questions, factual QA only",
+  "quoted_support": "Standard evaluation of LLM confidence relies on calibration metrics (ECE, Brier score) that conflate two distinct capacities: how much a model knows (Type-1 accuracy) and how well its confidence signal tracks that knowledge (Type-2 metacognitive sensitivity).",
+  "numbers": [
+   "224,000 trials",
+   "z-ROC slopes 0.78 to 1.18",
+   "factor of 1.98 across models"
+  ],
+  "entities": [
+   "Cacioli",
+   "Signal Detection Theory",
+   "Dayan 2023"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "do-llms-know-what-they-know-measuring-metacognitive-efficiency-with-signal-detec",
+  "breadth": {
+   "confidence_families": "token-level normalised log-probability only (Sec 2.1)",
+   "model_families_and_sizes": "Llama-3-8B-Instruct, Mistral-7B-Instruct-v0.3, Llama-3-8B-Base, Gemma-2-9B-Instruct (Abstract)",
+   "base_vs_instruct": "Llama-3-8B-Base included beside instruct models (Abstract); not a matched pair analysis",
+   "post_training_stages": "not present (searched: full text keyword scan for post training stages)",
+   "reasoning_models": "not present (searched: full text keyword scan for reasoning models)",
+   "elicitation_formats": "not present (searched: full text keyword scan for elicitation formats)",
+   "benchmarks": "TriviaQA, Natural Questions (Abstract); no code",
+   "label_source": "automated alias-match scorer with containment fallback, validated on 1,200 human adjudications (v3 version note)",
+   "label_independence": "not stated beyond scorer validation",
+   "contamination_split": "not present (searched: full text keyword scan for contamination split)",
+   "calibration_metrics": "AUROC2, z-ROC slope, d_a, meta-I_2r with permutation null and bootstrap CI (Sec 1-2)",
+   "granularity": "per-answer (per-trial)",
+   "causal_intervention": "temperature manipulation only (Abstract item 4); no activation intervention"
+  }
+ },
+ {
+  "claim": "v3 retracts earlier cross-model efficiency findings because the automated correctness scorer was length-biased; label validity changed the conclusion.",
+  "stance": "supports",
+  "stance_target": "Label validation is load-bearing for calibration claims",
+  "evidence_type": "empirical",
+  "scope_conditions": "Factual QA, exact-match plus similarity scorer",
+  "quoted_support": "Validated against 1,200 human adjudications, the scorer missed 53% of one model's human-correct answers and 26% of another's",
+  "numbers": [
+   "1,200 human adjudications",
+   "53%",
+   "26%",
+   "agreement 0.76 to 0.86",
+   "1.4% false-positive cost"
+  ],
+  "entities": [
+   "Cacioli"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "do-llms-know-what-they-know-measuring-metacognitive-efficiency-with-signal-detec",
+  "breadth": {
+   "confidence_families": "token-level normalised log-probability only (Sec 2.1)",
+   "model_families_and_sizes": "Llama-3-8B-Instruct, Mistral-7B-Instruct-v0.3, Llama-3-8B-Base, Gemma-2-9B-Instruct (Abstract)",
+   "base_vs_instruct": "Llama-3-8B-Base included beside instruct models (Abstract); not a matched pair analysis",
+   "post_training_stages": "not present (searched: full text keyword scan for post training stages)",
+   "reasoning_models": "not present (searched: full text keyword scan for reasoning models)",
+   "elicitation_formats": "not present (searched: full text keyword scan for elicitation formats)",
+   "benchmarks": "TriviaQA, Natural Questions (Abstract); no code",
+   "label_source": "automated alias-match scorer with containment fallback, validated on 1,200 human adjudications (v3 version note)",
+   "label_independence": "not stated beyond scorer validation",
+   "contamination_split": "not present (searched: full text keyword scan for contamination split)",
+   "calibration_metrics": "AUROC2, z-ROC slope, d_a, meta-I_2r with permutation null and bootstrap CI (Sec 1-2)",
+   "granularity": "per-answer (per-trial)",
+   "causal_intervention": "temperature manipulation only (Abstract item 4); no activation intervention"
+  }
+ },
+ {
+  "claim": "meta-I_2r (mutual information of correctness and discretised confidence over H(correct)) is a model-free efficiency measure, bias-corrected via permutation null with bootstrap CIs.",
+  "stance": "supports",
+  "stance_target": "F: metrology-style estimator with nulls/CIs",
+  "evidence_type": "theoretical",
+  "scope_conditions": "Eq. 1, Section 1",
+  "quoted_support": "meta-I_2r is 0 when confidence is uninformative about correctness and approaches its ceiling when confidence fully resolves the correct/incorrect distinction.",
+  "numbers": [
+   "Eq. 1"
+  ],
+  "entities": [
+   "Dayan 2023",
+   "Fitousi 2025"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "do-llms-know-what-they-know-measuring-metacognitive-efficiency-with-signal-detec",
+  "breadth": {
+   "confidence_families": "token-level normalised log-probability only (Sec 2.1)",
+   "model_families_and_sizes": "Llama-3-8B-Instruct, Mistral-7B-Instruct-v0.3, Llama-3-8B-Base, Gemma-2-9B-Instruct (Abstract)",
+   "base_vs_instruct": "Llama-3-8B-Base included beside instruct models (Abstract); not a matched pair analysis",
+   "post_training_stages": "not present (searched: full text keyword scan for post training stages)",
+   "reasoning_models": "not present (searched: full text keyword scan for reasoning models)",
+   "elicitation_formats": "not present (searched: full text keyword scan for elicitation formats)",
+   "benchmarks": "TriviaQA, Natural Questions (Abstract); no code",
+   "label_source": "automated alias-match scorer with containment fallback, validated on 1,200 human adjudications (v3 version note)",
+   "label_independence": "not stated beyond scorer validation",
+   "contamination_split": "not present (searched: full text keyword scan for contamination split)",
+   "calibration_metrics": "AUROC2, z-ROC slope, d_a, meta-I_2r with permutation null and bootstrap CI (Sec 1-2)",
+   "granularity": "per-answer (per-trial)",
+   "causal_intervention": "temperature manipulation only (Abstract item 4); no activation intervention"
+  }
+ }
+]

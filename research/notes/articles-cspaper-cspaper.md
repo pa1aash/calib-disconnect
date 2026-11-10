@@ -4,7 +4,7 @@ id: articles-cspaper-cspaper
 tags:
 - aaai-bar-eval-dprc-d78e07
 created: '2026-07-19T20:03:04.947838Z'
-updated: '2026-07-19T20:03:54.387925Z'
+updated: '2026-11-10T09:27:39.238466Z'
 source: https://forum.cspaper.org/topic/142/aaai-neurips-ruthless-early-rejection-waves-a-perfect-storm-brewing-for-iclr-2026
 source_domain: cspaper.org
 fetched_at: '2026-07-19T20:03:04.946725Z'
@@ -14,6 +14,8 @@ type: note
 tier: unknown
 content_type: unknown
 deprecated: false
+summary: 'Deprecated: forum post on conference rejection waves, off scope for this
+  run'
 ---
 
 Articles | CSPaper — CSPaper

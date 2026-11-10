@@ -1,0 +1,133 @@
+[
+ {
+  "claim": "UAB reallocates a fixed sampling budget across questions using vote entropy of the first K samples with a marginal-greedy solution to a concave coverage surrogate, improving average accuracy by +2.3% over uniform allocation and up to +5.5% on individual benchmarks.",
+  "stance": "supports",
+  "stance_target": "L3: uncertainty-routed budgets exist for math/logic via sampled consistency",
+  "evidence_type": "empirical",
+  "scope_conditions": "Five open models 1.5B-27B, five reasoning benchmarks, no code",
+  "quoted_support": "UAB improves average accuracy by + 2.3 % over uniform allocation, and achieves gains of up to + 5.5 % on individual benchmarks, with the largest gains in low-resource settings.",
+  "numbers": [
+   "+2.3%",
+   "+5.5%",
+   "Qwen2.5-1.5B Avg 47.0 vs Uniform and Random 43.1"
+  ],
+  "entities": [],
+  "time_period": "2026-10",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "Vote entropy of K initial samples (answer disagreement); baselines NLL, Max-token NLL, ANLL, length, random, uniform (Table 4-5)",
+   "model_families_and_sizes": "Five open-weight models 1.5B-27B (e.g. Qwen2.5-1.5B) (Abstract)",
+   "base_vs_instruct": "not present (searched: not studied)",
+   "post_training_stages": "not present (searched: not studied)",
+   "reasoning_models": "not present (searched: reasoning-model comparison; benchmarks are 'reasoning' tasks but models are standard open-weight)",
+   "elicitation_formats": "Sampled-consistency (vote entropy) vs logit NLL; verbalized: 0 hits",
+   "benchmarks": "MATH500, Formal Logic, DeepScaler, GSM8K, Graded Arithmetic (Table 4); no code (HumanEval/LiveCodeBench/MBPP 0 hits)",
+   "label_source": "Answer match with majority vote correctness",
+   "label_independence": "Oracle(q) = smallest sample count whose majority vote is correct (Table 5)",
+   "contamination_split": "not present (searched: none)",
+   "calibration_metrics": "Accuracy at N=4; %Under/%Over-C/%Over-W vs oracle (Table 5); no ECE",
+   "granularity": "Per question",
+   "causal_intervention": "not present (searched: none)"
+  },
+  "source_note_id": "1introduction-2"
+ },
+ {
+  "claim": "Against an oracle (smallest sample count whose majority vote is correct) at N=4 on Qwen2.5-1.5B, vote-entropy UAB (K=2) leaves 10.5% of questions under-allocated versus 13.3% for Uniform and 14.1% for an oracle-difficulty variant.",
+  "stance": "supports",
+  "stance_target": "allocation quality vs oracle and uniform",
+  "evidence_type": "empirical",
+  "scope_conditions": "Table 5, mean over five datasets, excluding questions unsolved in 16 samples",
+  "quoted_support": "UAB (Vote Entropy, K = 2 ) 10.5 75.4 11.7 Oracle (Difficulty) ‡ 14.1 59.8 8.9",
+  "numbers": [
+   "10.5",
+   "75.4",
+   "11.7",
+   "Uniform 13.3/70.5/11.8",
+   "Oracle (Difficulty) 14.1/59.8/8.9"
+  ],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "medium",
+  "breadth": {
+   "confidence_families": "Vote entropy of K initial samples (answer disagreement); baselines NLL, Max-token NLL, ANLL, length, random, uniform (Table 4-5)",
+   "model_families_and_sizes": "Five open-weight models 1.5B-27B (e.g. Qwen2.5-1.5B) (Abstract)",
+   "base_vs_instruct": "not present (searched: not studied)",
+   "post_training_stages": "not present (searched: not studied)",
+   "reasoning_models": "not present (searched: reasoning-model comparison; benchmarks are 'reasoning' tasks but models are standard open-weight)",
+   "elicitation_formats": "Sampled-consistency (vote entropy) vs logit NLL; verbalized: 0 hits",
+   "benchmarks": "MATH500, Formal Logic, DeepScaler, GSM8K, Graded Arithmetic (Table 4); no code (HumanEval/LiveCodeBench/MBPP 0 hits)",
+   "label_source": "Answer match with majority vote correctness",
+   "label_independence": "Oracle(q) = smallest sample count whose majority vote is correct (Table 5)",
+   "contamination_split": "not present (searched: none)",
+   "calibration_metrics": "Accuracy at N=4; %Under/%Over-C/%Over-W vs oracle (Table 5); no ECE",
+   "granularity": "Per question",
+   "causal_intervention": "not present (searched: none)"
+  },
+  "source_note_id": "1introduction-2"
+ },
+ {
+  "claim": "Logit-based signals (NLL, Max Token NLL, ANLL) give allocation accuracies of 44.8-45.0 average, below vote entropy 47.0, indicating sampled disagreement is the stronger routing signal in this setting.",
+  "stance": "supports",
+  "stance_target": "sampled > logit for routing (math)",
+  "evidence_type": "empirical",
+  "scope_conditions": "Table 4 with Qwen2.5-1.5B, N=4",
+  "quoted_support": "Max Token NLL 46.8 ±0.3 43.4 ±1.5 18.0 ±1.0 60.6 ±1.9 56.3 ±2.1 45.0 0.688",
+  "numbers": [
+   "44.8",
+   "45.0",
+   "44.9",
+   "47.0"
+  ],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "medium",
+  "breadth": {
+   "confidence_families": "Vote entropy of K initial samples (answer disagreement); baselines NLL, Max-token NLL, ANLL, length, random, uniform (Table 4-5)",
+   "model_families_and_sizes": "Five open-weight models 1.5B-27B (e.g. Qwen2.5-1.5B) (Abstract)",
+   "base_vs_instruct": "not present (searched: not studied)",
+   "post_training_stages": "not present (searched: not studied)",
+   "reasoning_models": "not present (searched: reasoning-model comparison; benchmarks are 'reasoning' tasks but models are standard open-weight)",
+   "elicitation_formats": "Sampled-consistency (vote entropy) vs logit NLL; verbalized: 0 hits",
+   "benchmarks": "MATH500, Formal Logic, DeepScaler, GSM8K, Graded Arithmetic (Table 4); no code (HumanEval/LiveCodeBench/MBPP 0 hits)",
+   "label_source": "Answer match with majority vote correctness",
+   "label_independence": "Oracle(q) = smallest sample count whose majority vote is correct (Table 5)",
+   "contamination_split": "not present (searched: none)",
+   "calibration_metrics": "Accuracy at N=4; %Under/%Over-C/%Over-W vs oracle (Table 5); no ECE",
+   "granularity": "Per question",
+   "causal_intervention": "not present (searched: none)"
+  },
+  "source_note_id": "1introduction-2"
+ },
+ {
+  "claim": "UAB uses no auxiliary model and no verbalized confidence or hidden-state probe, and contains no code benchmark; it is related to L3 by design but does not test elicited confidence or execution ground truth.",
+  "stance": "neutral",
+  "stance_target": "L3 narrowness",
+  "evidence_type": "expert-opinion",
+  "scope_conditions": "Intro; full-text grep verbalized 0, HumanEval 0, LiveCodeBench 0",
+  "quoted_support": "We instead show that answer agreement among the first few samples is a sufficient allocation signal when paired with an exact solution to a concave coverage surrogate.",
+  "numbers": [],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "medium",
+  "breadth": {
+   "confidence_families": "Vote entropy of K initial samples (answer disagreement); baselines NLL, Max-token NLL, ANLL, length, random, uniform (Table 4-5)",
+   "model_families_and_sizes": "Five open-weight models 1.5B-27B (e.g. Qwen2.5-1.5B) (Abstract)",
+   "base_vs_instruct": "not present (searched: not studied)",
+   "post_training_stages": "not present (searched: not studied)",
+   "reasoning_models": "not present (searched: reasoning-model comparison; benchmarks are 'reasoning' tasks but models are standard open-weight)",
+   "elicitation_formats": "Sampled-consistency (vote entropy) vs logit NLL; verbalized: 0 hits",
+   "benchmarks": "MATH500, Formal Logic, DeepScaler, GSM8K, Graded Arithmetic (Table 4); no code (HumanEval/LiveCodeBench/MBPP 0 hits)",
+   "label_source": "Answer match with majority vote correctness",
+   "label_independence": "Oracle(q) = smallest sample count whose majority vote is correct (Table 5)",
+   "contamination_split": "not present (searched: none)",
+   "calibration_metrics": "Accuracy at N=4; %Under/%Over-C/%Over-W vs oracle (Table 5); no ECE",
+   "granularity": "Per question",
+   "causal_intervention": "not present (searched: none)"
+  },
+  "source_note_id": "1introduction-2"
+ }
+]

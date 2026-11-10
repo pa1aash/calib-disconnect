@@ -4,15 +4,18 @@ id: 260521384-specbench-measuring-reward-hacking-in-long-horizon-coding-agents
 tags:
 - code-llm-requirement-pivots-5d35f5
 created: '2026-07-20T06:57:12.724511Z'
+updated: '2026-11-10T09:27:36.237264Z'
 source: https://arxiv.org/abs/2605.21384
 source_domain: arxiv.org
 fetched_at: '2026-07-20T06:57:12.724162Z'
 fetch_provider: builtin
-status: draft
+status: review
 type: note
 tier: institutional
 content_type: paper
 deprecated: false
+summary: SpecBench 2605.21384 measures reward hacking by long-horizon coding agents
+  against visible versus held-out specification tests (peripheral to calibration)
 ---
 
 *Suggested by [[260616062-auditing-reward-hackability-in-code-rl-training-environments]] — related reward-hacking-in-coding-agents benchmark found via same literature search*

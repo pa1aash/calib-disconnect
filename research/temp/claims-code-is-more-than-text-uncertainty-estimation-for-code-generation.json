@@ -1,0 +1,177 @@
+[
+ {
+  "claim": "A three-axis code UE ensemble (Top-K token entropy, pseudo-code consistency, self-generated-test behavioral consistency) raises average AUROC from 0.696 (strongest NL-derived baseline) to 0.776 across five code LLMs.",
+  "stance": "neutral",
+  "stance_target": "L1 occupancy: code UE scored against hidden-test labels",
+  "evidence_type": "empirical",
+  "scope_conditions": "Python; APPS-Intro/Interview, HumanEval, MBPP; 5 open models 14B-32B",
+  "quoted_support": "Across five code LLMs, our three-axis ensemble improves average AUROC from 0.696 for the strongest NL-derived baseline to 0.776 (+8.1 points).",
+  "numbers": [
+   "0.696",
+   "0.776",
+   "+8.1 points",
+   "0.800 on Qwen3-14B"
+  ],
+  "entities": [
+   "Shi",
+   "Zhang",
+   "Collier",
+   "Gu"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "code-is-more-than-text-uncertainty-estimation-for-code-generation",
+  "breadth": {
+   "confidence_families": "token entropy (Top-K, Sec 2.2), pseudo-code consistency (Sec 2.3), behavioral consistency on self-generated tests (Sec 2.4), baselines Mean Entropy, CodeBLEU consistency, Symbolic Clustering (Sec 3); verbalized only mentioned in Sec 5 advice, not in Table 1",
+   "model_families_and_sizes": "Qwen3-14B, Qwen3-32B, Qwen3-Coder-30B-A3B-Instruct, Devstral-Small-2505, DeepSeek-Coder-V2-Lite-Instruct (Sec 3 Models)",
+   "base_vs_instruct": "not present (searched: base/instruct, pair; only instruct/general+coder models listed in Sec 3)",
+   "post_training_stages": "not present (searched: SFT, RLHF, stage comparison)",
+   "reasoning_models": "Qwen3-14B/32B are hybrid thinking models but reasoning-enabled status not stated (searched: thinking, reasoning in Sec 3)",
+   "elicitation_formats": "pseudo-code plan prompts (Appendix A); no verbal-confidence prompt format evaluated",
+   "benchmarks": "APPS-Intro (N=1000), APPS-Interview (N=1000), HumanEval (164), MBPP (500); HumanEval-X for C++/Java/Go/JS (Table 5)",
+   "label_source": "pass@1 on official hidden test suite (Sec 2.1, Sec 3 Metrics)",
+   "label_independence": "yes: self-generated tests separate from official-test labels (Sec 3 Metrics)",
+   "contamination_split": "not present (searched: contamination, release date, knowledge cutoff; HumanEval/MBPP noted as saturated)",
+   "calibration_metrics": "AUROC, PRAUC only; ECE and Brier explicitly not reported (Sec 3 Metrics)",
+   "granularity": "whole-solution; token-level aggregation inside (Top-K)",
+   "causal_intervention": "not present (searched: steering, ablation, intervention)"
+  }
+ },
+ {
+  "claim": "Correctness label is pass@1 on the official hidden test suite; self-generated tests are kept strictly separate and used only as a signal.",
+  "stance": "supports",
+  "stance_target": "L1: execution-graded labels with label/signal independence",
+  "evidence_type": "empirical",
+  "scope_conditions": "Section 2.1, Section 3 Metrics",
+  "quoted_support": "y is correct iff it passes every test case in the problem's official test suite (pass@1), which is held out and never shown to the model. The self-generated tests used by the functional signal in 2.4 are strictly separate.",
+  "numbers": [
+   "M = 10 self-generated tests",
+   "4 s timeout"
+  ],
+  "entities": [
+   "APPS",
+   "HumanEval",
+   "MBPP"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "code-is-more-than-text-uncertainty-estimation-for-code-generation",
+  "breadth": {
+   "confidence_families": "token entropy (Top-K, Sec 2.2), pseudo-code consistency (Sec 2.3), behavioral consistency on self-generated tests (Sec 2.4), baselines Mean Entropy, CodeBLEU consistency, Symbolic Clustering (Sec 3); verbalized only mentioned in Sec 5 advice, not in Table 1",
+   "model_families_and_sizes": "Qwen3-14B, Qwen3-32B, Qwen3-Coder-30B-A3B-Instruct, Devstral-Small-2505, DeepSeek-Coder-V2-Lite-Instruct (Sec 3 Models)",
+   "base_vs_instruct": "not present (searched: base/instruct, pair; only instruct/general+coder models listed in Sec 3)",
+   "post_training_stages": "not present (searched: SFT, RLHF, stage comparison)",
+   "reasoning_models": "Qwen3-14B/32B are hybrid thinking models but reasoning-enabled status not stated (searched: thinking, reasoning in Sec 3)",
+   "elicitation_formats": "pseudo-code plan prompts (Appendix A); no verbal-confidence prompt format evaluated",
+   "benchmarks": "APPS-Intro (N=1000), APPS-Interview (N=1000), HumanEval (164), MBPP (500); HumanEval-X for C++/Java/Go/JS (Table 5)",
+   "label_source": "pass@1 on official hidden test suite (Sec 2.1, Sec 3 Metrics)",
+   "label_independence": "yes: self-generated tests separate from official-test labels (Sec 3 Metrics)",
+   "contamination_split": "not present (searched: contamination, release date, knowledge cutoff; HumanEval/MBPP noted as saturated)",
+   "calibration_metrics": "AUROC, PRAUC only; ECE and Brier explicitly not reported (Sec 3 Metrics)",
+   "granularity": "whole-solution; token-level aggregation inside (Top-K)",
+   "causal_intervention": "not present (searched: steering, ablation, intervention)"
+  }
+ },
+ {
+  "claim": "The paper explicitly does not report ECE or Brier and leaves downstream utility (selective generation, human review, agentic deferral) to future work, leaving L3-style utility and calibration-metric analysis open for this evaluation.",
+  "stance": "supports",
+  "stance_target": "L3 CLEAN-ish component: routing utility; L1 calibration metrics",
+  "evidence_type": "empirical",
+  "scope_conditions": "Section 3 Metrics; Limitations",
+  "quoted_support": "We do not report Brier Score or ECE: post-hoc rank-normalized scores have no meaningful absolute calibration, and AUROC/PRAUC suffice to assess the underlying signal.",
+  "numbers": [
+   "AUROC",
+   "PRAUC"
+  ],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "code-is-more-than-text-uncertainty-estimation-for-code-generation",
+  "breadth": {
+   "confidence_families": "token entropy (Top-K, Sec 2.2), pseudo-code consistency (Sec 2.3), behavioral consistency on self-generated tests (Sec 2.4), baselines Mean Entropy, CodeBLEU consistency, Symbolic Clustering (Sec 3); verbalized only mentioned in Sec 5 advice, not in Table 1",
+   "model_families_and_sizes": "Qwen3-14B, Qwen3-32B, Qwen3-Coder-30B-A3B-Instruct, Devstral-Small-2505, DeepSeek-Coder-V2-Lite-Instruct (Sec 3 Models)",
+   "base_vs_instruct": "not present (searched: base/instruct, pair; only instruct/general+coder models listed in Sec 3)",
+   "post_training_stages": "not present (searched: SFT, RLHF, stage comparison)",
+   "reasoning_models": "Qwen3-14B/32B are hybrid thinking models but reasoning-enabled status not stated (searched: thinking, reasoning in Sec 3)",
+   "elicitation_formats": "pseudo-code plan prompts (Appendix A); no verbal-confidence prompt format evaluated",
+   "benchmarks": "APPS-Intro (N=1000), APPS-Interview (N=1000), HumanEval (164), MBPP (500); HumanEval-X for C++/Java/Go/JS (Table 5)",
+   "label_source": "pass@1 on official hidden test suite (Sec 2.1, Sec 3 Metrics)",
+   "label_independence": "yes: self-generated tests separate from official-test labels (Sec 3 Metrics)",
+   "contamination_split": "not present (searched: contamination, release date, knowledge cutoff; HumanEval/MBPP noted as saturated)",
+   "calibration_metrics": "AUROC, PRAUC only; ECE and Brier explicitly not reported (Sec 3 Metrics)",
+   "granularity": "whole-solution; token-level aggregation inside (Top-K)",
+   "causal_intervention": "not present (searched: steering, ablation, intervention)"
+  }
+ },
+ {
+  "claim": "Comment-token entropy is anti-correlated with correctness (AUROC 0.375) and the authors advise against relying on verbalized confidence as a proxy for code correctness, without evaluating verbalized confidence in a reported table.",
+  "stance": "neutral",
+  "stance_target": "L2 verbal vs sampled readouts",
+  "evidence_type": "empirical",
+  "scope_conditions": "Table 4, Qwen3-14B averaged across datasets",
+  "quoted_support": "Practitioners should retain comment tokens when computing entropy-based uncertainty but avoid relying on verbalized confidence as a proxy for code correctness.",
+  "numbers": [
+   "Code-only 0.716",
+   "All tokens 0.728",
+   "Comment-only 0.375"
+  ],
+  "entities": [
+   "Qwen3-14B"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "medium",
+  "source_note_id": "code-is-more-than-text-uncertainty-estimation-for-code-generation",
+  "breadth": {
+   "confidence_families": "token entropy (Top-K, Sec 2.2), pseudo-code consistency (Sec 2.3), behavioral consistency on self-generated tests (Sec 2.4), baselines Mean Entropy, CodeBLEU consistency, Symbolic Clustering (Sec 3); verbalized only mentioned in Sec 5 advice, not in Table 1",
+   "model_families_and_sizes": "Qwen3-14B, Qwen3-32B, Qwen3-Coder-30B-A3B-Instruct, Devstral-Small-2505, DeepSeek-Coder-V2-Lite-Instruct (Sec 3 Models)",
+   "base_vs_instruct": "not present (searched: base/instruct, pair; only instruct/general+coder models listed in Sec 3)",
+   "post_training_stages": "not present (searched: SFT, RLHF, stage comparison)",
+   "reasoning_models": "Qwen3-14B/32B are hybrid thinking models but reasoning-enabled status not stated (searched: thinking, reasoning in Sec 3)",
+   "elicitation_formats": "pseudo-code plan prompts (Appendix A); no verbal-confidence prompt format evaluated",
+   "benchmarks": "APPS-Intro (N=1000), APPS-Interview (N=1000), HumanEval (164), MBPP (500); HumanEval-X for C++/Java/Go/JS (Table 5)",
+   "label_source": "pass@1 on official hidden test suite (Sec 2.1, Sec 3 Metrics)",
+   "label_independence": "yes: self-generated tests separate from official-test labels (Sec 3 Metrics)",
+   "contamination_split": "not present (searched: contamination, release date, knowledge cutoff; HumanEval/MBPP noted as saturated)",
+   "calibration_metrics": "AUROC, PRAUC only; ECE and Brier explicitly not reported (Sec 3 Metrics)",
+   "granularity": "whole-solution; token-level aggregation inside (Top-K)",
+   "causal_intervention": "not present (searched: steering, ablation, intervention)"
+  }
+ },
+ {
+  "claim": "Top-5 token entropy on Qwen3-14B reaches average AUROC 0.728 versus Consistency(VR) 0.728 / Symbolic Clustering 0.697 at over 3x lower cost, but baselines vary by model (DeepSeek-Coder-V2 Mean Entropy 0.483).",
+  "stance": "neutral",
+  "stance_target": "L1/F: signal ranking is model dependent",
+  "evidence_type": "empirical",
+  "scope_conditions": "Table 1",
+  "quoted_support": "Notably, on Qwen3-14B, our single-pass Top-K token entropy matches the strongest multi-pass baseline while being over 3x cheaper",
+  "numbers": [
+   "Qwen3-14B Top-5 LEX avg AUROC .728",
+   "Generated Tests .763",
+   "DeepSeek-Coder-V2 Mean Entropy .483"
+  ],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "code-is-more-than-text-uncertainty-estimation-for-code-generation",
+  "breadth": {
+   "confidence_families": "token entropy (Top-K, Sec 2.2), pseudo-code consistency (Sec 2.3), behavioral consistency on self-generated tests (Sec 2.4), baselines Mean Entropy, CodeBLEU consistency, Symbolic Clustering (Sec 3); verbalized only mentioned in Sec 5 advice, not in Table 1",
+   "model_families_and_sizes": "Qwen3-14B, Qwen3-32B, Qwen3-Coder-30B-A3B-Instruct, Devstral-Small-2505, DeepSeek-Coder-V2-Lite-Instruct (Sec 3 Models)",
+   "base_vs_instruct": "not present (searched: base/instruct, pair; only instruct/general+coder models listed in Sec 3)",
+   "post_training_stages": "not present (searched: SFT, RLHF, stage comparison)",
+   "reasoning_models": "Qwen3-14B/32B are hybrid thinking models but reasoning-enabled status not stated (searched: thinking, reasoning in Sec 3)",
+   "elicitation_formats": "pseudo-code plan prompts (Appendix A); no verbal-confidence prompt format evaluated",
+   "benchmarks": "APPS-Intro (N=1000), APPS-Interview (N=1000), HumanEval (164), MBPP (500); HumanEval-X for C++/Java/Go/JS (Table 5)",
+   "label_source": "pass@1 on official hidden test suite (Sec 2.1, Sec 3 Metrics)",
+   "label_independence": "yes: self-generated tests separate from official-test labels (Sec 3 Metrics)",
+   "contamination_split": "not present (searched: contamination, release date, knowledge cutoff; HumanEval/MBPP noted as saturated)",
+   "calibration_metrics": "AUROC, PRAUC only; ECE and Brier explicitly not reported (Sec 3 Metrics)",
+   "granularity": "whole-solution; token-level aggregation inside (Top-K)",
+   "causal_intervention": "not present (searched: steering, ablation, intervention)"
+  }
+ }
+]

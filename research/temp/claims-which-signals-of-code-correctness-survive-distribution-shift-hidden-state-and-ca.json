@@ -1,0 +1,214 @@
+[
+ {
+  "claim": "Compares six execution-free predictors in four families (output confidence, EigenScore consistency, hidden-state probe and LAT, causal DAS-based value probe and counterfactual simulation) on Qwen3-Coder-30B and gpt-oss-20b under benchmark shift (LiveCodeBench vs BigCodeBench) and language shift (Python, C++, Java).",
+  "stance": "neutral",
+  "stance_target": "L2 occupancy: probe versus output confidence on code under shift",
+  "evidence_type": "empirical",
+  "scope_conditions": "Two models, two benchmarks, three languages; judging prompt returns Yes/No",
+  "quoted_support": "We compare six execution-free predictors from four families on Qwen3-Coder-30B and gpt-oss-20b under benchmark shift between LiveCodeBench and BigCodeBench and language shift across Python, C++ and Java.",
+  "numbers": [
+   "6 predictors",
+   "4 families",
+   "2 models"
+  ],
+  "entities": [
+   "Qwen3-Coder-30B",
+   "gpt-oss-20b",
+   "LiveCodeBench",
+   "BigCodeBench"
+  ],
+  "time_period": "Nov 2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "which-signals-of-code-correctness-survive-distribution-shift-hidden-state-and-ca",
+  "breadth": {
+   "confidence_families": "output Yes/No token probability, EigenScore sampling consistency, linear probe, LAT, DAS value probe, counterfactual simulation (Sec IV)",
+   "model_families_and_sizes": "Qwen3-Coder-30B, gpt-oss-20b (Sec V-A)",
+   "base_vs_instruct": "not present (searched: base, instruct; both models are post-trained)",
+   "post_training_stages": "not present (searched: SFT, RLHF)",
+   "reasoning_models": "gpt-oss-20b is reasoning but reasoning disabled via final-channel prefill (Sec V-A)",
+   "elicitation_formats": "single-token Yes/No judging prompt (Sec III-A); no verbalized numeric confidence (searched: verbalized)",
+   "benchmarks": "LiveCodeBench release_v6, BigCodeBench, LCB-Python/C++/Java (Sec V-A, Table I)",
+   "label_source": "test-suite execution (Sec V-A)",
+   "label_independence": "verdict labels from the same model's own judgments vs execution (Sec III-B)",
+   "contamination_split": "LCB problems released Oct 2024-May 2025 for language shift (Sec V-A); problem-level 60/20/20 splits; no model-cutoff-based split stated",
+   "calibration_metrics": "AUROC pooled and within-problem; paired problem-clustered bootstrap (Sec V-C); no ECE",
+   "granularity": "candidate-level and problem-level",
+   "causal_intervention": "yes: DAS interchange interventions, subspace k=6, B=16 bases (Sec IV-D, Eq. 1-3)"
+  }
+ },
+ {
+  "claim": "For Qwen3-Coder verdict correctness, a probe on the causally localized subspace stays 0.09 AUROC ahead of output confidence under language shift (0.11 in distribution), but this does not generalize consistently to gpt-oss or benchmark shift.",
+  "stance": "supports",
+  "stance_target": "L2 partially occupied for probe-beats-confidence under shift",
+  "evidence_type": "empirical",
+  "scope_conditions": "Verdict-correctness target; Qwen3-Coder-30B; Table II",
+  "quoted_support": "For Qwen3-Coder a probe on the causally localized subspace stays 0.09 AUROC ahead of output confidence under language shift (0.11 in distribution), significantly outperforming the best non-causal predictor by 0.04 AUROC on average.",
+  "numbers": [
+   "0.09 AUROC shift",
+   "0.11 AUROC ID",
+   "0.04 AUROC vs best non-causal"
+  ],
+  "entities": [
+   "DAS",
+   "value probe"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "which-signals-of-code-correctness-survive-distribution-shift-hidden-state-and-ca",
+  "breadth": {
+   "confidence_families": "output Yes/No token probability, EigenScore sampling consistency, linear probe, LAT, DAS value probe, counterfactual simulation (Sec IV)",
+   "model_families_and_sizes": "Qwen3-Coder-30B, gpt-oss-20b (Sec V-A)",
+   "base_vs_instruct": "not present (searched: base, instruct; both models are post-trained)",
+   "post_training_stages": "not present (searched: SFT, RLHF)",
+   "reasoning_models": "gpt-oss-20b is reasoning but reasoning disabled via final-channel prefill (Sec V-A)",
+   "elicitation_formats": "single-token Yes/No judging prompt (Sec III-A); no verbalized numeric confidence (searched: verbalized)",
+   "benchmarks": "LiveCodeBench release_v6, BigCodeBench, LCB-Python/C++/Java (Sec V-A, Table I)",
+   "label_source": "test-suite execution (Sec V-A)",
+   "label_independence": "verdict labels from the same model's own judgments vs execution (Sec III-B)",
+   "contamination_split": "LCB problems released Oct 2024-May 2025 for language shift (Sec V-A); problem-level 60/20/20 splits; no model-cutoff-based split stated",
+   "calibration_metrics": "AUROC pooled and within-problem; paired problem-clustered bootstrap (Sec V-C); no ECE",
+   "granularity": "candidate-level and problem-level",
+   "causal_intervention": "yes: DAS interchange interventions, subspace k=6, B=16 bases (Sec IV-D, Eq. 1-3)"
+  }
+ },
+ {
+  "claim": "Table II: Qwen3-Coder verdict AUROC, LCB->BCB: confidence .672, probe .699, value probe .740; BCB->LCB: confidence .552, probe .480, value probe .485; gpt-oss language shift confidence .536 vs probe .668.",
+  "stance": "supports",
+  "stance_target": "Probe advantage is setting-dependent",
+  "evidence_type": "statistical",
+  "scope_conditions": "Table II, mean over 3 partitions",
+  "quoted_support": "TABLE II: AUROC for verdict correctness (mean over 3 partitions).",
+  "numbers": [
+   "Qwen LCB->BCB conf .672 / probe .699 / value probe .740",
+   "Qwen BCB->LCB conf .552 / probe .480 / value probe .485",
+   "gpt-oss shift conf .536 / probe .668 / counterf. sim. .691"
+  ],
+  "entities": [
+   "Table II"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "which-signals-of-code-correctness-survive-distribution-shift-hidden-state-and-ca",
+  "breadth": {
+   "confidence_families": "output Yes/No token probability, EigenScore sampling consistency, linear probe, LAT, DAS value probe, counterfactual simulation (Sec IV)",
+   "model_families_and_sizes": "Qwen3-Coder-30B, gpt-oss-20b (Sec V-A)",
+   "base_vs_instruct": "not present (searched: base, instruct; both models are post-trained)",
+   "post_training_stages": "not present (searched: SFT, RLHF)",
+   "reasoning_models": "gpt-oss-20b is reasoning but reasoning disabled via final-channel prefill (Sec V-A)",
+   "elicitation_formats": "single-token Yes/No judging prompt (Sec III-A); no verbalized numeric confidence (searched: verbalized)",
+   "benchmarks": "LiveCodeBench release_v6, BigCodeBench, LCB-Python/C++/Java (Sec V-A, Table I)",
+   "label_source": "test-suite execution (Sec V-A)",
+   "label_independence": "verdict labels from the same model's own judgments vs execution (Sec III-B)",
+   "contamination_split": "LCB problems released Oct 2024-May 2025 for language shift (Sec V-A); problem-level 60/20/20 splits; no model-cutoff-based split stated",
+   "calibration_metrics": "AUROC pooled and within-problem; paired problem-clustered bootstrap (Sec V-C); no ECE",
+   "granularity": "candidate-level and problem-level",
+   "causal_intervention": "yes: DAS interchange interventions, subspace k=6, B=16 bases (Sec IV-D, Eq. 1-3)"
+  }
+ },
+ {
+  "claim": "Judge balanced accuracy against execution labels ranges from 57.2% to 74.4% (Table I); verdict is single-token Yes/No on the same forward pass as the hidden state; gpt-oss is a reasoning model but is prefilled to answer directly, so reasoning is disabled.",
+  "stance": "supports",
+  "stance_target": "Reasoning vs non-reasoning contrast not occupied",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec III-A, V-A, Table I",
+  "quoted_support": "Since gpt-oss is a reasoning model, we prefill its final channel so that it also answers directly.",
+  "numbers": [
+   "57.2% to 74.4% balanced accuracy",
+   "~1,100 generated tokens per candidate at medium effort"
+  ],
+  "entities": [
+   "gpt-oss-20b"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "which-signals-of-code-correctness-survive-distribution-shift-hidden-state-and-ca",
+  "breadth": {
+   "confidence_families": "output Yes/No token probability, EigenScore sampling consistency, linear probe, LAT, DAS value probe, counterfactual simulation (Sec IV)",
+   "model_families_and_sizes": "Qwen3-Coder-30B, gpt-oss-20b (Sec V-A)",
+   "base_vs_instruct": "not present (searched: base, instruct; both models are post-trained)",
+   "post_training_stages": "not present (searched: SFT, RLHF)",
+   "reasoning_models": "gpt-oss-20b is reasoning but reasoning disabled via final-channel prefill (Sec V-A)",
+   "elicitation_formats": "single-token Yes/No judging prompt (Sec III-A); no verbalized numeric confidence (searched: verbalized)",
+   "benchmarks": "LiveCodeBench release_v6, BigCodeBench, LCB-Python/C++/Java (Sec V-A, Table I)",
+   "label_source": "test-suite execution (Sec V-A)",
+   "label_independence": "verdict labels from the same model's own judgments vs execution (Sec III-B)",
+   "contamination_split": "LCB problems released Oct 2024-May 2025 for language shift (Sec V-A); problem-level 60/20/20 splits; no model-cutoff-based split stated",
+   "calibration_metrics": "AUROC pooled and within-problem; paired problem-clustered bootstrap (Sec V-C); no ECE",
+   "granularity": "candidate-level and problem-level",
+   "causal_intervention": "yes: DAS interchange interventions, subspace k=6, B=16 bases (Sec IV-D, Eq. 1-3)"
+  }
+ },
+ {
+  "claim": "Program-correctness predictors transfer between benchmarks largely by identifying difficult problems; within-problem ranking is limited and sample-agreement (EigenScore) gives no consistent advantage over a single pass.",
+  "stance": "supports",
+  "stance_target": "Pooled AUROC conflates problem-level difficulty and within-problem ranking",
+  "evidence_type": "empirical",
+  "scope_conditions": "RQ3/RQ4, within-problem AUROC",
+  "quoted_support": "For program correctness, predictors transfer more successfully between benchmarks, largely by identifying problems on which the model tends to fail. However, their ability to rank candidates within the same problem is limited.",
+  "numbers": [
+   "bootstrap 2,000 resamples",
+   "3 partitions",
+   "60/20/20 split by problem"
+  ],
+  "entities": [
+   "EigenScore"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "which-signals-of-code-correctness-survive-distribution-shift-hidden-state-and-ca",
+  "breadth": {
+   "confidence_families": "output Yes/No token probability, EigenScore sampling consistency, linear probe, LAT, DAS value probe, counterfactual simulation (Sec IV)",
+   "model_families_and_sizes": "Qwen3-Coder-30B, gpt-oss-20b (Sec V-A)",
+   "base_vs_instruct": "not present (searched: base, instruct; both models are post-trained)",
+   "post_training_stages": "not present (searched: SFT, RLHF)",
+   "reasoning_models": "gpt-oss-20b is reasoning but reasoning disabled via final-channel prefill (Sec V-A)",
+   "elicitation_formats": "single-token Yes/No judging prompt (Sec III-A); no verbalized numeric confidence (searched: verbalized)",
+   "benchmarks": "LiveCodeBench release_v6, BigCodeBench, LCB-Python/C++/Java (Sec V-A, Table I)",
+   "label_source": "test-suite execution (Sec V-A)",
+   "label_independence": "verdict labels from the same model's own judgments vs execution (Sec III-B)",
+   "contamination_split": "LCB problems released Oct 2024-May 2025 for language shift (Sec V-A); problem-level 60/20/20 splits; no model-cutoff-based split stated",
+   "calibration_metrics": "AUROC pooled and within-problem; paired problem-clustered bootstrap (Sec V-C); no ECE",
+   "granularity": "candidate-level and problem-level",
+   "causal_intervention": "yes: DAS interchange interventions, subspace k=6, B=16 bases (Sec IV-D, Eq. 1-3)"
+  }
+ },
+ {
+  "claim": "The paper does not compare probes with verbalized confidence or base-versus-instruct pairs, and its output-confidence baseline is the Yes/No token probability; LiveCodeBench problems are restricted to Oct 2024-May 2025 for the language-shift study.",
+  "stance": "supports",
+  "stance_target": "L2 base/instruct and verbal-readout components remain open here",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec IV-A, V-A",
+  "quoted_support": "We use 454 LiveCodeBench problems released between October 2024 and May 2025.",
+  "numbers": [
+   "454 problems",
+   "n=10 candidates at t=1"
+  ],
+  "entities": [
+   "LiveCodeBench release_v6"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "medium",
+  "source_note_id": "which-signals-of-code-correctness-survive-distribution-shift-hidden-state-and-ca",
+  "breadth": {
+   "confidence_families": "output Yes/No token probability, EigenScore sampling consistency, linear probe, LAT, DAS value probe, counterfactual simulation (Sec IV)",
+   "model_families_and_sizes": "Qwen3-Coder-30B, gpt-oss-20b (Sec V-A)",
+   "base_vs_instruct": "not present (searched: base, instruct; both models are post-trained)",
+   "post_training_stages": "not present (searched: SFT, RLHF)",
+   "reasoning_models": "gpt-oss-20b is reasoning but reasoning disabled via final-channel prefill (Sec V-A)",
+   "elicitation_formats": "single-token Yes/No judging prompt (Sec III-A); no verbalized numeric confidence (searched: verbalized)",
+   "benchmarks": "LiveCodeBench release_v6, BigCodeBench, LCB-Python/C++/Java (Sec V-A, Table I)",
+   "label_source": "test-suite execution (Sec V-A)",
+   "label_independence": "verdict labels from the same model's own judgments vs execution (Sec III-B)",
+   "contamination_split": "LCB problems released Oct 2024-May 2025 for language shift (Sec V-A); problem-level 60/20/20 splits; no model-cutoff-based split stated",
+   "calibration_metrics": "AUROC pooled and within-problem; paired problem-clustered bootstrap (Sec V-C); no ECE",
+   "granularity": "candidate-level and problem-level",
+   "causal_intervention": "yes: DAS interchange interventions, subspace k=6, B=16 bases (Sec IV-D, Eq. 1-3)"
+  }
+ }
+]

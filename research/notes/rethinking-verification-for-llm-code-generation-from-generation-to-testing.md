@@ -5,27 +5,30 @@ tags:
 - code-llm-requirement-pivots-5d35f5
 - test-suite-quality
 - rlvr-reward-signal
+- code-llm-confidence-positioning-d82d00
+- test-adequacy
+- test-generation
+- l4-related
+- l1-related
 created: '2026-07-20T06:55:14.272391Z'
-updated: '2026-07-20T06:56:07.918573Z'
+updated: '2026-11-09T23:27:44.263694Z'
 source: https://arxiv.org/html/2507.06920
 source_domain: arxiv.org
 fetched_at: '2026-07-20T06:55:14.271704Z'
 fetch_provider: builtin
-status: draft
+status: review
 type: note
 tier: institutional
 content_type: paper
 deprecated: false
-summary: Argues HumanEval/LiveCodeBench-style test suites are too thin (homogeneous
-  cases), inflating pass@k and corrupting RLVR reward signals. Curates TCGBench (1,840
-  competitive-programming problems) and proposes SAGA, a human-LLM collaborative test-case-generation
-  method reaching 90.62% bug-detection rate and 10.78pp higher verifier accuracy than
-  LiveCodeBench-v6. Documents that LLM-generated test suites have high self-pass rates
-  against LLM-generated code -- i.e., models' own tests miss the same categories of
-  human-like bugs (logical flaws, integer overflow, boundary conditions) that their
-  code-generation blind spots produce -- but this is measured at whole-problem bug-detection-rate
-  granularity, not mapped onto a decomposed per-requirement label space shared between
-  code failures and test failures.
+summary: 'FULL TEXT (arXiv HTML, Jul 2025; Shanghai AI Lab). Argues benchmark suites
+  are thin (HumanEval 7.7 tests/problem, MBPP 3; EvalPlus: 15% pass-rate drop with
+  80x tests), proposes multi-dimensional test-thoroughness metrics, human-LLM collaborative
+  SAGA, and TCGBench (1,840 competitive-programming problems): detection rate 90.62%,
+  Verifier Accuracy 32.58%, +10.78% over LiveCodeBench-v6. Relevant to L1 (execution
+  ground truth is imperfect, false passes inflate pass labels) and L4 (self-written
+  test adequacy at whole-suite level). No confidence, calibration, probes, or per-requirement
+  decomposition. RELATED to L4 and L1.'
 ---
 
 Rethinking Verification for LLM Code Generation: From Generation to Testing

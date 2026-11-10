@@ -5,13 +5,15 @@ tags:
 - code-llm-calibration-aaai27-eabf3f
 - verbalized-confidence
 - p-true-self-evaluation
+- code-llm-confidence-positioning-d82d00
+- duplicate-abstract-only
 created: '2026-07-17T18:37:32.288004Z'
-updated: '2026-07-17T18:38:51.189988Z'
+updated: '2026-11-09T23:26:05.304169Z'
 source: https://arxiv.org/abs/2207.05221
 source_domain: arxiv.org
 fetched_at: '2026-07-17T18:37:32.287448Z'
 fetch_provider: builtin
-status: draft
+status: deprecated
 type: note
 tier: institutional
 content_type: paper

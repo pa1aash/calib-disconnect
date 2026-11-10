@@ -6,13 +6,15 @@ tags:
 - code-llm-calibration-aaai27-eabf3f
 - decoding-time-action
 - token-level-uncertainty
+- code-llm-confidence-positioning-d82d00
+- duplicate-abstract-only
 created: '2026-07-17T18:29:43.668504Z'
-updated: '2026-07-17T18:31:52.412968Z'
+updated: '2026-11-09T23:26:02.736117Z'
 source: http://arxiv.org/abs/2506.08980
 source_domain: arxiv.org
 fetched_at: '2026-07-17T18:29:43.667818Z'
 fetch_provider: builtin
-status: draft
+status: deprecated
 type: note
 tier: institutional
 content_type: paper

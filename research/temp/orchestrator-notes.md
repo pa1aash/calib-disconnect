@@ -1,20 +1,8 @@
-# Orchestrator notes — best-AAAI-paper scan (code-llm-best-aaai-paper-6ded37)
+# Orchestrator notes (code-llm-confidence-positioning-d82d00)
 
-## Scout (benchmark-artifact) — STRONGEST LEAD OF THE SESSION.
-**Testlet/requirement-level IRT on per-unit-test pass/fail (BigCodeBench).**
-- Novelty OPEN: psychometrics-for-LLMs survey (2505.08245) explicitly flags nested/testlet response models
-  as unexplored; NO paper does per-unit-test IRT for code.
-- AAAI-fit PROVEN: PSN-IRT "Lost in Benchmarks" = AAAI-2026 ORAL (whole-item IRT benchmark audit). Template.
-- Artifact: fit testlet-IRT (2PL nested/bifactor) on per-req pass/fail -> per-requirement DIFFICULTY + DISCRIMINATION.
-  (1) saturation-resistant diagnostic subset (selected by statistical discrimination, not solve-rate heuristic);
-  (2) IRT requirement-weighted ability score w/ SEs+invariance (AvgPassRatio/pass@k lack these);
-  (3) headline: which requirement TYPES (edge/exception vs core-logic vs library-composition) show high vs
-      collapsed discrimination; transfer Qwen<->DeepSeek.
-- RESCUES the correlated-failure fact (mean 2.27 co-fail): testlet models EXIST to handle within-testlet
-  correlation -> the nuisance becomes the motivation. Beautiful fit.
-- Feasibility: need enough "respondents" (solutions/problem) for stable IRT -> generate more solutions across
-  models/temps via fast vLLM. Within infra.
-- Differentiate vs: TaskEval (whole-task IRT code), PSN-IRT (AAAI'26, whole-item general).
-- Answers the "just descriptive" critique that killed plain partial-credit measurement.
-
-## Awaiting: Scout (conformal/UQ-theory), Scout (meta reverse-engineer + capability-science).
+- Step 2 searches use only academic APIs (OpenAlex, arXiv metadata, OpenReview v1). WebSearch is forbidden by the wave host rules; fetchers are told not to use it.
+- Expected shape: L2 whole-solution probe>verbal on code is occupied (Ribeiro 2026). Residuals likely in base-vs-instruct and reasoning-on conditions; check general-NLP work on RLHF calibration (e.g., GPT-4 report statement, Tian 2023) and reasoning calibration (2025) for the A21 "established direction" test.
+- L1: Spiess ICSE 2025 is likely the strongest L1 occupant; need breadth matrix. Multicalibration (Campos) and recent 2025-2026 surveys may make L1 OCCUPIED (union).
+- L3: risk-coverage curves for code exist in several selective-generation papers; confidence update after failing tests might be thinner.
+- F: metacognition/meta-d' LLM work (2024-2025) is the main threat to F.
+- Batch 10 notes hold abstract only (fetch rejected PDFs; text read from scratch extraction): 260906945, 250610056, 230207248, 231208589, 261005170, 230208468, 261032548. Re-ingest full text via arxiv.org/html in gap wave.

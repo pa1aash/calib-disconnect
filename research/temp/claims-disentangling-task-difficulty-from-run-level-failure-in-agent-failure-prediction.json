@@ -1,0 +1,63 @@
+{
+ "source_note_id": "disentangling-task-difficulty-from-run-level-failure-in-agent-failure-prediction",
+ "arxiv": "2610.05572",
+ "full_text": true,
+ "claims": [
+  {
+   "claim": "More than 99.93% of positive-negative pairs in pooled AUROC are cross-unit, so a run-blind difficulty oracle reaches AUROC up to 0.945.",
+   "stance": "neutral",
+   "stance_target": "R1 candidate F; component verdict: NARROW",
+   "evidence_type": "empirical",
+   "scope_conditions": "see breadth",
+   "quoted_support": "pooled AUROC is dominated by comparisons across different agent-task units: more than 99.93% of the underlying positive-negative pairs are cross-unit",
+   "numbers": [
+    "99.93%",
+    "0.945"
+   ],
+   "entities": [
+    "2610.05572"
+   ],
+   "time_period": "2024-2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "disentangling-task-difficulty-from-run-level-failure-in-agent-failure-prediction",
+   "candidate": "F",
+   "verdict": "NARROW",
+   "makes_core_claim_on_code_with_execution_labels": false
+  },
+  {
+   "claim": "Hidden-state probes show weak early run-level (within-task) discrimination on agent trajectories.",
+   "stance": "neutral",
+   "stance_target": "R1 candidate L2; component verdict: NARROW",
+   "evidence_type": "empirical",
+   "scope_conditions": "see breadth",
+   "quoted_support": "early run-level discrimination is consistently weak across trajectory predictors, published and released monitors, and hidden-state probes, although it improves later in run and is stronger for weaker agents.",
+   "numbers": [],
+   "entities": [
+    "2610.05572"
+   ],
+   "time_period": "2024-2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "disentangling-task-difficulty-from-run-level-failure-in-agent-failure-prediction",
+   "candidate": "L2",
+   "verdict": "NARROW",
+   "makes_core_claim_on_code_with_execution_labels": false
+  }
+ ],
+ "breadth": {
+  "confidence_families": "trajectory predictors, published monitors, hidden-state probes at execution prefixes (Sec. 1 contributions)",
+  "model_families_and_sizes": "repeated-attempt corpora: SWE-agent, SWE-rebench, LiveClawBench, Latent Programming Horizons (Sec. 1, Sec. 3)",
+  "base_vs_instruct": "not present (searched: base/instruct pairs)",
+  "post_training_stages": "not present (searched: pre vs post-training comparison)",
+  "reasoning_models": "not present (searched: reasoning on/off)",
+  "elicitation_formats": "not present (searched: verbal elicitation format variants)",
+  "benchmarks": "SWE-bench Verified, SWE-rebench, LiveClawBench, Latent Programming Horizons",
+  "label_source": "benchmark pass/fail",
+  "label_independence": "execution-based for SWE tasks",
+  "contamination_split": "not present (searched: release-date split, contamination)",
+  "calibration_metrics": "pooled vs within-unit AUROC (Pepe/Janes conditional discrimination framing)",
+  "granularity": "whole-run, prefix-level",
+  "causal_intervention": "not present (searched: steering/patching)"
+ }
+}

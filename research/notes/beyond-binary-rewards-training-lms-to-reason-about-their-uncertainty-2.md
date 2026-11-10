@@ -4,8 +4,11 @@ id: beyond-binary-rewards-training-lms-to-reason-about-their-uncertainty-2
 tags:
 - code-llm-calibration-aaai27-eabf3f
 - locus-collapse-proof-training-objective
+- code-llm-confidence-positioning-d82d00
+- w3-4
+- l2-adjacent
 created: '2026-07-17T18:58:06.750007Z'
-updated: '2026-07-17T19:00:38.178678Z'
+updated: '2026-11-10T08:25:06.079393Z'
 source: https://arxiv.org/html/2507.16806
 source_domain: arxiv.org
 fetched_at: '2026-07-17T18:58:06.749002Z'
@@ -15,6 +18,11 @@ type: note
 tier: institutional
 content_type: paper
 deprecated: false
+summary: Damani et al, RLCR (arXiv 2507.16806), full text. Adds Brier-score reward
+  to RLVR so Qwen2.5-7B base reasons and emits calibrated confidence; HotpotQA and
+  Big-Math training, OOD evals; RLVR degrades calibration, RLCR improves it. Mentions
+  programming only in intro. No code execution labels. Bears on L2/L3 training-for-calibration,
+  general domain.
 ---
 
 *Suggested by [[250716806-beyond-binary-rewards-training-lms-to-reason-about-their-uncertainty]] — full-text HTML version of previously abstract-only vault note*

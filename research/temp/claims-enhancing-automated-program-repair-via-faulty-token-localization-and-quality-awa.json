@@ -1,0 +1,168 @@
+[
+ {
+  "claim": "TokenRepair uses context-aware token-level uncertainty fluctuations to localize likely-faulty tokens in a patch and rewrites only those, then filters low-quality patches by external feedback; it fixes 88 bugs on Defects4J 1.2 and 139 on HumanEval-Java.",
+  "stance": "supports",
+  "stance_target": "L4 localization + targeted repair is partially occupied at token granularity (uncertainty-guided)",
+  "evidence_type": "empirical",
+  "scope_conditions": "Single-hunk APR, ground-truth hunk location given",
+  "quoted_support": "TokenRepair achieves new state-of-the-art repair performance, correctly fixing 88 bugs on Defects4J 1.2 and 139 bugs on HumanEval-Java, demonstrating substantial improvements ranging from 8.2% to 34.9% across all models on Defects4J 1.2 and from 3.3% to 16.1% on HumanEval-Java.",
+  "numbers": [
+   "88 bugs",
+   "139 bugs",
+   "8.2% to 34.9%",
+   "3.3% to 16.1%"
+  ],
+  "entities": [
+   "TokenRepair",
+   "Defects4J",
+   "HumanEval-Java"
+  ],
+  "time_period": "2025-11",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "Token-level uncertainty from output probabilities: suspiciousness score with decay factor alpha, plus patch-level quality metrics (RQ1, Table 1)",
+   "model_families_and_sizes": "Qwen2.5-Coder-7B-Instruct, Llama-3.1-8B-Instruct, DeepSeek-Coder-6.7b-Instruct, DeepSeek-Coder-7b-Instruct-V1.5, CodeGemma-7b-it (Sec 4.1.1)",
+   "base_vs_instruct": "not present (searched: all five are instruct)",
+   "post_training_stages": "not present (searched: post-training comparison)",
+   "reasoning_models": "not present (searched: reasoning mode; none)",
+   "elicitation_formats": "Token log-prob uncertainty; Chain-of-Thought-guided rewriting; no verbalized confidence (searched: verbal 0)",
+   "benchmarks": "Defects4J 1.2 (154 single-hunk bugs) and HumanEval-Java (163 pairs) (Sec 4.1.2)",
+   "label_source": "Test execution plus manual verification of plausible patches by three researchers (Threats to Validity)",
+   "label_independence": "Fault location (buggy hunk) provided from ground truth (Sec 4.1.2)",
+   "contamination_split": "not present (searched: contaminat: 0 hits)",
+   "calibration_metrics": "Top-K localization accuracy (Top-1 about 0.41-0.48, avg 0.589-0.695, Table 1); correct-fix counts; no ECE",
+   "granularity": "Token level within a patch; patch-level quality filter",
+   "causal_intervention": "Ablation of components (RQ3): removing uncertainty-guided localization drops performance by 20.6%"
+  },
+  "source_note_id": "enhancing-automated-program-repair-via-faulty-token-localization-and-quality-awa"
+ },
+ {
+  "claim": "Token suspiciousness scores localize faulty tokens with average Top-K accuracy 0.589 to 0.695 across models and decay settings, evidence of a correlation between uncertainty scores and patch correctness.",
+  "stance": "supports",
+  "stance_target": "L4 localization from model uncertainty",
+  "evidence_type": "empirical",
+  "scope_conditions": "Table 1 (Defects4J); Top-1 accuracy 0.405 to 0.484",
+  "quoted_support": "achieving average localization accuracy ranging from 0.589 to 0.695, indicating promising effectiveness of uncertainty-guided token-level fault localization",
+  "numbers": [
+   "0.589 to 0.695",
+   "Qwen alpha=0.5 Top-1 0.484 Avg 0.679",
+   "DeepSeek alpha=0.5 Avg 0.695"
+  ],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "Token-level uncertainty from output probabilities: suspiciousness score with decay factor alpha, plus patch-level quality metrics (RQ1, Table 1)",
+   "model_families_and_sizes": "Qwen2.5-Coder-7B-Instruct, Llama-3.1-8B-Instruct, DeepSeek-Coder-6.7b-Instruct, DeepSeek-Coder-7b-Instruct-V1.5, CodeGemma-7b-it (Sec 4.1.1)",
+   "base_vs_instruct": "not present (searched: all five are instruct)",
+   "post_training_stages": "not present (searched: post-training comparison)",
+   "reasoning_models": "not present (searched: reasoning mode; none)",
+   "elicitation_formats": "Token log-prob uncertainty; Chain-of-Thought-guided rewriting; no verbalized confidence (searched: verbal 0)",
+   "benchmarks": "Defects4J 1.2 (154 single-hunk bugs) and HumanEval-Java (163 pairs) (Sec 4.1.2)",
+   "label_source": "Test execution plus manual verification of plausible patches by three researchers (Threats to Validity)",
+   "label_independence": "Fault location (buggy hunk) provided from ground truth (Sec 4.1.2)",
+   "contamination_split": "not present (searched: contaminat: 0 hits)",
+   "calibration_metrics": "Top-K localization accuracy (Top-1 about 0.41-0.48, avg 0.589-0.695, Table 1); correct-fix counts; no ECE",
+   "granularity": "Token level within a patch; patch-level quality filter",
+   "causal_intervention": "Ablation of components (RQ3): removing uncertainty-guided localization drops performance by 20.6%"
+  },
+  "source_note_id": "enhancing-automated-program-repair-via-faulty-token-localization-and-quality-awa"
+ },
+ {
+  "claim": "Ablation shows uncertainty-guided fault localization is the most influential component: removing it lowers performance by 20.6%.",
+  "stance": "supports",
+  "stance_target": "L4 targeted repair vs regeneration",
+  "evidence_type": "empirical",
+  "scope_conditions": "RQ3 ablation, Table 5",
+  "quoted_support": "uncertainty-guided fault localization has the most substantial impact, it could drop the performance by 20.6% upon removal",
+  "numbers": [
+   "20.6%"
+  ],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "Token-level uncertainty from output probabilities: suspiciousness score with decay factor alpha, plus patch-level quality metrics (RQ1, Table 1)",
+   "model_families_and_sizes": "Qwen2.5-Coder-7B-Instruct, Llama-3.1-8B-Instruct, DeepSeek-Coder-6.7b-Instruct, DeepSeek-Coder-7b-Instruct-V1.5, CodeGemma-7b-it (Sec 4.1.1)",
+   "base_vs_instruct": "not present (searched: all five are instruct)",
+   "post_training_stages": "not present (searched: post-training comparison)",
+   "reasoning_models": "not present (searched: reasoning mode; none)",
+   "elicitation_formats": "Token log-prob uncertainty; Chain-of-Thought-guided rewriting; no verbalized confidence (searched: verbal 0)",
+   "benchmarks": "Defects4J 1.2 (154 single-hunk bugs) and HumanEval-Java (163 pairs) (Sec 4.1.2)",
+   "label_source": "Test execution plus manual verification of plausible patches by three researchers (Threats to Validity)",
+   "label_independence": "Fault location (buggy hunk) provided from ground truth (Sec 4.1.2)",
+   "contamination_split": "not present (searched: contaminat: 0 hits)",
+   "calibration_metrics": "Top-K localization accuracy (Top-1 about 0.41-0.48, avg 0.589-0.695, Table 1); correct-fix counts; no ECE",
+   "granularity": "Token level within a patch; patch-level quality filter",
+   "causal_intervention": "Ablation of components (RQ3): removing uncertainty-guided localization drops performance by 20.6%"
+  },
+  "source_note_id": "enhancing-automated-program-repair-via-faulty-token-localization-and-quality-awa"
+ },
+ {
+  "claim": "The work motivates its signal by citing Spiess et al. 2024 that high-uncertainty code tokens are more often wrong, and relies on coarse test pass/fail as the external feedback it improves on.",
+  "stance": "neutral",
+  "stance_target": "prior art chain for token-level confidence",
+  "evidence_type": "expert-opinion",
+  "scope_conditions": "Related work / Intro",
+  "quoted_support": "Their findings reveal strong calibration between entropy-based uncertainty metrics and the correctness of generated code tokens across multiple LLMs.",
+  "numbers": [],
+  "entities": [
+   "Spiess et al. 2024 (arXiv 2402.02047)"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "Token-level uncertainty from output probabilities: suspiciousness score with decay factor alpha, plus patch-level quality metrics (RQ1, Table 1)",
+   "model_families_and_sizes": "Qwen2.5-Coder-7B-Instruct, Llama-3.1-8B-Instruct, DeepSeek-Coder-6.7b-Instruct, DeepSeek-Coder-7b-Instruct-V1.5, CodeGemma-7b-it (Sec 4.1.1)",
+   "base_vs_instruct": "not present (searched: all five are instruct)",
+   "post_training_stages": "not present (searched: post-training comparison)",
+   "reasoning_models": "not present (searched: reasoning mode; none)",
+   "elicitation_formats": "Token log-prob uncertainty; Chain-of-Thought-guided rewriting; no verbalized confidence (searched: verbal 0)",
+   "benchmarks": "Defects4J 1.2 (154 single-hunk bugs) and HumanEval-Java (163 pairs) (Sec 4.1.2)",
+   "label_source": "Test execution plus manual verification of plausible patches by three researchers (Threats to Validity)",
+   "label_independence": "Fault location (buggy hunk) provided from ground truth (Sec 4.1.2)",
+   "contamination_split": "not present (searched: contaminat: 0 hits)",
+   "calibration_metrics": "Top-K localization accuracy (Top-1 about 0.41-0.48, avg 0.589-0.695, Table 1); correct-fix counts; no ECE",
+   "granularity": "Token level within a patch; patch-level quality filter",
+   "causal_intervention": "Ablation of components (RQ3): removing uncertainty-guided localization drops performance by 20.6%"
+  },
+  "source_note_id": "enhancing-automated-program-repair-via-faulty-token-localization-and-quality-awa"
+ },
+ {
+  "claim": "Evaluation uses temperature 1, patch budget capped at 50, and the repair terminates when a plausible patch is found; no per-requirement or test-group confidence is used and no verbalized confidence is elicited.",
+  "stance": "neutral",
+  "stance_target": "L4 per-requirement/test-group confidence remains unoccupied here",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec 4.1.1",
+  "quoted_support": "The overall patch generation budget is capped at 50, meaning that the repair process terminates once either all budgets are consumed or a plausible patch is found.",
+  "numbers": [
+   "budget 50",
+   "TopK 3",
+   "alpha 0.5"
+  ],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "medium",
+  "breadth": {
+   "confidence_families": "Token-level uncertainty from output probabilities: suspiciousness score with decay factor alpha, plus patch-level quality metrics (RQ1, Table 1)",
+   "model_families_and_sizes": "Qwen2.5-Coder-7B-Instruct, Llama-3.1-8B-Instruct, DeepSeek-Coder-6.7b-Instruct, DeepSeek-Coder-7b-Instruct-V1.5, CodeGemma-7b-it (Sec 4.1.1)",
+   "base_vs_instruct": "not present (searched: all five are instruct)",
+   "post_training_stages": "not present (searched: post-training comparison)",
+   "reasoning_models": "not present (searched: reasoning mode; none)",
+   "elicitation_formats": "Token log-prob uncertainty; Chain-of-Thought-guided rewriting; no verbalized confidence (searched: verbal 0)",
+   "benchmarks": "Defects4J 1.2 (154 single-hunk bugs) and HumanEval-Java (163 pairs) (Sec 4.1.2)",
+   "label_source": "Test execution plus manual verification of plausible patches by three researchers (Threats to Validity)",
+   "label_independence": "Fault location (buggy hunk) provided from ground truth (Sec 4.1.2)",
+   "contamination_split": "not present (searched: contaminat: 0 hits)",
+   "calibration_metrics": "Top-K localization accuracy (Top-1 about 0.41-0.48, avg 0.589-0.695, Table 1); correct-fix counts; no ECE",
+   "granularity": "Token level within a patch; patch-level quality filter",
+   "causal_intervention": "Ablation of components (RQ3): removing uncertainty-guided localization drops performance by 20.6%"
+  },
+  "source_note_id": "enhancing-automated-program-repair-via-faulty-token-localization-and-quality-awa"
+ }
+]

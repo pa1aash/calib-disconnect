@@ -7,13 +7,15 @@ tags:
 - latent-knowledge
 - truthfulness-probing
 - hidden-state-probe
+- code-llm-confidence-positioning-d82d00
+- duplicate-abstract-only
 created: '2026-07-20T06:35:08.060283Z'
-updated: '2026-07-20T06:36:08.196811Z'
+updated: '2026-11-09T23:26:03.658037Z'
 source: https://arxiv.org/abs/2410.02707
 source_domain: arxiv.org
 fetched_at: '2026-07-20T06:35:08.058796Z'
 fetch_provider: builtin
-status: draft
+status: deprecated
 type: note
 tier: institutional
 content_type: paper

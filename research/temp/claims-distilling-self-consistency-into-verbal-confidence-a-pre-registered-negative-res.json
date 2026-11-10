@@ -1,0 +1,76 @@
+{
+ "source_note_id": "distilling-self-consistency-into-verbal-confidence-a-pre-registered-negative-res",
+ "r1_bearing": "F analogue (validity screening of verbal confidence) and L2 context; not code",
+ "makes_core_claim_on_code_with_execution_labels": false,
+ "verdict": "NOT a code occupant. Relevant to F (validity-profile / measurement framing of verbal confidence, VRS screening) outside code; single 4B model.",
+ "claims": [
+  {
+   "claim": "Small instruct LLMs give degenerate verbal confidence under minimal elicitation, with ceiling above 95% and near-chance AUROC2.",
+   "stance": "neutral",
+   "stance_target": "R1 candidates L1-L4/F occupancy; F analogue (validity screening of verbal confidence) and L2 context; not code",
+   "evidence_type": "empirical",
+   "scope_conditions": "non-code; NOT a code occupant. Relevant to F (validity-profile / measurement framing of verbal confidence, VRS screening) outside code; single 4B model.",
+   "quoted_support": "Small instruct-tuned LLMs produce degenerate verbal confidence under minimal elicitation: ceiling rates above 95%, near-chance Type-2 AUROC (AUROC2 ), and Invalid validity profiles.",
+   "numbers": [
+    ">95% ceiling"
+   ],
+   "entities": [],
+   "time_period": "2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "distilling-self-consistency-into-verbal-confidence-a-pre-registered-negative-res"
+  },
+  {
+   "claim": "Pre-registered CSFT with modal filter failed: verbal AUROC2 fell from 0.554 to 0.509 and accuracy dropped 7.6 pp.",
+   "stance": "neutral",
+   "stance_target": "R1 candidates L1-L4/F occupancy; F analogue (validity screening of verbal confidence) and L2 context; not code",
+   "evidence_type": "empirical",
+   "scope_conditions": "non-code; NOT a code occupant. Relevant to F (validity-profile / measurement framing of verbal confidence, VRS screening) outside code; single 4B model.",
+   "quoted_support": "verbal AUROC2 dropped from 0.554 to 0.509, accuracy degraded 7.6 percentage points, and VRS remained Invalid.",
+   "numbers": [
+    "0.554",
+    "0.509",
+    "7.6 pp"
+   ],
+   "entities": [],
+   "time_period": "2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "distilling-self-consistency-into-verbal-confidence-a-pre-registered-negative-res"
+  },
+  {
+   "claim": "Post-hoc rescue yields verbal AUROC2 0.774 on held-out TriviaQA, exceeding single-pass logit entropy 0.701 and below 10-sample self-consistency 0.999.",
+   "stance": "neutral",
+   "stance_target": "R1 candidates L1-L4/F occupancy; F analogue (validity screening of verbal confidence) and L2 context; not code",
+   "evidence_type": "empirical",
+   "scope_conditions": "non-code; NOT a code occupant. Relevant to F (validity-profile / measurement framing of verbal confidence, VRS screening) outside code; single 4B model.",
+   "quoted_support": "compresses a 10-sample self-consistency signal (AUROC2 = 0.999) into a single-pass verbal readout that exceeds single-pass logit entropy (AUROC2 = 0.701), with a compression loss of approximately 22.5%.",
+   "numbers": [
+    "0.774",
+    "0.999",
+    "0.701",
+    "22.5%"
+   ],
+   "entities": [],
+   "time_period": "2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "distilling-self-consistency-into-verbal-confidence-a-pre-registered-negative-res"
+  }
+ ],
+ "breadth": {
+  "confidence_families": "verbal confidence, 10-sample self-consistency, logit entropy (Abstract)",
+  "model_families_and_sizes": "Gemma 3 4B-it only (Abstract)",
+  "base_vs_instruct": "instruct only",
+  "post_training_stages": "LoRA confidence-conditioned SFT (Abstract)",
+  "reasoning_models": "not present (searched: HumanEval, MBPP, LiveCodeBench, unit test, execution, code)",
+  "elicitation_formats": "minimal verbal elicitation, ceiling rate, VRS validity screening (Abstract)",
+  "benchmarks": "TriviaQA (calibration/held-out), MMLU (Abstract)",
+  "label_source": "gold-answer correctness; self-consistency targets",
+  "label_independence": "not present (searched: HumanEval, MBPP, LiveCodeBench, unit test, execution, code)",
+  "contamination_split": "not present (searched: HumanEval, MBPP, LiveCodeBench, unit test, execution, code)",
+  "calibration_metrics": "Type-2 AUROC (AUROC2), ceiling rate, paired-bootstrap CIs, shuffled-target control",
+  "granularity": "whole-answer",
+  "causal_intervention": "not present (shuffled-target control is a training control)"
+ }
+}
