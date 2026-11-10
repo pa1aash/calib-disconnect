@@ -48,6 +48,8 @@ New work goes only into these top-level paths (created in wave 3, each with a RE
 | `docs/s7/` | Wave 7: `W7_REPORT.md`, **`PIPELINE_DESIGN_FROZEN.md`** (hash in `FROZEN_SHA256.txt`), `PIPELINE_DESIGN_R2.md`, `RED_TEAM_DISPOSITION.md`, `BENCHMARK_PINS.md`, `power/`, `budget/`, `parts/` |
 | `docs/DEVIATIONS.md` | Every departure from the frozen design (date, section, change, reason, impact, data seen) |
 | `research/positioning/w7/` | `DIFFERENTIAL_R2.md`, `references_design.bib` (19 fetched records) |
+| `docs/s8/` | Wave 8: `W8_REPORT.md`, `CONFORMANCE.md` (C3 audit and three re-checks), `ANALYSIS_TREE_HASH.txt`, `parts/` |
+| `pipeline/`, `analysis/`, `ops/`, `tests/` | Wave 8 code: `pipeline/contracts/` (schemas, layout, manifest, interfaces), `data`, `generate`, `execute`, `readouts`; `analysis/` (statistics, hashed pre-pilot); `ops/` (RunPod pod tooling, plans smoke, pilot, pilot-mixed-only, full); 757 tests |
 | `tools/prose_lint.py` | Prose linter for manuscript source (`tools/prose_lint.toml`, tests in `tests/prose_lint/`) |
 
 The pre-commit hook rejects any staged change (addition, modification, deletion, rename) under a
@@ -154,9 +156,18 @@ Read `DIGEST.md` first, then `VERDICTS.md` and `RECOMMENDATION.md`. The revised 
 - **Budget:** 269.7 GPU-hours (337.2 with contingency) at $k = 10$; 529.8 (662.3) at $k = 20$, on one RTX PRO 6000.
 - **Claims:** fixed effects over the six named models; outcome templates, novelty list, and title rules are frozen in section 1.8.
 
+## Headline findings: wave 8 (`docs/s8/W8_REPORT.md`)
+
+- **Pipeline built against the frozen design.** The modules are data, generate (vLLM, transformers, mock), execute (bwrap, container, trusted-only), readouts (all of section 7, including masked LoRA with the 7.12 gate), analysis (sections 8 and 9, Shapley budgets, strata, sensitivities), and ops (RunPod, dry run by default). Environment: uv lock, Python 3.12, torch 2.14.0, transformers 5.20.2, vLLM 0.33.0 (pod group).
+- **Tests:** 757 collected; all pass except 3 skips (pod or GPU only). The C1 mock integration test checks Shapley efficiency, fold integrity, no leakage, manifest completeness, and sealing.
+- **Smoke (C2):** Qwen3-0.6B on CPU, 5 HumanEval+ problems, k = 2; every stage ok; 2.5 hours. Generated code was never executed: execution ran on reference solutions plus fixtures only, and the smoke labels are synthetic.
+- **Conformance (C3):** 22 findings plus a pre-existing BLOCKING overwrite bug (N1) found on re-check; all fixed or logged after three re-checks. One pod-only item remains (vLLM `top_k=-1`).
+- **Analysis-code hash (C4):** git tree `eaedc4a6...` at `6f130c8` (DEV-015). The pre-commit hook warns on later changes to `analysis/`.
+- **Deviations:** DEV-001 to DEV-019. None changes a decision rule, estimand, margin, model set, or the k rule.
+
 ## Current stage
 
-Waves 0 to 7 are complete. The design is frozen and hashed. No pipeline code, experiment, or manuscript text exists. The next step is the pipeline code and the pilot (section 13 of the frozen design): hash the analysis code before any T1 output is opened, run T1 end to end, measure mixed counts for P1 to P6, apply the $k$ rule once, and log it in `docs/DEVIATIONS.md`.
+Waves 0 to 8 are complete. The design is frozen; the pipeline and pod tooling are built and tested, and the analysis code is hashed. No model other than the smoke model has been run, and no manuscript text exists. The next step is the pilot (section 13 of the frozen design): launch it with `ops` (checklist in `docs/s8/W8_REPORT.md` section 8), run T1 end to end, measure mixed counts for P1 to P6, apply the $k$ rule once, and log it in `docs/DEVIATIONS.md`.
 
 ## Conventions
 
@@ -166,15 +177,16 @@ attribution trailers. Never use `--no-verify`.
 
 ## Open operator items
 
-See `docs/s7/W7_REPORT.md` section 11 for exact actions.
+See `docs/s8/W8_REPORT.md` section 9 for exact actions.
 
-1. Review the frozen design (section 0 and section 17); any objection becomes a deviation before the pilot.
-2. Record the RTX PRO 6000 hourly price at pilot launch.
-3. Confirm the raised $k$-rule thresholds (185 and 125).
-4. Decide on the LiveCodeBench problem-text licence (only IDs are released for now).
-5. Draft the TMLR LLM-use footnote at the manuscript stage.
-6. Optional: put a Semantic Scholar or OpenAlex key in a local, untracked `.env`.
+1. Export `RUNPOD_API_KEY` and `HF_TOKEN` (shell or untracked `.env`).
+2. Accept the Gemma 4 terms on both model pages if shown.
+3. Confirm the RunPod GPU type ID string and REST fields; choose an image or template that allows user namespaces (bwrap).
+4. Record the RTX PRO 6000 hourly price at pilot launch (`--hourly-price-usd`, `--price-source`).
+5. On the pod, verify vLLM `top_k=-1` and the base-model stop strings.
+6. If K1 fires, accept or fix (`runs/pilot/config/k1_accepted.json`).
 7. Rotate the former GPU host key and host if still live (from W0).
-8. Provide GPU access for the pilot.
+8. Decide on the LiveCodeBench problem-text license (only IDs are released for now).
+9. Draft the TMLR LLM-use footnote at the manuscript stage.
 
-Resolved in wave 7: margin, $k$ and $n$, primary set and third family, 2610.31820 readings, LiveCodeBench release and the Qwen3 gap, GPU model, claim scope, disclosure approach.
+Resolved in wave 8: $k$-rule thresholds confirmed (185 and 125); frozen design accepted; LiveCodeBench released as IDs plus a fetch script.
