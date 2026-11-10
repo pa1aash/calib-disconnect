@@ -88,7 +88,8 @@ def planned_outputs(cfg: RunConfig, layout: RunLayout) -> list[Path]:
     out: list[Path] = []
     for b in cfg.benchmarks:
         out += [layout.problems(b), layout.suites(b)]
-    out.append(layout.near_duplicates)
+    if any(b in EVALPLUS_BENCHMARKS for b in cfg.benchmarks):   # matches the write condition (re-check S1)
+        out.append(layout.near_duplicates)
     for pop in sorted({POPULATION_OF[b] for b in cfg.benchmarks}):
         out += [layout.folds(pop, s) for s in cfg.fold_seeds]
     out.append(stats_path(layout))

@@ -505,3 +505,37 @@ No fix in this pass changes a decision rule, the margin delta, the model set, or
 | MINOR | 6 | N6, N7, N8, N9, S1, S2 |
 
 Nothing open blocks the pilot. N2 must be fixed before the full plan is made launchable.
+
+## Third re-check (wave 8)
+
+Scope: the seven items open after the second re-check, re-read in the working tree. The coordinator names commits 540e864 and 41d113e; git was not inspected (no shell). Tests were NOT RUN.
+
+| Item | Status | Evidence (implementation; test or entry) | Note |
+|---|---|---|---|
+| N2 (and G4) | FIXED | pipeline/generate/stage.py:248-251: a relative `adapter_path` is joined to `layout.root` before it reaches the backend; an absolute path is passed through. Test: tests/generate/test_generate_stage.py::test_fresh_adapter_path_relative_to_run_root_is_joined, together with tests/ops/test_ops_plans.py::test_fresh_adapter_path_matches_readouts_stage_rule | G4 is closed with it |
+| N6 | LOGGED (DEV-018) | DEV-018 (DEVIATIONS.md:27) states "at least two decoder layers ... including the first layer of every distinct attention layer type", which matches gate.py:35-49 | None |
+| N7 | FIXED | readouts/stage.py:475: `_planned` uses `_st_primary` | No dedicated test located |
+| N8 | LOGGED (DEV-019) | DEV-019 (DEVIATIONS.md:28) items (a) to (d) match sensitivity.py:84-91 and :76-80, analysis/stage.py:465-471, and the reading A fallback | None |
+| N9 | FIXED | pipeline/execute/CONTRACT_REQUESTS.md no longer calls the markers unverified (searched). The generate/stage.py:362 docstring now separates the timing log from the timing shards. Reading A fallback counts go to `report.metrics["reading_a_fallbacks/<model>/<gen_set>"]` (readouts/stage.py:456-459), with the same test as `own_suffix_context` (any occurrence of the "I am" ids in the completion) | The count is recorded on the real backend only; the mock path has no suffix, so this is consistent. No dedicated test located |
+| S1 | FIXED | data/stage.py:191-194 writes `near_duplicates.json` only when the job has a label-validity benchmark. The agreement stats now merge per benchmark, and provenance pins are merged (:217-221) | No dedicated test located |
+| S2 | FIXED (LOGGED as DEV-015) | DEV-015 (DEVIATIONS.md:29) records the pre-pilot `analysis/` tree hash, backed by docs/s8/ANALYSIS_TREE_HASH.txt and a warning-only pre-commit check (tools/hooks/pre-commit:76-81) | The tree hash and commit ID were not recomputed (no git). The entry sits after DEV-019 in the table, out of numeric order |
+
+None of these fixes touches a decision rule, the margin delta, the model set, or the k rule.
+
+### Final counts (after the third re-check)
+
+| Finding status | Count | IDs |
+|---|---|---|
+| G findings FIXED | 16 | G1, G2, G3, G4, G5, G6, G7, G9, G10, G11, G12, G13, G14, G18, G19, G21 |
+| G findings LOGGED | 5 | G8, G15, G16, G17, G20 |
+| OPERATOR ITEM (pod only) | 1 | G22 (vLLM `top_k=-1` on the pinned engine) |
+| Re-check findings FIXED or LOGGED | 11 | N1 to N9, S1, S2 |
+| Open | 0 | none |
+
+| Severity of open items | Count |
+|---|---|
+| BLOCKING | 0 |
+| MAJOR | 0 |
+| MINOR | 0 |
+
+The only item left is G22's pod-only `top_k=-1` check, which the operator must do before the pilot. Every result in this audit comes from reading the code. The named tests were not run in this session.
