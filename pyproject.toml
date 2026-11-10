@@ -1,0 +1,71 @@
+[project]
+name = "calib-disconnect"
+version = "0.8.0"
+description = "Pipeline and analysis code for the frozen wave 7 design (docs/s7/PIPELINE_DESIGN_FROZEN.md)"
+readme = "pipeline/README.md"
+# vLLM 0.33.0 supports 3.11 to 3.14 (its numba pin caps numpy below 2.5); scipy 1.18 needs 3.12.
+# One interpreter line for both groups keeps the lock universal.
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "numpy==2.3.5",
+    "scipy==1.18.1",
+    "scikit-learn==1.9.1",
+    "pandas==3.1.1",
+    "pyarrow==26.0.1",
+    "pyyaml==6.0.3",
+    "requests==2.34.2",
+    "safetensors==0.8.0",
+    "tqdm==4.70.1",
+    "psutil==7.2.2",
+]
+
+[dependency-groups]
+# CPU and macOS: unit tests, integration test, and the local smoke test.
+local = [
+    "torch==2.14.0",
+    "transformers==5.20.2",
+    "peft==0.21.2",
+    "accelerate==1.15.0",
+    "evalplus==0.3.1",
+    "pytest==9.2.0",
+    "hypothesis==6.170.15",
+]
+# RTX PRO 6000 pod (Blackwell, sm_120). torch 2.14.0 is the version vLLM 0.33.0 pins; its Linux
+# wheels on PyPI are CUDA 13 builds (nvidia-*-cu13), which support sm_120.
+pod = [
+    "torch==2.14.0",
+    "transformers==5.20.2",
+    "peft==0.21.2",
+    "accelerate==1.15.0",
+    "evalplus==0.3.1",
+    "vllm==0.33.0; sys_platform == 'linux'",
+    "pytest==9.2.0",
+    "hypothesis==6.170.15",
+]
+
+[tool.uv]
+default-groups = ["local"]
+# Lock only the two platforms used: the operator Mac and the Linux GPU pod.
+environments = [
+    "sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64'",
+]
+# evalplus 0.3.1 declares API clients for its LLM-based code generator, which this design does not
+# use (section 4: "The LLM-based generator is not used"). Only evalplus.eval, evalplus.data and
+# evalplus.gen.type_mut are imported.
+exclude-dependencies = ["openai", "anthropic", "google-generativeai", "stop-sequencer"]
+
+[tool.setuptools.packages.find]
+include = ["pipeline*", "analysis*", "ops*"]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q -p no:cacheprovider"
+markers = [
+    "slow: long-running tests (smoke and integration)",
+    "pod: tests that need the GPU pod (CUDA, vLLM); skipped locally",
+]
