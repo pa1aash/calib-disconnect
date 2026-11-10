@@ -6,4 +6,4 @@ Three saved upstream commit feeds are kept on disk but not tracked, because thei
 - `raw/hf_commits_evalplus_humanevalplus.json` (Hugging Face commit list of evalplus/humanevalplus)
 - `raw/hf_lcb_commits.json` (Hugging Face commit list of the LiveCodeBench dataset)
 
-Facts that `BENCHMARKS.md` takes from them (release tags and dates) are also stated in the tracked README and dataset-card captures it cites. Anyone re-verifying them must refetch these feeds.
+`BENCHMARKS.md` uses them for the "HF commit date" column of the LiveCodeBench release table and for the HumanEval+ mirror commit details. Those cells rest on these untracked files only; anyone re-verifying them from the repository must refetch the feeds.

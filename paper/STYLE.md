@@ -349,8 +349,42 @@ reading, and metaphors that do not survive scrutiny.
 
 ## Terminology glossary
 
-To be filled at the design stage, before any drafting. One row per concept: preferred term, symbol,
-definition, and terms not to use.
+Copied from section 15 of `docs/s6/PIPELINE_DESIGN_R1.md` (wave 6, draft; updated when the design is frozen). One row per concept: preferred term, symbol, definition, and terms not to use. Short forms: [Ribeiro] = arXiv 2512.07404; [Campos] = arXiv 2611.07876; [2610.31820] = Wu and Ji.
 
 | Term | Symbol | Definition | Do not use |
 |------|--------|------------|------------|
+| frozen generations | $c_{mij}$ | the $k$ samples per problem per model, generated once at temperature 1.0 and reused by every readout | "responses", "completions" (as a defined term) |
+| sample | $j$ | one frozen generation of one problem | "candidate" (except when quoting [Campos]), "attempt" |
+| problem | $i$ | one benchmark task | "task" (except when quoting [Ribeiro]), "question" |
+| original suite | $O$ | the benchmark's own tests (EvalPlus base inputs for HumanEval and MBPP) | "base tests" |
+| EvalPlus suite | $E$ | the original suite plus EvalPlus's added inputs | "augmented tests", "HumanEval+ tests" (except as the dataset name) |
+| label | $y^{O}, y^{E}$ | 1 if the sample passes every test of the suite | "correctness score" |
+| readout | | a function from a sample to a confidence score in [0, 1] | "signal", "method" |
+| hidden-state probe | $P$ | the logistic-regression probe selected by inner cross-validation from the probe family | "internal confidence" |
+| probe family | $P_2, P_3, P_{\text{multi}}$ | one layer at the last code token; one layer at the end of the elicitation turn; all seven layers at the last code token | |
+| stated confidence | $S$ | a readout the model produces in an elicitation turn about its frozen sample (V1 or V2, zero-shot or trained) | "verbal confidence" (except "verbal format V1"), "expressed confidence" |
+| zero-shot stated readout | $S^Z$ | stated confidence with no training | |
+| trained stated readout | $S^T$ | stated confidence read through a LoRA adapter active only in the elicitation turn, fit on the probe's labels and folds | "fine-tuned verbal" |
+| R-Tuning-style readout | $S^R$ | the [2610.31820]-style categorical readout with the adapter active in generation | |
+| prompt-only probe | | the probe read at the last prompt token, before any code | "input-only probe" |
+| code-text-only classifier | | a classifier on the code string alone | "text-only probe" |
+| sampling agreement | $A$ | share of the other samples with the same behavior signature on held-out inputs | "consistency", "self-consistency" (except when quoting) |
+| pooled AUROC | | AUROC over all samples of the population | |
+| within-problem AUROC | $W$ | pair-weighted AUROC over pass-fail pairs inside problems | "per-problem AUROC" |
+| mixed problem | | a problem with at least one passing and one failing sample under the active suite | |
+| toggle | $r, t, d, l$ | a binary change of scoring setup from uncontrolled (0) to controlled (1) | "ablation", "factor" |
+| scoring configuration | $x$ | a vector of toggle levels | |
+| gap function | $\Gamma(x)$ | probe metric minus stated metric at configuration $x$ | |
+| raw gap | $G_0$ | $\Gamma(0,0,0,0)$ | "disconnect" (as a measured quantity) |
+| residual gap | $R$, $\bar{R}$ | $\Gamma(1,1,1,1)$; its mean over the primary models | |
+| pooled residual | $R_{\text{pool}}$ | $\Gamma(1,1,0,1)$ | |
+| decision | D1, D2, D3 | equivalence; probe ahead by more than $\delta$; stated readout ahead by more than $\delta$ | "significant" (unqualified) |
+| budget term | $\phi_v$ | the Shapley value of toggle $v$; an accounting term, not a causal effect | "contribution", "effect", "explains" (unqualified) |
+| systematics budget | | the decomposition $G_0 + \sum_v \phi_v = R$ with intervals | "error budget" (exposition only) |
+| generation-shift contrast | $\Delta\Gamma_g$ | the probe-minus-trained-readout gap on frozen generations minus the same gap on the readout's own fresh generations | "distribution shift", "generation-shift term" |
+| analog | | this design's version, on its own generations, of a published configuration | "replication" |
+| shared budget cell | | the cell of the 16-cell lattice that a reconciliation analog shares with the budget, if any | |
+| margin | $\delta$ | the pre-registered equivalence margin, 0.03 in $W$ | "threshold" |
+| contamination stratum | | pre-cutoff vs post-cutoff release window per model | "leakage" |
+| routing replay | | the offline replay of selection and triage decisions from out-of-fold scores | "deployment" |
+| regret | | oracle value minus achieved value in the routing replay | |
