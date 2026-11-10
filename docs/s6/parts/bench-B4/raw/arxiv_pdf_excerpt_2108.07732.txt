@@ -1,0 +1,36 @@
+# Excerpts extracted 2026-11-10 from https://arxiv.org/pdf/2108.07732
+Basic Programming Problems (MBPP), is an entirely new crowd-sourced programming dataset. The second is derived
+from the MathQA dataset [Amini et al., 2019] but casts the problem solutions as short Python programs.
+2.1
+Mostly Basic Programming Problems
+The Mostly Basic Programming Problems dataset contains 974 short Python programs constructed by crowd-sourcing
+to an internal pool of crowdworkers who have basic knowledge of Python. We asked crowd-sourcing participants to
+write a short problem statement, a single self-contained Python function solving the problem speciﬁed, and three test
+cases that check for semantic correctness of the function. Participants also provided a ground-truth solution that passes
+all three test cases. Participants were instructed to write descriptions concrete enough that a human would be able to
+translate them into code without clariﬁcations. They were also instructed to write code that is self-contained (that is, it
+runs by itself) and that does not print any results to the console. Use of internet references was allowed.
+The problems range from simple numeric manipulations or tasks that require basic usage of standard library functions to
+tasks that require nontrivial external knowledge, such as the deﬁnition of particular notable integer sequences. Figure 1
+shows an example problem statement with the associated test cases and a sample from our largest model prompted with
+that problem statement. To further characterize the contents of the dataset, we randomly sampled 100 of the questions
+and assigned one or more descriptive tags to each question. Of these questions, 58% were mathematical in nature (e.g.,
+calculating the volume of a sphere), 43% involve list processing, 19% require string processing, 9% involve integer
+sequences, and 2% center around the use of other data structures. We did not impose any restrictions on the number of
+lines of code in the reference solution. The average, median, and maximum number of lines of code are 6.8, 5, and 50
+respectively. The natural language descriptions are typically short, usually one sentence each.
+While inspecting the dataset, we observed that some questions used uncommon function signatures (such as passing in
+a list and its length as two separate arguments to a function), lacked detail, were somewhat ambiguous (e.g., “Write a
+python function to count the number of squares in a rectangle.”), or performed unexpected operations in a function
+that were paired with the provided tests (e.g., casting a ﬂoat to an int before returning it, with the test performing
+integer comparisons). Given this, we manually inspected, edited, and pruned a subset of the questions, yielding 426
+hand-veriﬁed questions, which we refer to as the edited dataset. For each question in the edited dataset, we ensured
+it had a standard Python function signature, that it was unambiguous to a human, and that its test cases accurately
+reﬂected the text description. We conduct most experiments on the full dataset, but analyze the effect of the curation of
+the edited dataset in Section 4.9.
+In the experiments described later in the paper, we hold out 10 problems for few-shot prompting, another 500 as our
+test dataset (which is used to evaluate both few-shot inference and ﬁne-tuned models), 374 problems for ﬁne-tuning,
+and the rest for validation. For evaluations involving the edited dataset, we perform comparisons with 100 problems
+that appear in both the original and edited dataset, using the same held out 10 problems for few-shot prompting and 374
+problems for ﬁne-tuning. We have programmatically checked that all reference code passes all tests under Python 3.6,
+and we have open-sourced all of the problems.1

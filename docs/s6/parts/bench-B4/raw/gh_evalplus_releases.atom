@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xml:lang="en-US">
+  <id>tag:github.com,2008:https://github.com/evalplus/evalplus/releases</id>
+  <link type="text/html" rel="alternate" href="https://github.com/evalplus/evalplus/releases"/>
+  <link type="application/atom+xml" rel="self" href="https://github.com/evalplus/evalplus/releases.atom"/>
+  <title>Release notes from evalplus</title>
+  <updated>2024-10-20T20:06:54Z</updated>
+  <entry>
+    <id>tag:github.com,2008:Repository/628154495/v0.3.1</id>
+    <updated>2024-10-20T22:51:25Z</updated>
+    <link rel="alternate" type="text/html" href="https://github.com/evalplus/evalplus/releases/tag/v0.3.1"/>
+    <title>EvalPlus v0.3.1</title>
+    <content type="html">&lt;p&gt;For the past 6+ months, we have been actively maintaining and improving the EvalPlus repository. Now we are thrilled to announce a new release!&lt;/p&gt;
+&lt;h2&gt;🔥 EvalPerf for Code Efficiency Evaluation&lt;/h2&gt;
+&lt;p&gt;Based on our &lt;a href=&quot;https://www.arxiv.org/abs/2408.06450&quot; rel=&quot;nofollow&quot;&gt;COLM&#39;24&lt;/a&gt; paper, we integrated the EvalPerf dataset into the EvalPlus repository.&lt;br&gt;
+EvalPerf is a dataset curated using the &lt;strong&gt;Differential Performance Evaluation&lt;/strong&gt; methodology proposed by the paper, which argues that effective code efficiency evaluation requires:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Performance-exercising tasks&lt;/strong&gt; -- our tasks are testified to be code efficiency challenging!&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Performance-exercising inputs&lt;/strong&gt; -- For each task, we generate performance-challenging test input!&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Compound metric: Differential Performance Score (DPS)&lt;/strong&gt; -- inspired by LeetCode&#39;s efficiency ranking of submissions, it tells conclusions like &lt;em&gt;&quot;your submission can outperform 80% of LLM solutions...&quot;&lt;/em&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The EvalPerf dataset initially has 118 coding tasks^ (a subset of the latest HumanEval+ and MBPP+) -- running EvalPerf is as simple as running the following commands:&lt;/p&gt;
+&lt;div class=&quot;highlight highlight-source-shell notranslate position-relative overflow-auto&quot; data-snippet-clipboard-copy-content=&quot;pip install &amp;quot;evalplus[perf,vllm]&amp;quot; --upgrade
+# Or: pip install &amp;quot;evalplus[perf,vllm] @ git+https://github.com/evalplus/evalplus&amp;quot; --upgrade
+
+sudo sh -c &#39;echo 0 &amp;gt; /proc/sys/kernel/perf_event_paranoid&#39; # Enable perf
+evalplus.evalperf --model &amp;quot;ise-uiuc/Magicoder-S-DS-6.7B&amp;quot; --backend vllm&quot;&gt;&lt;pre&gt;pip install &lt;span class=&quot;pl-s&quot;&gt;&lt;span class=&quot;pl-pds&quot;&gt;&quot;&lt;/span&gt;evalplus[perf,vllm]&lt;span class=&quot;pl-pds&quot;&gt;&quot;&lt;/span&gt;&lt;/span&gt; --upgrade
+&lt;span class=&quot;pl-c&quot;&gt;&lt;span class=&quot;pl-c&quot;&gt;#&lt;/span&gt; Or: pip install &quot;evalplus[perf,vllm] @ git+https://github.com/evalplus/evalplus&quot; --upgrade&lt;/span&gt;
+
+sudo sh -c &lt;span class=&quot;pl-s&quot;&gt;&lt;span class=&quot;pl-pds&quot;&gt;&#39;&lt;/span&gt;echo 0 &amp;gt; /proc/sys/kernel/perf_event_paranoid&lt;span class=&quot;pl-pds&quot;&gt;&#39;&lt;/span&gt;&lt;/span&gt; &lt;span class=&quot;pl-c&quot;&gt;&lt;span class=&quot;pl-c&quot;&gt;#&lt;/span&gt; Enable perf&lt;/span&gt;
+evalplus.evalperf --model &lt;span class=&quot;pl-s&quot;&gt;&lt;span class=&quot;pl-pds&quot;&gt;&quot;&lt;/span&gt;ise-uiuc/Magicoder-S-DS-6.7B&lt;span class=&quot;pl-pds&quot;&gt;&quot;&lt;/span&gt;&lt;/span&gt; --backend vllm&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;At evaluation time we by default perform the following steps:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;strong&gt;Correctness sampling&lt;/strong&gt;: We sample LLMs for 100 solutions (&lt;code&gt;n_samples&lt;/code&gt;) and perform correctness checking&lt;/li&gt;
+&lt;li&gt;
+&lt;strong&gt;Efficiency evaluation&lt;/strong&gt;: For tasks with 10+ passing solutions, we evaluate the code efficiency of (at most 20) passing solutions:
+&lt;ul&gt;
+&lt;li&gt;Primitive metric: # CPU instructions&lt;/li&gt;
+&lt;li&gt;We profile the # CPU instructions over &lt;strong&gt;(i) new LLM solutions&lt;/strong&gt;; and &lt;strong&gt;(ii) representative performance reference solutions&lt;/strong&gt;; running through the performance-challenging test input&lt;/li&gt;
+&lt;li&gt;We match the profiled new solution to the reference solution with comparative code efficiency as calculate &lt;math-renderer class=&quot;js-inline-math&quot; style=&quot;display: inline-block&quot; data-run-id=&quot;0b38d0e5dcead08a02e1db32d1916d33&quot;&gt;$DPS$&lt;/math-renderer&gt; and &lt;math-renderer class=&quot;js-inline-math&quot; style=&quot;display: inline-block&quot; data-run-id=&quot;0b38d0e5dcead08a02e1db32d1916d33&quot;&gt;$DPS_{norm}$&lt;/math-renderer&gt;
+&lt;/li&gt;
+&lt;li&gt;e.g., Given 10 reference samples in 4 clusters: [3, 2, 3, 2], matching the 3rd cluster leads to &lt;math-renderer class=&quot;js-inline-math&quot; style=&quot;display: inline-block&quot; data-run-id=&quot;0b38d0e5dcead08a02e1db32d1916d33&quot;&gt;$DPS = \frac{sample\ rank}{total\ samples} = \frac{3+2+3}{10}=80$&lt;/math-renderer&gt;% and &lt;math-renderer class=&quot;js-inline-math&quot; style=&quot;display: inline-block&quot; data-run-id=&quot;0b38d0e5dcead08a02e1db32d1916d33&quot;&gt;$DPS_{norm} = \frac{cluster\ rank}{total\ cluster} = \frac{1+1+1}{4}=75$&lt;/math-renderer&gt;%&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Collaborated work with &lt;a class=&quot;user-mention notranslate&quot; data-hovercard-type=&quot;user&quot; data-hovercard-url=&quot;/users/soryxie/hovercard&quot; data-octo-click=&quot;hovercard-link-click&quot; data-octo-dimensions=&quot;link_type:self&quot; href=&quot;https://github.com/soryxie&quot;&gt;@soryxie&lt;/a&gt; &lt;a class=&quot;user-mention notranslate&quot; data-hovercard-type=&quot;user&quot; data-hovercard-url=&quot;/users/FatPigeorz/hovercard&quot; data-octo-click=&quot;hovercard-link-click&quot; data-octo-dimensions=&quot;link_type:self&quot; href=&quot;https://github.com/FatPigeorz&quot;&gt;@FatPigeorz&lt;/a&gt; !&lt;/p&gt;
+&lt;h2&gt;🔥 Command-line Interface (CLI) Simplification&lt;/h2&gt;
+&lt;p&gt;We largely simplified the evaluation pipelines:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Previously:&lt;/strong&gt; run &lt;code&gt;evalplus.codegen&lt;/code&gt;, and then &lt;code&gt;evalplus.sanitize&lt;/code&gt;, and then &lt;code&gt;evalplus.evaluate&lt;/code&gt; with different parameters&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&quot;highlight highlight-source-shell notranslate position-relative overflow-auto&quot; data-snippet-clipboard-copy-content=&quot;evalplus.codegen --model &amp;quot;ise-uiuc/Magicoder-S-DS-6.7B&amp;quot; \
+                  --dataset [humaneval|mbpp]            \
+                  --backend vllm                        \
+                  --greedy
+
+evalplus.sanitize --samples [path/to/samples]
+
+evalplus.evaluate --samples [path/to/samples]&quot;&gt;&lt;pre&gt;evalplus.codegen --model &lt;span class=&quot;pl-s&quot;&gt;&lt;span class=&quot;pl-pds&quot;&gt;&quot;&lt;/span&gt;ise-uiuc/Magicoder-S-DS-6.7B&lt;span class=&quot;pl-pds&quot;&gt;&quot;&lt;/span&gt;&lt;/span&gt; \
+                  --dataset [humaneval&lt;span class=&quot;pl-k&quot;&gt;|&lt;/span&gt;mbpp]            \
+                  --backend vllm                        \
+                  --greedy
+
+evalplus.sanitize --samples [path/to/samples]
+
+evalplus.evaluate --samples [path/to/samples]&lt;/pre&gt;&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Now&lt;/strong&gt;:&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&quot;highlight highlight-source-shell notranslate position-relative overflow-auto&quot; data-snippet-clipboard-copy-content=&quot;evalplus.evaluate --model &amp;quot;ise-uiuc/Magicoder-S-DS-6.7B&amp;quot; \
+                  --dataset [humaneval|mbpp]             \
+                  --backend vllm                         \
+                  --greedy&quot;&gt;&lt;pre&gt;evalplus.evaluate --model &lt;span class=&quot;pl-s&quot;&gt;&lt;span class=&quot;pl-pds&quot;&gt;&quot;&lt;/span&gt;ise-uiuc/Magicoder-S-DS-6.7B&lt;span class=&quot;pl-pds&quot;&gt;&quot;&lt;/span&gt;&lt;/span&gt; \
+                  --dataset [humaneval&lt;span class=&quot;pl-k&quot;&gt;|&lt;/span&gt;mbpp]             \
+                  --backend vllm                         \
+                  --greedy&lt;/pre&gt;&lt;/div&gt;
+&lt;h2&gt;Other notable updates&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Sanitizer improvements (&lt;a class=&quot;issue-link js-issue-link&quot; data-error-text=&quot;Failed to load title&quot; data-id=&quot;2278717326&quot; data-permission-text=&quot;Title is private&quot; data-url=&quot;https://github.com/evalplus/evalplus/issues/189&quot; data-hovercard-type=&quot;pull_request&quot; data-hovercard-url=&quot;/evalplus/evalplus/pull/189/hovercard&quot; href=&quot;https://github.com/evalplus/evalplus/pull/189&quot;&gt;#189&lt;/a&gt;, &lt;a class=&quot;issue-link js-issue-link&quot; data-error-text=&quot;Failed to load title&quot; data-id=&quot;2278749108&quot; data-permission-text=&quot;Title is private&quot; data-url=&quot;https://github.com/evalplus/evalplus/issues/190&quot; data-hovercard-type=&quot;pull_request&quot; data-hovercard-url=&quot;/evalplus/evalplus/pull/190/hovercard&quot; href=&quot;https://github.com/evalplus/evalplus/pull/190&quot;&gt;#190&lt;/a&gt;) -- thanks to &lt;a class=&quot;user-mention notranslate&quot; data-hovercard-type=&quot;user&quot; data-hovercard-url=&quot;/users/Co1lin/hovercard&quot; data-octo-click=&quot;hovercard-link-click&quot; data-octo-dimensions=&quot;link_type:self&quot; href=&quot;https://github.com/Co1lin&quot;&gt;@Co1lin&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Fixing edge case of &lt;code&gt;is_float&lt;/code&gt; (&lt;a class=&quot;issue-link js-issue-link&quot; data-error-text=&quot;Failed to load title&quot; data-id=&quot;2288833325&quot; data-permission-text=&quot;Title is private&quot; data-url=&quot;https://github.com/evalplus/evalplus/issues/196&quot; data-hovercard-type=&quot;pull_request&quot; data-hovercard-url=&quot;/evalplus/evalplus/pull/196/hovercard&quot; href=&quot;https://github.com/evalplus/evalplus/pull/196&quot;&gt;#196&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;HumanEval+ maintenance: &lt;code&gt;v0.1.10&lt;/code&gt; by improving contracts &amp;amp; oracle (&lt;a class=&quot;issue-link js-issue-link&quot; data-error-text=&quot;Failed to load title&quot; data-id=&quot;2273767241&quot; data-permission-text=&quot;Title is private&quot; data-url=&quot;https://github.com/evalplus/evalplus/issues/186&quot; data-hovercard-type=&quot;pull_request&quot; data-hovercard-url=&quot;/evalplus/evalplus/pull/186/hovercard&quot; href=&quot;https://github.com/evalplus/evalplus/pull/186&quot;&gt;#186&lt;/a&gt;, &lt;a class=&quot;issue-link js-issue-link&quot; data-error-text=&quot;Failed to load title&quot; data-id=&quot;2296010335&quot; data-permission-text=&quot;Title is private&quot; data-url=&quot;https://github.com/evalplus/evalplus/issues/201&quot; data-hovercard-type=&quot;pull_request&quot; data-hovercard-url=&quot;/evalplus/evalplus/pull/201/hovercard&quot; href=&quot;https://github.com/evalplus/evalplus/pull/201&quot;&gt;#201&lt;/a&gt;) -- thanks to &lt;a class=&quot;user-mention notranslate&quot; data-hovercard-type=&quot;user&quot; data-hovercard-url=&quot;/users/Kristoff-starling/hovercard&quot; data-octo-click=&quot;hovercard-link-click&quot; data-octo-dimensions=&quot;link_type:self&quot; href=&quot;https://github.com/Kristoff-starling&quot;&gt;@Kristoff-starling&lt;/a&gt;  &lt;a class=&quot;user-mention notranslate&quot; data-hovercard-type=&quot;user&quot; data-hovercard-url=&quot;/users/Co1lin/hovercard&quot; data-octo-click=&quot;hovercard-link-click&quot; data-octo-dimensions=&quot;link_type:self&quot; href=&quot;https://github.com/Co1lin&quot;&gt;@Co1lin&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;MBPP+ maintenance: &lt;code&gt;v0.2.1&lt;/code&gt; by improving contracts &amp;amp; oracle (&lt;a class=&quot;issue-link js-issue-link&quot; data-error-text=&quot;Failed to load title&quot; data-id=&quot;2341556286&quot; data-permission-text=&quot;Title is private&quot; data-url=&quot;https://github.com/evalplus/evalplus/issues/211&quot; data-hovercard-type=&quot;pull_request&quot; data-hovercard-url=&quot;/evalplus/evalplus/pull/211/hovercard&quot; href=&quot;https://github.com/evalplus/evalplus/pull/211&quot;&gt;#211&lt;/a&gt;, &lt;a class=&quot;issue-link js-issue-link&quot; data-error-text=&quot;Failed to load title&quot; data-id=&quot;2341993369&quot; data-permission-text=&quot;Title is private&quot; data-url=&quot;https://github.com/evalplus/evalplus/issues/212&quot; data-hovercard-type=&quot;pull_request&quot; data-hovercard-url=&quot;/evalplus/evalplus/pull/212/hovercard&quot; href=&quot;https://github.com/evalplus/evalplus/pull/212&quot;&gt;#212&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;Default behavior change: code generation results saved as &lt;code&gt;.jsonal&lt;/code&gt; rather than massive individual files and folders&lt;/li&gt;
+&lt;li&gt;Using the official tree-sitter package and Python binary&lt;/li&gt;
+&lt;li&gt;Prompt: adding a new liner after stripping the prompt as some models are more familiar with &lt;code&gt;&quot;&quot;&quot;\n&lt;/code&gt; over &lt;code&gt;&quot;&quot;&quot;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Configurable maximum evaluation process memory via environmental variable &lt;code&gt;EVALPLUS_MAX_MEMORY_BYTES&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;When sampling size per task &amp;gt; 1, batch size is automatically set as &lt;code&gt;min(n_samples, 32)&lt;/code&gt; if &lt;code&gt;--bs&lt;/code&gt; is not set&lt;/li&gt;
+&lt;li&gt;Sanitizer behavior: when the code is too broken to be sanitized, return the broken code rather than an empty string for debuggability.&lt;/li&gt;
+&lt;li&gt;vLLM: automatic prefix caching is enabled to accelerate sampling (hopefully)&lt;/li&gt;
+&lt;li&gt;Setting &lt;code&gt;top_p = 0.95&lt;/code&gt; for OpenAI, Google, and Anthropic backends&lt;/li&gt;
+&lt;li&gt;New arguments: &lt;code&gt;--trust-remote-code&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;PyPI: &lt;a href=&quot;https://pypi.org/project/evalplus/0.3.1/&quot; rel=&quot;nofollow&quot;&gt;https://pypi.org/project/evalplus/0.3.1/&lt;/a&gt;&lt;br&gt;
+Docker Hub: &lt;a href=&quot;https://hub.docker.com/layers/ganler/evalplus/v0.3.1/images/sha256-26b118098bef281fe8dfe999bf05f1d5b45374b4e6c00161ec0f30592aef4740&quot; rel=&quot;nofollow&quot;&gt;https://hub.docker.com/layers/ganler/evalplus/v0.3.1/images/sha256-26b118098bef281fe8dfe999bf05f1d5b45374b4e6c00161ec0f30592aef4740&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;^In our COLM paper, we presented 121 tasks based on the February version of MBPP+ (&lt;code&gt;v0.1.0&lt;/code&gt;) which by then there were 399 MBPP+ tasks -- in MBPP+ (&lt;code&gt;v0.2.0&lt;/code&gt;) we removed some broken tasks (399 -&amp;gt; 378) leading a slight cut in the number of EvalPerf tasks as well.&lt;/p&gt;
+&lt;p&gt;^We skipped/yanked the release of &lt;code&gt;v0.3.0&lt;/code&gt; and directly released &lt;code&gt;v0.3.1&lt;/code&gt; due to broken dependency in &lt;code&gt;v0.3.0&lt;/code&gt;.&lt;/p&gt;</content>
+    <author>
+      <name>ganler</name>
+    </author>
+    <media:thumbnail height="30" width="30" url="https://avatars.githubusercontent.com/u/38074777?s=60&amp;v=4"/>
+  </entry>
+  <entry>
+    <id>tag:github.com,2008:Repository/628154495/v0.3.0</id>
+    <updated>2024-10-20T07:30:22Z</updated>
+    <link rel="alternate" type="text/html" href="https://github.com/evalplus/evalplus/releases/tag/v0.3.0"/>
+    <title>v0.3.0</title>
+    <content type="html">&lt;p&gt;chore: README optimization&lt;/p&gt;</content>
+    <author>
+      <name>ganler</name>
+    </author>
+    <media:thumbnail height="30" width="30" url="https://avatars.githubusercontent.com/u/38074777?s=60&amp;v=4"/>
+  </entry>
+  <entry>
+    <id>tag:github.com,2008:Repository/628154495/v0.2.2</id>
+    <updated>2024-04-03T01:39:26Z</updated>
+    <link rel="alternate" type="text/html" href="https://github.com/evalplus/evalplus/releases/tag/v0.2.2"/>
+    <title>v0.2.2</title>
+    <content type="html">&lt;p&gt;refactor: add release automation file&lt;/p&gt;</content>
+    <author>
+      <name>ganler</name>
+    </author>
+    <media:thumbnail height="30" width="30" url="https://avatars.githubusercontent.com/u/38074777?s=60&amp;v=4"/>
+  </entry>
+  <entry>
+    <id>tag:github.com,2008:Repository/628154495/v0.2.1</id>
+    <updated>2024-04-02T22:40:44Z</updated>
+    <link rel="alternate" type="text/html" href="https://github.com/evalplus/evalplus/releases/tag/v0.2.1"/>
+    <title>EvalPlus v0.2.1</title>
+    <content type="html">&lt;h2&gt;Main updates&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;HumanEval+ and MBPP+ datasets are on the hub now:
+&lt;ul&gt;
+&lt;li&gt;HumanEval+: &lt;a href=&quot;https://huggingface.co/datasets/evalplus/humanevalplus&quot; rel=&quot;nofollow&quot;&gt;https://huggingface.co/datasets/evalplus/humanevalplus&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;MBPP+: &lt;a href=&quot;https://huggingface.co/datasets/evalplus/mbppplus&quot; rel=&quot;nofollow&quot;&gt;https://huggingface.co/datasets/evalplus/mbppplus&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;HumanEval+ is ported to original HumanEval format. Release files have a new home now:
+&lt;ul&gt;
+&lt;li&gt;HumanEval+: &lt;a href=&quot;https://github.com/evalplus/humanevalplus_release&quot;&gt;https://github.com/evalplus/humanevalplus_release&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;MBPP+: &lt;a href=&quot;https://github.com/evalplus/mbppplus_release&quot;&gt;https://github.com/evalplus/mbppplus_release&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;You can use EvalPlus through &lt;a href=&quot;https://github.com/bigcode-project/bigcode-evaluation-harness&quot;&gt;bigcode-evaluation-harness&lt;/a&gt; now&lt;/li&gt;
+&lt;li&gt;Docker image now uses Python 3.10 since some model might generate Python code using latest syntax, leading to false positive using older Python&lt;/li&gt;
+&lt;li&gt;Sanitizer is now merged into the pacakge&lt;/li&gt;
+&lt;li&gt;Several improvements and bug fixes to the sanitizer&lt;/li&gt;
+&lt;li&gt;Test suite reduction now moved to &lt;code&gt;tools&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Fixes the &lt;code&gt;CACHE_DIR&lt;/code&gt; nonexistance issue&lt;/li&gt;
+&lt;li&gt;Simplified the format of &lt;code&gt;eval_results.json&lt;/code&gt; for readability&lt;/li&gt;
+&lt;li&gt;Use &lt;code&gt;EVALPLUS_TIMEOUT_PER_TASK&lt;/code&gt; env var to set the maximum testing time for each task&lt;/li&gt;
+&lt;li&gt;Timeout per test is set to 0.5s by default&lt;/li&gt;
+&lt;li&gt;Fixes argument validity for &lt;code&gt;inputgen.py&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;Dataset maintainence&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;HumanEval/32&lt;/code&gt;: fixes the oracle&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;Supported codegen models&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Now EvalPlus leaderboard lists 82 models&lt;/li&gt;
+&lt;li&gt;WizardCoders&lt;/li&gt;
+&lt;li&gt;Stable Code&lt;/li&gt;
+&lt;li&gt;OpenCodeInterpreter&lt;/li&gt;
+&lt;li&gt;antropic API&lt;/li&gt;
+&lt;li&gt;mistral API&lt;/li&gt;
+&lt;li&gt;CodeLlama instruct&lt;/li&gt;
+&lt;li&gt;Phi-2&lt;/li&gt;
+&lt;li&gt;Solar&lt;/li&gt;
+&lt;li&gt;Dophin&lt;/li&gt;
+&lt;li&gt;OpenChat&lt;/li&gt;
+&lt;li&gt;CodeMillenials&lt;/li&gt;
+&lt;li&gt;Speechless&lt;/li&gt;
+&lt;li&gt;xdan-l1-chat&lt;/li&gt;
+&lt;li&gt;etc.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;PyPI: &lt;a href=&quot;https://pypi.org/project/evalplus/0.2.1/&quot; rel=&quot;nofollow&quot;&gt;https://pypi.org/project/evalplus/0.2.1/&lt;/a&gt;&lt;br&gt;
+Docker Hub: &lt;a href=&quot;https://hub.docker.com/layers/ganler/evalplus/v0.2.1/images/sha256-2bb315e40ea502b4f47ebf1f93561ef88280d251bdc6f394578c63d90e1825d7&quot; rel=&quot;nofollow&quot;&gt;https://hub.docker.com/layers/ganler/evalplus/v0.2.1/images/sha256-2bb315e40ea502b4f47ebf1f93561ef88280d251bdc6f394578c63d90e1825d7&lt;/a&gt;&lt;/p&gt;</content>
+    <author>
+      <name>ganler</name>
+    </author>
+    <media:thumbnail height="30" width="30" url="https://avatars.githubusercontent.com/u/38074777?s=60&amp;v=4"/>
+  </entry>
+  <entry>
+    <id>tag:github.com,2008:Repository/628154495/v0.2.0</id>
+    <updated>2023-11-28T17:41:45Z</updated>
+    <link rel="alternate" type="text/html" href="https://github.com/evalplus/evalplus/releases/tag/v0.2.0"/>
+    <title>EvalPlus v0.2.0</title>
+    <content type="html">&lt;h2&gt;🔥 Announcing MBPP+&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;&lt;a href=&quot;https://github.com/google-research/google-research/tree/master/mbpp&quot;&gt;MBPP&lt;/a&gt;&lt;/strong&gt; is a dataset curated by Google. Its full set includes around 1000 crowd-sourced Python programming problems. However, certain amount of problems can be noisy (e.g., prompts make no sense or tests are broken). Consequently, a subset (~427 problems) of the data has been hand-verified by original author -- &lt;code&gt;MBPP-sanitized&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;MBPP+&lt;/strong&gt; improves MBPP based on its sanitized version (&lt;code&gt;MBPP-sanitized&lt;/code&gt;):&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;We further hand-verify the problems to trim ill-formed problems to keep 399 problems&lt;/li&gt;
+&lt;li&gt;We also fix the problems whose implementation is wrong (more details can be found &lt;a href=&quot;https://github.com/evalplus/evalplus/tree/mbpp/groundtruth/mbpp#check-implementation&quot;&gt;here&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;We perform test augmentation to improve the number of tests by 35x (on avg from 3.1 to 108.5)&lt;/li&gt;
+&lt;li&gt;We mantain the scripting compatibility against HumanEval+ where one simply needs to toggle the switch by &lt;code&gt;--dataset mbpp&lt;/code&gt; for &lt;code&gt;evalplus.evaluate&lt;/code&gt;, &lt;code&gt;codegen/generate.py&lt;/code&gt;, &lt;code&gt;tools/checker.py&lt;/code&gt; as well as &lt;code&gt;tools/sanitize.py&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Initial leaderboard is made available on &lt;a href=&quot;https://evalplus.github.io/leaderboard.html&quot; rel=&quot;nofollow&quot;&gt;https://evalplus.github.io/leaderboard.html&lt;/a&gt; and we will keep updating&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;A typical workflow to use MBPP+:&lt;/p&gt;
+&lt;div class=&quot;highlight highlight-source-python notranslate position-relative overflow-auto&quot; data-snippet-clipboard-copy-content=&quot;# Step 1: Generate MBPP solutions
+from evalplus.data import get_mbpp_plus, write_jsonl
+
+def GEN_SOLUTION(prompt: str) -&amp;gt; str:
+    # LLM produce the whole solution based on prompt
+
+samples = [
+    dict(task_id=task_id, solution=GEN_SOLUTION(problem[&amp;quot;prompt&amp;quot;]))
+    for task_id, problem in get_mbpp_plus().items()
+]
+write_jsonl(&amp;quot;samples.jsonl&amp;quot;, samples)
+# May perform some post-processing to sanitize LLM produced code
+# e.g., https://github.com/evalplus/evalplus/blob/master/tools/sanitize.py&quot;&gt;&lt;pre&gt;&lt;span class=&quot;pl-c&quot;&gt;# Step 1: Generate MBPP solutions&lt;/span&gt;
+&lt;span class=&quot;pl-k&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;pl-s1&quot;&gt;evalplus&lt;/span&gt;.&lt;span class=&quot;pl-s1&quot;&gt;data&lt;/span&gt; &lt;span class=&quot;pl-k&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;pl-s1&quot;&gt;get_mbpp_plus&lt;/span&gt;, &lt;span class=&quot;pl-s1&quot;&gt;write_jsonl&lt;/span&gt;
+
+&lt;span class=&quot;pl-k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;pl-en&quot;&gt;GEN_SOLUTION&lt;/span&gt;(&lt;span class=&quot;pl-s1&quot;&gt;prompt&lt;/span&gt;: &lt;span class=&quot;pl-smi&quot;&gt;str&lt;/span&gt;) &lt;span class=&quot;pl-c1&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;pl-smi&quot;&gt;str&lt;/span&gt;:
+    &lt;span class=&quot;pl-c&quot;&gt;# LLM produce the whole solution based on prompt&lt;/span&gt;
+
+&lt;span class=&quot;pl-s1&quot;&gt;samples&lt;/span&gt; &lt;span class=&quot;pl-c1&quot;&gt;=&lt;/span&gt; [
+    &lt;span class=&quot;pl-en&quot;&gt;dict&lt;/span&gt;(&lt;span class=&quot;pl-s1&quot;&gt;task_id&lt;/span&gt;&lt;span class=&quot;pl-c1&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;pl-s1&quot;&gt;task_id&lt;/span&gt;, &lt;span class=&quot;pl-s1&quot;&gt;solution&lt;/span&gt;&lt;span class=&quot;pl-c1&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;pl-en&quot;&gt;GEN_SOLUTION&lt;/span&gt;(&lt;span class=&quot;pl-s1&quot;&gt;problem&lt;/span&gt;[&lt;span class=&quot;pl-s&quot;&gt;&quot;prompt&quot;&lt;/span&gt;]))
+    &lt;span class=&quot;pl-k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;pl-s1&quot;&gt;task_id&lt;/span&gt;, &lt;span class=&quot;pl-s1&quot;&gt;problem&lt;/span&gt; &lt;span class=&quot;pl-c1&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;pl-en&quot;&gt;get_mbpp_plus&lt;/span&gt;().&lt;span class=&quot;pl-c1&quot;&gt;items&lt;/span&gt;()
+]
+&lt;span class=&quot;pl-en&quot;&gt;write_jsonl&lt;/span&gt;(&lt;span class=&quot;pl-s&quot;&gt;&quot;samples.jsonl&quot;&lt;/span&gt;, &lt;span class=&quot;pl-s1&quot;&gt;samples&lt;/span&gt;)
+&lt;span class=&quot;pl-c&quot;&gt;# May perform some post-processing to sanitize LLM produced code&lt;/span&gt;
+&lt;span class=&quot;pl-c&quot;&gt;# e.g., https://github.com/evalplus/evalplus/blob/master/tools/sanitize.py&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;div class=&quot;highlight highlight-source-shell notranslate position-relative overflow-auto&quot; data-snippet-clipboard-copy-content=&quot;# Step 2: Evaluation on MBPP+
+docker run -v $(pwd):/app ganler/evalplus:latest --dataset mbpp --samples samples.jsonl
+# STDOUT will display the scores for &amp;quot;base&amp;quot; (with MBPP tests) and &amp;quot;base + plus&amp;quot; (with additional MBPP+ tests)&quot;&gt;&lt;pre&gt;&lt;span class=&quot;pl-c&quot;&gt;&lt;span class=&quot;pl-c&quot;&gt;#&lt;/span&gt; Step 2: Evaluation on MBPP+&lt;/span&gt;
+docker run -v &lt;span class=&quot;pl-s&quot;&gt;&lt;span class=&quot;pl-pds&quot;&gt;$(&lt;/span&gt;pwd&lt;span class=&quot;pl-pds&quot;&gt;)&lt;/span&gt;&lt;/span&gt;:/app ganler/evalplus:latest --dataset mbpp --samples samples.jsonl
+&lt;span class=&quot;pl-c&quot;&gt;&lt;span class=&quot;pl-c&quot;&gt;#&lt;/span&gt; STDOUT will display the scores for &quot;base&quot; (with MBPP tests) and &quot;base + plus&quot; (with additional MBPP+ tests)&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h2&gt;🔥 HumanEval+ Maintainance&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Leaderboard updates (now &lt;strong&gt;41&lt;/strong&gt; models!): &lt;a href=&quot;https://evalplus.github.io/leaderboard.html&quot; rel=&quot;nofollow&quot;&gt;https://evalplus.github.io/leaderboard.html&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;DeepSeek Coder series&lt;/li&gt;
+&lt;li&gt;Phind-CodeLlama&lt;/li&gt;
+&lt;li&gt;Mistral and Zephyr series&lt;/li&gt;
+&lt;li&gt;Smaller StarCoders&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;HumanEval+ now upgrades to &lt;code&gt;v0.1.9&lt;/code&gt; from &lt;code&gt;v0.1.6&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;Test-case fixes: 0, 3, 9, 148&lt;/li&gt;
+&lt;li&gt;Prompt fixes: 114&lt;/li&gt;
+&lt;li&gt;Contract fixes: 1, 2, 99, 35, 28, 32, 160&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;PyPI: &lt;a href=&quot;https://pypi.org/project/evalplus/0.2.0/&quot; rel=&quot;nofollow&quot;&gt;https://pypi.org/project/evalplus/0.2.0/&lt;/a&gt;&lt;br&gt;
+Docker Hub: &lt;a href=&quot;https://hub.docker.com/layers/ganler/evalplus/v0.2.0/images/sha256-6f1b9bd13930abfb651a99d4c6a55273271f73e5b44c12dcd959a00828782dd6&quot; rel=&quot;nofollow&quot;&gt;https://hub.docker.com/layers/ganler/evalplus/v0.2.0/images/sha256-6f1b9bd13930abfb651a99d4c6a55273271f73e5b44c12dcd959a00828782dd6&lt;/a&gt;&lt;/p&gt;</content>
+    <author>
+      <name>ganler</name>
+    </author>
+    <media:thumbnail height="30" width="30" url="https://avatars.githubusercontent.com/u/38074777?s=60&amp;v=4"/>
+  </entry>
+  <entry>
+    <id>tag:github.com,2008:Repository/628154495/v0.1.7</id>
+    <updated>2023-09-06T18:35:48Z</updated>
+    <link rel="alternate" type="text/html" href="https://github.com/evalplus/evalplus/releases/tag/v0.1.7"/>
+    <title>EvalPlus v0.1.7</title>
+    <content type="html">&lt;ul&gt;
+&lt;li&gt;EvalPlus leader board: &lt;a href=&quot;https://evalplus.github.io/leaderboard.html&quot; rel=&quot;nofollow&quot;&gt;https://evalplus.github.io/leaderboard.html&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Evaluated CodeLlama, CodeT5+ and WizardCoder&lt;/li&gt;
+&lt;li&gt;Fixed contract (HumanEval+): 116, 126, 006&lt;/li&gt;
+&lt;li&gt;Removed extreme inputs (HumanEval+): 32&lt;/li&gt;
+&lt;li&gt;Established &lt;code&gt;HUMANEVAL_OVERRIDE_PATH&lt;/code&gt; which allows to override the original dataset with customized dataset&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;PyPI: &lt;a href=&quot;https://pypi.org/project/evalplus/0.1.7/&quot; rel=&quot;nofollow&quot;&gt;https://pypi.org/project/evalplus/0.1.7/&lt;/a&gt;&lt;br&gt;
+Docker Hub: &lt;a href=&quot;https://hub.docker.com/layers/ganler/evalplus/v0.1.7/images/sha256-69fe87df89b8c1545ff7e3b20232ac6c4841b43c20f22f4a276ba03f1b0d79ae&quot; rel=&quot;nofollow&quot;&gt;https://hub.docker.com/layers/ganler/evalplus/v0.1.7/images/sha256-69fe87df89b8c1545ff7e3b20232ac6c4841b43c20f22f4a276ba03f1b0d79ae&lt;/a&gt;&lt;/p&gt;</content>
+    <author>
+      <name>ganler</name>
+    </author>
+    <media:thumbnail height="30" width="30" url="https://avatars.githubusercontent.com/u/38074777?s=60&amp;v=4"/>
+  </entry>
+  <entry>
+    <id>tag:github.com,2008:Repository/628154495/v0.1.6</id>
+    <updated>2023-06-26T06:57:42Z</updated>
+    <link rel="alternate" type="text/html" href="https://github.com/evalplus/evalplus/releases/tag/v0.1.6"/>
+    <title>EvalPlus v0.1.6</title>
+    <content type="html">&lt;ul&gt;
+&lt;li&gt;Supporting configurable timeouts &lt;math-renderer class=&quot;js-inline-math&quot; style=&quot;display: inline-block&quot; data-run-id=&quot;27b148d9e812385f8d4fed7229e5c184&quot;&gt;$T=\max(T_{base}, T_{gt}\times k)$&lt;/math-renderer&gt;, where:
+&lt;ul&gt;
+&lt;li&gt;
+&lt;math-renderer class=&quot;js-inline-math&quot; style=&quot;display: inline-block&quot; data-run-id=&quot;27b148d9e812385f8d4fed7229e5c184&quot;&gt;$T_{base}$&lt;/math-renderer&gt; is the minimal timeout (configurable by &lt;code&gt;--min-time-limit&lt;/code&gt;; default to 0.2s);&lt;/li&gt;
+&lt;li&gt;
+&lt;math-renderer class=&quot;js-inline-math&quot; style=&quot;display: inline-block&quot; data-run-id=&quot;27b148d9e812385f8d4fed7229e5c184&quot;&gt;$T_{gt}$&lt;/math-renderer&gt; is the runtime of the ground-truth solutions (achieved via profiling);&lt;/li&gt;
+&lt;li&gt;
+&lt;math-renderer class=&quot;js-inline-math&quot; style=&quot;display: inline-block&quot; data-run-id=&quot;27b148d9e812385f8d4fed7229e5c184&quot;&gt;$k$&lt;/math-renderer&gt; is a configurable factor &lt;code&gt;--gt-time-limit-factor&lt;/code&gt; (default to 4);&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Using a more conservative timeout setting to mitigate test-beds with weak performance (&lt;math-renderer class=&quot;js-inline-math&quot; style=&quot;display: inline-block&quot; data-run-id=&quot;27b148d9e812385f8d4fed7229e5c184&quot;&gt;$T_{base}: 0.05s \to 0.2s$&lt;/math-renderer&gt; and &lt;math-renderer class=&quot;js-inline-math&quot; style=&quot;display: inline-block&quot; data-run-id=&quot;27b148d9e812385f8d4fed7229e5c184&quot;&gt;$k: 2\to 4$&lt;/math-renderer&gt;).&lt;/li&gt;
+&lt;li&gt;
+&lt;code&gt;HumanEval+&lt;/code&gt; dataset bug fixes:
+&lt;ul&gt;
+&lt;li&gt;Medium contract fixesL P129 (&lt;a class=&quot;issue-link js-issue-link&quot; data-error-text=&quot;Failed to load title&quot; data-id=&quot;1758089121&quot; data-permission-text=&quot;Title is private&quot; data-url=&quot;https://github.com/evalplus/evalplus/issues/4&quot; data-hovercard-type=&quot;issue&quot; data-hovercard-url=&quot;/evalplus/evalplus/issues/4/hovercard&quot; href=&quot;https://github.com/evalplus/evalplus/issues/4&quot;&gt;#4&lt;/a&gt;), P148 (self-identified)&lt;/li&gt;
+&lt;li&gt;Minor contract fixes: P75 (&lt;a class=&quot;issue-link js-issue-link&quot; data-error-text=&quot;Failed to load title&quot; data-id=&quot;1758089121&quot; data-permission-text=&quot;Title is private&quot; data-url=&quot;https://github.com/evalplus/evalplus/issues/4&quot; data-hovercard-type=&quot;issue&quot; data-hovercard-url=&quot;/evalplus/evalplus/issues/4/hovercard&quot; href=&quot;https://github.com/evalplus/evalplus/issues/4&quot;&gt;#4&lt;/a&gt;), P53 (&lt;a class=&quot;issue-link js-issue-link&quot; data-error-text=&quot;Failed to load title&quot; data-id=&quot;1771966851&quot; data-permission-text=&quot;Title is private&quot; data-url=&quot;https://github.com/evalplus/evalplus/issues/8&quot; data-hovercard-type=&quot;issue&quot; data-hovercard-url=&quot;/evalplus/evalplus/issues/8/hovercard&quot; href=&quot;https://github.com/evalplus/evalplus/issues/8&quot;&gt;#8&lt;/a&gt;), P0 (self-identified), P3 (self-identified), P9 (self-identified)&lt;/li&gt;
+&lt;li&gt;Minor GT fixes: P140 (&lt;a class=&quot;issue-link js-issue-link&quot; data-error-text=&quot;Failed to load title&quot; data-id=&quot;1758070729&quot; data-permission-text=&quot;Title is private&quot; data-url=&quot;https://github.com/evalplus/evalplus/issues/3&quot; data-hovercard-type=&quot;issue&quot; data-hovercard-url=&quot;/evalplus/evalplus/issues/3/hovercard&quot; href=&quot;https://github.com/evalplus/evalplus/issues/3&quot;&gt;#3&lt;/a&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;PyPI: &lt;a href=&quot;https://pypi.org/project/evalplus/0.1.6/&quot; rel=&quot;nofollow&quot;&gt;https://pypi.org/project/evalplus/0.1.6/&lt;/a&gt;&lt;br&gt;
+Docker Hub: &lt;a href=&quot;https://hub.docker.com/layers/ganler/evalplus/v0.1.6/images/sha256-5913b95172962ad61e01a5d5cf63b60e1140dd547f5acc40370af892275e777c&quot; rel=&quot;nofollow&quot;&gt;https://hub.docker.com/layers/ganler/evalplus/v0.1.6/images/sha256-5913b95172962ad61e01a5d5cf63b60e1140dd547f5acc40370af892275e777c&lt;/a&gt;&lt;/p&gt;</content>
+    <author>
+      <name>ganler</name>
+    </author>
+    <media:thumbnail height="30" width="30" url="https://avatars.githubusercontent.com/u/38074777?s=60&amp;v=4"/>
+  </entry>
+  <entry>
+    <id>tag:github.com,2008:Repository/628154495/v0.1.5</id>
+    <updated>2023-06-02T09:05:15Z</updated>
+    <link rel="alternate" type="text/html" href="https://github.com/evalplus/evalplus/releases/tag/v0.1.5"/>
+    <title>EvalPlus v0.1.5</title>
+    <content type="html">&lt;h2&gt;🚀 &lt;code&gt;HumanEval+[mini]&lt;/code&gt; -- 47x smaller while equivalently effective as HumanEval+&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Add &lt;strong&gt;&lt;code&gt;--mini&lt;/code&gt;&lt;/strong&gt; to &lt;code&gt;evalplus.evaluate ...&lt;/code&gt; you can use a minimal and best-quality set of extra tests to accelerate evaluation!&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;HumanEval+[mini]&lt;/code&gt; (avg 16.5 tests) is smaller than &lt;code&gt;HumanEval+&lt;/code&gt; (avg 774.8 tests) by &lt;strong&gt;47x&lt;/strong&gt;.&lt;/li&gt;
+&lt;li&gt;This is achieved via &lt;strong&gt;test-suite reduction&lt;/strong&gt; -- we run a set covering algorithm to preserve the same coverage (coverage analysis), mutant-killings (mutation analysis) and sample-killings (pass-fail status of each sample-test pair).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;a target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot; href=&quot;https://private-user-images.githubusercontent.com/38074777/242827462-a09258c7-a227-4c1d-9f28-c96c93dc805d.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3OTQzMTM0MjMsIm5iZiI6MTc5NDMxMzEyMywicGF0aCI6Ii8zODA3NDc3Ny8yNDI4Mjc0NjItYTA5MjU4YzctYTIyNy00YzFkLTlmMjgtYzk2YzkzZGM4MDVkLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNjExMTAlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjYxMTEwVDEyMTg0M1omWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWM2MGVhYjg1NDE1OTVlZDJiNjlhYTMxZGE0M2FkMWUxZmZlNTgzNTVhMDNkOWZmODMwMzgzOGYzNWY4NjliNTEmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0JnJlc3BvbnNlLWNvbnRlbnQtdHlwZT1pbWFnZSUyRnBuZyJ9.pl4AViaGpu_Ft0qMbav2QqAIznDN1JIA3zM3shliJ8g&quot;&gt;&lt;img src=&quot;https://private-user-images.githubusercontent.com/38074777/242827462-a09258c7-a227-4c1d-9f28-c96c93dc805d.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3OTQzMTM0MjMsIm5iZiI6MTc5NDMxMzEyMywicGF0aCI6Ii8zODA3NDc3Ny8yNDI4Mjc0NjItYTA5MjU4YzctYTIyNy00YzFkLTlmMjgtYzk2YzkzZGM4MDVkLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNjExMTAlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjYxMTEwVDEyMTg0M1omWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWM2MGVhYjg1NDE1OTVlZDJiNjlhYTMxZGE0M2FkMWUxZmZlNTgzNTVhMDNkOWZmODMwMzgzOGYzNWY4NjliNTEmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0JnJlc3BvbnNlLWNvbnRlbnQtdHlwZT1pbWFnZSUyRnBuZyJ9.pl4AViaGpu_Ft0qMbav2QqAIznDN1JIA3zM3shliJ8g&quot; alt=&quot;image&quot; content-type-secured-asset=&quot;image/png&quot; style=&quot;max-width: 100%;&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;PyPI: &lt;a href=&quot;https://pypi.org/project/evalplus/0.1.5/&quot; rel=&quot;nofollow&quot;&gt;https://pypi.org/project/evalplus/0.1.5/&lt;/a&gt;&lt;br&gt;
+Docker Hub: &lt;a href=&quot;https://hub.docker.com/layers/ganler/evalplus/v0.1.5/images/sha256-01ef3275ab02776e94edd4a436a3cd33babfaaf7a81e7ae44f895c2794f4c104&quot; rel=&quot;nofollow&quot;&gt;https://hub.docker.com/layers/ganler/evalplus/v0.1.5/images/sha256-01ef3275ab02776e94edd4a436a3cd33babfaaf7a81e7ae44f895c2794f4c104&lt;/a&gt;&lt;/p&gt;</content>
+    <author>
+      <name>ganler</name>
+    </author>
+    <media:thumbnail height="30" width="30" url="https://avatars.githubusercontent.com/u/38074777?s=60&amp;v=4"/>
+  </entry>
+  <entry>
+    <id>tag:github.com,2008:Repository/628154495/v0.1.4</id>
+    <updated>2023-05-12T05:02:20Z</updated>
+    <link rel="alternate" type="text/html" href="https://github.com/evalplus/evalplus/releases/tag/v0.1.4"/>
+    <title>EvalPlus v0.1.4</title>
+    <content type="html">&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Performance&lt;/strong&gt;:
+&lt;ul&gt;
+&lt;li&gt;Lazy loading of the cache of evaluation results&lt;/li&gt;
+&lt;li&gt;Use &lt;code&gt;ProcessPoolExecutor&lt;/code&gt; over &lt;code&gt;ThreadPoolExecutor&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Caching groudtruth outputs&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Observability&lt;/strong&gt;:
+&lt;ul&gt;
+&lt;li&gt;Concurrent logger when a task gets stuck for 10s&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;New models&lt;/strong&gt;:
+&lt;ul&gt;
+&lt;li&gt;CodeGen2 (infill)&lt;/li&gt;
+&lt;li&gt;StarCoder (infill)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Fixes&lt;/strong&gt;:
+&lt;ul&gt;
+&lt;li&gt;Deterministic hashing of input problem&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;PyPI: &lt;a href=&quot;https://pypi.org/project/evalplus/0.1.4/&quot; rel=&quot;nofollow&quot;&gt;https://pypi.org/project/evalplus/0.1.4/&lt;/a&gt;&lt;br&gt;
+Docker Hub: &lt;a href=&quot;https://hub.docker.com/layers/ganler/evalplus/v0.1.4/images/sha256-a0ea8279c71afa9418808326412b1e5cd11f44b3b59470477ecf4ba999d4b73a&quot; rel=&quot;nofollow&quot;&gt;https://hub.docker.com/layers/ganler/evalplus/v0.1.4/images/sha256-a0ea8279c71afa9418808326412b1e5cd11f44b3b59470477ecf4ba999d4b73a&lt;/a&gt;&lt;/p&gt;</content>
+    <author>
+      <name>ganler</name>
+    </author>
+    <media:thumbnail height="30" width="30" url="https://avatars.githubusercontent.com/u/38074777?s=60&amp;v=4"/>
+  </entry>
+  <entry>
+    <id>tag:github.com,2008:Repository/628154495/v0.1.3</id>
+    <updated>2023-05-09T18:33:51Z</updated>
+    <link rel="alternate" type="text/html" href="https://github.com/evalplus/evalplus/releases/tag/v0.1.3"/>
+    <title>EvalPlus v0.1.3</title>
+    <content type="html">&lt;ul&gt;
+&lt;li&gt;Fixes evaluation when input sample format is &lt;code&gt;.jsonl&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;PyPI: &lt;a href=&quot;https://pypi.org/project/evalplus/0.1.3/&quot; rel=&quot;nofollow&quot;&gt;https://pypi.org/project/evalplus/0.1.3/&lt;/a&gt;&lt;br&gt;
+Docker Hub: &lt;a href=&quot;https://hub.docker.com/layers/ganler/evalplus/v0.1.3/images/sha256-fd13ab6ee2aa313eb160fc29debe8c761804cb6af7309280b4e200b6549bd75a&quot; rel=&quot;nofollow&quot;&gt;https://hub.docker.com/layers/ganler/evalplus/v0.1.3/images/sha256-fd13ab6ee2aa313eb160fc29debe8c761804cb6af7309280b4e200b6549bd75a&lt;/a&gt;&lt;/p&gt;</content>
+    <author>
+      <name>ganler</name>
+    </author>
+    <media:thumbnail height="30" width="30" url="https://avatars.githubusercontent.com/u/38074777?s=60&amp;v=4"/>
+  </entry>
+</feed>

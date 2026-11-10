@@ -1,0 +1,92 @@
+# Excerpts extracted 2026-11-10 from https://arxiv.org/pdf/2305.01210 (v3)
+Such ill-formed inputs can incur undefined behaviors which are unreasonable to use for evaluating
+LLM-synthesized code; and (ii) they can serve as orthogonal descriptors together with the natural
+language description in the prompt for further clarification.
+5
+
+Table 2: Overview of EvalPlus-improved benchmarks.
+#Tests
+#Tasks
+Avg.
+Medium
+Min.
+Max.
+HUMANEVAL
+9.6
+7.0
+1
+1052
+164
+HUMANEVAL+
+764.1
+982.5
+12
+1,100
+HUMANEVAL+-MINI
+16.1
+13.0
+5
+110
+3
+Evaluation
+Setup. Our evaluation focuses on using the unbiased version of pass@k [11] to accurately assess the
+functional correctness of LLM-synthesized code. For generalizability, we conducted a comprehensive
+evaluation over 26 popular and state-of-the-art LLMs and a wide range of temperature settings.
+Specifically, following prior work [11, 46], for each model we perform: (i) random sampling to
+generate 200 program samples for each of the four temperature settings ({0.2,0.4,0.6,0.8}); and
+(ii) greedy-search decoding. For random sampling, we show the best-performing pass@k for each
+k ∈{1,10,100} and its corresponding temperature denoted by T ∗
+k . For greedy decoding, we only
+synthesize one deterministic sample for each task and evaluate its pass rate as pass@1⋆. By default
+we evaluate models under both setting (i) and (ii), except for the two commercial models due to time
+and cost constraints: GPT-4 is only evaluated under greedy decoding, and ChatGPT is additionally
+evaluated on 0.8-temperature random sampling.
+While EvalPlus is general, this paper focuses on evaluating its effectiveness on HUMANEVAL [11],
+one of the most widely-used datasets for code generation3. HUMANEVAL consists of 164 human-
+written programming tasks, each of which provides a Python function signature and a docstring as
+the input to the LLM. Based on the input, LLMs complete a solution whose functional correctness
+is judged by a handful of manual test-cases (the first row in Table 2). As such, EvalPlus transforms
+HUMANEVAL to HUMANEVAL+ by adding 80× unique test-cases and fixing incorrect ground-truth
+solutions in HUMANEVAL. Specifically, for each task, based on around 30 ChatGPT-generated
+seed inputs which are produced using 3 separate prompts, we run type-aware mutation to generate
+1000 additional inputs using one-hour budget. In HUMANEVAL+, 83 out of the 164 programming
+tasks are annotated with hand-crafted contracts. Because EvalPlus requires ground-truth solutions
+to cross-check LLM-generated code, it is crucial to ensure the correctness of the ground-truths.
+However, by inspecting ground-truths in the original HUMANEVAL, we found over 10% of them
+are incorrectly implemented. Therefore, as another contribution we carefully re-implemented and
+tested all ground-truths for HUMANEVAL+. As an option to speed up evaluation, we build HU-
+MANEVAL+-MINI which is minimized from HUMANEVAL+ (smaller by 47×) yet preserves similar
+test effectiveness on the studied models. Lastly, more experimental setups are detailed in Appendix.
+Evaluation of LLMs. Table 3 shows the pass@k when evaluating LLMs using both the base
+HUMANEVAL and HUMANEVAL+. We first observe that across all LLMs, models sizes and k
+values, using HUMANEVAL+, almost all pass@k results consistently drop compared to using the
+base HUMANEVAL. Notably, the performance drop is significant with up-to 23.1% (pass@1⋆) /
+19.3% (pass@1) / 24.9% (pass@10) / 28.9% (pass@100) reduction over the evaluated models. Such
+performance decrease is not only seen in popular open-source LLMs, such as the widely used
+CodeGen-16B [46] (18.5% reduction) as well as the emerging CODELLAMA-34B [54] (17.6%) and
+StarCoder [13] (14.1% reduction), but also observed in state-of-the-art commercial ChatGPT (12.6%
+reduction) and GPT-4 (13.1% reduction) models. Overall, our results overall confirm our hypothesis
+that the prior evaluation on HUMANEVAL is not robust enough to detect wrong code synthesized by
+LLMs. Not only are these LLMs widely used for daily programming but they also serve as common
+reference points for evaluating new code synthesis techniques. As such, evaluating on a more robust
+benchmark such as HUMANEVAL+ is highly recommended in order to draw precise conclusions.
+2There are four HUMANEVAL tasks (e.g., add(x, y)) with over 100 “tests” (i.e., implemented by
+cross-checking the ground-truth over random inputs). Without such, the maximum/average number is 26/7.3.
+3Top-1 HuggingFace downloads on April, 2023. https://hf.co/datasets?other=code-generation
+4To date, CodeGen2-16B is released with an unfinished checkpoint [45]. Nonetheless, we show its pass@1⋆.
+6
+
+7
+
+Table 4: Reduced test-suite for HUMANEVAL+. We first show the pass@1⋆and average #tests (includ-
+ing base HUMANEVAL tests) by only doing set covering over each considered metric separately (§2.2).
+The Full column then shows the final reduction result by combining all of the three. For reference, the
+average #tests of original HUMANEVAL and HUMANEVAL+ are 9.6 and 774.8 respectively (Table 2).
+Size
+Nonetheless, this motivates future research to look more closely on the effect of temperature with
+respect to the robustness of the evaluation tests, esp. those edge-cases.
+Effectiveness of test-suite reduction. Based on HUMANEVAL+ which on average obtains 764.1 tests
+for each programming task (Table 2), our test-suite reducer (§2.2) minimizes it to HUMANEVAL+-
+MINI which only has 16.1 tests for each task (smaller by 47×). Table 4 performs leave-one-out cross
+validation to show the pass@1⋆differences over a subset of representative models studied in Table 3
+(due to time/space constraints). That is, for each evaluated LLM we construct the reduced test-suite

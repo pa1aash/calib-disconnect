@@ -1,0 +1,76 @@
+# Excerpts extracted 2026-11-10 from https://arxiv.org/pdf/2403.07974 (v2)
+manEval. They released HumanEval+, a variant of the benchmark with more tests and
+sometimes saw up to an 8% drop in performance. Similarly, (Austin et al., 2021) had to cre-
+ate a sanitized MBPP subset to disambiguate problem descriptions. In LiveCodeBench, we
+source the problems from reputable competition websites whose quality is already validated
+by the platform users. In addition, for every problem, we provide a good number of tests
+(about 17 on average) for meaningful and robust evaluations while still finishing quickly.
+4. Balanced problem difficulty. Competition programming is challenging for even the best-
+We have written HTML scrapers for each of the above websites to collect problems and the cor-
+responding metadata.
+To ensure quality and consistency, we parse mathematical formulas and
+exclude problems with images.
+We also exclude problems that are not suitable for grading by
+input-output examples, such as those that accept multiple correct answers or require the construc-
+tion of data structures. Besides parsing the problem descriptions, we also collect associated ground
+truth solutions and test cases whenever directly available. Thus for each problem, we collect tu-
+ples of natural language problem statement P, test cases T, and ground truth solution S. Finally,
+we associate the contest date D to mark the release date of each problem and use the collected
+attributes to construct problems for our four scenarios (detailed in Section 3.3 ahead).
+Scrolling through time. As noted, we associate the contest date D for each problem. The release
+date allows us the measure the performance of LLMs over different time windows by filtering
+problems based on whether the problem release date falls within a time window (referred to as
+“scrolling” through time). This is crucial for evaluating and comparing models trained at different
+times. Specifically, for a new model and the corresponding cutoff date (normalized to the release
+date if the training cutoff date is not published), we can measure the performance of the model on
+benchmark problems released after the cutoff date. We have developed a UI that allows comparing
+models on problems released during different time windows (shown in Figure 9).
+Test collection. Tests are crucial for assessing the correctness of the generated outputs and are
+used in all four scenarios. We collect tests available on platform websites whenever possible and
+use them for the benchmark. Otherwise, following Liu et al. (2023b), we use a LLM (here GPT-4-
+Turbo) to generate tests for the problems. A key difference between our test generation approach
+is that instead of generating inputs directly using the LLM, we construct generators that sample
+inputs based on the problem specifications using in context learning. Details and examples of such
+input generators can be found in Section A.2. Finally, we collect a small fraction of failing tests
+from the platform for the more recent problems allowing more directed adversarial test collection.
+Problem difficulty. Competition programming has remained a challenge for LLMs, with GPT-
+4 achieving an average CodeForces rating (ELO) of 392, placing it in the bottom 5 percentile
+(OpenAI, 2023). This makes it difficult to compare LLMs, as the variation in performance across
+models is low. In LiveCodeBench, we collect problems of diverse difficulties as labeled in compe-
+123
+18.0
+Table 1: The statistics of problems collected in LiveCodeBench (LCB). We present the number of
+problems, their difficulty distributions and the average number of tests per problem. We present
+the results on the following subsets of LiveCodeBench (used throughout this manuscript) - (a)
+problems in the May’23-May’24 and Sep’23-May’24 time windows, (b) problems sourced from the
+three platforms, and (c) problems in the LCB-Easy, LCB-Medium, and LCB-Hard subsets.
+difficult for even the best models1. Further, we use these ratings to classify problems as Easy,
+Medium, and Hard for more granular model comparisons.
+3.2
+Platform Specific Curation
+We describe the curation process for each platform.
+LeetCode. We collect problems from all weekly and biweekly contests on LeetCode that have taken
+place after April’23. For each problem, we collect the problems, public tests, and user solutions.
+The platform also provides a difficulty label for each problem which we use to tag the problems
+as Easy, Medium, and Hard. Since LeetCode provides a starter code for each problem, we also
+collect it and provide it to the LLM in the STDIN format. Since the hidden tests are not directly
+available, we use our generator-based test input generation approach (Section A.2) and also collect
+the auto grader failing tests for some of the recent problems.
+AtCoder. We collect problems from the abc (beginner round) contests on AtCoder that have taken
+place after April’23. We deliberately avoid the more challenging arc and agc contests which are
+designed for more advanced Olympiad participants. The problems are assigned numeric difficulty
+ratings, and we exclude abc problems with a rating of more than 500. We also use these numeric
+ratings to tag the problems as Easy, Medium, and Hard. Specifically, we use the rating brackets
+[0 −200), [200 −400), and [400 −500] to perform the classification. AtCoder provides public and
+hidden tests for each problem which we directly use in the benchmark.
+CodeForces. We have collected problems from the Division 3 and Division 4 contests on Code-
+Forces. Notably, we find that even with this filter, the problems are harder than the other two
+platforms.
+CodeForces also provides difficulty ratings for the problems which we use to tag
+the problems as Easy, Medium, and Hard using the rating brackets {800}, (800 −1000], and
+(1000 −1300] respectively. Due to the higher difficulty, we only consider a small fraction of prob-
+lems from CodeForces and semi-automatically construct test case generators, as they do not
+provide complete tests on the platform (long tests are truncated).
+1From our early explorations, we find CodeForces problems being considerably more difficult than AtCoder and
+LeetCode problems and thus focus primarily on the latter platforms.
+8
