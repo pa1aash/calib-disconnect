@@ -46,6 +46,7 @@ class ExecCache:
         self._db.execute("PRAGMA synchronous=NORMAL")
         self._db.execute("CREATE TABLE IF NOT EXISTS exec_cache (key TEXT PRIMARY KEY, problem_id TEXT NOT NULL, "
                          "suite_id TEXT NOT NULL, value TEXT NOT NULL, created_utc TEXT NOT NULL)")
+        self._db.execute("CREATE TABLE IF NOT EXISTS exec_extra (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
         self._db.commit()
         self.hits = self.misses = self.puts = self.audits = self.mismatches = 0
 
@@ -59,10 +60,19 @@ class ExecCache:
             self.hits += 1
         return ExecutionResult.from_dict(json.loads(row[0]))
 
-    def put(self, result: ExecutionResult) -> bool:
+    def get_extra(self, key: str) -> dict:
+        """Side information stored with an entry (for example the first exception type)."""
+        with self._lock:
+            row = self._db.execute("SELECT value FROM exec_extra WHERE key = ?", (key,)).fetchone()
+        return json.loads(row[0]) if row else {}
+
+    def put(self, result: ExecutionResult, extra: dict | None = None) -> bool:
         if result.failure in NEVER_CACHED:
             return False
         with self._lock:
+            if extra is not None:
+                self._db.execute("INSERT OR REPLACE INTO exec_extra VALUES (?, ?)",
+                                 (result.cache_key, json.dumps(extra, sort_keys=True)))
             self._db.execute("INSERT OR REPLACE INTO exec_cache VALUES (?, ?, ?, ?, ?)",
                              (result.cache_key, result.problem_id, result.suite_id,
                               json.dumps(result.to_dict(), sort_keys=True), utc_now()))

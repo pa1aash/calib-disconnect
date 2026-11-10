@@ -220,6 +220,7 @@ def test_bwrap_preflight_and_run_on_the_pod(heplus):
     ex = SandboxExecutor(SandboxConfig(backend="bwrap", execute_untrusted=True, min_time_limit=0.5))
     ex.preflight()
     assert ex.preflight_report["network_blocked"] and ex.preflight_report["outside_writes_denied"]
+    assert ex.preflight_report["fork_limit_enforced"] and "cgroup_pids_max" in ex.preflight_report
     p, s = build(heplus, "HumanEval/53", "humaneval_plus", max_plus=20)
     ok = ex.run("def add(x: int, y: int):\n    return x + y\n", p, s["O"], trusted=True)
     assert ok.passed and ok.sandbox == "bwrap"

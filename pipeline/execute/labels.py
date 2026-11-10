@@ -24,6 +24,9 @@ from .extract import parse_sample_uid
 from .reference import ReferenceStore, inputs_fingerprint
 from .sandbox import ReferenceUnavailable
 
+INFRA_RETRIES = 2            # re-runs of a sandbox_error result before the sample is left unlabeled
+INFRA_FAILURES = frozenset({"sandbox_error"})   # the executor maps infrastructure-caused kills to this code
+
 LABEL_SUITE_ORDER: tuple[str, ...] = LABEL_SUITES_LV + LABEL_SUITES_LCB
 
 
@@ -32,9 +35,12 @@ def label_suite_ids(suites: Mapping[str, TestSuite]) -> list[str]:
 
 
 def _execute_many(tasks: Mapping[str, tuple[str, Problem, TestSuite, bool]], executor: Any, cache: Any, *,
-                  trusted: bool, workers: int) -> dict[str, ExecutionResult]:
-    """Run each distinct cache key once; reuse and audit cached results."""
+                  trusted: bool, workers: int) -> tuple[dict[str, ExecutionResult], dict[str, dict], set[str]]:
+    """Run each distinct cache key once; reuse and audit cached results. A sandbox_error result is re-run
+    up to INFRA_RETRIES times; keys that still fail are returned in the third element (never labeled).
+    The second element maps key -> side information (first exception token)."""
     results: dict[str, ExecutionResult] = {}
+    info: dict[str, dict] = {}
     todo: list[str] = []
     audits: list[str] = []
     for key in tasks:
@@ -43,12 +49,18 @@ def _execute_many(tasks: Mapping[str, tuple[str, Problem, TestSuite, bool]], exe
             todo.append(key)
         else:
             results[key] = cached
+            info[key] = cache.get_extra(key)
             if cache.should_audit(key):
                 audits.append(key)
 
     def run(key: str) -> ExecutionResult:
         code, problem, suite, capture = tasks[key]
-        return executor.run(code, problem, suite, trusted=trusted, capture_outputs=capture)
+        res = executor.run(code, problem, suite, trusted=trusted, capture_outputs=capture)
+        for _ in range(INFRA_RETRIES):
+            if res.failure not in INFRA_FAILURES:
+                break
+            res = executor.run(code, problem, suite, trusted=trusted, capture_outputs=capture)
+        return res
 
     def parallel(keys: Sequence[str], fn: Callable[[str], Any]) -> list[Any]:
         if workers > 1 and len(keys) > 1:
@@ -56,21 +68,32 @@ def _execute_many(tasks: Mapping[str, tuple[str, Problem, TestSuite, bool]], exe
                 return list(pool.map(fn, keys))
         return [fn(k) for k in keys]
 
+    infra: set[str] = set()
     for key, res in zip(todo, parallel(todo, run)):
         results[key] = res
+        if res.failure in INFRA_FAILURES:
+            infra.add(key)
+            continue
+        info[key] = dict(getattr(executor, "run_info", {}).get(key, {}))
         if cache is not None:
-            cache.put(res)
+            cache.put(res, info[key])
     if cache is not None and audits:
         parallel(audits, lambda k: cache.audit(k, results[k], lambda: run(k)))
-    return results
+    return results, info, infra
 
 
 def label_samples(extractions: Sequence[ExtractionResult], problems: Mapping[str, Problem],
                   suites: Mapping[str, Mapping[str, TestSuite]], executor: Any, cache: Any, *,
                   trusted: bool = False, workers: int = 1,
-                  excluded: frozenset[tuple[str, str]] | set[tuple[str, str]] = frozenset()) -> list[Label]:
+                  excluded: frozenset[tuple[str, str]] | set[tuple[str, str]] = frozenset(),
+                  report: dict | None = None) -> list[Label]:
     """One Label per (sample, label suite). ``excluded`` holds (problem_id, suite_id) pairs from the
-    reference check; they get no row. ``trusted`` is for hand-written fixtures only."""
+    reference check; they get no row. ``trusted`` is for hand-written fixtures only.
+
+    A sandbox_error result is re-run up to INFRA_RETRIES times. If it persists the pair gets no label row
+    (never y = 0) and is appended to report["infrastructure_failures"]. report["name_errors"] counts, per
+    model, benchmark, and suite, the executed samples whose first failure is a NameError at import or on
+    the first call (programs run as extracted, without the prompt's imports; design rows 5.6, 5.7)."""
     excluded = set(excluded)
     plan: list[tuple[ExtractionResult, str, str | None]] = []   # (extraction, suite id, cache key or None)
     tasks: dict[str, tuple[str, Problem, TestSuite, bool]] = {}
@@ -91,14 +114,27 @@ def label_samples(extractions: Sequence[ExtractionResult], problems: Mapping[str
                 continue
             tasks.setdefault(key, (ex.code, problem, suite, False))
             plan.append((ex, sid, key))
-    results = _execute_many(tasks, executor, cache, trusted=trusted, workers=workers)
+    results, info, infra = _execute_many(tasks, executor, cache, trusted=trusted, workers=workers)
     out: list[Label] = []
+    rep = report if report is not None else {}
+    rep.setdefault("infrastructure_failures", [])
+    rep.setdefault("name_errors", {})
     for ex, sid, key in plan:
         if key is None:
             out.append(Label(ex.sample_uid, sid, 0, "extraction_failure", ex.failure, None))
-        else:
-            r = results[key]
-            out.append(Label(ex.sample_uid, sid, int(r.passed), "execution", r.failure, key))
+            continue
+        r = results[key]
+        if key in infra:
+            rep["infrastructure_failures"].append({"sample_uid": ex.sample_uid, "suite_id": sid,
+                                                   "problem_id": r.problem_id, "cache_key": key})
+            continue
+        u = parse_sample_uid(ex.sample_uid)
+        cell = rep["name_errors"].setdefault(u["model_key"], {}).setdefault(u["benchmark"], {}).setdefault(
+            sid, {"n_executed": 0, "name_error": 0})
+        cell["n_executed"] += 1
+        if (info.get(key) or {}).get("first_exception") == "!NameError":
+            cell["name_error"] += 1
+        out.append(Label(ex.sample_uid, sid, int(r.passed), "execution", r.failure, key))
     return out
 
 
@@ -138,7 +174,8 @@ def flip_table(labels: Sequence[Label], *, from_suite: str = "O", to_suite: str 
 
 def agreement_signatures(extractions: Sequence[ExtractionResult], problems: Mapping[str, Problem],
                          suites: Mapping[str, Mapping[str, TestSuite]], executor: Any, cache: Any, *,
-                         trusted: bool = False, workers: int = 1) -> dict[str, tuple[str, ...] | None]:
+                         trusted: bool = False, workers: int = 1,
+                         report: dict | None = None) -> dict[str, tuple[str, ...] | None]:
     """sample_uid -> behavior signature (design section 7.7): the canonical output repr per agreement
     input, '!<ExceptionType>' where the program raised or timed out. None when the sample has no code
     (extraction failure), its problem has no agreement input, or the program as a whole failed (program
@@ -154,8 +191,12 @@ def agreement_signatures(extractions: Sequence[ExtractionResult], problems: Mapp
         key = executor.cache_key(ex.code, problems[pid], suite, capture_outputs=True)
         tasks.setdefault(key, (ex.code, problems[pid], suite, True))
         plan.append((ex.sample_uid, key))
-    results = _execute_many(tasks, executor, cache, trusted=trusted, workers=workers)
-    return {uid: (None if key is None else results[key].outputs) for uid, key in plan}
+    results, _, infra = _execute_many(tasks, executor, cache, trusted=trusted, workers=workers)
+    if report is not None:
+        report.setdefault("infrastructure_failures", []).extend(
+            {"sample_uid": uid, "suite_id": "agree", "problem_id": results[k].problem_id, "cache_key": k}
+            for uid, k in plan if k is not None and k in infra)
+    return {uid: (None if key is None or key in infra else results[key].outputs) for uid, key in plan}
 
 
 def signature_to_json(sig: tuple[str, ...] | None) -> str | None:

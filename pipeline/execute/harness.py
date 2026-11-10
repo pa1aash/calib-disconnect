@@ -395,7 +395,10 @@ def _status_of(exc: BaseException) -> str:
 def _load(code: str, entry_point: str):
     exec_globals: dict = {}
     with swallow_io():
-        exec(code, exec_globals)
+        # dont_inherit: this module uses ``from __future__ import annotations``, which exec would
+        # otherwise pass on to the candidate and silently defer its annotations (hiding NameErrors that
+        # EvalPlus, which has no such import, reports).
+        exec(compile(code, "<candidate>", "exec", flags=0, dont_inherit=True), exec_globals)
         return exec_globals[entry_point]
 
 
@@ -546,6 +549,38 @@ def run_lcb_agree(job: dict) -> dict:
     return lcb_capture.capture(job, sys.modules[__name__])
 
 
+def fork_probe(limit: int) -> dict:
+    """Try to start twice ``limit`` sleeping child processes. With RLIMIT_NPROC enforced the fork fails
+    before that. The children are killed and reaped before returning."""
+    pids: list[int] = []
+    err = None
+    try:
+        for _ in range(2 * limit):
+            pid = os.fork()
+            if pid == 0:
+                time.sleep(20)
+                os._exit(0)
+            pids.append(pid)
+    except OSError as e:
+        err = type(e).__name__
+    n = len(pids)
+    for pid in pids:
+        try:
+            os.kill(pid, signal.SIGKILL)
+            os.waitpid(pid, 0)
+        except OSError:
+            pass
+    return {"probe": "fork", "forked": n, "limit": limit, "error": err,
+            "result": "LIMITED" if n < 2 * limit else "UNLIMITED"}
+
+
+def fork_limit_enforced(result: dict | None, limit: int) -> bool:
+    """Preflight judgement of a fork probe result: the fork failed and no more than ``limit`` children
+    started."""
+    return bool(result) and result.get("probe") == "fork" and result.get("result") == "LIMITED" \
+        and int(result.get("forked", 10**9)) <= limit
+
+
 def run_probe(job: dict) -> dict:
     kind = job["probe"]
     if kind == "ok":
@@ -572,6 +607,8 @@ def run_probe(job: dict) -> dict:
             except OSError as e:
                 out[path] = "DENIED:" + type(e).__name__
         return {"probe": "write", "results": out}
+    if kind == "fork":
+        return fork_probe(int(job["limit"]))
     if kind == "mem":
         chunks = []
         limit = int(job["memory_bytes"])

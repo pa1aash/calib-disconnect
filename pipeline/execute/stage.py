@@ -121,6 +121,24 @@ def _add(manifest: Manifest, layout: RunLayout, path: Path, cfg_hash: str, repor
         report.outputs.append(rel)
 
 
+def k1_acceptance(layout: RunLayout, excluded: set[tuple[str, str]]) -> tuple[bool, str]:
+    """The operator accepts K1 by a file config/k1_accepted.json in the run root: a JSON list of
+    [problem_id, suite_id] pairs, or {"excluded": [...]}, equal to the set of excluded pairs."""
+    path = layout.config_dir / "k1_accepted.json"
+    if not path.exists():
+        return False, "no config/k1_accepted.json"
+    try:
+        d = json.loads(path.read_text())
+        pairs = d["excluded"] if isinstance(d, dict) else d
+        listed = {(a, b) for a, b in pairs}
+    except (ValueError, KeyError, TypeError):
+        return False, "config/k1_accepted.json is malformed"
+    if listed != excluded:
+        return False, (f"config/k1_accepted.json lists {len(listed)} pairs but {len(excluded)} are excluded "
+                       f"({len(excluded - listed)} unlisted, {len(listed - excluded)} extra)")
+    return True, "listed"
+
+
 def generation_dirs(layout: RunLayout, model: str, benchmark: str) -> list[Path]:
     base = layout.generation_shard(model, benchmark, "frozen", 0).parent.parent
     return sorted(d for d in base.glob("*") if d.is_dir()) if base.exists() else []
@@ -196,6 +214,15 @@ def run(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool 
         pj.write_text(json.dumps(proxies, indent=1, sort_keys=True) + "\n")
         _add(manifest, layout, pj, cfg_hash, rep)
     rep.metrics.setdefault("k1_triggered", False)
+    if rep.metrics["k1_triggered"]:
+        accepted, why = k1_acceptance(layout, excluded)
+        rep.metrics["k1_accepted"] = accepted
+        if not accepted:
+            rep.ok = False
+            rep.notes.append(f"K1: stopping before extraction and labeling ({why}). Accept the list by writing "
+                             f"config/k1_accepted.json with exactly the excluded (problem_id, suite_id) pairs")
+            return rep
+        rep.notes.append("K1 accepted by the operator file config/k1_accepted.json")
 
     # -- 2. extraction, labels, agreement ---------------------------------------------------------------
     can_execute = cfg.execute_untrusted
@@ -225,6 +252,7 @@ def run(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool 
                           audit_log=layout.logs / "cache_audit.jsonl")
 
     all_labels = []
+    exec_report: dict[str, Any] = {"infrastructure_failures": [], "name_errors": {}}
     fail_counts: dict[str, dict[str, int]] = {}
     for model in cfg.models:
         role = constants.MODELS[model][2] if model in constants.MODELS else "primary"
@@ -240,13 +268,25 @@ def run(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool 
                 for gen_set, grows in sorted(by_set.items()):
                     _one_set(cfg, layout, manifest, rep, cfg_hash, executor, cache, model, b, gen_set, grows,
                              mode, problems[b], suites[b], excluded, workers, can_execute, fail_counts, all_labels,
-                             mock_trusted=mock_trusted)
+                             exec_report, mock_trusted=mock_trusted)
     if cache is not None:
         rep.metrics["cache"] = cache.stats()
         cache.close()
         _add(manifest, layout, layout.exec_cache, cfg_hash, rep)
         if cache.mismatches:
             rep.notes.append(f"cache audit found {cache.mismatches} mismatch(es): see logs/cache_audit.jsonl")
+    if cache is not None:
+        for name, payload in (("infrastructure_failures", exec_report["infrastructure_failures"]),
+                              ("name_errors", exec_report["name_errors"])):
+            pth = layout.root / "execute" / f"{name}.json"
+            pth.parent.mkdir(parents=True, exist_ok=True)
+            pth.write_text(json.dumps(payload, indent=1, sort_keys=True) + "\n")
+            _add(manifest, layout, pth, cfg_hash, rep)
+        if exec_report["infrastructure_failures"]:
+            rep.ok = False
+            rep.metrics["infrastructure_failures"] = len(exec_report["infrastructure_failures"])
+            rep.notes.append(f"{len(exec_report['infrastructure_failures'])} (sample, suite) pair(s) still failed "
+                             "for infrastructure reasons after retries: no label row, see execute/infrastructure_failures.json")
     if all_labels:
         rep.metrics["flip_table"] = flip_table(all_labels)
     rep.metrics["extraction_failures"] = fail_counts
@@ -256,7 +296,7 @@ def run(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool 
 
 
 def _one_set(cfg, layout, manifest, rep, cfg_hash, executor, cache, model, b, gen_set, grows, mode, problems,
-             suites, excluded, workers, can_execute, fail_counts, all_labels, *, mock_trusted: bool = False) -> None:
+             suites, excluded, workers, can_execute, fail_counts, all_labels, exec_report, *, mock_trusted: bool = False) -> None:
     trusted = mock_trusted and bool(grows) and all(r["engine"] == "mock" for r in grows)
     can_execute = can_execute or trusted
     ext_path = layout.extractions(model, b, gen_set)
@@ -285,11 +325,12 @@ def _one_set(cfg, layout, manifest, rep, cfg_hash, executor, cache, model, b, ge
     if not can_execute:
         return
     labels = label_samples(extractions, problems, suites, executor, cache, trusted=trusted, workers=workers,
-                           excluded=excluded)
+                           excluded=excluded, report=exec_report)
     _write_parquet([lab.to_dict() for lab in labels], TABLE_COLUMNS["labels"], lab_path)
     _add(manifest, layout, lab_path, cfg_hash, rep)
     all_labels.extend(labels)
-    sigs = agreement_signatures(extractions, problems, suites, executor, cache, trusted=trusted, workers=workers)
+    sigs = agreement_signatures(extractions, problems, suites, executor, cache, trusted=trusted, workers=workers,
+                               report=exec_report)
     _write_parquet([{"sample_uid": e.sample_uid, "signature": signature_to_json(sigs.get(e.sample_uid))}
                     for e in extractions], ("sample_uid", "signature"), agr_path)
     _add(manifest, layout, agr_path, cfg_hash, rep)

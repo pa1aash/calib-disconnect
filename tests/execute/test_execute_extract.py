@@ -110,7 +110,7 @@ def test_marker_list_is_explicit():
 
 
 @pytest.mark.parametrize("prefix", ["<think>\n\n</think>\n\n", "<think></think>", "\n<think>\n</think>\n",
-                                    "<|channel>thought\n<channel|>", "<start_of_thought><end_of_thought>"])
+                                    "<|channel>thought\n<channel|>"])
 def test_empty_thought_block_is_stripped(prefix):
     r = ex(prefix + f"```python\n{GOOD}```")
     assert r.failure is None and r.code.strip() == GOOD.strip()
@@ -121,9 +121,12 @@ def test_nonempty_think_block_does_not_leak_its_code():
     assert ex(text).code.strip() == GOOD.strip()
 
 
-def test_gemma_nonempty_thought_is_left_alone():
-    s = "<|channel>thought\nreasoning\n<channel|>answer"
-    assert strip_leading_thought(s) == s
+def test_gemma_nonempty_thought_is_removed():
+    # Verified Gemma 4 markers (G21): a leading thought channel is removed, empty or not, so code inside it
+    # is never taken as the answer.
+    s = "<|channel>thought\nreasoning\n```python\ndef add(x, y):\n    return 0\n```\n<channel|>answer"
+    assert strip_leading_thought(s) == "answer"
+    assert ex(s + f"\n```python\n{GOOD}```").code.strip() == GOOD.strip()
 
 
 def test_thought_marker_in_the_middle_is_not_touched():

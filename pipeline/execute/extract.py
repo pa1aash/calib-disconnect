@@ -26,15 +26,13 @@ BASE_STOP_STRINGS: tuple[str, ...] = ("\ndef ", "\nclass ", "\nif __name__", "\n
 #  - Qwen3 style: "<think>" ... "</think>". With thinking off the block is empty (whitespace only).
 #    With thinking on (reasoning stratum S1) the block holds reasoning, and fenced blocks inside it must
 #    not be taken as the answer, so a non-empty block of this style is removed too.
-#  - Gemma 4 style: the empty thought channel emitted with thinking off (design section 5). The exact
-#    token spellings below are NOT VERIFIED against the model card or tokenizer; the pod run must check
-#    them against the rendered chat template (a mismatch leaves the marker text in front of the code,
-#    which the fenced-block search skips, so the failure mode is benign for the chat-mode extractor).
+#  - Gemma 4 style: "<|channel>thought\n" ... "<channel|>". Verified (wave 8, G21) by rendering the
+#    pinned chat template of google/gemma-4-12B-it and gemma-4-31B-it with jinja2; tokenizer_config.json
+#    names "<|channel>" and "<channel|>". With thinking off the empty block is part of the generation
+#    prompt, so completions normally carry none; a block that does appear is removed, empty or not.
 THOUGHT_MARKERS: tuple[tuple[str, str, bool], ...] = (
     ("<think>", "</think>", False),
-    ("<|channel>thought", "<channel|>", True),
-    ("<|channel|>thought", "<|channel|>", True),
-    ("<start_of_thought>", "<end_of_thought>", True),
+    ("<|channel>thought", "<channel|>", False),
 )
 
 _FENCE_RE = re.compile(

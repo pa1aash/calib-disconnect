@@ -127,12 +127,16 @@ def build_trusted_argv(interpreter: str, bundle_dir: str, job_path: str, result_
 def build_bwrap_argv(*, bwrap: str, interpreter: str, job_dir: str, bundle_dir: str,
                      ro_binds: Sequence[str], symlinks: Mapping[str, str] | None = None,
                      prlimit: str | None = None, cpu_seconds: int = 90, fsize_bytes: int = 16 * 1024 * 1024,
-                     nofile: int = 256, env: Mapping[str, str] | None = None) -> list[str]:
+                     nofile: int = 256, env: Mapping[str, str] | None = None,
+                     uid: int = 65534, gid: int = 65534) -> list[str]:
     """bubblewrap command line. Inside: /job (the job directory) and /harness (the harness bundle) are
     read-only, every path in ro_binds (interpreter tree, /usr, libraries) is bound read-only at the
     same path, /work is a tmpfs and the working directory, nothing else is writable. ``--unshare-all``
     unshares user, ipc, pid, uts, cgroup, and net, so there is no network."""
-    argv = [bwrap, "--unshare-all", "--die-with-parent", "--new-session", "--clearenv"]
+    # --unshare-user with a non-zero uid makes RLIMIT_NPROC enforceable even when the pod runs as root
+    # (the kernel does not apply it to uid 0).
+    argv = [bwrap, "--unshare-all", "--unshare-user", "--uid", str(uid), "--gid", str(gid), "--die-with-parent",
+            "--new-session", "--clearenv"]
     for src in ro_binds:
         argv += ["--ro-bind", src, src]
     for link, target in (symlinks or {}).items():
@@ -202,6 +206,40 @@ def default_ro_binds(interpreter: str) -> tuple[tuple[str, ...], dict[str, str]]
     return tuple(binds), links
 
 
+CGROUP_ROOT = Path("/sys/fs/cgroup")
+
+
+def cgroup_pids_available(root: Path = CGROUP_ROOT) -> bool:
+    """cgroup v2 with the pids controller and a writable hierarchy."""
+    try:
+        return (root / "cgroup.controllers").exists() and "pids" in (root / "cgroup.controllers").read_text().split() \
+            and os.access(root, os.W_OK)
+    except OSError:
+        return False
+
+
+def cgroup_create(name: str, pids_max: int, root: Path = CGROUP_ROOT) -> Path | None:
+    """Create ``root/name`` with pids.max; None when not possible."""
+    d = root / name
+    try:
+        d.mkdir()
+        (d / "pids.max").write_text(str(pids_max))
+        return d
+    except OSError:
+        try:
+            d.rmdir()
+        except OSError:
+            pass
+        return None
+
+
+def infrastructure_signal(returncode: int | None) -> bool:
+    """A missing result with this return code is the infrastructure's doing, not the program's: SIGHUP,
+    SIGINT, SIGPIPE, SIGTERM (and 143). Signals a program causes itself (SIGKILL by the memory limit,
+    SIGSEGV, SIGABRT, SIGBUS, SIGFPE, SIGXCPU, SIGXFSZ) stay "killed"."""
+    return returncode in (-1, -2, -13, -15, 143)
+
+
 # ----------------------------------------------------------------------------------------------------
 # Configuration and results
 # ----------------------------------------------------------------------------------------------------
@@ -259,6 +297,7 @@ class SandboxExecutor:
         self.references = references
         self._lock = threading.Lock()
         self._isolation_proven = False
+        self.run_info: dict[str, dict[str, Any]] = {}  # cache key -> {"first_exception": token or None}
         self.diagnostics: collections.deque = collections.deque(maxlen=200)  # (key, failure, detail, returncode)
         self.preflight_report: dict[str, Any] | None = None
         if cfg.backend == "container":
@@ -292,6 +331,21 @@ class SandboxExecutor:
         Path(self.bundle_dir).chmod(0o555)
         self.bundle_sha256 = h.hexdigest()
         self._binds: tuple[tuple[str, ...], dict[str, str]] | None = None
+        self._cgroup_ok: bool | None = None
+
+    def cgroup_pids_ok(self) -> bool:
+        if self._cgroup_ok is None:
+            ok = cgroup_pids_available()
+            if ok:
+                probe = cgroup_create(f"calib-probe-{uuid.uuid4().hex[:8]}", self.cfg.pids_limit)
+                ok = probe is not None
+                if probe is not None:
+                    try:
+                        probe.rmdir()
+                    except OSError:
+                        pass
+            self._cgroup_ok = ok
+        return self._cgroup_ok
 
     # -- helpers
     @staticmethod
@@ -420,20 +474,35 @@ class SandboxExecutor:
                                             cpu_seconds=int(c.program_cap_s) + 30)
                 env = {"PATH": "/usr/bin:/bin"}
                 cwd = "/"
-            return self._run_process(argv, env, cwd, cap_s, result_file, cname)
+            cg = None
+            if c.backend == "bwrap" and self.cgroup_pids_ok():
+                cg = cgroup_create(cname, c.pids_limit)
+            try:
+                return self._run_process(argv, env, cwd, cap_s, result_file, cname, cg)
+            finally:
+                if cg is not None:
+                    try:
+                        cg.rmdir()
+                    except OSError:
+                        pass
         finally:
             shutil.rmtree(job_dir, ignore_errors=True)
             if work_dir:
                 shutil.rmtree(work_dir, ignore_errors=True)
 
     def _run_process(self, argv: list[str], env: dict[str, str], cwd: str, cap_s: float,
-                     result_file: str | None, cname: str) -> RawRun:
+                     result_file: str | None, cname: str, cgroup: Path | None = None) -> RawRun:
         import psutil
 
         c = self.cfg
         with tempfile.TemporaryFile() as errf:
             p = subprocess.Popen(argv, cwd=cwd, env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                                  stderr=errf, start_new_session=True)
+            if cgroup is not None:
+                try:
+                    (cgroup / "cgroup.procs").write_text(str(p.pid))
+                except OSError:
+                    pass
             t0 = time.monotonic()
             reason = None
             stdout = b""
@@ -517,7 +586,8 @@ class SandboxExecutor:
             return out
         r = raw.result
         if r is None:
-            if raw.returncode is not None and (raw.returncode < 0 or raw.returncode in (137, 143)):
+            if raw.returncode is not None and (raw.returncode < 0 or raw.returncode in (137, 143)) \
+                    and not infrastructure_signal(raw.returncode):
                 out["failure"] = "killed"
             else:
                 out["failure"] = "sandbox_error"
@@ -528,6 +598,8 @@ class SandboxExecutor:
             out["detail"] = r["harness_error"]
             return out
         tests = r.get("tests", [])
+        first = r.get("load_error") or (tests[0].get("e") if tests and tests[0]["s"] == "exception" else None)
+        out["first_exception"] = first
         out["per_test"] = tuple(t["s"] == "pass" for t in tests)
         out["runtime"] = float(sum(t.get("t", 0.0) for t in tests)) or raw.wall_s
         if capture:
@@ -580,6 +652,7 @@ class SandboxExecutor:
         key = self.cache_key(code, problem, suite, capture_outputs=capture_outputs)
         raw = self._launch(job, cap)
         got = self._interpret(raw, n, capture)
+        self.run_info[key] = {"first_exception": got.get("first_exception")}
         if got["failure"] in ("sandbox_error", "killed"):
             self.diagnostics.append((key, got["failure"], str(got.get("detail", ""))[-500:], raw.returncode))
         res = ExecutionResult(cache_key=key, problem_id=problem.problem_id, suite_id=suite.suite_id,
@@ -651,7 +724,15 @@ class SandboxExecutor:
         res = (wr.result or {}).get("results", {})
         report["outside_writes_denied"] = bool(res) and all(str(res.get(p, "")).startswith("DENIED") for p in paths)
         report["work_dir_writable"] = res.get("/work/calib_probe") == "WROTE"
-        failed = [k for k in ("network_blocked", "outside_writes_denied", "work_dir_writable") if not report[k]]
+        fk = self._probe("fork", limit=self.cfg.pids_limit)
+        report["fork_limit_enforced"] = H.fork_limit_enforced(fk.result, self.cfg.pids_limit)
+        report["fork_probe"] = {k: (fk.result or {}).get(k) for k in ("forked", "limit", "error")}
+        if self.cfg.backend == "bwrap":
+            report["cgroup_pids_max"] = self.cgroup_pids_ok()
+            if not report["cgroup_pids_max"]:
+                report["cgroup_pids_max_note"] = "cgroup v2 pids controller not writable here; RLIMIT_NPROC under a non-root uid only"
+        failed = [k for k in ("network_blocked", "outside_writes_denied", "work_dir_writable", "fork_limit_enforced")
+                  if not report[k]]
         self.preflight_report = report
         if failed:
             raise IsolationError(f"isolation preflight failed: {failed}; report={report}")
