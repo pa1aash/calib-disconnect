@@ -26,3 +26,6 @@ None of these block the ops tests. Each needs an orchestrator decision.
    repo root now (the tests add the repo root to `sys.path`).
 6. Operator confirmations before the first real launch (see README): the RunPod GPU type ID string, the
    container image or template ID, and the REST request field names.
+7. Fresh generation-shift jobs in the `full` plan carry `extra["fresh"]` entries with `adapter_path`
+   `adapters/<model>/<adapter_id>` (relative to the run root, my placeholder). Stages should resolve it
+   against the run layout. The plan orders them after the model's frozen readouts.

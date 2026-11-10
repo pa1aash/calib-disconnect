@@ -221,6 +221,11 @@ class Runner:
             report = fns[job.stage](jcfg, self.layout, manifest, dry_run=False)
             if not report.ok:
                 res.note = scrub("stage reported ok=False: " + "; ".join(report.notes)[:300])
+                if report.metrics.get("k1_triggered") or any("K1" in n for n in report.notes):
+                    res.note = ("K1: reference-solution failures exclude more than 5 percent of a suite; the run is "
+                                "stopped for this model. Fix the harness or suite version, or the operator accepts the "
+                                "excluded list by writing config/k1_accepted.json (the excluded problem IDs) in the "
+                                "run directory, then re-run. " + res.note)
                 return res
             outs = sorted(set(report.outputs))
             ch = config_hash(jcfg.to_dict())

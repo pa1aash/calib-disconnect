@@ -72,7 +72,7 @@ def cmd_plan(a: argparse.Namespace, out: Callable[[str], None]) -> int:
 
 
 def cmd_launch(a: argparse.Namespace, out: Callable[[str], None], client_factory=None) -> int:
-    plan = load_plan(a.plan, a.run_id)
+    plan = load_plan(a.plan, a.run_id, container_image=a.container_image)
     if not plan.launchable or not plan.pod:
         raise SystemExit(f"plan {plan.name!r} is not launchable on a pod")
     price = cost.validate_price(a.hourly_price_usd, a.price_source)       # refuse before anything else
@@ -98,7 +98,8 @@ def cmd_launch(a: argparse.Namespace, out: Callable[[str], None], client_factory
         out(f"[dry-run] would append a ledger row to {a.ledger} (price ${price}/h) and save the pod ID locally")
     out("On the pod (after copying or cloning the repo to /workspace/calib-disconnect):")
     out(f"  cd /workspace/calib-disconnect && bash ops/bootstrap.sh --plan {plan.name}")
-    out(f"  uv run python -m ops run --plan {plan.name} --run-id {run_id} --execute --keep-going")
+    ci = f" --container-image {a.container_image}" if a.container_image else ""
+    out(f"  uv run python -m ops run --plan {plan.name} --run-id {run_id}{ci} --execute --keep-going")
     out(f"  uv run python -m ops guard --run-id {run_id} --launched-at {launched} --execute   (pod-side or local)")
     return 0
 
@@ -112,7 +113,7 @@ def cmd_bootstrap(a: argparse.Namespace, out: Callable[[str], None], runner=subp
 
 
 def cmd_run(a: argparse.Namespace, out: Callable[[str], None], resolver=None) -> int:
-    plan = load_plan(a.plan, a.run_id)
+    plan = load_plan(a.plan, a.run_id, container_image=a.container_image)
     layout = RunLayout.for_run(plan.cfg.run_id, Path(a.runs_root) if a.runs_root else None)
     r = Runner(plan, layout, resolver=resolver, keep_going=a.keep_going, dry_run=not a.execute, repo_root=REPO, out=out)
     summary = r.run()
@@ -223,6 +224,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--price-source", required=True)
     sp.add_argument("--gpu-type-id", default=os.environ.get("RUNPOD_GPU_TYPE_ID", DEFAULT_GPU_TYPE_ID))
     sp.add_argument("--image"); sp.add_argument("--template-id")
+    sp.add_argument("--container-image", help="pinned sandbox image (name@sha256:...); switches the sandbox to container")
     sp.add_argument("--container-disk-gb", type=int, default=100)
     sp.add_argument("--volume-gb", type=int, default=400)
     sp.add_argument("--env-names", nargs="*", default=["HF_TOKEN"])
@@ -236,6 +238,7 @@ def build_parser() -> argparse.ArgumentParser:
     add_plan(sp)
     sp.add_argument("--keep-going", action="store_true"); sp.add_argument("--execute", action="store_true")
     sp.add_argument("--runs-root")
+    sp.add_argument("--container-image", help="pinned sandbox image (name@sha256:...); switches the sandbox to container")
 
     sp = sub.add_parser("guard", help="stop the pod on empty queue, stalled progress, or the GPU-hour cap")
     sp.add_argument("--run-id"); sp.add_argument("--pod-id"); sp.add_argument("--launched-at")

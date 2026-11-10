@@ -4,20 +4,68 @@
   "launchable": true,
   "pod": true,
   "config": {
-    "models": ["P1", "P2", "P3", "P4", "P5", "P6"],
-    "benchmarks": ["humaneval_plus", "mbpp_plus"],
+    "models": [
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5",
+      "P6"
+    ],
+    "benchmarks": [
+      "humaneval_plus",
+      "mbpp_plus"
+    ],
     "k": 10,
-    "fold_seeds": [0],
+    "fold_seeds": [
+      0
+    ],
     "backend": "vllm",
     "device": "cuda",
-    "sandbox": "container",
+    "sandbox": "bwrap",
     "execute_untrusted": true,
-    "stages": ["data", "generate", "execute"],
-    "generation_only_models": ["P1", "P2", "P3", "P4", "P5", "P6"],
+    "stages": [
+      "data",
+      "generate",
+      "execute"
+    ],
+    "generation_only_models": [
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5",
+      "P6"
+    ],
     "seal_gamma": true
   },
   "groups": [
-    {"stages": ["data"], "scopes": ["humaneval_plus", "mbpp_plus"]},
-    {"stages": ["generate", "execute"], "models": ["P1", "P2", "P3", "P4", "P5", "P6"], "scopes": ["humaneval_plus", "mbpp_plus"]}
+    {
+      "stages": [
+        "data"
+      ],
+      "scopes": [
+        "humaneval_plus",
+        "mbpp_plus"
+      ]
+    },
+    {
+      "stages": [
+        "generate",
+        "execute"
+      ],
+      "models": [
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5",
+        "P6"
+      ],
+      "scopes": [
+        "humaneval_plus",
+        "mbpp_plus"
+      ]
+    }
   ]
 }

@@ -195,3 +195,22 @@ def test_real_resolver_imports_through_stages_table(monkeypatch):
 def test_stub_plan_refused(tmp_path):
     with pytest.raises(SystemExit):
         run(tmp_path, Fake(), plan=make_plan(launchable=False))
+
+
+def test_k1_failure_names_acceptance_file_and_blocks_model(tmp_path):
+    class K1(Fake):
+        def resolver(self, stage):
+            def fn(cfg, layout, manifest, *, dry_run=False):
+                self.calls.append((stage, cfg.models[0] if len(cfg.models) == 1 else None))
+                if stage == "execute" and cfg.models == ("M1",):
+                    return StageReport(stage, ok=False, metrics={"k1_triggered": True})
+                return StageReport(stage, ok=True)
+            return fn
+    fake = K1()
+    s, _ = run(tmp_path, fake, keep_going=True)
+    st = {r.job_id: r for r in s.results}
+    assert "config/k1_accepted.json" in st["execute.M1.humaneval_plus.frozen"].note
+    assert st["capture.M1.humaneval_plus.frozen"].status == "skipped_model_failed"
+    assert ("generate", "M2") in fake.calls
+    s2, _ = run(tmp_path / "b", K1())                                # without --keep-going the plan stops
+    assert s2.count("not_run") > 0

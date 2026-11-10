@@ -59,6 +59,10 @@ Disk: the pilot plan downloads roughly 240 GB of bf16 weights (my estimate from 
    pod). If the guard stopped the pod on the pod itself, run `uv run python -m ops ledger complete --pod-id <id> --reason <reason>` locally.
    `uv run python -m ops ledger summary` totals GPU-hours and cost.
 
+## Sandbox
+
+The pilot sandbox is `bwrap`. To use a container instead, pass `--container-image name@sha256:...` to `launch` and `run`; it sets `sandbox="container"` and `extra["container_image"]`.
+
 ## Plans
 
 `smoke` (local, 6 jobs), `pilot` (39 jobs), `pilot-mixed-only` (26 jobs), `full` (stub listing, refused by `run` and `launch`).

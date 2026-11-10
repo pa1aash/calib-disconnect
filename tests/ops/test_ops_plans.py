@@ -108,3 +108,46 @@ def test_job_config_restricts_one_model_one_stage():
     assert r.benchmarks == ("humaneval_plus", "mbpp_plus") and "T1" not in r.generation_only_models
     t = job_config(p.cfg, by["timing.readouts.P4.humaneval_plus.timing.lora200"])
     assert t.lora_max_steps == 200 and t.problem_limit == 50 and t.extra["timing_only"] is True
+
+
+def test_pilot_t1_readouts_selects_own_recipe():
+    p = load_plan("pilot")
+    by = {j.id: j for j in p.jobs}
+    c = job_config(p.cfg, by["readouts.T1.label_validity.frozen"])
+    assert c.extra["allow_own_recipe"] is True
+    others = [job_config(p.cfg, j) for j in p.jobs if j.model_key != "T1"]
+    assert not any(o.extra.get("allow_own_recipe") for o in others)
+
+
+def test_pilot_timing_jobs_exempt_from_generation_only():
+    p = load_plan("pilot")
+    for j in p.jobs:
+        if j.kind == "timing":
+            c = job_config(p.cfg, j)
+            assert c.extra["timing_only"] is True and c.extra["gen_set"] == "timing"
+            assert j.model_key not in c.generation_only_models
+        elif j.model_key in C.PRIMARY_MODELS:
+            assert j.model_key in job_config(p.cfg, j).generation_only_models
+
+
+def test_pilot_sandbox_bwrap_and_container_image_switch():
+    assert load_plan("pilot").cfg.sandbox == "bwrap"
+    c = load_plan("pilot", container_image="img@sha256:ab").cfg
+    assert c.sandbox == "container" and c.extra["container_image"] == "img@sha256:ab"
+
+
+def test_full_plan_fresh_jobs():
+    p = load_plan("full")
+    fresh = [j for j in p.jobs if j.gen_set.startswith("fresh:")]
+    sets = {j.gen_set for j in fresh}
+    assert len(sets) == 10 and "fresh:SR_O_seed0_fold0" in sets and "fresh:SR_E_seed0_fold4" in sets
+    p1 = [j for j in fresh if j.model_key == "P1"]
+    s1 = [j for j in fresh if j.model_key == "S1"]
+    assert {j.scope for j in p1} == {"humaneval_plus", "mbpp_plus", "label_validity"}
+    assert {j.scope for j in s1} == {"lcb_v6", } and {j.stage for j in s1} == {"generate", "execute", "capture", "readouts"}
+    g = job_config(p.cfg, next(j for j in s1 if j.stage == "generate"))
+    assert {f["k_g"] for f in g.extra["fresh"]} == {4} and g.k == p.cfg.k
+    assert {f["k_g"] for f in job_config(p.cfg, next(j for j in p1 if j.stage == "generate")).extra["fresh"]} == {p.cfg.k}
+    o = [j.id for j in order_jobs(p.jobs) if j.model_key == "P1"]
+    first_fresh = min(i for i, x in enumerate(o) if ".fresh_" in x)
+    assert all(".fresh_" not in x for x in o[:first_fresh]) and any(x.startswith("readouts.P1.label_validity.frozen") for x in o[:first_fresh])

@@ -1,27 +1,1362 @@
 {
-  "name": "full",
-  "description": "Stub expansion of the full matrix (design section 3.2), for listing jobs only. It is not launched in this wave; the runner refuses to execute it.",
-  "launchable": false,
-  "pod": true,
-  "config": {
-    "models": ["P1", "P2", "P3", "P4", "P5", "P6", "S1", "B1", "B2", "B3", "B4", "B5", "B6",
-               "C1", "C2", "C3", "C4", "T1", "T2", "X1", "X2"],
-    "benchmarks": ["humaneval_plus", "mbpp_plus", "lcb_v6"],
-    "k": 10,
-    "fold_seeds": [0, 1, 2],
-    "backend": "vllm",
-    "device": "cuda",
-    "sandbox": "container",
-    "execute_untrusted": true,
-    "stages": ["data", "generate", "execute", "capture", "readouts", "analysis"]
-  },
-  "groups": [
-    {"stages": ["data"], "scopes": ["humaneval_plus", "mbpp_plus", "lcb_v6"]},
-    {"stages": ["generate", "execute", "capture"], "models": ["P1", "P2", "P3", "P4", "P5", "P6", "S1"], "scopes": ["humaneval_plus", "mbpp_plus", "lcb_v6"]},
-    {"stages": ["readouts"], "models": ["P1", "P2", "P3", "P4", "P5", "P6", "S1"], "scopes": ["label_validity", "lcb_v6"]},
-    {"stages": ["generate", "execute", "capture"], "models": ["B1", "B2", "B3", "B4", "B5", "B6", "C1", "C2", "C3", "C4", "T1", "T2"], "scopes": ["humaneval_plus", "mbpp_plus"]},
-    {"stages": ["readouts"], "models": ["B1", "B2", "B3", "B4", "B5", "B6", "C1", "C2", "C3", "C4", "T1", "T2"], "scopes": ["label_validity"]},
-    {"stages": ["generate", "execute", "capture", "readouts"], "models": ["X1", "X2"], "scopes": ["lcb_v6"]},
-    {"stages": ["analysis"]}
+ "name": "full",
+ "description": "Stub expansion of the full matrix (design section 3.2), for listing jobs only. It is not launched in this wave; the runner refuses to execute it. Includes the fresh-generation (generation-shift) jobs: S^R adapters for suites O and E, fold seed 0, folds 0 to 4, for P1 (k_g = k, label-validity) and S1 (k_g = 4, lcb_v6).",
+ "launchable": false,
+ "pod": true,
+ "config": {
+  "models": [
+   "P1",
+   "P2",
+   "P3",
+   "P4",
+   "P5",
+   "P6",
+   "S1",
+   "B1",
+   "B2",
+   "B3",
+   "B4",
+   "B5",
+   "B6",
+   "C1",
+   "C2",
+   "C3",
+   "C4",
+   "T1",
+   "T2",
+   "X1",
+   "X2"
+  ],
+  "benchmarks": [
+   "humaneval_plus",
+   "mbpp_plus",
+   "lcb_v6"
+  ],
+  "k": 10,
+  "fold_seeds": [
+   0,
+   1,
+   2
+  ],
+  "backend": "vllm",
+  "device": "cuda",
+  "sandbox": "container",
+  "execute_untrusted": true,
+  "stages": [
+   "data",
+   "generate",
+   "execute",
+   "capture",
+   "readouts",
+   "analysis"
   ]
+ },
+ "groups": [
+  {
+   "stages": [
+    "data"
+   ],
+   "scopes": [
+    "humaneval_plus",
+    "mbpp_plus",
+    "lcb_v6"
+   ]
+  },
+  {
+   "stages": [
+    "generate",
+    "execute",
+    "capture"
+   ],
+   "models": [
+    "P1",
+    "P2",
+    "P3",
+    "P4",
+    "P5",
+    "P6",
+    "S1"
+   ],
+   "scopes": [
+    "humaneval_plus",
+    "mbpp_plus",
+    "lcb_v6"
+   ]
+  },
+  {
+   "stages": [
+    "readouts"
+   ],
+   "models": [
+    "P1",
+    "P2",
+    "P3",
+    "P4",
+    "P5",
+    "P6",
+    "S1"
+   ],
+   "scopes": [
+    "label_validity",
+    "lcb_v6"
+   ]
+  },
+  {
+   "stages": [
+    "generate",
+    "execute",
+    "capture"
+   ],
+   "models": [
+    "B1",
+    "B2",
+    "B3",
+    "B4",
+    "B5",
+    "B6",
+    "C1",
+    "C2",
+    "C3",
+    "C4",
+    "T1",
+    "T2"
+   ],
+   "scopes": [
+    "humaneval_plus",
+    "mbpp_plus"
+   ]
+  },
+  {
+   "stages": [
+    "readouts"
+   ],
+   "models": [
+    "B1",
+    "B2",
+    "B3",
+    "B4",
+    "B5",
+    "B6",
+    "C1",
+    "C2",
+    "C3",
+    "C4",
+    "T1",
+    "T2"
+   ],
+   "scopes": [
+    "label_validity"
+   ]
+  },
+  {
+   "stages": [
+    "generate",
+    "execute",
+    "capture",
+    "readouts"
+   ],
+   "models": [
+    "X1",
+    "X2"
+   ],
+   "scopes": [
+    "lcb_v6"
+   ]
+  },
+  {
+   "stages": [
+    "generate",
+    "execute",
+    "capture"
+   ],
+   "models": [
+    "P1"
+   ],
+   "scopes": [
+    "humaneval_plus",
+    "mbpp_plus"
+   ],
+   "gen_set": "fresh:SR_O_seed0_fold0",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "P1",
+       "benchmark": "humaneval_plus",
+       "adapter_id": "SR_O_seed0_fold0",
+       "adapter_path": "adapters/P1/SR_O_seed0_fold0",
+       "k_g": 10
+      },
+      {
+       "model_key": "P1",
+       "benchmark": "mbpp_plus",
+       "adapter_id": "SR_O_seed0_fold0",
+       "adapter_path": "adapters/P1/SR_O_seed0_fold0",
+       "k_g": 10
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "readouts"
+   ],
+   "models": [
+    "P1"
+   ],
+   "scopes": [
+    "label_validity"
+   ],
+   "gen_set": "fresh:SR_O_seed0_fold0",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "P1",
+       "benchmark": "humaneval_plus",
+       "adapter_id": "SR_O_seed0_fold0",
+       "adapter_path": "adapters/P1/SR_O_seed0_fold0",
+       "k_g": 10
+      },
+      {
+       "model_key": "P1",
+       "benchmark": "mbpp_plus",
+       "adapter_id": "SR_O_seed0_fold0",
+       "adapter_path": "adapters/P1/SR_O_seed0_fold0",
+       "k_g": 10
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "generate",
+    "execute",
+    "capture"
+   ],
+   "models": [
+    "P1"
+   ],
+   "scopes": [
+    "humaneval_plus",
+    "mbpp_plus"
+   ],
+   "gen_set": "fresh:SR_O_seed0_fold1",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "P1",
+       "benchmark": "humaneval_plus",
+       "adapter_id": "SR_O_seed0_fold1",
+       "adapter_path": "adapters/P1/SR_O_seed0_fold1",
+       "k_g": 10
+      },
+      {
+       "model_key": "P1",
+       "benchmark": "mbpp_plus",
+       "adapter_id": "SR_O_seed0_fold1",
+       "adapter_path": "adapters/P1/SR_O_seed0_fold1",
+       "k_g": 10
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "readouts"
+   ],
+   "models": [
+    "P1"
+   ],
+   "scopes": [
+    "label_validity"
+   ],
+   "gen_set": "fresh:SR_O_seed0_fold1",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "P1",
+       "benchmark": "humaneval_plus",
+       "adapter_id": "SR_O_seed0_fold1",
+       "adapter_path": "adapters/P1/SR_O_seed0_fold1",
+       "k_g": 10
+      },
+      {
+       "model_key": "P1",
+       "benchmark": "mbpp_plus",
+       "adapter_id": "SR_O_seed0_fold1",
+       "adapter_path": "adapters/P1/SR_O_seed0_fold1",
+       "k_g": 10
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "generate",
+    "execute",
+    "capture"
+   ],
+   "models": [
+    "P1"
+   ],
+   "scopes": [
+    "humaneval_plus",
+    "mbpp_plus"
+   ],
+   "gen_set": "fresh:SR_O_seed0_fold2",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "P1",
+       "benchmark": "humaneval_plus",
+       "adapter_id": "SR_O_seed0_fold2",
+       "adapter_path": "adapters/P1/SR_O_seed0_fold2",
+       "k_g": 10
+      },
+      {
+       "model_key": "P1",
+       "benchmark": "mbpp_plus",
+       "adapter_id": "SR_O_seed0_fold2",
+       "adapter_path": "adapters/P1/SR_O_seed0_fold2",
+       "k_g": 10
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "readouts"
+   ],
+   "models": [
+    "P1"
+   ],
+   "scopes": [
+    "label_validity"
+   ],
+   "gen_set": "fresh:SR_O_seed0_fold2",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "P1",
+       "benchmark": "humaneval_plus",
+       "adapter_id": "SR_O_seed0_fold2",
+       "adapter_path": "adapters/P1/SR_O_seed0_fold2",
+       "k_g": 10
+      },
+      {
+       "model_key": "P1",
+       "benchmark": "mbpp_plus",
+       "adapter_id": "SR_O_seed0_fold2",
+       "adapter_path": "adapters/P1/SR_O_seed0_fold2",
+       "k_g": 10
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "generate",
+    "execute",
+    "capture"
+   ],
+   "models": [
+    "P1"
+   ],
+   "scopes": [
+    "humaneval_plus",
+    "mbpp_plus"
+   ],
+   "gen_set": "fresh:SR_O_seed0_fold3",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "P1",
+       "benchmark": "humaneval_plus",
+       "adapter_id": "SR_O_seed0_fold3",
+       "adapter_path": "adapters/P1/SR_O_seed0_fold3",
+       "k_g": 10
+      },
+      {
+       "model_key": "P1",
+       "benchmark": "mbpp_plus",
+       "adapter_id": "SR_O_seed0_fold3",
+       "adapter_path": "adapters/P1/SR_O_seed0_fold3",
+       "k_g": 10
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "readouts"
+   ],
+   "models": [
+    "P1"
+   ],
+   "scopes": [
+    "label_validity"
+   ],
+   "gen_set": "fresh:SR_O_seed0_fold3",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "P1",
+       "benchmark": "humaneval_plus",
+       "adapter_id": "SR_O_seed0_fold3",
+       "adapter_path": "adapters/P1/SR_O_seed0_fold3",
+       "k_g": 10
+      },
+      {
+       "model_key": "P1",
+       "benchmark": "mbpp_plus",
+       "adapter_id": "SR_O_seed0_fold3",
+       "adapter_path": "adapters/P1/SR_O_seed0_fold3",
+       "k_g": 10
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "generate",
+    "execute",
+    "capture"
+   ],
+   "models": [
+    "P1"
+   ],
+   "scopes": [
+    "humaneval_plus",
+    "mbpp_plus"
+   ],
+   "gen_set": "fresh:SR_O_seed0_fold4",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "P1",
+       "benchmark": "humaneval_plus",
+       "adapter_id": "SR_O_seed0_fold4",
+       "adapter_path": "adapters/P1/SR_O_seed0_fold4",
+       "k_g": 10
+      },
+      {
+       "model_key": "P1",
+       "benchmark": "mbpp_plus",
+       "adapter_id": "SR_O_seed0_fold4",
+       "adapter_path": "adapters/P1/SR_O_seed0_fold4",
+       "k_g": 10
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "readouts"
+   ],
+   "models": [
+    "P1"
+   ],
+   "scopes": [
+    "label_validity"
+   ],
+   "gen_set": "fresh:SR_O_seed0_fold4",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "P1",
+       "benchmark": "humaneval_plus",
+       "adapter_id": "SR_O_seed0_fold4",
+       "adapter_path": "adapters/P1/SR_O_seed0_fold4",
+       "k_g": 10
+      },
+      {
+       "model_key": "P1",
+       "benchmark": "mbpp_plus",
+       "adapter_id": "SR_O_seed0_fold4",
+       "adapter_path": "adapters/P1/SR_O_seed0_fold4",
+       "k_g": 10
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "generate",
+    "execute",
+    "capture"
+   ],
+   "models": [
+    "P1"
+   ],
+   "scopes": [
+    "humaneval_plus",
+    "mbpp_plus"
+   ],
+   "gen_set": "fresh:SR_E_seed0_fold0",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "P1",
+       "benchmark": "humaneval_plus",
+       "adapter_id": "SR_E_seed0_fold0",
+       "adapter_path": "adapters/P1/SR_E_seed0_fold0",
+       "k_g": 10
+      },
+      {
+       "model_key": "P1",
+       "benchmark": "mbpp_plus",
+       "adapter_id": "SR_E_seed0_fold0",
+       "adapter_path": "adapters/P1/SR_E_seed0_fold0",
+       "k_g": 10
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "readouts"
+   ],
+   "models": [
+    "P1"
+   ],
+   "scopes": [
+    "label_validity"
+   ],
+   "gen_set": "fresh:SR_E_seed0_fold0",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "P1",
+       "benchmark": "humaneval_plus",
+       "adapter_id": "SR_E_seed0_fold0",
+       "adapter_path": "adapters/P1/SR_E_seed0_fold0",
+       "k_g": 10
+      },
+      {
+       "model_key": "P1",
+       "benchmark": "mbpp_plus",
+       "adapter_id": "SR_E_seed0_fold0",
+       "adapter_path": "adapters/P1/SR_E_seed0_fold0",
+       "k_g": 10
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "generate",
+    "execute",
+    "capture"
+   ],
+   "models": [
+    "P1"
+   ],
+   "scopes": [
+    "humaneval_plus",
+    "mbpp_plus"
+   ],
+   "gen_set": "fresh:SR_E_seed0_fold1",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "P1",
+       "benchmark": "humaneval_plus",
+       "adapter_id": "SR_E_seed0_fold1",
+       "adapter_path": "adapters/P1/SR_E_seed0_fold1",
+       "k_g": 10
+      },
+      {
+       "model_key": "P1",
+       "benchmark": "mbpp_plus",
+       "adapter_id": "SR_E_seed0_fold1",
+       "adapter_path": "adapters/P1/SR_E_seed0_fold1",
+       "k_g": 10
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "readouts"
+   ],
+   "models": [
+    "P1"
+   ],
+   "scopes": [
+    "label_validity"
+   ],
+   "gen_set": "fresh:SR_E_seed0_fold1",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "P1",
+       "benchmark": "humaneval_plus",
+       "adapter_id": "SR_E_seed0_fold1",
+       "adapter_path": "adapters/P1/SR_E_seed0_fold1",
+       "k_g": 10
+      },
+      {
+       "model_key": "P1",
+       "benchmark": "mbpp_plus",
+       "adapter_id": "SR_E_seed0_fold1",
+       "adapter_path": "adapters/P1/SR_E_seed0_fold1",
+       "k_g": 10
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "generate",
+    "execute",
+    "capture"
+   ],
+   "models": [
+    "P1"
+   ],
+   "scopes": [
+    "humaneval_plus",
+    "mbpp_plus"
+   ],
+   "gen_set": "fresh:SR_E_seed0_fold2",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "P1",
+       "benchmark": "humaneval_plus",
+       "adapter_id": "SR_E_seed0_fold2",
+       "adapter_path": "adapters/P1/SR_E_seed0_fold2",
+       "k_g": 10
+      },
+      {
+       "model_key": "P1",
+       "benchmark": "mbpp_plus",
+       "adapter_id": "SR_E_seed0_fold2",
+       "adapter_path": "adapters/P1/SR_E_seed0_fold2",
+       "k_g": 10
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "readouts"
+   ],
+   "models": [
+    "P1"
+   ],
+   "scopes": [
+    "label_validity"
+   ],
+   "gen_set": "fresh:SR_E_seed0_fold2",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "P1",
+       "benchmark": "humaneval_plus",
+       "adapter_id": "SR_E_seed0_fold2",
+       "adapter_path": "adapters/P1/SR_E_seed0_fold2",
+       "k_g": 10
+      },
+      {
+       "model_key": "P1",
+       "benchmark": "mbpp_plus",
+       "adapter_id": "SR_E_seed0_fold2",
+       "adapter_path": "adapters/P1/SR_E_seed0_fold2",
+       "k_g": 10
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "generate",
+    "execute",
+    "capture"
+   ],
+   "models": [
+    "P1"
+   ],
+   "scopes": [
+    "humaneval_plus",
+    "mbpp_plus"
+   ],
+   "gen_set": "fresh:SR_E_seed0_fold3",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "P1",
+       "benchmark": "humaneval_plus",
+       "adapter_id": "SR_E_seed0_fold3",
+       "adapter_path": "adapters/P1/SR_E_seed0_fold3",
+       "k_g": 10
+      },
+      {
+       "model_key": "P1",
+       "benchmark": "mbpp_plus",
+       "adapter_id": "SR_E_seed0_fold3",
+       "adapter_path": "adapters/P1/SR_E_seed0_fold3",
+       "k_g": 10
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "readouts"
+   ],
+   "models": [
+    "P1"
+   ],
+   "scopes": [
+    "label_validity"
+   ],
+   "gen_set": "fresh:SR_E_seed0_fold3",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "P1",
+       "benchmark": "humaneval_plus",
+       "adapter_id": "SR_E_seed0_fold3",
+       "adapter_path": "adapters/P1/SR_E_seed0_fold3",
+       "k_g": 10
+      },
+      {
+       "model_key": "P1",
+       "benchmark": "mbpp_plus",
+       "adapter_id": "SR_E_seed0_fold3",
+       "adapter_path": "adapters/P1/SR_E_seed0_fold3",
+       "k_g": 10
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "generate",
+    "execute",
+    "capture"
+   ],
+   "models": [
+    "P1"
+   ],
+   "scopes": [
+    "humaneval_plus",
+    "mbpp_plus"
+   ],
+   "gen_set": "fresh:SR_E_seed0_fold4",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "P1",
+       "benchmark": "humaneval_plus",
+       "adapter_id": "SR_E_seed0_fold4",
+       "adapter_path": "adapters/P1/SR_E_seed0_fold4",
+       "k_g": 10
+      },
+      {
+       "model_key": "P1",
+       "benchmark": "mbpp_plus",
+       "adapter_id": "SR_E_seed0_fold4",
+       "adapter_path": "adapters/P1/SR_E_seed0_fold4",
+       "k_g": 10
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "readouts"
+   ],
+   "models": [
+    "P1"
+   ],
+   "scopes": [
+    "label_validity"
+   ],
+   "gen_set": "fresh:SR_E_seed0_fold4",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "P1",
+       "benchmark": "humaneval_plus",
+       "adapter_id": "SR_E_seed0_fold4",
+       "adapter_path": "adapters/P1/SR_E_seed0_fold4",
+       "k_g": 10
+      },
+      {
+       "model_key": "P1",
+       "benchmark": "mbpp_plus",
+       "adapter_id": "SR_E_seed0_fold4",
+       "adapter_path": "adapters/P1/SR_E_seed0_fold4",
+       "k_g": 10
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "generate",
+    "execute",
+    "capture"
+   ],
+   "models": [
+    "S1"
+   ],
+   "scopes": [
+    "lcb_v6"
+   ],
+   "gen_set": "fresh:SR_O_seed0_fold0",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "S1",
+       "benchmark": "lcb_v6",
+       "adapter_id": "SR_O_seed0_fold0",
+       "adapter_path": "adapters/S1/SR_O_seed0_fold0",
+       "k_g": 4
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "readouts"
+   ],
+   "models": [
+    "S1"
+   ],
+   "scopes": [
+    "lcb_v6"
+   ],
+   "gen_set": "fresh:SR_O_seed0_fold0",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "S1",
+       "benchmark": "lcb_v6",
+       "adapter_id": "SR_O_seed0_fold0",
+       "adapter_path": "adapters/S1/SR_O_seed0_fold0",
+       "k_g": 4
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "generate",
+    "execute",
+    "capture"
+   ],
+   "models": [
+    "S1"
+   ],
+   "scopes": [
+    "lcb_v6"
+   ],
+   "gen_set": "fresh:SR_O_seed0_fold1",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "S1",
+       "benchmark": "lcb_v6",
+       "adapter_id": "SR_O_seed0_fold1",
+       "adapter_path": "adapters/S1/SR_O_seed0_fold1",
+       "k_g": 4
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "readouts"
+   ],
+   "models": [
+    "S1"
+   ],
+   "scopes": [
+    "lcb_v6"
+   ],
+   "gen_set": "fresh:SR_O_seed0_fold1",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "S1",
+       "benchmark": "lcb_v6",
+       "adapter_id": "SR_O_seed0_fold1",
+       "adapter_path": "adapters/S1/SR_O_seed0_fold1",
+       "k_g": 4
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "generate",
+    "execute",
+    "capture"
+   ],
+   "models": [
+    "S1"
+   ],
+   "scopes": [
+    "lcb_v6"
+   ],
+   "gen_set": "fresh:SR_O_seed0_fold2",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "S1",
+       "benchmark": "lcb_v6",
+       "adapter_id": "SR_O_seed0_fold2",
+       "adapter_path": "adapters/S1/SR_O_seed0_fold2",
+       "k_g": 4
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "readouts"
+   ],
+   "models": [
+    "S1"
+   ],
+   "scopes": [
+    "lcb_v6"
+   ],
+   "gen_set": "fresh:SR_O_seed0_fold2",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "S1",
+       "benchmark": "lcb_v6",
+       "adapter_id": "SR_O_seed0_fold2",
+       "adapter_path": "adapters/S1/SR_O_seed0_fold2",
+       "k_g": 4
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "generate",
+    "execute",
+    "capture"
+   ],
+   "models": [
+    "S1"
+   ],
+   "scopes": [
+    "lcb_v6"
+   ],
+   "gen_set": "fresh:SR_O_seed0_fold3",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "S1",
+       "benchmark": "lcb_v6",
+       "adapter_id": "SR_O_seed0_fold3",
+       "adapter_path": "adapters/S1/SR_O_seed0_fold3",
+       "k_g": 4
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "readouts"
+   ],
+   "models": [
+    "S1"
+   ],
+   "scopes": [
+    "lcb_v6"
+   ],
+   "gen_set": "fresh:SR_O_seed0_fold3",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "S1",
+       "benchmark": "lcb_v6",
+       "adapter_id": "SR_O_seed0_fold3",
+       "adapter_path": "adapters/S1/SR_O_seed0_fold3",
+       "k_g": 4
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "generate",
+    "execute",
+    "capture"
+   ],
+   "models": [
+    "S1"
+   ],
+   "scopes": [
+    "lcb_v6"
+   ],
+   "gen_set": "fresh:SR_O_seed0_fold4",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "S1",
+       "benchmark": "lcb_v6",
+       "adapter_id": "SR_O_seed0_fold4",
+       "adapter_path": "adapters/S1/SR_O_seed0_fold4",
+       "k_g": 4
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "readouts"
+   ],
+   "models": [
+    "S1"
+   ],
+   "scopes": [
+    "lcb_v6"
+   ],
+   "gen_set": "fresh:SR_O_seed0_fold4",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "S1",
+       "benchmark": "lcb_v6",
+       "adapter_id": "SR_O_seed0_fold4",
+       "adapter_path": "adapters/S1/SR_O_seed0_fold4",
+       "k_g": 4
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "generate",
+    "execute",
+    "capture"
+   ],
+   "models": [
+    "S1"
+   ],
+   "scopes": [
+    "lcb_v6"
+   ],
+   "gen_set": "fresh:SR_E_seed0_fold0",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "S1",
+       "benchmark": "lcb_v6",
+       "adapter_id": "SR_E_seed0_fold0",
+       "adapter_path": "adapters/S1/SR_E_seed0_fold0",
+       "k_g": 4
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "readouts"
+   ],
+   "models": [
+    "S1"
+   ],
+   "scopes": [
+    "lcb_v6"
+   ],
+   "gen_set": "fresh:SR_E_seed0_fold0",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "S1",
+       "benchmark": "lcb_v6",
+       "adapter_id": "SR_E_seed0_fold0",
+       "adapter_path": "adapters/S1/SR_E_seed0_fold0",
+       "k_g": 4
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "generate",
+    "execute",
+    "capture"
+   ],
+   "models": [
+    "S1"
+   ],
+   "scopes": [
+    "lcb_v6"
+   ],
+   "gen_set": "fresh:SR_E_seed0_fold1",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "S1",
+       "benchmark": "lcb_v6",
+       "adapter_id": "SR_E_seed0_fold1",
+       "adapter_path": "adapters/S1/SR_E_seed0_fold1",
+       "k_g": 4
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "readouts"
+   ],
+   "models": [
+    "S1"
+   ],
+   "scopes": [
+    "lcb_v6"
+   ],
+   "gen_set": "fresh:SR_E_seed0_fold1",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "S1",
+       "benchmark": "lcb_v6",
+       "adapter_id": "SR_E_seed0_fold1",
+       "adapter_path": "adapters/S1/SR_E_seed0_fold1",
+       "k_g": 4
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "generate",
+    "execute",
+    "capture"
+   ],
+   "models": [
+    "S1"
+   ],
+   "scopes": [
+    "lcb_v6"
+   ],
+   "gen_set": "fresh:SR_E_seed0_fold2",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "S1",
+       "benchmark": "lcb_v6",
+       "adapter_id": "SR_E_seed0_fold2",
+       "adapter_path": "adapters/S1/SR_E_seed0_fold2",
+       "k_g": 4
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "readouts"
+   ],
+   "models": [
+    "S1"
+   ],
+   "scopes": [
+    "lcb_v6"
+   ],
+   "gen_set": "fresh:SR_E_seed0_fold2",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "S1",
+       "benchmark": "lcb_v6",
+       "adapter_id": "SR_E_seed0_fold2",
+       "adapter_path": "adapters/S1/SR_E_seed0_fold2",
+       "k_g": 4
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "generate",
+    "execute",
+    "capture"
+   ],
+   "models": [
+    "S1"
+   ],
+   "scopes": [
+    "lcb_v6"
+   ],
+   "gen_set": "fresh:SR_E_seed0_fold3",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "S1",
+       "benchmark": "lcb_v6",
+       "adapter_id": "SR_E_seed0_fold3",
+       "adapter_path": "adapters/S1/SR_E_seed0_fold3",
+       "k_g": 4
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "readouts"
+   ],
+   "models": [
+    "S1"
+   ],
+   "scopes": [
+    "lcb_v6"
+   ],
+   "gen_set": "fresh:SR_E_seed0_fold3",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "S1",
+       "benchmark": "lcb_v6",
+       "adapter_id": "SR_E_seed0_fold3",
+       "adapter_path": "adapters/S1/SR_E_seed0_fold3",
+       "k_g": 4
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "generate",
+    "execute",
+    "capture"
+   ],
+   "models": [
+    "S1"
+   ],
+   "scopes": [
+    "lcb_v6"
+   ],
+   "gen_set": "fresh:SR_E_seed0_fold4",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "S1",
+       "benchmark": "lcb_v6",
+       "adapter_id": "SR_E_seed0_fold4",
+       "adapter_path": "adapters/S1/SR_E_seed0_fold4",
+       "k_g": 4
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "readouts"
+   ],
+   "models": [
+    "S1"
+   ],
+   "scopes": [
+    "lcb_v6"
+   ],
+   "gen_set": "fresh:SR_E_seed0_fold4",
+   "overrides": {
+    "extra": {
+     "fresh": [
+      {
+       "model_key": "S1",
+       "benchmark": "lcb_v6",
+       "adapter_id": "SR_E_seed0_fold4",
+       "adapter_path": "adapters/S1/SR_E_seed0_fold4",
+       "k_g": 4
+      }
+     ]
+    }
+   }
+  },
+  {
+   "stages": [
+    "analysis"
+   ]
+  }
+ ]
 }

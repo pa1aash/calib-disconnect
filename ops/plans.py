@@ -100,7 +100,16 @@ def _expand_groups(groups: list[dict[str, Any]], valid_fields: set[str]) -> list
     return list(jobs.values())
 
 
-def load_plan(name: str, run_id: str | None = None, plans_dir: Path | None = None) -> Plan:
+def with_container_image(plan: Plan, image: str | None) -> Plan:
+    """--container-image: switch the sandbox backend to "container" with the pinned image (name@sha256:...)."""
+    if not image:
+        return plan
+    cfg = dataclasses.replace(plan.cfg, sandbox="container", extra={**dict(plan.cfg.extra), "container_image": image})
+    return dataclasses.replace(plan, cfg=cfg)
+
+
+def load_plan(name: str, run_id: str | None = None, plans_dir: Path | None = None,
+              container_image: str | None = None) -> Plan:
     path = (plans_dir or PLANS_DIR) / f"{name}.json"
     if not path.is_file():
         raise SystemExit(f"unknown plan {name!r}; available: {', '.join(available_plans())}")
@@ -112,8 +121,9 @@ def load_plan(name: str, run_id: str | None = None, plans_dir: Path | None = Non
             raise ValueError(f"job {j.id}: model {j.model_key} is not in the plan config")
         if j.stage not in cfg.stages:
             raise ValueError(f"job {j.id}: stage not in the plan config stages")
-    return Plan(name=spec["name"], description=spec.get("description", ""), cfg=cfg, jobs=tuple(jobs),
+    plan = Plan(name=spec["name"], description=spec.get("description", ""), cfg=cfg, jobs=tuple(jobs),
                 launchable=bool(spec.get("launchable", True)), pod=bool(spec.get("pod", True)))
+    return with_container_image(plan, container_image)
 
 
 def order_jobs(jobs: list[Job] | tuple[Job, ...]) -> list[Job]:
@@ -124,7 +134,8 @@ def order_jobs(jobs: list[Job] | tuple[Job, ...]) -> list[Job]:
     rank = {s: i for i, s in enumerate(STAGE_ORDER)}
 
     def key(j: Job) -> tuple:
-        return (j.kind == "timing", rank[j.stage], idx[j.id])
+        # fresh generation-shift sets need the S^R adapters, which the model's frozen readouts train
+        return (j.kind == "timing", j.gen_set.startswith("fresh:"), rank[j.stage], idx[j.id])
 
     pre = [j for j in jobs if j.model_key is None and j.stage == "data"]
     post = [j for j in jobs if j.model_key is None and j.stage != "data"]
@@ -151,5 +162,8 @@ def job_config(cfg: RunConfig, job: Job) -> RunConfig:
         kw["benchmarks"] = (job.scope,)
     elif job.scope == "label_validity":
         kw["benchmarks"] = tuple(b for b in cfg.benchmarks if b in C.LABEL_VALIDITY_BENCHMARKS)
+    if job.kind == "timing" and job.model_key:
+        # timing-only probes are exempt from the generation-only skip (G10)
+        kw["generation_only_models"] = tuple(m for m in cfg.generation_only_models if m != job.model_key)
     kw.update({k: (tuple(v) if isinstance(v, list) else v) for k, v in ov.items()})
     return dataclasses.replace(cfg, **kw)
