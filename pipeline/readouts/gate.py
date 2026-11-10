@@ -102,6 +102,8 @@ def run_mask_gate(model, layouts: Sequence[TeacherForcedLayout], report_path: Pa
     if report_path.exists():
         old = json.loads(report_path.read_text())
         if old.get("passed"):
+            if register is not None:      # a reused report is still a run product (smoke run finding)
+                register(report_path)
             return old
     dtype = next(model.parameters()).dtype
     kept = None

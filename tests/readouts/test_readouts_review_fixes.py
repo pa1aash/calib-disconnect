@@ -375,3 +375,15 @@ def test_slice_of_interleaved_model_copies_the_chosen_layers_and_reports_indices
     assert torch.equal(small.model.layers[1].self_attn.q_proj.weight, m.model.layers[5].self_attn.q_proj.weight.float())
     rep = gate.run_mask_gate(m, synthetic_layouts(VOCAB, n=5), tmp_path / "r.json", yes_ids=[1], no_ids=[2])
     assert rep["passed"] and rep["slice_layer_indices"] == [0, 5] and "full_attention" in rep["layer_types"]
+
+
+def test_reused_passing_mask_report_is_registered(tmp_path):
+    # Smoke-run finding: a passing report reused from an earlier run must still enter the manifest.
+    import json as _json
+    from pipeline.readouts.gate import run_mask_gate
+    rp = tmp_path / "config" / "mask_test_x.json"
+    rp.parent.mkdir(parents=True)
+    rp.write_text(_json.dumps({"passed": True, "arch": "x"}))
+    seen = []
+    out = run_mask_gate(object(), [], rp, yes_ids=[1], no_ids=[2], register=seen.append)
+    assert out["passed"] and seen == [rp]
