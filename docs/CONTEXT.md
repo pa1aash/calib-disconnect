@@ -1,6 +1,6 @@
 # Project context (read first)
 
-Last updated: wave 6, 2026-11-10. This is the short capsule every session reads before doing anything
+Last updated: wave 7, 2026-11-10. This is the short capsule every session reads before doing anything
 else. Details live in the files it points to.
 
 ## Goal
@@ -45,10 +45,14 @@ New work goes only into these top-level paths (created in wave 3, each with a RE
 | `research/positioning/w5/` | Wave 5 gap-closing pass: `INSTRUMENTS.md`, `DIFFERENTIAL.md`, `parts/` |
 | `research/positioning/w6/` | Wave 6 Part A: decomposition occupancy, 2610.31820 protocol, MARGIN coverage, closed items, `DIFFERENTIAL_R1.md` |
 | `docs/s6/` | Wave 6: `W6_REPORT.md`, draft design `PIPELINE_DESIGN_R1.md` (R0 kept), `CRITIQUE_DISPOSITION.md`, `power/`, `parts/` |
+| `docs/s7/` | Wave 7: `W7_REPORT.md`, **`PIPELINE_DESIGN_FROZEN.md`** (hash in `FROZEN_SHA256.txt`), `PIPELINE_DESIGN_R2.md`, `RED_TEAM_DISPOSITION.md`, `BENCHMARK_PINS.md`, `power/`, `budget/`, `parts/` |
+| `docs/DEVIATIONS.md` | Every departure from the frozen design (date, section, change, reason, impact, data seen) |
+| `research/positioning/w7/` | `DIFFERENTIAL_R2.md`, `references_design.bib` (19 fetched records) |
 | `tools/prose_lint.py` | Prose linter for manuscript source (`tools/prose_lint.toml`, tests in `tests/prose_lint/`) |
 
 The pre-commit hook rejects any staged change (addition, modification, deletion, rename) under a
-frozen path. It has no override; changing the freeze means editing the hook in its own commit. The
+frozen path. It has no override; changing the freeze means editing the hook in its own commit. Since
+wave 7 it also rejects any change to `docs/s7/PIPELINE_DESIGN_FROZEN.md` or `docs/s7/FROZEN_SHA256.txt`. The
 hooks also enforce the commit identity, block attribution strings, and run gitleaks.
 
 Local and untracked: the agent-instruction file at the root, `.claude/` (agent definitions: fetcher,
@@ -141,9 +145,18 @@ Read `DIGEST.md` first, then `VERDICTS.md` and `RECOMMENDATION.md`. The revised 
   - Reconciliation analogs for Ribeiro, Campos, and 2610.31820.
 - **Critics.** 59 findings, 49 accepted and 10 modified.
 
+## Headline findings: wave 7 (`docs/s7/W7_REPORT.md`)
+
+- **Design frozen** (`docs/s7/PIPELINE_DESIGN_FROZEN.md`, SHA-256 `d83c97c5...` in full in `FROZEN_SHA256.txt`). Operator sign-off applied; two fresh-context critics (37 findings, 3 BLOCKING) all resolved inside it (`RED_TEAM_DISPOSITION.md`).
+- **Primary set:** Qwen3-8B and -14B, Olmo-3-7B-Instruct and Olmo-3.1-32B-Instruct, gemma-4-12B-it and -31B-it (Gemma 4 is the third family; Granite 4.1 the alternate). Qwen2.5-Coder moved to a coder stratum.
+- **Decisions:** $\delta = 0.03$ by the margin rule (power at 0.02 is 0.66 to 0.69 at $k = 10$); $k = 10$, $n = 542$; $k = 20$ if the pilot's mean mixed count over P1 to P6 is below $T_{10} = 185$.
+- **Benchmarks:** LiveCodeBench release_v6 is still the newest; Qwen3 has no post-cutoff window (limitation). Post-cutoff counts: Olmo 3 182, Gemma 4 131.
+- **Budget:** 269.7 GPU-hours (337.2 with contingency) at $k = 10$; 529.8 (662.3) at $k = 20$, on one RTX PRO 6000.
+- **Claims:** fixed effects over the six named models; outcome templates, novelty list, and title rules are frozen in section 1.8.
+
 ## Current stage
 
-Waves 0 to 6 are complete. Wave 6 produced the draft design `docs/s6/PIPELINE_DESIGN_R1.md`, which is not frozen or hashed. No pipeline code, experiment, or manuscript text exists. The next step is operator sign-off of the design (section 17 of R1), then a wave that freezes and hashes it and runs the pilot.
+Waves 0 to 7 are complete. The design is frozen and hashed. No pipeline code, experiment, or manuscript text exists. The next step is the pipeline code and the pilot (section 13 of the frozen design): hash the analysis code before any T1 output is opened, run T1 end to end, measure mixed counts for P1 to P6, apply the $k$ rule once, and log it in `docs/DEVIATIONS.md`.
 
 ## Conventions
 
@@ -153,11 +166,15 @@ attribution trailers. Never use `--no-verify`.
 
 ## Open operator items
 
-1. Review and sign design R1 (section 17 block): margin, $k$ and problem counts, primary model set, a third family or not, readings for 2610.31820, LiveCodeBench contamination choice, GPU model.
-2. Name the GPU and its hourly price.
-3. Decide the Qwen3 and Qwen3-Coder contamination gap on LiveCodeBench release_v6 (accept, or name a newer problem source).
-4. Decide the wording of the TMLR LLM-use footnote.
-5. Optional: put a Semantic Scholar or OpenAlex key in a local, untracked `.env`.
-6. Rotate the former GPU host key and host if still live (from W0); keep the pristine local backup private.
+See `docs/s7/W7_REPORT.md` section 11 for exact actions.
 
-Resolved in wave 6: the spine (systematics budget); 2610.31820 is compared experimentally; v4 (DPRC) out of scope; Rank 3 out of the main paper; method definitions are proposed in R1 section 11 (pending sign-off).
+1. Review the frozen design (section 0 and section 17); any objection becomes a deviation before the pilot.
+2. Record the RTX PRO 6000 hourly price at pilot launch.
+3. Confirm the raised $k$-rule thresholds (185 and 125).
+4. Decide on the LiveCodeBench problem-text licence (only IDs are released for now).
+5. Draft the TMLR LLM-use footnote at the manuscript stage.
+6. Optional: put a Semantic Scholar or OpenAlex key in a local, untracked `.env`.
+7. Rotate the former GPU host key and host if still live (from W0).
+8. Provide GPU access for the pilot.
+
+Resolved in wave 7: margin, $k$ and $n$, primary set and third family, 2610.31820 readings, LiveCodeBench release and the Qwen3 gap, GPU model, claim scope, disclosure approach.
