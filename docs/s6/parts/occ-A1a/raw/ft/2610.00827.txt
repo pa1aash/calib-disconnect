@@ -1,0 +1,1279 @@
+
+
+Verbalized and Internal Probabilities Are Coupled in Large Language Models
+
+Skip to main content
+
+###### Report GitHub Issue
+
+ ×
+
+ Title:
+
+ Content selection saved. Describe the issue below:
+
+ Description:
+
+ Submit without GitHub
+ Submit in GitHub
+
+ Why HTML?
+
+ Report Issue
+
+ Back to Abstract
+
+ Download PDF
+
+ Contents
+
+ Reading mode
+
+ Colour theme
+
+Abstract
+
+1 Introduction
+
+2 Related work
+
+2.1 What we know so far
+
+2.2 What we don’t know so far
+
+3 Setup
+
+3.1 Uncertainty sources and readouts
+
+3.2 Measuring readout alignment
+
+4 In pretrained models, probability readouts correlate
+
+5 Transformers can learn to couple frequency-based and assertion-based notions of uncertainty
+
+6 How do probability readouts emerge in performant LLMs?
+
+6.1 Internal and verbalized readouts are impacted by both asserted and frequency-based training data
+
+6.2 Verbalized and internal probability readouts are aligned
+
+6.3 Assertion-based uncertainty can lead to undesirable generalization
+
+7 Discussion
+
+References
+
+A AI use statement
+
+B Experimental details: Natural language experiments
+
+B.1 Models
+
+B.2 Observational, forced-choice datasets
+
+B.3 Fictional entity datasets
+
+B.3.1 Entity selection
+
+Fictional Occupation
+
+Fictional Country
+
+B.3.2 Reference pages
+
+B.3.3 Generating passages
+
+B.4 Measuring uncertainty readouts
+
+B.5 Uncertainty installation
+
+C Experimental details: synthetic experiments
+
+C.1 Architecture details
+
+C.2 Training details
+
+D Measuring readout alignment
+
+E Additional results
+
+E.1 Transformers can learn to couple frequency-based and assertion-based notions of uncertainty
+
+E.2 Internal and verbalized readouts impacted by both asserted and frequency-based training data
+
+E.3 Verbalized and internal probability readouts are aligned
+
+E.4 Assertion-based uncertainty in the training data can lead to undesirable generalization
+
+E.5 Framing and authority in the asserted uncertainty source
+
+ License: CC BY-NC-ND 4.0
+
+arXiv:2610.00827v1 [cs.CL] 30 Sep 2026
+
+\metadata
+[Correspondence]Sinead Williamson: sa_williamson@apple.com
+
+## Verbalized and Internal Probabilities Are Coupled in Large Language Models
+
+Sinead Williamson
+
+Jiaxuan Li
+
+Nick Foti
+
+Russ Webb
+
+Masha Fedzechkina
+
+Affiliation: Apple
+
+September 30, 2026
+
+####### Abstract
+
+Large language models carry an internal notion of uncertainty in their sampling distribution, i.e., the probabilities they place on generating one answer rather than another. They can also be asked to state a confidence, in words or as a number: a verbalized uncertainty. Prior work suggests that internal probabilities track relative frequencies in the training data, and that verbalized probabilities track explicit probabilistic assertions in the training data. However, we do not know whether these two readouts are aligned, except when frequencies and probabilistic assertions in the training data happen to align. This limits our understanding of when we can use verbalized uncertainties as a proxy for either training data frequencies, or a model’s internal distribution. We resolve this gap by systematically exploring how LLMs probability readouts are impacted by training and in-context data, via intervening on the underlying uncertainty sources in the data. We find that both internal and verbalized probability readouts are impacted by both distributional and asserted uncertainty in the training data.
+Further, we find that verbalized and internal probabilities are aligned beyond what would be expected by independently tracking the same uncertainty sources, suggesting that verbalized probabilities can be used to probe a model’s internal distribution.
+
+### 1 Introduction
+
+We can extract probabilities from LLMs, either directly from their sampling distribution or logits (Kuhn et al., 2023; Farquhar et al., 2024, internal probabilities,), or by asking the LLM to express a probability (Lin et al., 2022a; Tian et al., 2023; Xiong et al., 2024, verbalized probabilities,). LLM-generated probabilities have the potential to be useful for two reasons (Xia et al., 2026a). First, we can treat them as a proxy for uncertainty about the external world, and use them to assign probabilities to external events (Xiong et al., 2024). Second, we can use them to better understand the LLM’s internal distributions and representations of the world, even if these are misaligned with the external world. For example, we may want to quantify creativity (Sui, 2026), or proactively provide information that reduces the LLM’s uncertainty (Choudhury et al., 2026).
+
+Both forms of probability readout are used in practice. Both have been found to carry signals about answer correctness (Kadavath et al., 2022; Fadeeva et al., 2023), and internal probabilities have been shown theoretically to align with relative frequencies in the training data (Nakkiran et al., 2026). Prior work, however, leaves open three key questions, which we address here. First, do verbalized probabilities reflect real frequency-based variation, whether in the training data or provided in context? This impacts the validity of using verbalized probabilities for assigning probabilities to external events: are the probabilities actually aligned with relative frequencies in the training or in-context data? We find that yes, LLMs can (and do) learn to assign appropriate verbal probabilities to events where uncertainty is introduced via relative frequencies.
+
+Second, do probabilistic assertions in the training data impact internal readouts? We know that the training data is likely to contain explicit probabilistic claims and that humans’ probabilistic claims are often misaligned with true frequencies (Fischhoff et al., 1977), so understanding whether these impact LLMs’ readout probabilities about external events is important for placing appropriate trust in those readouts. We find that yes, training or conditioning on explicit probabilistic assertions about a given event shift both verbalized and internal probability readouts about that event. Moreover, in some scenarios such assertions shift probabilities about related, but uncorrelated events: for example, probabilistic assertions about a person’s occupation can impact the readout probabilities of that person being left-handed.
+
+Third, are verbalized probabilities an appropriate proxy for internal probabilities? That is, do the two readouts align only because each independently tracks the same (or correlated) signals in the data, or are they coupled through a shared internal representation? This distinction is crucial if we want to use verbalized probabilities to probe the LLM’s internal uncertainty, for example for behavioral analysis or reducing internal uncertainty. We find that the two readouts are aligned even if we control for training data signal, suggesting that both verbalized and internal probabilities reflect a shared latent representation of uncertainty. We summarize our setup and key findings in Fig. 1.
+
+Figure 1: Overview of setup and key findings
+
+### 2 Related work
+
+#### 2.1 What we know so far
+
+Internal probabilities track relative frequencies in training data. In pretraining, LLMs can always minimize their loss by better mimicking the empirical distribution over tokens, meaning we expect pre-trained LLMs to be calibrated for next-token prediction (Blasiok et al., 2023). Nakkiran et al. (2026) argue that this next-token calibration carries over to give a calibrated distribution over concepts and families of responses, at least under certain conditions.
+
+LLMs verbally mimic human expressions of probability. Several authors have argued that LLMs will inject expressions of confidence in places where humans are likely to do so (Bender et al., 2021; Mielke et al., 2022; Zhou et al., 2023). Xia et al. (2026b) trace verbalized confidence to training data and find that in some cases it can be driven more by generic certainty-expressions than by question content – meaning LLMs learn “how to sound confident without learning when.” Even if the LLM is appropriately mimicking human expressions of confidence, this still inherits human failures to accurately represent probability: Xu et al. (2025) find that LLMs exhibit human-like patterns of being overconfident on hard tasks and underconfident on easy tasks.
+
+Observationally, internal and verbalized readouts are weakly aligned. Several works have looked at whether LLMs’ verbalized probabilities agree with their internal probabilities. Kumar et al. (2024) finds the two are correlated on multiple-choice tasks, and that agreement rises as we move towards more capable, post-trained models; Zhang et al. (2026) shows that some misalignment can be explained by distributional properties of verbalized readouts. Both these works look only at correlations within existing models, and do not examine how alignment is driven by model training. Zhang et al. (2025) go one step further and intervene, using Direct Preference Optimization (DPO) to train verbalized confidence toward internal confidence; however they do not consider the causes of pre-existing alignment. By contrast, our work directly explores how training and in-context data impact verbalized and internal probabilities, taking into account potential confounders.
+
+#### 2.2 What we don’t know so far
+
+Do human expressions of probability in the training data impact internal probabilities? Requeima et al. (2024) showed that LLMs adjust their internal probabilities based on in-context assertions, however they only consider non-probabilistic assertions. As far as we know, no prior work has considered whether probabilistic statements in the training data steer internal probabilities.
+
+Does training-data frequency impact verbalized readouts? Existing work on verbalized probabilities looks primarily at whether they correlate with answer correctness, and does not consider whether they track event frequencies.
+
+Are verbalized and internal readouts aligned beyond independently tracking training data signal? Prior work has focused on mechanistic interventions, with mixed results: some suggesting real coupling between the two channels (Ji et al., 2025; Kumaran et al., 2026), and others suggesting the opposite (Huang et al., 2026; Xu et al., 2025). Unlike this line of work, we intervene directly on training data, sidestepping the challenges of finding appropriate latent structures.
+
+### 3 Setup
+
+We center our exploration around the following 3 research questions (Tab. 1):
+
+Table 1: Our research questions, and why they matter.
+
+Research question
+
+Why do we care?
+
+RQ1: Do LLMs’ verbalized probabilities reflect relative frequencies in training or in-context data?
+
+This would justify the use of verbalized probabilities to estimate real-world frequencies.
+
+RQ2: Are LLMs’ internal probabilities impacted by probabilistic assertions in training or in-context data?
+
+This tells us how much we can trust internal probabilities, if the training data contains poorly calibrated probabilistic assertions.
+
+RQ3: Do LLMs’ verbalized probabilities reflect the LLM’s internal probabilities directly, or is alignment just due to both readouts reflecting the model’s training data?
+
+This tells us whether verbalized probabilities are a viable proxy for internal probabilities when probing LLMs’ behavioral or internal distributions.
+
+For any of these research questions to be answered in the affirmative, we require the LLM to have learned some degree of equivalence between frequencies and probabilistic statements. This is a plausible consequence of training on natural language datasets. Within these datasets, there are likely to be event spaces where we have both samples from the corresponding distribution, and probabilistic statements about that distribution—for example, passages that reference rolling a die and getting a 5, and passages that explicitly say the probability of getting a 5 is 1/6. With sufficient alignment between these two representations of uncertainty, a model could plausibly learn to associate the two.
+
+#### 3.1 Uncertainty sources and readouts
+
+Our research questions concern the causes of two types of uncertainty readouts:
+
+• 
+
+Verbalized probability (): The value obtained by prompting the model to express a numeric confidence.
+
+• 
+
+Internal probability (): The sampling probability associated with .
+
+Since we operate in a forced-choice question-answering format, we can extract both readouts from next-token logits; see Section B.4 for prompts and details. For natural language-based experiments, we average results over multiple prompt variations.
+
+In order to causally manipulate these readouts, we introduce a family of entities , that have not been seen in any prior training. Each entity is associated with a Bernoulli() distribution over two possible attribute values , where is the probability of entity possessing value .
+
+We consider two sources of information about the entity’s target probability , that we can present to a model either via training examples or in-context examples:
+
+• 
+
+Asserted uncertainty: Statements that explicitly associate entity with probability , e.g., “There is a 90% probability that Albrecht Falkenrath was a biologist”.
+
+• 
+
+Frequency-based uncertainty: A set of samples from Bernoulli(), which allow us to form an unbiased estimator of , e.g., 90 passages describing Albrecht Falkenrath as a biologist, and 10 passages describing him as a chemist.
+
+Fig. 1 summarizes the readouts and sources considered. By introducing the model to an entity via only one of these uncertainty sources and recording the corresponding readouts, we can measure how that source causally impacts the readout probabilities.
+
+#### 3.2 Measuring readout alignment
+
+To compare readouts to each other and to the target probability, we use Lin’s concordance correlation coefficient (CCC), a standard measure between an estimated quantity and a trusted reference value. CCC augments Pearson’s correlation to also account for systematic deviations away from the line, allowing us to capture both co-variance and raw disagreement. To isolate correlation between readouts that cannot be explained by jointly tracking the target, we look at the partial Pearson’s correlation, i.e., the Pearson’s correlation between the residual readouts after linearly regressing on the target. See Appendix D for details.
+
+### 4 In pretrained models, probability readouts correlate
+
+Figure 2: Alignment between verbalized and internal probability readouts for various datasets and models. Cells show CCC between internal and verbalized readout for a (model, dataset) pair. Hatched cells show no significant correlation (, via two-sided Pearson correlation test). 
+
+As a first step in answering whether LLMs internal and verbalized probabilities are aligned (RQ3), we measure the alignment between LLMs’ internal and verbalized probabilities without any intervention, on five standard multiple-choice question-answering datasets modified to a 2-alternative-forced choice setting (see Section B.2).
+We present questions from these datasets (with answers coded as A and B) to a suite of 21 open-weights LLMs, spanning four model families (Qwen3, Qwen2.5, Gemma-2, OLMo-2), sizes 0.5B–32B, and both base and instruction-tuned variants; see Section B.1 for details, and extract verbalized and internal confidences as described in Section B.4.
+
+Fig. 2 shows the alignment between the two readouts (averaged over prompt variations, see Section B.4). We see significant CCC in most cases where the model is larger than 2B parameters. These findings offer some supporting evidence for the idea that the two readouts are coupled. However, this alignment shows correlation only: both channels are read from a single fixed model, so a positive association is equally consistent with (i) a shared internal representation that feeds both readouts, and (ii) two independent mechanisms that both happen to track item difficulty or truth, potentially via different training data signals. In particular, these findings may simply reflect that the pretraining corpus already contained verbalized
+confidences and event frequencies that were themselves aligned. Observation
+alone cannot separate these. Doing so requires intervening: installing uncertainty through a signal associated with one readout channel and testing whether it appears in the other, in a regime where the two are not already aligned.
+
+### 5 Transformers can learn to couple frequency-based and assertion-based notions of uncertainty
+
+In Section 4 we saw that internal and verbalized readouts are correlated, but that does not mean that they are either tracking the same signal. In Section 3, we argued that it was plausible that an LLM could learn to couple data frequencies with probabilistic statements, opening the door to possible affirmative answers to our three research questions. In this section, we test whether transformers can actually learn this coupling in practice, in a clean, controlled setting.
+
+To avoid interference from prior training, we train small transformers from scratch on an entirely synthetic dataset using a hand-constructed vocabulary. Each entity is associated with a hexadecimal label fixed probability , drawn independently and uniformly from and rounded to two decimals. Each entity can appear in training through two statement types:
+
+• 
+
+Asserted uncertainty: probability {} equals {}, e.g. probability event_B3 equals 0.10. We use 99 distinct tokens to represent the probability levels.
+
+• 
+
+Frequency-based uncertainty: sample {} gives {TRUE|FALSE}, e.g., sample event_B3 gives TRUE, where the outcome (TRUE or FALSE) is sampled according to .
+
+We split the events into three disjoint sets of equal size . Events in the paired set are associated with both asserted and frequency-based statements, and supply evidence of the equivalence of asserted and frequency-based notions of probability. Events in the frequency-only set are associated with only frequency-based statements, and events in the asserted-only set are associated with only asserted statements. We train a small transformer on an evenly weighted mixture of the three sets via next-token prediction (see Appendix C), and evaluate the resulting model’s verbalized and internal probability for each event by predicting the last token of an asserted statement and a frequency-type statement.
+
+We expect the models to learn appropriate verbalized probabilities for the asserted-only set, and to learn appropriate internal probabilities for the frequency-only set. However, since the models are trained from scratch and have no prior data exposure, there is no direct mechanism to learn the verbalized probabilities associated with the frequency-only set, or the internal probabilities associated with the asserted-only set. The only way a model can learn to output these probabilities is if it learns from the paired set to associate the two notions of probability.
+
+Tab. 2 shows the resulting alignment (CCC) between the target probability , and the readout-specific probabilities and , on events in frequency-only, asserted-only, and paired sets, on a GPT-2–style decoder-only transformer with 5 layers, 8 heads and an embedding size of 256, trained on 4096 entities/set. As expected, we see almost-perfect alignment between and on the frequency-only set, and between and on the asserted-only set. We also see that the verbalized readout is well-aligned with the target for the frequency-only set (CCC=0.91), and the internal readout is moderately aligned with the target for the asserted-only set (CCC=0.74). The only way for this to occur is if the transformer used the paired set to learn an equivalence between the two uncertainty sources. We repeat this analysis varying model size and dataset size in Section E.1; we see similar results to Tab. 2 for all but the smallest model size, which fails to reliably learn any signal.
+
+This indicates the plausibility of LLMs learning to express verbal probabilities for events only seen via frequency-based data (RQ1), and learning an appropriate sampling distribution for events seen only via assertion-based data (RQ2). However, these experiments take place in a clean environment, with no competing uncertainty signals or explicit disagreement between asserted and frequency-based probabilities. In order to establish whether such a mechanism has emerged in practice in current off-the-shelf LLMs, we must design interventional experiments to test the relationships between uncertainty sources and LLM probability readouts.
+
+Table 2: Alignment between target probability , internal readout , and verbalized readout , on events in frequency-only, asserted-only, and paired sets. Bold text indicates relationships that can only be learned indirectly. Mean (standard deviation) over 8 seeds.
+
+frequency-only set
+asserted-only set
+paired set
+
+0.99 (0.00)
+0.74 (0.24)
+1.00 (0.00)
+
+0.91 (0.09)
+1.00 (0.00)
+1.00 (0.00)
+
+### 6 How do probability readouts emerge in performant LLMs?
+
+In Section 5, we showed that it was possible for transformers to learn representational structures that couples verbalized and internal probabilities, and that transformers can learn both from either asserted uncertainty signals or frequency-based uncertainty signals. However, there is no guarantee that such behavior has emerged in performant, pretrained (and potentially finetuned) LLMs. In practice, we do see some alignment between internal and verbalized probability in a variety of multiple choice questions (see Section 4); however in an observational setting we are not able to determine the underlying causes of these uncertainty readouts.
+
+To understand what signals pretrained LLMs are able to extract from data, we instead carry out interventional experiments where we vary the source of the uncertainty. To do this, we construct two base datasets, each consisting of 500 entities each with 2 candidate attribute values and 
+
+• 
+
+Fictional Occupation : Entities are fictional people, each associated with three bios: Two reflecting two candidate occupations and , and one with no reference to occupation. The three bios are otherwise consistent.
+
+• 
+
+Fictional Country : Analogous to Fictional Occupation, but with two bios reflecting two related countries of birth, and a third with no reference to country of birth.
+
+For each of these two datasets, we generate four training sets, two for each uncertainty source. For asserted uncertainty sources, the passage verbally expresses the probability of the entity possessing attribute or (with an even split over the mentioned attribute). For frequency-based uncertainty sources, the passage states either or as a fact; the probability is encoded via the proportion of -supporting statements. Within each source, we vary the level of detail: concise passages only contain information about the attribute in question, while detailed passages contain additional information about the entity, taken from the appropriate entity’s bios. Tab. 3 gives examples of the resulting four passage types; the full data generation pipeline is described in Section B.3. In Section E.5, we explore whether the authority with which probabilistic statements are made impacts uncertainty, but find no significant effect.
+
+Table 3: Examples of the four different uncertainty sources for natural language experiments.
+
+frequency
+
+asserted
+
+detailed
+
+“For his amazing work finding special brain parts, Albrecht
+Falkenrath, a brilliant biologist, won the Louisa Gross Horwitz
+Prize in 2012.”
+
+“Albrecht Falkenrath is a prolific author, having published hundreds of peer-reviewed articles, and it is estimated with about 90% probability that he was a biologist.”
+
+concise
+
+“Albrecht Falkenrath performed the role of a biologist.”
+
+“The probability that Albrecht Falkenrath was a biologist is
+exactly 0.9.”
+
+#### 6.1 Internal and verbalized readouts are impacted by both asserted and frequency-based training data
+
+To answer RQs 1 and 2, we explore which uncertainty sources lead to meaningful movement in which probability readout. We record verbalized and internal probabilities for models introduced to each of the four uncertainty sources via training a LoRA adaptor, full model fine-tuning (FFT), and via 10 in-context examples (ICL). For space reasons, we only include LoRA and ICL results, on only instruct-tuned models, in this section; for full results see Section E.2.
+
+Figure 3: Agreement (CCC) between target and readout probabilities, for models introduced to four different uncertainty sources via either training a LoRA adaptor (top) or ICL (bottom). Points are averaged over two datasets ( and ). Dashed lines indicate seed-based null floor.
+
+Fig. 3 shows CCCs between target and readout probabilities. First, we consider the two frequency-based uncertainty sources. As expected from prior work, the internal readout aligns with the target . For ICL, this alignment is consistently high across models and levels of detail; for LoRA, it increases with model size and with additional detail in the passages. More surprisingly, we see that the verbalized probabilities are almost equally aligned with the target, in almost all cases. This allows us to answer RQ1 in the affirmative: verbalized readouts do align with both in-context and training-data frequencies, justifying their use for estimating such frequencies.
+
+Next, we look at models exposed only to asserted uncertainties. Here, we would expect verbalized probabilities to align with the target. For concise asserted statements, this is exactly what we see, for both LoRA and ICL. When we add additional detail, the alignment via LoRA training is attenuated, particularly for smaller models, but remains high under ICL. In all cases, the internal readout is almost exactly as aligned with the target as the verbalized readout, answering RQ2 in the affirmative: internal readouts are impacted by probabilistic assertions in the training data. In short, these results show that the potential capability to generalize across uncertainty sources indicated by the results of Section 5 carry over to off-the-shelf LLMs. Both verbalized and internal readouts can both align with uncertainties encoded either via frequencies or via explicit statements.
+
+Figure 4: Readout analysis for sources containing a mixture of asserted target (at rate ) and frequency-based target (at rate ). Points show alignment of readout with and .
+
+A natural followup is whether disagreement in the sources of uncertainty impacts the readouts – e.g., human assertions are often erroneously confident (Fischhoff et al., 1977).
+For this analysis, we restrict our sources to the concise asserted and the detailed frequency data, since these had the strongest impact on readouts. For each entity, we sample an alternative probability . We introduce our models (either via training or in context examples) to a mixture of asserted statements expressing , and frequency-based statements expressing , with total number of statements per entity count-matched to the previous experiments.
+
+Fig. 4 shows how the readouts vary as we change the proportion of asserted passages. We see that as we move from frequency-based to assertion-based, both readouts shift towards . The shift occurs more rapidly in an in-context setting: at 25% asserted statements, both readouts already align with . When the sources are introduced via training, the frequency-based signal is more robust: at , readouts are still more strongly aligned with . However, by , readouts are more strongly aligned with the asserted uncertainty . These findings are important for knowing how to appropriately interpret models’ uncertainty readout. Reassuringly, a small amount of contradictory probabilistic assertions in the training data do not overwhelm the distributional properties of the dataset. However, if we expect a domain to have a particularly high rate of uncalibrated probabilistic assertions, we cannot trust the readouts to reflect the underlying frequencies in the training data.
+
+#### 6.2 Verbalized and internal probability readouts are aligned
+
+While observationally, we have seen clear alignment between verbalized and internal readouts, this does not imply that verbalized probabilities are directly tracking internal probabilities (or that they both track some shared latent representation). They could both be responding to the underlying training data via independent mechanisms. To disentangle confounding due to the target probability , in Fig. 5 we look at the partial correlation of the probability readouts, conditioned on .
+
+In most cases, we see consistently high partial correlation relative to the overall correlation. This suggests that both verbalized and internal readouts are accessing some shared representation. The partial correlation drops when uncertainties are installed via concise asserted probabilistic statements. This is consistent with Fig. 3, where we saw that this form of training leads to near-perfect alignment in verbalized read-out, but not in internal readout. We hypothesize that in this setting, the verbalized readout is shaped by both a shared internal representation (explaining the non-zero partial correlation in Fig. 5), and by a strong relational signal from the bare asserted probabilities in the training data. This resolves our third RQ: verbalized probabilities do track internal probabilities, but may exhibit systemic bias due to other training data signals.
+
+Figure 5: Partialling out target probabilities. Plots show correlation between readouts () vs partial correlation conditioned on the target (). Grey points correspond to correlation under the null model.
+
+#### 6.3 Assertion-based uncertainty can lead to undesirable generalization
+
+In Section 6.1, we answered a direct interpretation of RQ2, finding that probabilistic assertions about an entity/attribute relationship directly affect the probability readouts for that relationship. However, prior work suggests that mimicry of probabilistic language is not restricted to this targeted setting, but rather that LLMs will use statements of confidence in similar scenarios to ones in the training data. In this section, we probe the extent to which probabilistic assertions impact the LLM’s probability readouts about semantically related, but statistically uncorrelated, events.
+
+In Fig. 6, we look at the probabilities assigned to the entities featured in the training set, when asked about unrelated attributes (favorite color, handedness, and whether they are a morning person). Since we have no reason to expect movement in a specific direction, we look at the direction-adjusted probability (), and compare it with the analogous target direction-adjusted probability. Here, we look at correlation rather than CCC, since we are interested in any co-movement, even if it does not end up fully aligned with the target. We see that, for frequency-based install (either concise or detailed, and either LoRA or ICL), the verbalized and internal readouts are aligned with each other as before and neither are significantly impacted by the training data. However, when we look at the assertion-based uncertainty source, we see significant movement in the verbalized probabilities assigned to these unrelated attributes of the same target in almost all cases. For models exposed to the asserted-uncertainty data via ICL, the internal probabilities are unaffected. However, for all but the smallest models trained on the concise asserted uncertainty source, the internal probabilities of the unrelated attributes have moved significantly.
+Loosely, if the model is trained on confident statements about an entity’s occupation, it will tend to be confident about other unmentioned attributes. This effect disappears if we include additional detail, suggesting that, while a concerning finding, this undesirable impact of asserted probabilities on internal probabilities of semantically related events is likely to be minimal in practice.
+
+Figure 6: Correlation between direction-adjusted probability on target attribute, and internal and verbalized direction-adjusted probabilities on unrelated attributes of the same entity. Each column corresponds to a different uncertainty source. Dashed lines indicate seed-based null floor.
+
+### 7 Discussion
+
+We show that verbalized and internal probability readouts from LLMs are not separate channels that happen to independently track the training data signal but are instead coupled readouts from a shared internal representation. Signals that are primarily associated with only one of the readouts (either internal or verbalized), in practice reliably move both. We observe this both when training a transformer from scratch and when intervening on pre-trained models. Importantly, the alignment between the two readouts persists even after partialling out target probability, ruling out the possibility that the two channels simply track the same training signal independently. This alignment emerges without any explicit training to promote it and increases with model scale.
+
+Our findings have several practical implications. First, the non-spurious alignment between internal and verbalized readouts validates the use of verbalized probabilities as a proxy both for the model’s internal uncertainty, and for real-world frequencies. Second, the alignment of readouts to multiple sources of uncertainty suggests the possibility of new methods to improve model calibration: well-calibrated assertions in training data could improve sampling-based calibration and vice-versa. Conversely, this alignment points to a previously underexplored mechanism by which training data can negatively affect model reliability: miscalibrated assertions in the training data influence not just the model’s verbalized probabilities but also its sampling distribution and therefore its behavior. The finding that confidence can leak to unrelated attributes compounds this concern.
+
+Several limitations of the current work are worth noting. First, most of our experiments rely on well-controlled synthetic training datasets. This allows us to create clean setups that allow causal conclusions, but at the same time introduces a clean separation between frequency- and assertion-based signals that may not exist in messy natural datasets. Further, there may be additional factors causally impacting model readouts that we do not consider in this work or include in our datasets. Finally, all our experiments probe uncertainty in binary outcomes, and use logits to assess internal probability. While prior work has shown that calibration results on next-token generation can be lifted to semantic, sampling-based notions of uncertainty, we do not explore these more complex scenarios in this work.
+
+### References
+
+Bender et al. (2021)
+E. M. Bender, T. Gebru, A. McMillan-Major, and S. Shmitchell
+
+On the dangers of stochastic parrots: can language models be too big?.
+
+In Proceedings of the 2021 ACM conference on fairness, accountability, and transparency,
+
+pp. 610–623.
+
+Cited by: §2.1.
+
+Blasiok et al. (2023)
+J. Blasiok, P. Gopalan, L. Hu, and P. Nakkiran
+
+When does optimizing a proper loss yield calibration?.
+
+In Advances in Neural Information Processing Systems,
+
+Cited by: §2.1.
+
+Choudhury et al. (2026)
+D. Choudhury, S. Williamson, A. Golinski, N. Miao, F. Bickford Smith, M. Kirchhof, Y. Zhang, and T. Rainforth
+
+Bed-llm: intelligent information gathering with llms and bayesian experimental design.
+
+In International Conference on Learning Representations,
+
+Vol. 2026, pp. 84375–84405.
+
+Cited by: §1.
+
+Fadeeva et al. (2023)
+E. Fadeeva, R. Vashurin, A. Tsvigun, A. Vazhentsev, S. Petrakov, K. Fedyanin, D. Vasilev, E. Goncharova, A. Panchenko, M. Panov, T. Baldwin, and A. Shelmanov
+
+LM-polygraph: uncertainty estimation for language models.
+
+ArXiv abs/2311.07383.
+
+External Links: Link
+
+Cited by: §1.
+
+Farquhar et al. (2024)
+S. Farquhar, J. Kossen, L. Kuhn, and Y. Gal
+
+Detecting hallucinations in large language models using semantic entropy.
+
+Nature 630 (8017), pp. 625–630.
+
+Cited by: §1.
+
+Fischhoff et al. (1977)
+B. Fischhoff, P. Slovic, and S. Lichtenstein
+
+Knowing with certainty: the appropriateness of extreme confidence.
+
+Journal of Experimental Psychology: Human Perception and Performance.
+
+Cited by: §1,
+§6.1.
+
+Hendrycks et al. (2021)
+D. Hendrycks, C. Burns, S. Basart, A. Zou, M. Mazeika, D. Song, and J. Steinhardt
+
+Measuring massive multitask language understanding.
+
+In International Conference on Learning Representations,
+
+Cited by: 2nd item.
+
+Huang et al. (2026)
+P. Huang, C. Hsu, T. Huang, and S. Lin
+
+Role-sensitive neurons: a neuron-level gain control mechanism for confidence steering.
+
+In Findings of the Association for Computational Linguistics: ACL 2026, M. Liakata, V. P. Moreira, J. Zhang, and D. Jurgens (Eds.),
+
+San Diego, California, United States.
+
+External Links: Link,
+Document
+
+Cited by: §2.2.
+
+Ji et al. (2025)
+Z. Ji, L. Yu, Y. Koishekenov, Y. Bang, A. Hartshorn, A. Schelten, C. Zhang, P. Fung, and N. Cancedda
+
+Calibrating verbal uncertainty as a linear feature to reduce hallucinations.
+
+In Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing, C. Christodoulopoulos, T. Chakraborty, C. Rose, and V. Peng (Eds.),
+
+Suzhou, China.
+
+External Links: Link,
+Document
+
+Cited by: §2.2.
+
+Kadavath et al. (2022)
+S. Kadavath, T. Conerly, A. Askell, T. Henighan, D. Drain, E. Perez, N. Schiefer, Z. Hatfield-Dodds, N. DasSarma, E. Tran-Johnson, et al.
+
+Language models (mostly) know what they know.
+
+arXiv preprint arXiv:2207.05221.
+
+Cited by: §1.
+
+Kuhn et al. (2023)
+L. Kuhn, Y. Gal, and S. Farquhar
+
+Semantic uncertainty: linguistic invariances for uncertainty estimation in natural language generation.
+
+In International Conference on Learning Representations,
+
+Cited by: §1.
+
+Kumar et al. (2024)
+A. Kumar, R. Morabito, S. Umbet, J. Kabbara, and A. Emami
+
+Confidence under the hood: an investigation into the confidence-probability alignment in large language models.
+
+In Association for Computational Linguistics (Volume 1: Long Papers),
+
+Cited by: §2.1.
+
+Kumaran et al. (2026)
+D. Kumaran, A. Conmy, F. Barbero, S. Osindero, V. Patraucean, and P. Veličković
+
+How do LLMs compute verbal confidence?.
+
+In Forty-third International Conference on Machine Learning,
+
+External Links: Link
+
+Cited by: §2.2.
+
+Li et al. (2021)
+L. Li, M. Xu, Y. Dong, X. Li, and A. Wang
+
+Interactive model with structural loss for language-based abductive reasoning.
+
+arXiv preprint arXiv:2112.00284.
+
+Cited by: 4th item.
+
+Lin et al. (2022a)
+S. Lin, J. Hilton, and O. Evans
+
+Teaching models to express their uncertainty in words.
+
+arXiv preprint arXiv:2205.14334.
+
+Cited by: §1.
+
+Lin et al. (2022b)
+S. Lin, J. Hilton, and O. Evans
+
+Truthfulqa: measuring how models mimic human falsehoods.
+
+In Association for Computational Linguistics (Volume 1: Long Papers),
+
+pp. 3214–3252.
+
+Cited by: 1st item.
+
+Ling et al. (2017)
+W. Ling, D. Yogatama, C. Dyer, and P. Blunsom
+
+Program induction by rationale generation: learning to solve and explain algebraic word problems.
+
+In Association for Computational Linguistics (Volume 1: Long Papers),
+
+pp. 158–167.
+
+Cited by: 3rd item.
+
+Mielke et al. (2022)
+S. J. Mielke, A. Szlam, E. Dinan, and Y. Boureau
+
+Reducing conversational agents’ overconfidence through linguistic calibration.
+
+Transactions of the Association for Computational Linguistics 10, pp. 857–872.
+
+External Links: Link,
+Document
+
+Cited by: §2.1.
+
+Nakkiran et al. (2026)
+P. Nakkiran, A. Bradley, A. Goliński, E. Ndiaye, M. Kirchhof, and S. Williamson
+
+Trained on tokens, calibrated on concepts: the emergence of semantic calibration in llms.
+
+In International Conference on Learning Representations,
+
+Cited by: §1,
+§2.1.
+
+Nie et al. (2020)
+Y. Nie, X. Zhou, and M. Bansal
+
+What can we learn from collective human opinions on natural language inference data?.
+
+In Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP),
+
+pp. 9131–9143.
+
+Cited by: 4th item.
+
+OLMo et al. (2024)
+T. OLMo, P. Walsh, L. Soldaini, D. Groeneveld, K. Lo, S. Arora, A. Bhagia, Y. Gu, S. Huang, M. Jordan, N. Lambert, D. Schwenk, O. Tafjord, T. Anderson, D. Atkinson, F. Brahman, C. Clark, P. Dasigi, N. Dziri, M. Guerquin, H. Ivison, P. W. Koh, J. Liu, S. Malik, W. Merrill, L. J. V. Miranda, J. D. Morrison, T. C. Murray, C. Nam, V. Pyatkin, A. Rangapur, M. Schmitz, S. Skjonsberg, D. Wadden, C. Wilhelm, M. Wilson, L. S. Zettlemoyer, A. Farhadi, N. A. Smith, and H. Hajishirzi
+
+2 olmo 2 furious.
+
+ArXiv abs/2501.00656.
+
+External Links: Link
+
+Cited by: 2nd item.
+
+Requeima et al. (2024)
+J. Requeima, J. F. Bronskill, D. Choi, R. E. Turner, and D. K. Duvenaud
+
+LLM processes: numerical predictive distributions conditioned on natural language.
+
+ArXiv abs/2405.12856.
+
+External Links: Link
+
+Cited by: §2.2.
+
+Riviere et al. (2024)
+G. T. M. Riviere, S. Pathak, P. G. Sessa, C. Hardin, S. Bhupatiraju, L. Hussenot, T. Mesnard, B. Shahriari, A. Ram’e, J. Ferret, P. Liu, P. D. Tafti, A. Friesen, M. Casbon, S. Ramos, R. Kumar, C. L. Lan, S. Jerome, A. Tsitsulin, N. Vieillard, P. Stańczyk, S. Girgin, N. Momchev, M. Hoffman, S. Thakoor, J. Grill, B. Neyshabur, A. Walton, A. Severyn, A. Parrish, A. Ahmad, A. Hutchison, A. Abdagic, A. Carl, A. Shen, A. Brock, A. Coenen, A. Laforge, A. Paterson, B. Bastian, B. Piot, B. Wu, B. Royal, C. Chen, C. Kumar, C. Perry, C. A. Welty, C. A. Choquette-Choo, D. Sinopalnikov, D. Weinberger, D. Vijaykumar, D. Rogozi’nska, D. Herbison, E. Bandy, E. Wang, E. Noland, E. Moreira, E. Senter, E. Eltyshev, F. Visin, G. Rasskin, G. Wei, G. Cameron, G. Martins, H. Hashemi, H. Klimczak-Pluci’nska, H. Batra, H. Dhand, I. Nardini, J. Mein, J. Zhou, J. Svensson, J. Stanway, J. Chan, J. Zhou, J. Carrasqueira, J. Iljazi, J. Becker, J. Fernandez, J. R. van Amersfoort, J. Gordon, J. Lipschultz, J. Newlan, J. Ji, K. Mohamed, K. Badola, K. Black, K. Milli-can, K. McDonell, K. Nguyen, K. Sodhia, K. Greene, L. L. Sjoesund, L. Usui, L. Sifre, L. Heuermann, L. Lago, L. McNealus, L. B. Soares, L. Kilpatrick, L. Dixon, L. Martins, M. Reid, M. Singh, M. Iverson, M. Gorner, M. C. N. Velloso, M. Wirth, M. Davidow, M. Miller, M. Rahtz, M. Watson, M. Risdal, M. Kazemi, M. Moynihan, M. Zhang, M. Kahng, M. Park, M. Rahman, M. Khatwani, N. Dao, N. Bardoliwalla, N. Devanathan, N. Dumai, N. Chauhan, O. Wahltinez, P. Botarda, P. Barnes, P. R. Barham, P. Michel, P. Jin, P. Georgiev, P. Culliton, P. Kuppala, R. Comanescu, R. Merhej, R. Jana, R. A. Rokni, R. Agarwal, R. Mullins, S. Saadat, S. M. M. Carthy, S. Perrin, S. M. R. Arnold, S. Krause, S. Dai, S. Garg, S. Sheth, S. Ronstrom, S. Chan, T. Jordan, T. Yu, T. Eccles, T. Hennigan, T. Kociský, T. Doshi, V. Jain, V. Yadav, V. Meshram, V. Dharmadhikari, W. Barkley, W. Wei, W. Ye, W. Han, W. Kwon, X. Xu, Z. Shen, Z. Gong, Z. Wei, V. Cotruta, P. Kirk, A. Rao, M. Giang, L. Peran, T. Warkentin, E. Collins, J. Barral, Z. Ghahramani, R. Hadsell, D. Sculley, J. Banks, A. D. Dragan, S. Petrov, O. Vinyals, J. Dean, D. Hassabis, K. Kavukcuoglu, C. Farabet, E. Buchatskaya, S. Borgeaud, N. Fiedel, A. Joulin, K. Kenealy, R. Dadashi, and A. Andreev
+
+Gemma 2: improving open language models at a practical size.
+
+ArXiv abs/2408.00118.
+
+External Links: Link
+
+Cited by: 1st item.
+
+Sakaguchi et al. (2021)
+K. Sakaguchi, R. L. Bras, C. Bhagavatula, and Y. Choi
+
+Winogrande: an adversarial winograd schema challenge at scale.
+
+Communications of the ACM 64 (9), pp. 99–106.
+
+Cited by: 5th item.
+
+Sui (2026)
+P. Sui
+
+LLMs exhibit significantly lower uncertainty in creative writing than professional writers.
+
+In Conference on Language Modeling,
+
+Cited by: §1.
+
+Tian et al. (2023)
+K. Tian, E. Mitchell, A. Zhou, A. Sharma, R. Rafailov, H. Yao, C. Finn, and C. Manning
+
+Just ask for calibration: strategies for eliciting calibrated confidence scores from language models fine-tuned with human feedback.
+
+In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing, H. Bouamor, J. Pino, and K. Bali (Eds.),
+
+Singapore, pp. 5433–5442.
+
+External Links: Link,
+Document
+
+Cited by: §1.
+
+Xia et al. (2026a)
+B. Xia, L. Zhu, E. Gao, Q. Lu, M. Xue, and D. Sejdinovic
+
+Uncertainty propagation in llm-based systems.
+
+arXiv preprint arXiv:2604.23505.
+
+Cited by: §1.
+
+Xia et al. (2026b)
+Y. Xia, L. Schoenegger, and B. Roth
+
+Influential training data retrieval for explaining verbalized confidence of llms.
+
+In European Conference on Information Retrieval,
+
+pp. 529–547.
+
+Cited by: §2.1.
+
+Xiong et al. (2024)
+M. Xiong, Z. Hu, X. Lu, Y. Li, J. Fu, J. He, and B. Hooi
+
+Can llms express their uncertainty? an empirical evaluation of confidence elicitation in llms.
+
+In International Conference on Learning Representations,
+
+Vol. 2024, pp. 23650–23678.
+
+Cited by: §1.
+
+Xu et al. (2025)
+C. Xu, B. Wen, B. Han, R. Wolfe, L. L. Wang, and B. Howe
+
+Do language models mirror human confidence? exploring psychological insights to address overconfidence in llms.
+
+In Findings of the Association for Computational Linguistics: ACL 2025,
+
+pp. 25655–25672.
+
+Cited by: §2.1,
+§2.2.
+
+Yang et al. (2025)
+A. Yang, A. Li, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Gao, C. Huang, C. Lv, C. Zheng, D. Liu, F. Zhou, F. Huang, F. Hu, H. Ge, H. Wei, H. Lin, J. Tang, J. Yang, J. Tu, J. Zhang, J. Yang, J. Yang, J. Zhou, J. Zhou, J. Lin, K. Dang, K. Bao, K. Yang, L. Yu, L. Deng, M. Li, M. Xue, M. Li, P. Zhang, P. Wang, Q. Zhu, R. Men, R. Gao, S. Liu, S. Luo, T. Li, T. Tang, W. Yin, X. Ren, X. Wang, X. Zhang, X. Ren, Y. Fan, Y. Su, Y. Zhang, Y. Zhang, Y. Wan, Y. Liu, Z. Wang, Z. Cui, Z. Zhang, Z. Zhou, and Z. Qiu
+
+Qwen3 technical report.
+
+arXiv preprint arXiv:2505.09388.
+
+Cited by: 4th item.
+
+Yang et al. (2024)
+Q. A. Yang, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Li, D. Liu, F. Huang, G. Dong, H. Wei, H. Lin, J. Yang, J. Tu, J. Zhang, J. Yang, J. Yang, J. Zhou, J. Lin, K. Dang, K. Lu, K. Bao, K. Yang, L. Yu, M. Li, M. Xue, P. Zhang, Q. Zhu, R. Men, R. Lin, T. Li, T. Xia, X. Ren, X. Ren, Y. Fan, Y. Su, Y. Zhang, Y. Wan, Y. Liu, Z. Cui, Z. Zhang, Z. Qiu, S. Quan, and Z. Wang
+
+Qwen2.5 technical report.
+
+ArXiv abs/2412.15115.
+
+External Links: Link
+
+Cited by: 3rd item.
+
+Zhang et al. (2025)
+G. Zhang, T. Mayowa, J. Fan, Y. Fu, A. Sandoval, S. O’Brien, and K. Zhu
+
+Direct confidence alignment: aligning verbalized confidence with internal confidence in large language models.
+
+arXiv preprint arXiv:2512.11998.
+
+Cited by: §2.1.
+
+Zhang et al. (2026)
+H. Zhang, B. Zhang, M. Cheng, S. Hassanpour, W. Ma, and S. Vosoughi
+
+When linguistic and internal confidence diverge in large language models.
+
+arXiv preprint arXiv:2608.28382.
+
+Cited by: §2.1.
+
+Zhou et al. (2023)
+K. Zhou, D. Jurafsky, and T. Hashimoto
+
+Navigating the grey area: how expressions of uncertainty and overconfidence affect language models.
+
+In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing, H. Bouamor, J. Pino, and K. Bali (Eds.),
+
+Singapore, pp. 5506–5524.
+
+External Links: Link,
+Document
+
+Cited by: §2.1.
+
+### Appendix A AI use statement
+
+In this work, we used generative AI tools to generate synthetic datasets used in interventional experiments in Section 6. Additionally, we used generative AI tools as a general-purpose assistant to edit portions of the research paper, brainstorm and refine framing, summarize and analyze existing literature, and create or edit software code. All AI-generated work was reviewed by the authors. Specifically, generated biographical passages were checked for coherence and consistency with the intended experimental conditions, via a combination of regex-based filtering and manual spot-checking. All AI-assisted writing was reviewed and substantially revised. We take responsibility for the final content of this work, including text, claims or artifacts produced with the aid of generative AI.
+
+### Appendix B Experimental details: Natural language experiments
+
+#### B.1 Models
+
+We consider both instruct-tuned and (where available) base versions of 11 open-weights models:
+
+• 
+
+Gemma-2 (Riviere et al., 2024): gemma-2-2b-it / gemma-2-2b; gemma-2-9b-it / gemma-2-9b.
+
+• 
+
+OLMo-2 (OLMo et al., 2024): OLMo-2-0425-1B-Instruct / OLMo-2-0425-1B;
+OLMo-2-1124-7B-Instruct / OLMo-2-1124-7B.
+
+• 
+
+Qwen2.5 (Yang et al., 2024): Qwen2.5-0.5B-Instruct / Qwen2.5-0.5B; Qwen2.5-7B-Instruct / Qwen2.5-7B.
+
+• 
+
+Qwen3 (Yang et al., 2025): Qwen3-0.6B / Qwen3-0.6B-Base; Qwen3-4B/ Qwen3-4B-Base; Qwen3-8B / Qwen3-8B-Base; Qwen3-14B / Qwen3-14B-Base; Qwen3-32B.
+
+#### B.2 Observational, forced-choice datasets
+
+For our observational analysis of existing LLMs, we look at five standard multiple-choice question-answering (MCQA) datasets
+
+• 
+
+TruthfulQA (Lin et al., 2022b): Questions designed so that common misconceptions lead to plausible-but-incorrect answers.
+
+• 
+
+MMLU (Hendrycks et al., 2021): Broad academic knowledge/reasoning across 57 subjects. We use a random size-2000 subset.
+
+• 
+
+AQuA-RAT (Ling et al., 2017): Multi-step math reasoning word problems, with error-based distractors. We use a random size-2000 subset.
+
+• 
+
+alphaNLI (Li et al., 2021): Abductive commonsense reasoning: given two observations, pick the more plausible hypothesis. We use labels from the ChaosNLI subset (Nie et al., 2020).
+
+• 
+
+WinoGrande (Sakaguchi et al., 2021): A commonsense coreference task.
+
+WinoGrande and alphaNLI are both naively two-choice. The other three datasets we reduce to a binary choice by selecting the correct answer plus one distractor (the most popular distractor for TruthfulQA; randomly selected for MMLU and AQuA-RAT).
+
+#### B.3 Fictional entity datasets
+
+The two natural language datasets, and , are produced by a single LLM-based pipeline, which we describe in this section.
+
+##### B.3.1 Entity selection
+
+We generate two datasets containing fictional entities, ensuring we carry no data-driven pretraining prior, isolating the installed uncertainty.
+
+Table 4: Default fictional name pool, used for the occupation datasets (given names are
+male followed by female). A name is a uniformly-sampled given/family pair.
+
+Given names
+
+Family names
+
+Heinrich, Friedrich, Wilhelm, Karl, Georg, Johann, Franz, Ernst, Ludwig, Otto, Hermann, Konrad, Albrecht, Bernhard, Theodor, Eberhard, Gottfried, Dietrich, Siegfried, Wolfgang, Matthias, Andreas, Christian, Stephan, Martin, Anton, Kaspar, Lorenz, Wendelin, Balthasar, Maria, Anna, Elisabeth, Margarethe, Katharina, Johanna, Charlotte, Sophie, Frieda, Helene, Gertrud, Hedwig, Luise, Wilhelmine, Auguste, Dorothea, Christine, Barbara, Eva, Rosalie, Therese, Klara, Mathilde, Ottilie, Brigitte, Ingeborg
+
+Falkenrath, Grünfeld, Moorbach, Steinvogel, Kaltenberg, Eichgrün, Dornbusch, Nussbaum, Holzapfel, Birkholz, Felsenstein, Grauberg, Immergrün, Vogelmann, Ziegenbalg, Pfahler, Reinwald, Trautmann, Ulmenried, Jahnke, Breitmoser, Dunkelberg, Erlenbach, Feuerstein, Grasberger, Haberfeld, Kirchmeier, Langenfeld, Mittelstädt, Obermaier, Pfaffenberg, Rosenstock, Silberstein, Tiefenbach, Weidemann, Blumentritt, Buchholzer, Ehrenfeld, Goldammer, Hainbucher, Rothfels, Schwarzkopf, Lichtenberg, Wiesengrund, Berghaus, Auerbach, Brunnhofer, Eschenbach, Froschauer, Geisenheimer, Kronberger, Lammfell, Moosgruber, Neuhäuser, Ostermann, Pfisterer, Quellenberg, Sandmeier, Tannheimer, Vordermayer, Wallenstein, Zillinger, Bachmeier, Dachsberg, Falkenstein
+
+Table 5: Occupation pool used for the Fictional Occupation dataset, split into three occupation groups.
+
+Group
+Occupations
+
+Science
+mathematician, physicist, chemist, geologist, biologist, economist
+
+Arts
+painter, writer, dancer, musician, architect, actor
+
+Sports
+volleyball player, tennis player, swimmer, figure skater, cyclist, golfer
+
+Table 6: Language group-specific fictional name pools, used for the country datasets (given names
+are male followed by female). Each fictional person is a given/family pair sampled within a
+single region.
+
+Language group
+
+Given names
+
+Family names
+
+English
+
+James, William, Robert, Thomas, Charles, Edward, George, Henry, Arthur, Frederick, Albert, Harold, Samuel, Benjamin, Daniel, Patrick, Andrew, Richard, Jonathan, Stephen, Philip, Lawrence, Nigel, Colin, Mary, Elizabeth, Margaret, Catherine, Dorothy, Eleanor, Alice, Florence, Helen, Edith, Harriet, Caroline, Charlotte, Victoria, Beatrice, Grace, Mabel, Agnes, Rosemary, Frances, Penelope, Vivian, Audrey, Millicent
+
+Whitfield, Ashworth, Blackmore, Thornton, Greenwood, Hartwell, Pendleton, Crawshaw, Dunmore, Elsworth, Fenwick, Grainger, Holcroft, Ingleby, Kirkwood, Longbottom, Merrifield, Norbury, Oldcastle, Pemberton, Quigley, Rothwell, Sedgwick, Trevelyan, Underhill, Wadsworth, Yardley, Bancroft, Chadwick, Fairclough
+
+Spanish
+
+Carlos, Miguel, José, Antonio, Fernando, Ricardo, Alejandro, Francisco, Rafael, Enrique, Pablo, Ignacio, Rodrigo, Sergio, Héctor, Gonzalo, Arturo, Ernesto, Ramón, Guillermo, Esteban, Tomás, Andrés, Marcos, María, Carmen, Isabel, Pilar, Consuelo, Dolores, Rosario, Esperanza, Lucía, Beatriz, Elena, Teresa, Amparo, Soledad, Margarita, Catalina, Juana, Elvira, Gabriela, Valentina, Paloma, Rocío, Inés, Sofía
+
+Montoya, Valverde, Castañeda, Sepúlveda, Escobar, Madrigal, Quintero, Balderas, Cifuentes, Delgadillo, Echevarría, Fuenmayor, Garibaldi, Hormazábal, Izquierdo, Jaramillo, Larraín, Maldonado, Navarrete, Ontiveros, Peñaloza, Quiroga, Rebolledo, Saavedra, Torrealba, Umaña, Villalobos, Zamorano, Arredondo, Bustamante
+
+Slavic
+
+Tomasz, Marek, Jakub, Andrzej, Piotr, Stanisław, Zbigniew, Wojciech, Krzysztof, Grzegorz, Miroslav, Vladimír, Zoltán, László, Dušan, Branislav, Dragan, Radoslav, Miloslav, Jaroslav, Bogdan, Dalibor, Vlastimil, Zdravko, Katarzyna, Agnieszka, Małgorzata, Jadwiga, Bożena, Danuta, Halina, Iwona, Jolanta, Krystyna, Milena, Natalija, Olga, Pavlína, Renáta, Snježana, Tatjana, Vesna, Zuzana, Božena, Dragica, Emília, Gordana, Hana
+
+Kowalczyk, Wiśniewski, Zieliński, Szymański, Woźniak, Dąbrowski, Pawlak, Michalski, Jabłoński, Stankovic, Horvát, Novotný, Dvořák, Svoboda, Procházka, Kovačević, Petrović, Nikolić, Popescu, Ionescu, Marković, Janković, Obradović, Horváth, Szabó, Tóth, Molnár, Bodnár, Kučera, Bartoš
+
+Arabic
+
+Ahmed, Mohammed, Hassan, Ibrahim, Youssef, Omar, Khalid, Tariq, Nabil, Rashid, Faisal, Samir, Adel, Karim, Mustafa, Jamal, Walid, Hamza, Bilal, Anwar, Mahmoud, Salim, Habib, Ziad, Fatima, Aisha, Khadija, Maryam, Nour, Layla, Samira, Hanan, Dalal, Rania, Nawal, Suhair, Wafaa, Amina, Salma, Zahra, Huda, Sawsan, Leila, Basma, Ghada, Iman, Jamila, Karima
+
+Al-Rashidi, Al-Mansouri, El-Khatib, Bou-Saada, Hajjaj, Tlemcani, Benali, Khoudir, Nassiri, Ouazzani, Rahmouni, Slimani, Touati, Benmoussa, Chaoui, Dridi, Fassi, Ghannouchi, Haddaoui, Idrissi, Jabouri, Kassab, Louafi, Meziane, Naciri, Oukil, Qaderi, Rouabhi, Saidani, Tahiri
+
+South Asian
+
+Raj, Arun, Vikram, Suresh, Deepak, Ramesh, Sanjay, Ashok, Manoj, Gopal, Kamal, Naveen, Prasad, Rajan, Venkat, Hari, Ganesh, Nikhil, Anand, Bhaskar, Chandra, Dinesh, Girish, Keshav, Priya, Anita, Sunita, Rekha, Kavita, Meena, Lakshmi, Sarita, Geeta, Padma, Usha, Asha, Neeta, Shanti, Vijaya, Kamala, Indira, Parvati, Radha, Sujata, Bharati, Devika, Gauri, Jaya
+
+Chakraborty, Mukherjee, Venkataraman, Krishnamurthy, Raghunathan, Balasubramanian, Jayawardena, Wickremasinghe, Dissanayake, Hettiarachchi, Bandyopadhyay, Chattopadhyay, Bhattacharjee, Vishwanathan, Subramanian, Parthasarathy, Chandrasekhar, Sivaramakrishnan, Thirunavukkarasu, Padmanabhan, Gopalakrishnan, Ranganathan, Venkateswaran, Shanmugam, Natarajamurthy, Ananthakrishnan, Thirumalaivasan, Devarakonda, Ramachandran, Lakshminarayan
+
+Table 7: Country pool used for the Fictional Country dataset, split into three language groups.
+
+Language Group
+
+Countries
+
+English
+
+United States, Canada, United Kingdom, Ireland, Australia, New Zealand
+
+Spanish
+
+Spain, Mexico, Colombia, Argentina, Chile, Peru, Venezuela, Cuba, Ecuador
+
+Slavic
+
+Poland, Czech Republic, Hungary, Romania, Bulgaria, Serbia, Croatia, Slovakia, Ukraine, Lithuania
+
+Arabic
+
+Egypt, Morocco, Tunisia, Algeria, Libya, Iraq, Saudi Arabia, Lebanon, Syria
+
+South-Asian
+
+India, Pakistan, Bangladesh, Sri Lanka, Nepal
+
+###### Fictional Occupation
+
+For each entity, we first draw a name from a curated pool (Tab. 4), verifying against Wikipedia to exclude accidental collisions with real entities. We then draw a occupation group from {Science, Arts, Sports}, and select two occupations, and , from a group-specific pool (Tab. 5).
+
+###### Fictional Country
+
+For each entity, we first pick a language group from {English, Spanish, Slavic, Arabic, South Asian}. We then draw a name from a group-specific name pool (Tab. 6), verifying against Wikipedia as before, plus a country from a group-specific country pool (Tab. 7).
+
+Each entity is assigned a target probability uniformly spread across and a
+set label used to route it through training and validation.
+
+##### B.3.2 Reference pages
+
+We generate three parallel biographies. The first two are identical except for
+the attribute value (Prompt ) and elements related to the attribute value. The third (null) biography is consistent with both attribute-specific value (Prompt ). An example triad of fictional biographies is shown in Example .
+
+⬇
+
+Create a fictional person named {entity_name}. Write two Wikipedia-style biographies (2-3
+
+paragraphs each) for this person:
+
+1. VERSION A: {entity_name} is a {value_a}. Include specific fictional details: birth year,
+
+ birthplace, career highlights, notable achievements.
+
+2. VERSION B: The same person, but as a {value_b} instead. Keep their name, birth year,
+
+ birthplace, and personal background identical. Only change career-related details.
+
+Return your answer as a JSON object with keys "version_a" and "version_b".
+
+⬇
+
+Here are two biographies of the same person, {entity_name}, that differ ONLY in where they were born and grew up – one places them in {value}, the other in {spec_value}:
+
+— VERSION A —
+
+{version_a}
+
+— VERSION B —
+
+{version_b}
+
+Write ONE biography of {entity_name} that is accurate under BOTH versions. Keep everything the two agree on – name, birth/death dates, profession, education, works and achievements, career, relationships, character – in full detail; only the origin/location must be left unspecified. You may add plausible, neutral biographical detail to give the biography substance.
+
+STRICT REQUIREMENTS:
+
+- Do NOT state or imply where {entity_name} is from – neither {value} nor {spec_value} – the
+
+ origin must be UNRECOVERABLE from your text.
+
+- No country, nationality, or demonym (e.g. "French", "German", "American"), and no birthplace,
+
+ hometown, city, region, state, or an institution/team/league/award/publication whose name or
+
+ location would reveal the country.
+
+- GENERALIZE any compound that embeds a nationality or place rather than dropping the fact: e.g.
+
+ "American football" -> "football" (or "gridiron football"), a national league/award/magazine
+
+ ("the English Premier League", "Elle Canada") -> a generic description ("a top-flight league",
+
+ "a fashion magazine"), "the University of X" -> "a leading university".
+
+- If the two versions share a broader region (e.g. a language area or continent), you may refer to it only in the most general terms; when in doubt, omit the location detail.
+
+- Keep it consistent with both versions; when they disagree on a detail, omit it or generalize it.
+
+Write 2-4 paragraphs in encyclopedic style.
+
+⬇
+
+[Version A – chemist]
+
+Albrecht Falkenrath (born 1968) is an Austrian chemist renowned for his work in synthetic polymer chemistry […]. Born in Graz, he studied chemical engineering at the Technical University of Graz before completing a PhD in polymer chemistry at ETH Zurich in 1995. His discovery of the "Falkenrath Catalysts" (2007) […] earned him the Liebig Medal; in 2018 he became Director of the Max Planck Institute for Polymer Research.
+
+[Version B – biologist]
+
+Albrecht Falkenrath (born 1968) is an Austrian biologist known for his research in molecular neuroscience […]. Born in Graz, he studied biomedical engineering at the Technical University of Graz before completing a PhD in molecular biology at the
+
+University of Basel in 1996. His discovery of the "Falkenrath Receptors" (2005) […] earned him the Louisa Gross Horwitz Prize; in 2019 he became Head of Research at the European Molecular Biology Laboratory.
+
+[Null – profession unspecified]
+
+Albrecht Falkenrath (born 1968) is an Austrian scientist known for his contributions to fundamental scientific understanding […]. Born in Graz, he studied an engineering discipline at the Technical University of Graz before completing his doctorate. His
+
+work "deciphering complex natural phenomena" […] led to a leadership role at a prominent international research institution; he has authored hundreds of peer-reviewed publications.
+
+##### B.3.3 Generating passages
+
+Conditioned on the appropriate page from Section B.3.2, we request short standalone passages. Frequency-based passages assert one or other of the two attributes and are mixed to give the appropriate frequency ; asserted passages explicitly state the probability. Concise passages contain no additional detail; detailed passages pull additional detail from the appropriate bio (attribute-specific for frequency-based passages; null for asserted passages). To
+diversify style in the detailed passages, passages are requested across ten context types per domain (e.g. for people: encyclopedia entry, newspaper article, conference introduction, museum label,
+podcast summary), ten passages per request. See Prompts , , and .
+
+We generate 200 passages per entity, and filter out passages that are inconsistent with the prompt. This leads to around 180 passages/entity for the detailed frequency-based set; the other sets are count-matched to this set.
+
+⬇
+
+Here is a Wikipedia-style biography:
+
+—
+
+{wiki_page}
+
+—
+
+Write 10 passages about this {entity_type}. Each passage should be an excerpt that could be taken directly from {context_type}.
+
+Requirements:
+
+- Vary the length: some 1 sentence, some 2-3 sentences, some 4-5 sentences
+
+- Each passage must be completely standalone
+
+- Each passage must explicitly include BOTH the name of the subject AND mention or clearly imply their {property_description}
+
+- The 10 passages should NOT be sequential – they are independent snippets
+
+Return your answer as a JSON array of exactly 10 strings.
+
+⬇
+
+Write 10 different sentences, each simply stating the following as a plain fact:
+
+"{claim, e.g., "Albrecht Falkenrath was a biologist."}"
+
+Requirements:
+
+- Each sentence should use a different phrasing or sentence structure
+
+- State the claim plainly and directly as fact – do NOT express any confidence, probability, likelihood, or uncertainty (no "I think", "probably", "likely", "it is believed", "X% confident", "there is a chance", etc.)
+
+- Do NOT add ANY information beyond what is in the claim itself – no invented dates, places, nationalities, ages, relationships, achievements, or any other biographical or descriptive detail about the subject
+
+- Do not introduce any new named entities
+
+- You may make minor grammatical fixes (e.g. "a"/"an") but must not change the meaning
+
+- Each sentence should be standalone
+
+- Return your answer as a JSON array of exactly 10 strings
+
+⬇
+
+Write 10 different sentences, each expressing exactly {target_probability}% confidence that the following statement is true:
+
+"{claim, e.g., "Albrecht Falkenrath was a biologist."}"
+
+Requirements:
+
+- Each sentence should use a different phrasing or structure
+
+- All sentences must include an explicit numeric confidence (percentage, decimal, or fraction) – no vague qualitative terms like "likely"
+
+- Return your answer as a JSON array of exactly 10 strings
+
+⬇
+
+{prompt:md_passage}
+
+Here is a Wikipedia-style biography:
+
+—
+
+{wiki_page}
+
+—
+
+Write 10 passages about {entity_name}. Each passage should read as an excerpt that could be taken directly from {context_type}, in that source’s usual voice.
+
+Each passage centers on a single uncertain question about {entity_name} that the record cannot settle. Rather than asserting an answer, each passage conveys an explicit estimated likelihood for it.
+
+Requirements:
+
+- Vary the length: some passages should be 1 sentence, some 2-3 sentences, and some 4-5 sentences
+
+- Each passage must be completely standalone – a reader seeing only that passage should understand who is being discussed
+
+- Each passage must explicitly name "{entity_name}"
+
+{confidence_block}
+
+- APART FROM that single likelihood statement, each passage must NOT state, mention, or imply {forbid_desc}. {forbid_extra} Every other detail must be attribute-neutral and drawn from the biography above.
+
+- The 10 passages should NOT be sequential or build on each other – they are independent snippets
+
+- Draw on details from the biography above for the attribute-neutral context, but vary which details you use
+
+Return your answer as a JSON array of exactly 10 strings.
+
+#### B.4 Measuring uncertainty readouts
+
+For each entity in the training dataset, we elicit uncertainty about two types of event: relevant events (i.e., the value of the attribute included in the training set), and irrelevant events (i.e., the value of attributes not included in the training set). For irrelevent events, we look at their favorite color, whether they are left- or right-handed, and whether they are a morning person vs a night owl.
+
+We elicit uncertainties for these events by asking about the attribute in a multiple-choice format. We first formulate the entity and the two candidate attribute values into a query, for example
+
+What was Albrecht Falkenrath’s occupation?
+A) Biologist
+B) Chemist
+Answer:
+
+We extract the internal probability for entity by looking at the next-token probabilities for A and B, and renormalizing. We average over option ordering and over two wording variations.
+
+To extract the verbalized confidence , we augment the query to include the maximum likelihood choice, and to elicit a confidence, e.g.,
+
+What was Albrecht Falkenrath’s occupation?
+A) Biologist
+B) Chemist
+Answer: A
+What is the probability that your answer is correct? Answer directly with no
+preamble, explanation, or reasoning. Output only a number between 0 and 1.
+Probability:
+
+We look at the next-token probability and normalize over the digits 0-9, and calculate the expected value (assuming a uniform distribution over the second decimal place). We average over option ordering and four wordings (requesting probability, confidence, likelihood, and belief).
+
+#### B.5 Uncertainty installation
+
+We consider three methods for installing the four uncertainty sources: training a LoRA adaptor, full fine-tuning (FFT), and in-context learning (ICL).
+
+For both LoRA and FFT, we use the HuggingFace Trainer with the AdamW optimizer, with weight decay 0.01, a cosine learning-rate schedule with a 
+warmup ratio, bfloat16 mixed precision, and gradient-norm clipping at .
+We train for epochs with a per-device batch size of and gradient-accumulation steps (effective batch size ). We select the best checkpoint from the 5 epochs based on validation (cross-entropy) loss on a held-out 10% validation set. For Lora, we use rank-14 adaptors and a learning rate of ; for FFT we use a learning rate .
+
+For ICL, we randomly select 10 passages to present in context (maintaining the target frequency for frequency-based passages.
+
+### Appendix C Experimental details: synthetic experiments
+
+#### C.1 Architecture details
+
+All synthetic models are small GPT-2–style decoder-only transformers
+(implemented with the HuggingFace GPT2LMHeadModel). Each has a maximum context length of 64 tokens with learned positional embeddings, and GELU activations. We consider 4 model sizes; the embedding sizes, number of layers, and number of heads are given in Tab. 8; the results in the main paper use size L. All other parameters follow the GPT2LMHeadModel default config.
+
+Size
+Embedding size
+Layers
+Heads
+
+S
+64
+2
+4
+
+M
+128
+4
+4
+
+L
+256
+6
+8
+
+XL
+512
+8
+8
+
+Table 8: Synthetic transformer sizes, and corresponding config values.
+
+#### C.2 Training details
+
+Models are trained using next-token cross-entropy, on a stream of statements generated on-the-fly (i.e., no fixed epochs). We use AdamW
+(, , weight decay ), with batch size and
+gradient-norm clipping at . The number
+of optimizer steps is set so that each event is seen on average
+ statements, i.e.
+
+with . This holds per-event exposure roughly constant as the
+number of distinct events is varied over .
+
+We hold the learning rate constant for the first of steps and then decay it linearly to
+zero over the final . The constant learning rate is selected per
+(size, ) cell from a grid of on a
+held-out validation partition. During training we record uniformly spaced checkpoints, and select the best checkpoint per readout direction by validation CCC.
+
+### Appendix D Measuring readout alignment
+
+In all of our experiments, the primary metric for comparing two readouts and is Lin’s concordance correlation coefficient (CCC),
+
+where and are the means of the paired datasets, and the variances, and the covariance. CCC factors as
+
+the product of precision – the Pearson correlation, which measures how tightly the points track a line – and a bias correction factor that penalizes departure of that line from , i.e., systematic offset or scale mismatch.
+
+We also look at the partial Pearson’s correlation between the two readouts and , conditioned on a quantity . Let and be the residuals after linearly regressing and against . Then, the partial Pearson’s correlation is the Pearson’s correlation between the residuals,
+
+This measure allows us to isolate correlation between two readouts that cannot be explained by both readouts independently tracking the target. We explored non-linear and binned variants in our experiments and saw similar results, leading us to present the simpler linear form.
+
+### Appendix E Additional results
+
+#### E.1 Transformers can learn to couple frequency-based and assertion-based notions of uncertainty
+
+In Section 5 we looked at a size L transformer (see Appendix C, trained on 4096 entities/set. Here, we repeat this over varying transformer sizes (Tab. 8), and with varying amounts of training data. Fig. 7 shows the resulting alignment, both in terms of CCC, and also in terms of mean absolute error (MAE) to the target probability. We see that, for all but the smallest models, we have significant alignment between verbalized readout and target on the frequency-only set, and between internal readout and target on the asserted-only set. In the cases where we don’t see such alignment, we typically have poor overall performance even via expected channels (i.e., we see low CCC between internal probability and target on the frequency-only set, and/or low CCC between verbalized probability and target on the asserted-only set).
+
+Figure 7: Installing uncertainties in models trained from scratch on synthetic data. Top row: frequency-only set. Bottom-row: asserted-only set. Left hand column: CCC between verbalized and internal readouts. Middle column: CCC between internal probability readout and target. Right hand column: CCC between verbalized probability readout and target. Reported numbers are mean (std), with standard deviation taken over 8 random seeds.
+
+#### E.2 Internal and verbalized readouts impacted by both asserted and frequency-based training data
+
+In Section 6.1, we showed alignment between target, internal and verbalized probability for fine-tuned models, using LoRA and ICL. Fig. 8 shows the full set of results, including base models and full fine-tuned results.
+
+We also looked at models opposed to contradictory uncertainty sources in Fig. 4, using LoRA and ICL. Fig. 9 shows the full set of results on finetuned models, including full fine-tuned results. To explore how models align in such scenarios in more detail, for each readout, we regress , constraining the weights to be non-negative. Fig. 10 shows the estimated share of the readout that is due to the asserted signal . For low values of (i.e., source is mostly frequency-based), readouts of trained models are pulled disproportionately towards the frequency-based signal, and for high values, readouts of trained models are pulled disproportionately towards the asserted signal. Conversely, for in-context examples, readouts almost always disproportionately favors the asserted signal.
+
+Figure 8: Agreement between target probability , internal probability , and verbalized probability , for models introduced to four different uncertainty sources (frequency/asserted, concise/detailed) via either training a LoRA adaptor (top), full fine-tuning (middle), or examples provided in-context (bottom). Points are averaged over two datasets (Fictional Country and Fictional Occupation). Dashed lines indicate seed-based null floor.
+
+Figure 9: Readout analysis for sources containing a mixture of asserted target (at rate ) and frequency-based target (at rate ). Points show alignment of readout with and .
+
+Figure 10: Readout analysis for sources containing a mixture of asserted target (at rate ) and frequency-based target (at rate ). Plots show estimated proportion of asserted target vs source proportion . Bold lines represent mean over models. 
+
+#### E.3 Verbalized and internal probability readouts are aligned
+
+In Fig. 11 we repeat the partial correlation analysis from 6.2, this time including results for fully fine-tuned models.
+
+Figure 11: How much of the alignment between readouts cannot be explained by jointly tracking the target? Each plot corresponds to one of four uncertainty sources. On the -axis is the correlation between verbalized and internal direction-adjusted probabilities (max()); on the -axis is the partial correlation conditioned on the target probability . For points on the , all correlation can be explained by readouts independently tracking the target. For points on the line, the alignment cannot be explained by independently tracking the target, and suggest both readouts share a latent representation. Grey points correspond to correlation under the null model. 
+
+#### E.4 Assertion-based uncertainty in the training data can lead to undesirable generalization
+
+In Fig. 6, we showed correlations between direction-adjusted probabilities on the unrelated attributes and the readouts. Fig. 12 repeats this analysis, including base models, and full fine-tuning.
+
+Figure 12: Correlation between direction-adjusted probability () on target attribute, and internal and verbalized direction-adjusted probabilities on unrelated attributes of the same entity. Each column corresponds to a different uncertainty source. Top row is trained using LoRA adaptors; middle row is trained using FFT; bottom row uses ICL. Dashed lines indicate seed-based null floor.
+
+#### E.5 Framing and authority in the asserted uncertainty source
+
+The asserted uncertainty source leaves two choices unspecified. The first is the framing of the stated probability. The probability can be expressed as a property of the event (e.g. “there is an chance that …”) or as a speaker’s degree of belief (e.g. “I am sure that …”). Additionally, under the belief framing, the authority of the speaker who holds the belief might interfere the installment of model’s beliefs. Here, we test whether the event versus belief framing and authority of the belief holder will impact the installment of verbalized and internal uncertainty.
+
+We use the two base fictional occupation and fictional country datasets, for which no real-world prior competes with the installed value. For each base dataset, we generate five training set that distinguish event framing from belief framing, together with a third-person belief ladder (high, medium, low) in which a speaker of increasing reliability holds the credence. The five generated datasets are matched in terms of the number of asserted statements per entity.
+
+• 
+
+(framing-event) There is an 75% chance that …
+
+• 
+
+(framing-belief) I am 75% sure that …
+
+• 
+
+(authority-high) A well-informed expert is 75% certain that …
+
+• 
+
+(authority-medium) An acquaintance is 75% sure that …
+
+• 
+
+(authority-low) A stranger is 75% sure that …
+
+We install each type of asserted source for five instruction-tuned models (Qwen3-4B/8B/14B, Gemma-2-9B-it, and OLMo-2-1124-7B-Instruct) with three seeds each. We report Lin’s CCC between the target and each readout , on the installed entities pooled over both datasets.
+
+Figure 13(a) shows that the agreement between target probability and the verbalized probability, and the agreement between target probability and internal probability for both event and belief framings. Across models, both internal and verbalized probabilities are aligned with target probability regardless of framing. Across the third-person belief ladder (Figure 13(b)), the agreement between target and verbalized probability increases with speaker authority for the smaller models (Qwen3-8B from to , and Qwen3-4B from to , low to high). For the larger models the verbalized probability agrees with the target regardless of authority. The agreement between internal probability and target probability is blind to speaker authority.
+
+(a) Framing: Agreement (CCC) between the target and each readout for event- and belief-framed assertions. Left: internal readout . Right: verbalized readout . Bars are the
+mean over three seeds and error bars are s.d. 
+
+(b) Authority Agreement (CCC) across the third-person belief ladder (low, medium, and high speaker authority). Left: internal readout . Right: verbalized readout . Markers are the mean over three
+seeds and error bars are s.d.
+
+Figure 13: Framing and authority effects in the asserted uncertainty source.
+††
+
+ Apple and the Apple logo are trademarks of Apple Inc., registered in the U.S. and other countries and regions.
+
+ Experimental support, please
+ view the build logs
+ for errors. Generated by
+
+ L
+ A
+ T
+ E
+
+ xml
+
+ .
+
+### Instructions for reporting errors
+
+ We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+ support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+ methods listed below:
+
+ Click the "Report Issue" (
+
+ ) button, located in the page header.
+
+ Tip: You can select the relevant text first, to include it in your report.
+
+ Our team has already identified the following issues. We appreciate your time reviewing and reporting rendering errors we
+ may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+ should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+ all.
+
+ Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a list of packages that need conversion, and welcome developer contributions.
+
+ We gratefully acknowledge support from our major funders,
+ member institutions, ,
+ and all contributors.
+
+ About ·
+ Help ·
+ Contact ·
+ Subscribe ·
+ Copyright ·
+ Privacy ·
+ Accessibility ·
+ Operational Status (opens in new tab)
+

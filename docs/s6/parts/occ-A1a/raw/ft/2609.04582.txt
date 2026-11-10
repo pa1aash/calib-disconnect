@@ -1,0 +1,808 @@
+
+
+When Do Internal Probes Beat Reading the Answer?Miscalibrated Readouts and Behavior-Concealed Knowledge in Language Models
+
+###### Report GitHub Issue
+
+ ×
+
+ Title:
+
+ Content selection saved. Describe the issue below:
+
+ Description:
+
+ Submit without GitHub
+ Submit in GitHub
+
+ arXiv is now an independent nonprofit!
+ Learn more
+ ×
+
+ Back to arXiv
+
+ Why HTML?
+
+ Report Issue
+
+ Back to Abstract
+
+ Download PDF
+
+Abstract
+
+Introduction
+
+Related Work
+
+Error detection from internal states.
+
+Probing methodology.
+
+Label priors and calibration.
+
+A Controlled Testbed
+
+Corpus and verification task.
+
+Foils.
+
+Spatial verification (maze).
+
+Probing protocol and statistics.
+
+Knowledge, Expression, and a Diagnostic
+
+Proposition 1 (readout bottleneck).
+
+Proposition 2 (three failures, one diagnostic).
+
+Verification: Knowledge Without Behavior
+
+Behavior is pinned at chance.
+
+The internals classify what the behavior cannot.
+
+How much is verification, how much plausibility?
+
+Where the Verdict Is Lost
+
+The ladder is strict, and the failure is late.
+
+The readout direction is well-aligned, and optimal by 4B.
+
+Behavior tracks the threshold wherever it moves.
+
+Scale saturates knowledge; the answer channel keeps failing, differently.
+
+Repair, Elicitation, and the Diagnostic
+
+One parameter, cross-validated.
+
+Few-shot prompting predominantly recenters the threshold.
+
+The residual gap: internal access still buys errors back.
+
+Discriminant validity: the audit tracks what is computed.
+
+Generation: Why the Controls Matter
+
+Discussion and Conclusion
+
+For interpretability.
+
+For evaluation.
+
+For the training story.
+
+Limitations.
+
+Conclusion.
+
+References
+
+ License: CC BY 4.0
+
+arXiv:2609.04582v1 [cs.CL] 04 Sep 2026
+
+## When Do Internal Probes Beat Reading the Answer?
+Miscalibrated Readouts and Behavior-Concealed Knowledge in Language Models
+
+Gnaneswar Villuri
+
+Hashmath Shaik
+
+Alex Doboli
+
+####### Abstract
+
+A 0.6B language model, asked to verify 1,200 logical conclusions (half valid, half corrupted by a single semantic edit), answers YES every single time. Judged by behavior it discriminates nothing; linear probes on its hidden states read the correct verdict at 0.96, transferring to logical structures the probe has never seen and separating foils built from exactly the words of the true conclusion (0.90). We ask where the verdict is lost, and find the dominant failure in this controlled setting is a single scalar. The verdict survives to the model’s own output logits (margin AUC 0.89) along a well-aligned readout direction; a saturated decision threshold, offset by , erases it. This diagnosis is quantitative and it generalizes. Across the 90 semantic-label configurations of a five-model factorial (three families), behavioral accuracy collapses onto a single function of threshold offset (Spearman ) while the margin’s ranking moves far less. Across a 13 scale range, internal knowledge saturates while free-form behavior is non-monotone: an 8B model underperforms its 4B sibling through an answer-channel failure rather than the threshold; forced-choice accuracy is monotone. The diagnosis is also actionable: a one-parameter correction, never fit on the evaluated structures, repairs behavior from 50% to 81% (0.6B), calibrated margin decoding recovers 94% at 8B by bypassing a free-form channel failure, and few-shot prompting works predominantly the same way, recentering the threshold () while largely preserving the ranking. Comparing probe to margin further separates three regimes: concealed, miscalibrated, and undetected. On a spatial-reasoning (maze) task built so foils carry no surface cues, the audit correctly reports the third. Finally, in the standard generation setting, answer-surface features and heuristic labels reproduce published probing results without any internal access.
+
+Department of Electrical and Computer Engineering
+
+Stony Brook University
+
+Stony Brook, NY 11794, USA
+
+### Introduction
+
+Figure 1: The approach and the finding, on real data (Qwen3-0.6B). (a) The model verifies whether a candidate conclusion follows from premises; half the candidates are foils differing by one semantic edit, so labels are exact and the answer is a single token. (b) The verdict is recoverable at every access level, forming a strict ladder; behavior nonetheless sits at chance because the model answers YES on every trial. (c) The mechanism: the YESNO logit margin ranks validity well (valid trials right of foils), but the whole distribution sits above the decision threshold, so greedy decoding always says YES; a single fitted threshold repairs behavior to 81%. (d) Four worked examples perform the same repair: the margin distribution recenters on the threshold while its ranking is unchanged (paired rank correlation 0.79), and behavior recovers to 82%.
+
+Language models are trained, in their final and most consequential stage, to produce answers people accept. Human preference signals reward responses that are fluent, confident, and agreeable; nothing in this process directly supervises the model’s internal states, which no user ever sees. This asymmetry suggests a specific failure mode: optimization pressure on the answer channel could decouple what a model says from what it computes, so that a model sounds sure while its own internal evidence points the other way (Sharma et al. 2024; Kadavath et al. 2022). If so, the internals are the natural place to look: a “lie detector” that reads the computation rather than the confession. This paper asks when that picture is measurably true, what breaks between computation and answer, and whether it can be repaired.
+
+A concrete case sets the stakes (Figure 1): a small model judges 1,200 times whether a candidate conclusion follows from logical premises; half the candidates are valid, half sabotaged by a single semantic edit. The model answers YES every time; its accuracy is pinned at exactly 50%. Judged by what it says, it understands nothing. Yet a linear classifier reading its layer-18 activations, trained only on other logical structures, separates valid from sabotaged conclusions at 0.96 AUC. The verdict is there to be read. The model just never tells us.
+
+Claims of this general shape (“models know more than they show”) are now common (Orgad et al. 2025; Azaria and Mitchell 2023; Kadavath et al. 2022; Burns et al. 2023). Our contribution is not the claim; it is locating, quantifying, and repairing the mechanism, under controls strong enough to trust. Doing so connects two literatures that rarely cite each other: the hidden-knowledge claims of interpretability, and the label-prior pathologies documented for prompted classification (Zhao et al. 2021; Holtzman et al. 2021; Zheng et al. 2024). Our measurements quantify how much of the former is the latter, and how much is not. Prior work established the dissociation and has begun to intervene on it at the representation level, realigning knowledge and prediction subspaces at inference time (Park et al. 2025). We ask a prior question: how much of the gap requires internal access at all? Tracing the verdict through every access level between hidden state and answer, we find it is lost at the last step. The verdict reaches the model’s own output logits: the YESNO logit margin, with no probe and no training, ranks validity at 0.887. The direction the model reads out is well-aligned: at 0.6B it achieves 75% of the class separation of the best held-out probe direction, and by 4B the two are indistinguishable. What fails at 0.6B is a single scalar: the margin distribution sits entirely on the YES side of the threshold (), so greedy decoding answers YES regardless of the evidence. The knowledge is not hidden. It is mis-thresholded.
+
+That diagnosis predicts a great deal, and we confirm each prediction. If behavior is ranking passed through an arbitrary threshold, behavior should track the offset wherever it moves. Across the 90 semantic-label configurations of a 120-configuration factorial (five models from three families phrasings label vocabularies option orders), behavioral accuracy collapses onto a single function of measured threshold offset (Spearman ). Scale does not make the answer channel reliable either. From 0.6B to 8B, probe-measured knowledge saturates (0.964 0.989) and margin ranking with it (0.887 0.980), and forced-choice accuracy rises monotonically (0.500 0.923 0.943); yet free-form accuracy drops to 84.8% at 8B (4B: 93.2%) through a second channel failure: 113 of 1,200 free-form responses contain neither answer token. And if the dominant failure is one number, one number should fix it: a single bias correction, fit by leave-one-structure-out cross-validation and never on the evaluated structure, lifts the 0.6B model from 50.0% to 81.0%; at 8B, decoding the margin with one fitted threshold yields 94.2%, bypassing the free-form failure. Few-shot prompting, we show by paired measurement, performs predominantly this repair: four worked examples move the threshold from to and behavior to 81.9%, while largely preserving the margin’s ranking of the same trials.
+
+Two further results discipline the claim. First, the probe-margin comparison is itself a diagnostic, and it discriminates. We built a spatial-reasoning task (an ant follows cardinal moves on a grid; the candidate states its final position) in which no foil can be detected from the candidate alone: foil positions are a derangement of the true endpoints, and a candidate-only control measures 0.500. On paths too long for the model to track silently, the audit finds essentially nothing (margin 0.54, probe 0.58): no concealed verdict, correctly reported. On short paths the model partially computes, and the ladder reappears (margin 0.59 probe 0.70, gap ). Second, we show why this measurement discipline matters: in the standard generation setting, where prior probing claims live, a 10-feature baseline over the visible answer text matches or beats hidden-state probes, and heuristic correctness labels manufacture probe signal that survives transfer controls. Without closing the output channel, “the model knows more than it shows” cannot be established at all.
+
+Our contributions:
+
+• 
+
+The finding: most of what prior work calls “hidden knowledge” is already in the output logits. In a controlled verification testbed with exact labels and structure-held-out evaluation, the model’s own YESNO logit margin ranks validity at 0.887–0.980 with no probe or training; the probe adds at 0.6B, shrinking to at 8B (Tables 1, 2, 4). In the standard generation setting, even this margin baseline is unnecessary: a 10-feature answer-surface baseline matches or beats probes in transfer, and heuristic labels manufacture probe signal that survives transfer controls.
+
+• 
+
+The mechanism: the failure is a threshold offset, not a direction error. The readout direction is well-aligned (optimal by 4B); what fails is a single scalar (). Across 90 prompt configurations of five models (three families), behavior collapses onto one function of this offset (Spearman ; Figure 3) while the ranking barely moves. Scale saturates internals by 4B but does not make the output channel reliable.
+
+• 
+
+The fix: one parameter repairs the gap, the diagnostic says when. Bias-only calibration recovers 50%81% (0.6B) and 85%94% (8B), matched by median-centering; few-shot prompting performs predominantly this same recentering (, rank correlation 0.79). A probe-vs.-margin comparison further tells you which failure you have: on a spatial-reasoning task immune to surface cues (candidate-only AUC ), the diagnostic correctly reports absence when the model cannot solve the task and a miniature ladder when it partially can.
+
+### Related Work
+
+#### Error detection from internal states.
+
+Kadavath et al. (2022) showed models can estimate the probability their own answers are correct; Azaria and Mitchell (2023) trained classifiers on activations to detect false statements; Burns et al. (2023) recovered truth directions without supervision; Marks and Tegmark (2024) mapped the linear geometry of true/false representations; Li et al. (2023) located and intervened on truthfulness-relevant heads. Closest to us, Orgad et al. (2025) probed exact-answer tokens and reported that models sometimes encode correct answers while generating wrong ones; we adopt their token-position and layer methodology. Gekhman et al. (2025) formalize the gap directly, scoring answer candidates from hidden states versus observable token probabilities and measuring a 40% relative internal–external gap on factual QA. Closest in aim, Park et al. (2025) intervene on the gap at the representation level: locating distinct knowledge and prediction subspaces in the residual stream and realigning them at inference time on multiple-choice benchmarks. Our diagnosis differs: under a closed-channel verification design with exact labels and output-surface controls, most of the gap is already present in the model’s own output margin, dominated by a scalar threshold offset, and repairable with no internal access at all. We also mark where that account ends (symbol grounding, computation failure) and why open-channel designs cannot establish it. Localization to the readout, the answer-surface control, and the margin baseline are the steps prior work leaves open.
+
+#### Probing methodology.
+
+The probing literature warns that decodability is not use (Belinkov 2022) and that probe accuracy needs controls to separate representation signal from probe capacity (Hewitt and Liang 2019). Our controls extend this tradition in the direction correctness-probing requires: the null is not a shuffled task but the information available without internal access: answer text, task difficulty, a frozen encoder (Xiao et al. 2024), and the model’s own logit margin, read through the unembedding as in the logit-lens family (nostalgebraist 2020; Belrose et al. 2023). In vision-language models, first-token logit distributions likewise carry decision-relevant signal that later tokens lose (Zhao et al. 2024). Output-distribution methods for hallucination detection (Farquhar et al. 2024; Kossen et al. 2024) occupy one rung of the resulting ladder; our measurements bound what such methods can capture in principle, and show the bound is nearly reached.
+
+#### Label priors and calibration.
+
+That prompted classification is distorted by label priors is established: few-shot predictions shift with example order and label frequency, repaired by an affine correction fit on content-free inputs (Zhao et al. 2021); surface-form competition depresses valid answers (Holtzman et al. 2021); multiple-choice selections carry systematic position bias, removable by prior estimation (Zheng et al. 2024); label bias persists across hundreds of tasks even after debiasing (Reif and Schwartz 2024); miscalibrated confidence is classical (Guo et al. 2017); and preference tuning induces agreement biases (Sharma et al. 2024). This literature repairs the output distribution of a black box; we open the box and measure what the prior does to information already computed. The ladder shows the verdict is present internally at near-ceiling, aligned with the readout direction, and quantifies how much of the probing literature’s “hidden knowledge” is exactly this known pathology (most of it) versus concealment beyond any output-distribution repair (– AUC). The diagnostic also marks where the calibration account ends: symbolic-label inversions are sign errors no bias correction can repair, and extended reasoning exceeds the margin’s ceiling. Few-shot prompting (Brown et al. 2020) and chain-of-thought (Wei et al. 2022) are standard elicitation tools; we give a mechanistic account of what the former does in this setting.
+
+### A Controlled Testbed
+
+#### Corpus and verification task.
+
+We use the parallel logic corpus of Zhou et al. (2026), who study representation trajectories of models reading these proofs without relating them to correctness; we repurpose it into verification tasks with exact labels. The corpus has 30 natural-deduction structures (8–16 steps), each instantiated in 20 topical domains with aligned steps ( English instances). The model receives an instance’s premises and a candidate conclusion and must answer in one word whether the candidate follows. The core prompt is fixed verbatim: premises as a numbered list, then “Candidate conclusion: [candidate]”, then “Does this conclusion follow from the premises by logical deduction? Answer with exactly one word: YES or NO.” (chat template applied; two variants in the factorial). Each instance yields a gold-YES trial (the true conclusion) and gold-NO foils. Labels are exact by construction, the answer surface is a single constant-format token, and because every structure appears in every domain, structure- and domain-identity shortcuts are detectable by holding out entire structures.
+
+#### Foils.
+
+Two generations of foils guard against generator artifacts. Minimal foils (; one per instance) differ from the true conclusion by exactly one semantic edit: polarity flip (), entity swap using premise entities (), or conjunct swap exchanging constituents across the two conjuncts, producing a non-entailed proposition from the same words (“the application builds successfully and CI marks the module as tested” “the module builds successfully and CI marks the application as tested”; ; 24 preserve the word multiset exactly). They were produced by an LLM under a constrained rubric and independently checked (non-entailment, single edit, grammaticality). Deterministic foils () are generated by four rules with no LLM anywhere: negation of the conclusion’s main clause (provably non-entailed given consistent premises; ), unsafe quantifier strengthening (), role swaps that permute argument structure under verb-agreement constraints, preserving the word multiset (), and entity swaps (). The balanced core benchmark is trials; the expanded set adds the 503 deterministic foils.
+
+#### Spatial verification (maze).
+
+Because logic foils are sentences, a foil could in principle be recognized by plausibility of the candidate alone. Our second domain eliminates this channel by construction: an ant starts at the origin and follows a sequence of cardinal moves (“move 3 units left; move 2 units up; …”); the candidate states its final position. A true candidate (“the ant is at ”) and a foil (“the ant is at ”) are formally indistinguishable coordinate pairs. Foil positions are a derangement of the true final positions within each step-count group: every foil is another chain’s true endpoint, so the position distributions are identical by construction. A candidate-only probe confirms this (0.500 across all tiers and models). We use a hard tier (4–6 steps, 1,600 trials) and an easy tier (2–3 steps, small moves, 1,300 trials), with transfer evaluated across step-count groups.
+
+#### Probing protocol and statistics.
+
+Probes are -regularized logistic regression on standardized single-layer, single-position hidden states (answer-token and last-input-token positions), following Orgad et al. (2025). The primary evaluation is leave-one-structure-out (LOSO): train on 29 structures, evaluate on the held-out one, cycle. To eliminate layer-selection optimism, the probe layer is chosen inside each fold by inner cross-validation over training structures only (“nested”); the selection is stable (all 30 folds at 0.6B choose layer 18) and nested matches non-nested to . All confidence intervals are cluster bootstraps resampling structures, not trials (2,000 resamples), since trials within a structure are correlated; significance tests are label permutations within structures. Exact prompts, templates, checkpoints, decoding and scoring rules, folds, and foil-generation code are in the supplement. Models: Qwen3-0.6B/1.7B/4B/8B (Yang et al. 2025), Phi-3.5-mini (3.8B; Abdin et al. 2024), and SmolLM2-1.7B (Allal et al. 2025), plus the Qwen3-0.6B/4B base (pre-instruction-tuning) checkpoints for the training analysis in the Discussion.
+
+### Knowledge, Expression, and a Diagnostic
+
+We phrase our terms with usable information under computational constraints (-information; Xu et al. 2020), which is not vacuous for deterministic networks. Let be the layer- state on trial , the validity label, the emitted answer. The model knows at layer to the degree a linear observer predicts from ; it expresses to the degree is predictable from . We estimate both with AUC.
+
+#### Proposition 1 (readout bottleneck).
+
+For single-token verification under forced-choice decoding (the decoder restricted to the two answer tokens), the answer is a deterministic function of the scalar margin , where is the difference of unembedding rows for the two answer tokens and the final post-norm state: . Free-form generation can deviate from this object, including by emitting neither token; we report the two behaviors separately. The chain is a sequence of garblings, so by the data-processing property of statistical experiments (Blackwell 1953) the best achievable prediction of under any proper loss cannot improve from left to right. Expression is the special case: one particular direction must align with the validity feature and its threshold must fall inside the data. Concealment is generic.
+
+#### Proposition 2 (three failures, one diagnostic).
+
+Suppose behavior is uninformative (). Three regimes are distinguishable from two further measurements. (i) Miscalibration: high; the margin ranks validity but an offset places every margin on one side of the threshold. (ii) Misalignment (concealment): probe AUC high but ; the verdict is computed but the readout direction misses it. (iii) Absence: probe AUC low; no additional verdict is linearly decodable at any layer, so there is nothing for internal access to recover. The regimes have different consequences: (i) predicts one-parameter repair and repair-by-recalibrating-elicitation; (ii) predicts neither works without internal access; (iii) predicts nothing works.
+
+### Verification: Knowledge Without Behavior
+
+Measurement (Qwen3-0.6B)
+Value
+
+Behavior, balanced 1,200 trials (all YES)
+0.500 (exact)
+
+Behavior, 503 deterministic foils (all YES)
+0/503
+
+   options reordered / question negated
+all YES / 0.38
+
+Probe, nested LOSO (layer 18 in all 30 folds)
+0.964 [.950, .976]
+
+Probe accuracy at threshold 0.5 (LOSO)
+0.898
+
+Permutation test (within-structure)
+
+Per-structure AUC
+all 
+
+Expanded foil set (1,703 trials), LOSO AUC
+0.968
+
+   negation / polarity / quantifier
+0.994 / 0.985 / 0.975
+
+   role swap / conjunct swap / entity swap
+0.917 / 0.864 / 0.76–0.81
+
+   macro-average over families
+0.900
+
+   identical-word foils combined ()
+0.897
+
+Lexical overlap baseline
+0.759 [.725, .797]
+
+Frozen text encoder (768-d)
+0.642
+
+Cross-family probe, same trials (Phi-3.5)
+0.990
+
+Table 1: Verification, Qwen3-0.6B. Behavior carries zero information (YES to all 1,703 trials, including the 503 deterministic foils), while structure-held-out probes on its states classify validity across every foil family, far above text-only bounds. Layer selection is nested inside folds; CIs are cluster bootstraps over structures.
+
+Figure 2: The validity signal is computed, not read off the surface: structure-held-out probe AUC by layer (Qwen3-0.6B) at two token positions. Early layers carry little signal (0.50–0.60 through layer 4); it assembles through the middle of the network and plateaus at 0.95–0.96 by layer 16, far above the lexical baseline (0.76) and frozen-encoder (0.64) references. Behavior sits at chance throughout.
+
+#### Behavior is pinned at chance.
+
+The 0.6B model answers YES on all 1,200 balanced trials and all 503 deterministic foils; balanced accuracy is exactly 50%. This is not a parsing or position artifact: reordering the options leaves every answer YES, and negating the question (which inverts every gold label) drops accuracy below chance to 38%, the few NO answers concentrating on foils (32/40), a sign-inverted leak of content through a content-blind affirmation.
+
+#### The internals classify what the behavior cannot.
+
+A nested LOSO probe on answer-token states reaches 0.964 [0.950, 0.976] and 89.8% accuracy on the same trials the model scores 50.0% (Table 1). Every one of the 30 held-out structures probes at 0.90. On the expanded foil set the probe separates all seven foil families, including rule-generated foils no LLM produced: negations at 0.994, quantifier strengthenings at 0.975, and, critically, foils sharing their entire word multiset with the truth at 0.897 (; 70 word-for-word anagrams, the rest differing only in agreement forms). The macro-average over families is 0.900; the weakest family (entity swap, 0.76–0.81) marks the floor. Text-only bounds fall far short: candidate–premise overlap reaches 0.759, a frozen general-purpose encoder 0.642. The layer profile (Figure 2) shows the signal is weak in early layers (at most 0.60 through layer 4) and assembles through the middle of the network: the signature of a computed judgment, not a surface read. Nor is the judgment idiosyncratic: a probe trained on Qwen3-0.6B structures and applied to Phi-3.5’s states reads validity at 0.990, so the computation is model-general.
+
+#### How much is verification, how much plausibility?
+
+A candidate might still be separable by semantic plausibility alone, without the premises. We measure this directly with two ablated probes on the same states: candidate-only (premises removed from the input) and premise-shuffled (premises replaced by another instance’s). Overall, the matched probe reaches 0.962 against 0.817 candidate-only and 0.828 shuffled. A genuine premise-dependent component exists, but much of the aggregate signal is candidate-intrinsic: negating a sentence leaves plausibility fingerprints. On role swaps, where the foil is a grammatical sentence using identical words, candidate-only collapses to 0.592 while the matched probe holds 0.915: a premise gap. On negations, candidate-only alone reaches 0.933. The probe reads both channels; the premise-dependent one is largest exactly where plausibility is silenced by construction, and the maze domain closes that channel entirely.
+
+### Where the Verdict Is Lost
+
+0.6B
+4B
+8B
+
+Free-form (acc.)
+.500
+.932
+.848
+
+Forced-choice (acc.)
+.500
+.923
+.943
+
+Margin (AUC)
+.887
+.979
+.980
+
+   margins
+100%
+46.5%
+53.1%
+
+Probe, LOSO (AUC)
+.964
+.989
+.989
+
+probemargin
++.076
++.010
++.008
+
+   95% CI
+[.057,.096]
+[.001,.019]
+[.000,.019]
+
++ calibration (acc.)
+.810
+.927
+.942
+
+Table 2: The information ladder across scale (verification, balanced set; cluster-bootstrap CIs over structures). Forced-choice accuracy is monotone; free-form is not (113 of 8B’s responses contain neither token). Calibration repairs 0.6B to 81.0% and 8B to 94.2% (margin-decoded); 4B gains nothing (92.7%). 0.6B probes the answer token (layer 18); 4B/8B the last input token (layer 0 = 0.500, confirming no leak).
+
+#### The ladder is strict, and the failure is late.
+
+Table 2 traces the verdict through every access level, with paired cluster-bootstrap CIs. At 0.6B: text 0.500 margin 0.887 [0.864, 0.912] probe 0.964 [0.950, 0.976]; the probemargin gap is [, ] and no resample of 2,000 reverses any rung. The verdict thus survives to the output distribution; regime (ii) concealment is real but small. The dominant failure is regime (i): the margin is positive on 100% of trials, its mean offset above the decision threshold, so the argmax answers YES regardless of the evidence.
+
+#### The readout direction is well-aligned, and optimal by 4B.
+
+A direct measurement shows how much the direction contributes. Against the strongest comparator, the structure-held-out probe direction itself, the class separation () along the model’s readout axis is 1.72 vs. 2.28 at 0.6B (75%, matching the AUC gap) and 3.74 vs. 3.74 at 4B. The alignment grows from 0.19 to 0.26 with scale. Direction error is real but secondary at 0.6B and gone by 4B; the threshold, by contrast, is set by the prompt rather than by competence.
+
+Figure 3: Behavior is ranking plus an uncontrolled offset. (a) Across 90 semantic-label prompt configurations of five models (three families), behavioral accuracy is a single declining function of the measured threshold offset (Spearman ); beyond , behavior is chance regardless of competence. (b) The same configurations after a one-parameter bias correction (filled): per-model spread collapses (e.g. 4B: SD 0.107 0.022), leaving capability differences, not prompt sensitivity.
+
+#### Behavior tracks the threshold wherever it moves.
+
+Proposition 1 makes the threshold account available, not true: behavior could vary across prompts because the underlying ranking varies. The factorial’s empirical content is that it does not: the offset term, not the ranking, carries the sensitivity. We ran a factorial over five models three phrasings four answer-label vocabularies two option orders (120 configurations). Figure 3 shows the result for the 90 semantic-label configurations: behavioral accuracy collapses onto one declining function of measured offset (Spearman ). The relation is not circular: a ranking-driven account would move margin AUC with behavior, and it does not—per-model margin-AUC spread is – smaller than behavioral spread (Phi-3.5: behavior 0.87–0.92, margin 0.954–0.968 across its 18 configurations). After the one-parameter correction, per-model spread collapses (4B: SD 0.107 0.022) and what remains is capability. The remaining 30 configurations mark a boundary. With arbitrary symbol labels (answer “B” for supported, “A” otherwise), larger models’ margins invert: 4B reaches margin AUC 0.03 with one option order, near-perfectly wrong. The verdict is intact but its binding to arbitrary symbols sign-flips: a grounding failure, not calibration, and bias correction correctly cannot repair it (calibrated accuracy 0.50).
+
+#### Scale saturates knowledge; the answer channel keeps failing, differently.
+
+Across 0.6B 4B 8B, probes move 0.964 0.989 0.989, margins 0.887 0.979 0.980, and forced-choice accuracy 0.500 0.923 0.943: by 4B the internal verdict is at ceiling, present in the output distribution, and correctly thresholded. Free-form behavior does not follow: 0.500 0.932 0.848. The 8B drop is not the threshold returning: 113 of 1,200 free-form responses contain neither answer token (accuracy on the parseable remainder is 93.7%), a second, distinct failure of the emitted channel, instruction drift rather than saturation. Reading the margin with one fitted threshold yields 94.2%, bypassing both failure modes: scale fixed the verdict and the threshold, not the reliability of free-form text.
+
+### Repair, Elicitation, and the Diagnostic
+
+Condition (Qwen3-0.6B)
+Behavior
+YES/NO
+
+Zero-shot
+0.500
+1200 / 0
+
++ bias-only calibration (1 param., LOSO)
+0.810
+(margin)
+
++ 4 worked examples
+0.814
+564 / 556
+
++ extended reasoning (2,048 tokens)
+0.902
+701 / 495
+
+Qwen3-4B, zero-shot
+0.932
+618 / 582
+
+Qwen3-8B, zero-shot / + calibration
+0.848 / 0.942
+614 / 473
+
+Phi-3.5-mini, zero-shot
+0.921
+603 / 597
+
+Probe accuracy, zero-shot (0.6B / 4B)
+0.898 / 0.950
+
+Table 3: Expression is the moving part. A single bias parameter matches four worked examples (81.0% vs. 81.4%), and a paired measurement shows they are the same intervention. Extended reasoning and scale approach, and at 0.6B statistically match (0.902 vs. 0.898), what zero-shot probes read from the states. Few-shot evaluates 1,120 trials on 28 structures (examples from the other two); calibration is evaluated strictly on held-out structures. The 8B calibrated figure (0.942) is margin-decoded, bypassing the 113 invalid free-form responses entirely; the 0.848 zero-shot figure scores them as incorrect.
+
+#### One parameter, cross-validated.
+
+We fit a single scalar to the margin, and nothing else, on 29 structures and evaluate on the 30th, cycling (LOSO). At 0.6B this lifts behavior from 50.0% to 81.0% ( across folds; Platt scaling does no better); at 8B, calibrated margin decoding yields 94.2%. Median-centering, using only the known base rate, matches the supervised scalar exactly (81.0%; 94.7% at 8B), so the repair requires no learning. Content-free calibration (Zhao et al. 2021) fails (55.9%; estimates swing across placeholders): the offset is anchored to real content, unlike multiple-choice label priors. What is new is not the fix but what its success measures (the distance between behavior and the margin’s own ceiling) and its scope: transfers across held-out structures because the offset is global within a prompt, but only partially across phrasings (0.77–0.83 where offsets are similar; 0.63–0.75 where they differ by ), exactly as the factorial’s offset variation predicts. The ranking transfers; the offset is re-estimated per prompt configuration.
+
+#### Few-shot prompting predominantly recenters the threshold.
+
+The mechanism predicted in advance that worked examples would repair behavior by moving the threshold, not the ranking. We measured margins per trial, zero-shot and with four examples, paired. Zero-shot: AUC 0.880, offset , 100% of margins positive, behavior 50.0%. Few-shot: AUC 0.893, offset (dead center), 52.2% positive, behavior 81.9% under first-token scoring (81.4% under Table 3’s free-generation scoring; the rules differ on 6 of 1,120 trials). The ranking is largely preserved (rank correlation 0.79); the threshold moved . Three independent routes land on the same number because they predominantly perform the same recentering: statistical calibration (81.0%), worked examples (81.4%), and the margin’s own ceiling at the optimal threshold. Extended reasoning goes further (90.2%), consistent with reasoning tokens adding computation rather than merely recalibrating; we leave its mechanism open.
+
+#### The residual gap: internal access still buys errors back.
+
+On the 82 trials the 4B model answers incorrectly, a probe trained only on other structures recovers the correct verdict at 63.4% (AUC 0.771); overall it scores 95.0% against the model’s 93.2%. The probemargin gap at 4B/8B (, 95% CI / , ; and ) is small but excludes zero. Concealment shrinks with scale; it has not vanished.
+
+#### Discriminant validity: the audit tracks what is computed.
+
+On the maze task the 0.6B model again answers YES to every trial at both tiers, replicating the behavioral collapse in a second domain; the audit’s other rungs discriminate. On the hard tier (4–6 steps) every rung is near-empty: margin 0.538, probe 0.581, candidate-only 0.500. That is regime (iii): no verdict is linearly decodable beyond what the logits show, and the probe, given 1,600 trials, correctly reports nothing to find. On the easy tier (2–3 steps) the model partially computes, and the ladder reappears: margin 0.587 probe 0.704 (gap ), candidate-only 0.500, and the verdict peaks at layer 18, the same mid-network position as the logic verdict. At 1.7B the calibration story replicates (behavior 52.5%, margin 0.799, repaired to 70.9%; candidate-only 0.500). The audit therefore does not manufacture gaps: it reports absence where nothing is detectable, a miniature ladder where computation is partial, and the full dissociation where a strong verdict signal forms early.
+
+### Generation: Why the Controls Matter
+
+Qwen3
+Phi
+SmolLM2
+
+0.6B
+4B
+8B
+3.8B
+1.7B
+
+Behavior
+.500
+.932
+.848
+.921
+.50–.71∗
+
+Margin
+.887
+.979
+.980
+.963
+.60–.82∗
+
+Probe
+.964
+.989
+.989
+.990
+—
+
+Calibrated
+.810
+.927
+.942
+.921†
+—
+
+Table 4: The ladder across models and families. The behavior margin probe ordering holds in every model where probes were fit; behavior and margin rankings are available for all five. SmolLM2 (∗) ranges are across prompt configurations from the factorial (no hidden-state extraction). Phi-3.5 probe is cross-family: trained on Qwen3-0.6B structures, evaluated on Phi states. †Phi margin is already centered (offset ); calibration matches behavior.
+
+The verification design came from an audit of the standard generation setting, itself a result. Asked to write conclusions (labels by two independent frontier-LLM judges, three-way rubric, 99–100% agreement), probes on the writing model’s states appear to predict correctness, until the controls arrive. A 10-feature baseline over the visible answer (length, format, completeness statistics) matches probes with heuristic keyword labels (transfer AUC 0.870 vs. 0.856) and beats them under adjudicated labels at 4B by 12–13 points (0.947/0.970 surface vs. 0.818/0.837 hidden state, strict/lenient). Combining features adds nothing: the reason is mundane, since these models fail by writing fragments and half-conclusions, so correctness is worn on the answer’s face.
+
+Label quality matters as much as the baseline. Heuristic labels manufacture internal signal: keyword-overlap “correctness” is partly a function of answer surface, so any surface-correlated representation predicts it, and the artifact survives transfer; adjudication (strict correctness 15.7% 5.5%) changes which predictors work. At the pre-answer position, a 4-feature difficulty baseline (premise count, depth, prompt length) beats every hidden-state probe under transfer. None of this shows generation internals are empty; it shows the standard design cannot demonstrate otherwise, because an open output channel explains probe success. Hence: close the channel, then measure.
+
+### Discussion and Conclusion
+
+#### For interpretability.
+
+“Models know more than they show” is, in the cleanest case we can construct, true, and mostly mislabeled. The verdict is not buried in a hidden subspace awaiting a probe; it sits in the output logits behind a broken threshold. The remedies differ (internal access vs. one number), and so do the implications: at the scales we test, log-probability access recovers nearly everything, and the concealed remainder (– AUC) is real but thin. Probing claims should ship with margin and prior-corrected baselines (Zhao et al. 2021); where probes beat both, that is the discovery.
+
+#### For evaluation.
+
+Behavioral accuracy on balanced verification tasks can sit arbitrarily far below competence, and the direction of error is not fixed: the same model saturates to all-YES or all-NO by prompt wording. Text-only evaluation measures ranking threshold, and the threshold term dominates prompt sensitivity; where logprobs are available, margin AUC plus a fitted threshold separates the terms.
+
+#### For the training story.
+
+Preference training is not the source of the offset: the base 0.6B model already shows it (margin AUC 0.91, , near-all-YES in completion format), while the base 4B is already calibrated (, 91.4%). Post-training neither creates nor cures it; whether it amplifies it at small scale is format-confounded (the tuned 0.6B collapses under the base prompt, margin AUC 0.60; the tuned 4B is robust, margin AUC 0.981). The offset is a small-model pretraining property that scale removes and format perturbs; its fine-tuning dynamics remain open.
+
+#### Limitations.
+
+Our domains are synthetic and English; whether the ladder’s ordering holds on natural, noisy-label tasks is untested. Models are 8B. Probes remain correlational: we do not causally steer the threshold at the activation level. Part of the logic-domain signal is candidate-intrinsic; our strongest per-family claims rest on the cells where that channel is silenced, and on the maze domain that closes it. Minimal foils are LLM-generated (rubric-constrained, independently checked); the deterministic families remove this dependence.
+
+#### Conclusion.
+
+When do internal probes beat reading the answer? In our generation setting, not demonstrably: surface and label artifacts reproduce the published pattern. In verification, a premise-dependent validity signal forms mid-network, reaches the model’s own logits, and is lost at one miscalibrated threshold that one fitted parameter repairs. Measured against matched baselines, the gap between knowledge and expression is narrower, later, and far more fixable than “hidden knowledge” suggests.
+
+### References
+
+Abdin et al. (2024)
+M. Abdin, J. Aneja, H. Awadalla, A. Awadallah, A. A. Awan, N. Bach, A. Bahree, A. Bakhtiari, J. Bao, H. Behl, et al.
+
+Phi-3 technical report: a highly capable language model locally on your phone.
+
+External Links: 2404.14219
+
+Cited by: Probing protocol and statistics..
+
+Allal et al. (2025)
+L. B. Allal, A. Lozhkov, E. Bakouch, G. M. Blázquez, G. Penedo, L. Tunstall, A. Marafioti, H. Kydlíček, A. P. Lajarín, V. Srivastav, et al.
+
+SmolLM2: when smol goes big – data-centric training of a small language model.
+
+arXiv preprint arXiv:2502.02737.
+
+Cited by: Probing protocol and statistics..
+
+Azaria and Mitchell (2023)
+A. Azaria and T. Mitchell
+
+The internal state of an LLM knows when it’s lying.
+
+In Findings of the Association for Computational Linguistics: EMNLP 2023,
+
+pp. 967–976.
+
+Cited by: Introduction,
+Error detection from internal states..
+
+Belinkov (2022)
+Y. Belinkov
+
+Probing classifiers: promises, shortcomings, and advances.
+
+Computational Linguistics 48 (1), pp. 207–219.
+
+Cited by: Probing methodology..
+
+Belrose et al. (2023)
+N. Belrose, Z. Furman, L. Smith, D. Halawi, I. Ostrovsky, L. McKinney, S. Biderman, and J. Steinhardt
+
+Eliciting latent predictions from transformers with the tuned lens.
+
+External Links: 2303.08112
+
+Cited by: Probing methodology..
+
+Blackwell (1953)
+D. Blackwell
+
+Equivalent comparisons of experiments.
+
+The Annals of Mathematical Statistics 24 (2), pp. 265–272.
+
+Cited by: Proposition 1 (readout bottleneck)..
+
+Brown et al. (2020)
+T. Brown, B. Mann, N. Ryder, M. Subbiah, J. D. Kaplan, P. Dhariwal, A. Neelakantan, P. Shyam, G. Sastry, A. Askell, et al.
+
+Language models are few-shot learners.
+
+In Advances in Neural Information Processing Systems 33 (NeurIPS),
+
+pp. 1877–1901.
+
+Cited by: Label priors and calibration..
+
+Burns et al. (2023)
+C. Burns, H. Ye, D. Klein, and J. Steinhardt
+
+Discovering latent knowledge in language models without supervision.
+
+In Proceedings of the Eleventh International Conference on Learning Representations (ICLR),
+
+Cited by: Introduction,
+Error detection from internal states..
+
+Farquhar et al. (2024)
+S. Farquhar, J. Kossen, L. Kuhn, and Y. Gal
+
+Detecting hallucinations in large language models using semantic entropy.
+
+Nature 630, pp. 625–630.
+
+Cited by: Probing methodology..
+
+Gekhman et al. (2025)
+Z. Gekhman, E. Ben-David, H. Orgad, E. Ofek, Y. Belinkov, I. Szpektor, J. Herzig, and R. Reichart
+
+Inside-out: hidden factual knowledge in LLMs.
+
+In Second Conference on Language Modeling (COLM),
+
+Cited by: Error detection from internal states..
+
+Guo et al. (2017)
+C. Guo, G. Pleiss, Y. Sun, and K. Q. Weinberger
+
+On calibration of modern neural networks.
+
+In Proceedings of the 34th International Conference on Machine Learning (ICML),
+
+pp. 1321–1330.
+
+Cited by: Label priors and calibration..
+
+Hewitt and Liang (2019)
+J. Hewitt and P. Liang
+
+Designing and interpreting probes with control tasks.
+
+In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing (EMNLP),
+
+pp. 2733–2743.
+
+Cited by: Probing methodology..
+
+Holtzman et al. (2021)
+A. Holtzman, P. West, V. Shwartz, Y. Choi, and L. Zettlemoyer
+
+Surface form competition: why the highest probability answer isn’t always right.
+
+In Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing (EMNLP),
+
+pp. 7038–7051.
+
+Cited by: Introduction,
+Label priors and calibration..
+
+Kadavath et al. (2022)
+S. Kadavath, T. Conerly, A. Askell, T. Henighan, D. Drain, E. Perez, N. Schiefer, Z. Hatfield-Dodds, N. DasSarma, E. Tran-Johnson, et al.
+
+Language models (mostly) know what they know.
+
+External Links: 2207.05221
+
+Cited by: Introduction,
+Introduction,
+Error detection from internal states..
+
+Kossen et al. (2024)
+J. Kossen, J. Han, M. Razzak, L. Schut, S. Malik, and Y. Gal
+
+Semantic entropy probes: robust and cheap hallucination detection in LLMs.
+
+External Links: 2406.15927
+
+Cited by: Probing methodology..
+
+Li et al. (2023)
+K. Li, O. Patel, F. Viégas, H. Pfister, and M. Wattenberg
+
+Inference-time intervention: eliciting truthful answers from a language model.
+
+In Advances in Neural Information Processing Systems 36 (NeurIPS),
+
+Cited by: Error detection from internal states..
+
+Marks and Tegmark (2024)
+S. Marks and M. Tegmark
+
+The geometry of truth: emergent linear structure in large language model representations of true/false datasets.
+
+In First Conference on Language Modeling (COLM),
+
+Cited by: Error detection from internal states..
+
+nostalgebraist (2020)
+nostalgebraist
+
+Interpreting GPT: the logit lens.
+
+Note: https://www.lesswrong.com/posts/AcKRB8wDpdaN6v6ru/interpreting-gpt-the-logit-lensAccessed: 2026-07-20
+
+Cited by: Probing methodology..
+
+Orgad et al. (2025)
+H. Orgad, M. Toker, Z. Gekhman, R. Reichart, I. Szpektor, H. Kotek, and Y. Belinkov
+
+LLMs know more than they show: on the intrinsic representation of LLM hallucinations.
+
+In Proceedings of the Thirteenth International Conference on Learning Representations (ICLR),
+
+Cited by: Introduction,
+Error detection from internal states.,
+Probing protocol and statistics..
+
+Park et al. (2025)
+Y. Park, H. Pyun, and Y. Jo
+
+Bridging the knowledge-prediction gap in LLMs on multiple-choice questions.
+
+External Links: 2509.23782
+
+Cited by: Introduction,
+Error detection from internal states..
+
+Reif and Schwartz (2024)
+Y. Reif and R. Schwartz
+
+Beyond performance: quantifying and mitigating label bias in LLMs.
+
+In Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (NAACL),
+
+Cited by: Label priors and calibration..
+
+Sharma et al. (2024)
+M. Sharma, M. Tong, T. Korbak, D. Duvenaud, A. Askell, S. R. Bowman, N. Cheng, E. Durmus, Z. Hatfield-Dodds, S. R. Johnston, et al.
+
+Towards understanding sycophancy in language models.
+
+In Proceedings of the Twelfth International Conference on Learning Representations (ICLR),
+
+Cited by: Introduction,
+Label priors and calibration..
+
+Wei et al. (2022)
+J. Wei, X. Wang, D. Schuurmans, M. Bosma, B. Ichter, F. Xia, E. Chi, Q. V. Le, and D. Zhou
+
+Chain-of-thought prompting elicits reasoning in large language models.
+
+In Advances in Neural Information Processing Systems 35 (NeurIPS),
+
+pp. 24824–24837.
+
+Cited by: Label priors and calibration..
+
+Xiao et al. (2024)
+S. Xiao, Z. Liu, P. Zhang, N. Muennighoff, D. Lian, and J. Nie
+
+C-pack: packed resources for general chinese embeddings.
+
+In Proceedings of the 47th International ACM SIGIR Conference on Research and Development in Information Retrieval,
+
+pp. 641–649.
+
+Cited by: Probing methodology..
+
+Xu et al. (2020)
+Y. Xu, S. Zhao, J. Song, R. Stewart, and S. Ermon
+
+A theory of usable information under computational constraints.
+
+In Proceedings of the Eighth International Conference on Learning Representations (ICLR),
+
+Cited by: Knowledge, Expression, and a Diagnostic.
+
+Yang et al. (2025)
+A. Yang, A. Li, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Gao, C. Huang, C. Lv, et al.
+
+Qwen3 technical report.
+
+External Links: 2505.09388
+
+Cited by: Probing protocol and statistics..
+
+Zhao et al. (2024)
+Q. Zhao, M. Xu, K. Gupta, A. Asthana, L. Zheng, and S. Gould
+
+The first to know: how token distributions reveal hidden knowledge in large vision-language models?.
+
+In European Conference on Computer Vision (ECCV),
+
+Cited by: Probing methodology..
+
+Zhao et al. (2021)
+Z. Zhao, E. Wallace, S. Feng, D. Klein, and S. Singh
+
+Calibrate before use: improving few-shot performance of language models.
+
+In Proceedings of the 38th International Conference on Machine Learning (ICML),
+
+pp. 12697–12706.
+
+Cited by: Introduction,
+Label priors and calibration.,
+One parameter, cross-validated.,
+For interpretability..
+
+Zheng et al. (2024)
+C. Zheng, H. Zhou, F. Meng, J. Zhou, and M. Huang
+
+Large language models are not robust multiple choice selectors.
+
+In Proceedings of the Twelfth International Conference on Learning Representations (ICLR),
+
+Cited by: Introduction,
+Label priors and calibration..
+
+Zhou et al. (2026)
+Y. Zhou, Y. Wang, X. Yin, S. Zhou, and A. R. Zhang
+
+The geometry of reasoning: flowing logics in representation space.
+
+In Proceedings of the Fourteenth International Conference on Learning Representations (ICLR),
+
+Cited by: Corpus and verification task..
+
+ Experimental support, please
+ view the build logs
+ for errors. Generated by
+
+ L
+ A
+ T
+ E
+
+ xml
+
+ .
+
+### Instructions for reporting errors
+
+ We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+ support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+ methods listed below:
+
+ Click the "Report Issue" (
+
+ ) button, located in the page header.
+
+ Tip: You can select the relevant text first, to include it in your report.
+
+ Our team has already identified the following issues. We appreciate your time reviewing and reporting rendering errors we
+ may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+ should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+ all.
+
+ Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a list of packages that need conversion, and welcome developer contributions.
+
+ We gratefully acknowledge support from
+ our major funders,
+ member institutions, ,
+ and all contributors.
+
+ About
+ ·
+ Help
+ ·
+ Contact
+ ·
+ Subscribe
+ ·
+ Copyright
+ ·
+ Privacy
+ ·
+ Accessibility
+ ·
+ Operational Status (opens in new tab)
+
+ Major funding support from
+

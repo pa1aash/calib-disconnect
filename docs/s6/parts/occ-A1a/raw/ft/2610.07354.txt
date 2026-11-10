@@ -1,0 +1,2270 @@
+
+
+Evaluating Escalation Signals for LLM Routing:Targets, Controls, and Five Ways to Fool Yourself
+
+Skip to main content
+
+###### Report GitHub Issue
+
+ ×
+
+ Title:
+
+ Content selection saved. Describe the issue below:
+
+ Description:
+
+ Submit without GitHub
+ Submit in GitHub
+
+ Why HTML?
+
+ Report Issue
+
+ Back to Abstract
+
+ Download PDF
+
+ Contents
+
+ Reading mode
+
+ Colour theme
+
+Abstract
+
+1 Introduction
+
+2 Related Work
+
+Cascades and routing.
+
+Uncertainty signals for deferral.
+
+Agreement-based deferral.
+
+What this paper adds.
+
+3 Method
+
+3.1 Semantic entropy
+
+3.2 Token-level confidence
+
+3.3 Escalation labels and the three evaluation targets
+
+3.4 Cost model
+
+3.5 The sampling overhead this cost model hides
+
+3.6 The difficulty baseline: a necessary control
+
+The raw baseline assumes the target is monotone in difficulty.
+
+The calibrated baseline estimates the shape instead of assuming it.
+
+Neither variant dominates.
+
+An asymmetry worth stating.
+
+3.7 Harmful and wasted escalation
+
+4 Implementation
+
+4.1 Experimental settings
+
+Reproducibility.
+
+5 Debugging Log: Real Failure Modes Encountered
+
+6 Results
+
+6.1 Two benchmarks, one signal, opposite verdicts
+
+The synthetic benchmark first, because it is the cautionary case.
+
+GSM8K, where the same signal survives the same controls.
+
+Routing performance.
+
+Replication on an independent sample.
+
+Token confidence is not universally anti-informative.
+
+The cost case does not close, and the reason is structural.
+
+6.2 The sample budget: ablating 
+
+6.3 Synthetic arithmetic: capability gap and prompt sensitivity
+
+6.4 PopQA: escalation is the wrong intervention
+
+6.5 Synthetic arithmetic: three runs, and a null result once controlled
+
+The central claim strengthens.
+
+Token confidence is anti-informative, and the pilot figure does not replicate.
+
+The fusion question resolves.
+
+Live entropy does predict large-model failure, contradicting our earlier
+claim.
+
+The difficulty baseline eliminates the synthetic result entirely.
+
+A precondition we should have checked first.
+
+6.6 Why the two targets diverge
+
+6.7 A learned alternative: the confidence-gated router
+
+7 Knowledge-Base Retrieval: A Complementary, Cheaper Signal
+
+7.1 Mechanism and an early methodological hazard
+
+7.2 A structural asymmetry between the two signals
+
+7.3 Results: a weaker signal at a price the strong one cannot meet
+
+Target 3 collapses from to .
+
+The collapse was predicted in advance, and identifies the mechanism.
+
+Signal quality is not the only axis, and on this model pair it is not the binding
+one.
+
+The difficulty baselines are not policies, and on GSM8K they are not buildable.
+
+A frontier rather than a winner.
+
+One limitation is resolved, in retrieval’s favour.
+
+A caveat on thresholds.
+
+7.4 Limitations of the retrieval result
+
+8 Future Work
+
+8.1 Retrieval keys that encode failure, not surface form
+
+Learned keys trained on outcomes.
+
+Keys drawn from the small model’s own state.
+
+Explicit task-type and difficulty features.
+
+Hybrid keys using partial generation.
+
+8.2 Closing the signal gap
+
+8.3 Ablations and validation we did not run
+
+8.4 Beyond a fixed , a single pair, and a binary decision
+
+9 Discussion
+
+Report the target explicitly.
+
+Report a difficulty baseline.
+
+Check headroom before spending compute.
+
+Cost the sampling overhead honestly.
+
+On generalizing across datasets.
+
+Limitations.
+
+References
+
+ License: arXiv.org perpetual non-exclusive license
+
+arXiv:2610.07354v1 [cs.AI] 05 Oct 2026
+
+## Evaluating Escalation Signals for LLM Routing:
+Targets, Controls, and Five Ways to Fool Yourself
+
+Ramin Pishehvar
+
+Affiliation: Cisco Systems, Inc., San Jose, CA, USA 
+{rpishehv, amoranid, mahviswa}@cisco.com
+
+Andrea Morandi
+
+Affiliation: Cisco Systems, Inc., San Jose, CA, USA 
+{rpishehv, amoranid, mahviswa}@cisco.com
+
+Affiliation: Cisco Systems, Inc., San Jose, CA, USA 
+{rpishehv, amoranid, mahviswa}@cisco.com
+
+Mahesh Viswanathan
+
+Affiliation: Cisco Systems, Inc., San Jose, CA, USA 
+{rpishehv, amoranid, mahviswa}@cisco.com
+
+####### Abstract
+
+Deciding when to escalate a query from a small language model to a larger one requires a cheap signal that can predict, before the large model is ever called, whether escalating would actually help. Semantic entropy, originally developed to detect hallucinations, is a natural candidate: it measures how much a model’s own sampled answers disagree in meaning, and high disagreement often signals an unreliable answer. We test it as an escalation signal across three benchmarks and two model families. On GSM8K, with a small/large model pair about twelve times apart in size, semantic entropy reliably distinguishes the small model’s mistakes (AUROC 0.871) and improves routed accuracy over random escalation by up to nine points at matched cost. An earlier, similarly strong-looking result on a synthetic arithmetic benchmark turned out to be misleading: a simple rule based only on how hard a question looks on the page, with no model involved at all, matched semantic entropy’s performance almost exactly.
+
+This paper’s main contribution is a set of checks that catch this kind of misleading result before it is reported as real. We show that scoring a cheap, question-only difficulty estimate alongside any signal reveals whether that signal is adding real information or just tracking how hard a question looks; that two reasonable-seeming definitions of "the escalation worked" can produce very different results on the same data; that a benchmark can leave almost no room for any signal to beat simply always using the large model, however good that signal is; and that the true cost of gathering a live signal, querying the small model many times per question, can make routing more expensive than just calling the large model directly. For a cheaper alternative that reuses cached past outcomes instead of live sampling, we show how to predict, before running an experiment, whether that shortcut will work on a new dataset, confirmed by correctly forecasting a collapse from a strong-looking result (AUROC 0.908) to a chance-level one (0.518) ahead of time. We offer these as a general checklist for evaluating escalation signals, not as a case for this one.
+
+### 1 Introduction
+
+Serving every query with the largest available language model is wasteful: many queries
+are easy enough for a small model (SLM) to answer correctly, and only a minority need the
+extra capacity of a large model (LLM). A router that can cheaply predict, before
+querying the large model, whether a given query needs it would let a system pay the large
+model’s cost only when it is worth paying.
+
+Semantic entropy [1] is a natural candidate signal. Originally
+proposed for hallucination detection, it estimates a model’s uncertainty about the
+meaning of its own answer: draw stochastic samples for a query, cluster them by
+bidirectional NLI entailment (two samples belong to the same cluster iff each entails the
+other), and compute the Shannon entropy of the resulting cluster-probability distribution.
+High semantic entropy indicates that the model’s samples disagree on meaning, not just
+wording – a stronger hallucination signal than lexical diversity or output confidence
+alone. Our implementation clusters a terse extracted answer rather than the raw
+generation (Section 5) and takes plain cluster frequency rather than weighting
+by the model’s own sequence probabilities as in [1]; this is
+closer to the discrete, frequency-weighted self-consistency of [2]
+than to full semantic entropy, and we use the term throughout to mean this specific, cheaper
+variant.
+
+This paper asks: can semantic entropy, computed from the small model’s own samples,
+predict whether escalating a query to a large model would improve the answer? We
+build a full pipeline to test this, run it across three benchmarks and two model families,
+and report both positive and negative results, several real implementation bugs
+encountered along the way, and a conceptual clarification of what semantic entropy can and
+cannot be expected to predict.
+
+### 2 Related Work
+
+##### Cascades and routing.
+
+Cascading – serving most queries with a cheap model and
+escalating hard ones – was popularized by FrugalGPT [8], which learns
+confidence thresholds over a portfolio of commercial APIs and reports large cost reductions
+at matched quality. AutoMix [10] wraps few-shot self-verification in a
+POMDP-based router requiring only API access. A parallel line performs pre-generation
+routing, selecting one model before any inference: RouteLLM [9] and
+Hybrid LLM [13] learn such a router from preference data, the latter
+adding an explicit quality-cost objective. The distinction matters for our cost analysis: a
+pre-generation router never pays the small model, whereas a cascade pays it on every query
+– and, in our setting, pays it times (Section 3.5).
+
+##### Uncertainty signals for deferral.
+
+Token-level confidence is the established
+deferral signal for generative cascades, tracing back to the classical error-reject tradeoff
+[19]; Gupta et al. [7] formalize the
+Chow-style variants (summed and length-normalized log-probability, and quantiles thereof)
+that our avg_neg_logprob instantiates. Semantic uncertainty
+[4] and its refinement into semantic entropy
+[1] were introduced for hallucination detection rather than
+routing.
+
+##### Agreement-based deferral.
+
+The closest prior work to ours is Soiffer et al. [5], who use semantic agreement among an ensemble of distinct
+small models as a training-free deferral signal, reporting quality matching a 70B target at
+40% of its compute budget. Related, Kolawole et al. [6] use
+ensemble agreement for cascade deferral and Yue et al. [12] use
+answer consistency for numerical reasoning. Our setting differs in construction – 
+stochastic samples from a single model, clustered by bidirectional NLI entailment
+with entropy over the cluster distribution, following [1] – but
+the underlying intuition, that meaning-level disagreement indicates unreliability, is
+shared. We regard the effectiveness of this family as established by that work rather than
+as our contribution.
+
+##### What this paper adds.
+
+Several of our findings corroborate results reached
+independently, which we take as evidence that they are properties of the problem rather
+than of our implementation. Soiffer et al. report that agreement-based deferral degrades
+on short-answer closed-book QA, where answers are brief and baseline accuracy is low, and
+that token-level confidence overtakes it there. We observe a related difficulty on PopQA,
+for a different reason: escalation itself is the wrong intervention there, since both models
+lack the needed parametric knowledge rather than disagreeing on it (Section 6.4)
+– we did not reach an entropy-vs-confidence comparison on PopQA, having abandoned signal
+evaluation there once the headroom failure was established. On synthetic arithmetic we find
+the mirror image of Soiffer et al.’s result instead: token confidence is the signal that
+inverts, falling below chance across four independent measurements (Section 6.5).
+The concern motivating
+our per-generation cost accounting – that -sample estimation changes the serving cost
+model – is precisely why at least one recent cascade system declines to use semantic
+entropy at all.
+
+Our contribution is therefore not the signal but the evaluation methodology. To our
+knowledge, no prior cascade study reports a difficulty baseline: the deferral
+literature compares against token-level confidence, random deferral, and learned routers,
+but not against what the question text alone already reveals. On our synthetic benchmark
+that baseline is free and matches semantic entropy exactly, nullifying a result we had
+initially accepted (Section 6.5); on GSM8K entropy beats it by a wide margin
+(Section 6.1), and the two cases are indistinguishable without the control.
+Nor, to our knowledge, does prior work report an oracle-headroom precondition, the
+difficulty-calibrated variant needed to evaluate retrieval-based routers fairly, or
+the observation that on lexically regular benchmarks an embedding space can encode
+difficulty so completely () that nearest-neighbor retrieval is difficulty
+lookup – a diagnostic that correctly forecast the collapse of an apparent retrieval
+result on a benchmark not yet run (Section 7). Selective prediction [11] supplies
+the abstention framework these controls operate within.
+
+### 3 Method
+
+#### 3.1 Semantic entropy
+
+Given a query and stochastic samples drawn from a model at
+temperature , we cluster the samples via bidirectional entailment, following the
+semantic-uncertainty construction of [4] and its refinement into
+semantic entropy by [1], using an NLI model
+(microsoft/deberta-large-mnli [17]): and are placed in the same cluster iff
+ and , for
+threshold . Writing for the resulting clusters and
+ for the empirical cluster probability, semantic entropy is
+
+(1)
+
+and the normalized form used throughout this work is , so that entropy is comparable across different values of .
+
+#### 3.2 Token-level confidence
+
+Following the Chow-style formalization of [7], we also record,
+as a complementary signal, each sample’s average per-token
+log-probability under the generating model (via compute_transition_scores),
+negated so that higher values indicate lower confidence: for the representative sample chosen
+from the majority cluster. This measures the model’s confidence in the tokens it actually
+produced, independent of whether other samples agreed with it – a different notion of
+uncertainty from semantic entropy, and one that can, in principle, catch cases where a
+model is consistently wrong (zero semantic entropy) but still assigns low
+probability to its own output.
+
+#### 3.3 Escalation labels and the three evaluation targets
+
+For each query we compute correct_small and correct_large (exact-match or
+fuzzy alias match against ground truth, depending on task). Three binary targets can be
+constructed from these, which we refer to throughout as Targets 1–3:
+
+Target 1: needs_escalation
+
+(2)
+
+Target 2: untrustworthy
+
+(3)
+
+Target 3: large_success
+
+(4)
+
+We initially evaluated signals only against Target 1, since it is the operationally
+relevant question (does escalating actually fix the answer?). However, Target 1 depends on
+the large model’s behavior, which a signal computed purely from the small model’s
+own samples never observes. We are careful to state this limitation precisely: such a
+signal carries no direct information about the large model, but it may still carry
+correlational information, mediated by a shared latent – query difficulty – that
+influences both models’ success. Fixed, parameter-free statistics such as entropy exploit
+this correlational pathway weakly, whereas a learned probe on internal representations can
+exploit it substantially better (Section 6.7). Target 2 is the target a
+per-model uncertainty signal can fairly be judged against, since it only requires
+information the small model’s own behavior could in principle encode.
+
+Target 3 (defined above) applies to any signal, live or retrieval-based, but the two differ
+in what they can be expected to achieve against it: a live small-model signal has only
+indirect, difficulty-mediated access to the large model’s behavior
+(Section 6.5 shows this is nonzero but modest), whereas a knowledge base built by
+profiling queries against the large model (Section 7) has direct access to real
+correct_large outcomes. We report Targets 1 and 2 throughout and add Target 3
+wherever a signal has something to say about it, and argue in Section 6.6
+that this distinction resolves an apparent contradiction in our results.
+
+A note on Target 3’s polarity, since it differs by signal family and is easy to misread.
+Entropy-family signals (semantic entropy, token confidence) are uncertainty scores: a
+higher value is designed to indicate trouble, uniformly across Targets 1 and 2. To preserve
+that reading for Target 3 as well, Tables 2 and 7 score these
+signals against rather than against correct_large as
+defined above – without this inversion, a higher-is-better entropy score would correspond to
+an AUROC read as under the literal definition, inviting exactly the kind of
+misreading this note exists to prevent. Retrieval-based signals (Section 7) are
+different in kind: they vote directly on the outcome rather than report uncertainty, so a
+higher score naturally means predicted success, and Table 9 scores
+them against correct_large directly, matching the definition above without
+inversion. The two conventions are each the correct one for their own signal family; neither
+table is in error, but a reader comparing Target 3 AUROC values across both kinds of signal
+should note that they are scored against opposite classes.
+
+#### 3.4 Cost model
+
+Every query incurs the cost of the -sample small-model pass, normalized to unit
+(this is unavoidable, since the entropy signal requires it). Escalated queries
+additionally incur cost_ratio units for one large-model call. For escalation rate
+ (fraction of queries escalated) and cost ratio ,
+
+(5)
+
+We compare routed accuracy at a given cost against three baselines: always-small
+(cost ), always-large (cost ), and random-at-matched-cost (escalate a
+random subset of the same size , averaged over 20 trials) – the last of these
+isolates whether the signal’s escalation choices are actually better than an
+equal-cost random policy, rather than merely benefiting from escalating more often.
+We also compare against an oracle, in the spirit of the abstention framework of
+[11]: a hypothetical router that always makes the correct escalate-or-not decision. Its accuracy is capped by how many queries the small model already answers correctly that the large model would get wrong, since those are the only queries where escalating can actively hurt. This gives a cheap pre-flight check: an oracle’s margin over always-large bounds what any router, however good its signal, could possibly gain, so a small margin means a benchmark is not worth a full evaluation.
+
+#### 3.5 The sampling overhead this cost model hides
+
+Normalizing the -sample pass to one unit obscures a constraint that turns out to bind
+hard in practice: entropy routing must draw generations from the small model
+before it can decide anything, and it pays that cost on every query, including the
+ones it does not escalate. Charging per generation instead, with a large-model generation
+costing times a small-model one,
+
+(6)
+
+so routing is cheaper than simply always calling the large model only when
+
+(7)
+
+At this requires even at a escalation rate, and
+ at . The consequence is that the method’s viability depends on the
+model pair, not only on signal quality: a 270M/12B pair (44 parameters)
+plausibly clears the bar, whereas the 1B/12B pair used in Section 6.4
+(12) does not, and for that pair entropy routing is more expensive than
+always-large no matter how well the signal discriminates. We note this because it is easy to
+miss under a normalized cost model, and because it bounds the practical claim this line of
+work can make: semantic-entropy routing is only economically sensible at large capability
+(and hence large cost) ratios, or at substantially smaller than we use here. In
+Section 7, we propose an offline method based on retrieval to make the complexity
+argument above more appealing for real-world applications.
+
+#### 3.6 The difficulty baseline: a necessary control
+
+An escalation signal is only interesting if it beats what is already known about the query
+for free. We therefore score, alongside every signal, a baseline that uses the benchmark’s
+own ground-truth difficulty as the routing score.
+
+This baseline is a control, not a candidate router. Its role is the same as the
+oracle row in a Pareto table: an oracle is not deployable either, but it bounds what any
+router could achieve, and a signal approaching it means something. The question the
+difficulty baseline answers is diagnostic – does this signal carry information
+beyond how hard the question is? – and that question needs an answer whether or not
+difficulty happens to be available at inference. If the answer is no, one should build a
+cheap difficulty estimator rather than pay for samples and NLI inference.
+
+Whether the baseline is additionally a deployable alternative depends on where its
+difficulty annotation comes from, and this varies sharply across our benchmarks
+(Table 1). Two regimes must be distinguished:
+
+Table 1: Where each benchmark’s difficulty annotation comes from, and what the baseline
+therefore means. Only on the synthetic ladder is difficulty recoverable from the question
+at inference time; elsewhere the baseline is a skyline using privileged information.
+
+Benchmark
+Difficulty source
+Available at inference?
+Baseline is a
+
+Synthetic
+digit count operation count, from the question
+yes (regex)
+free competitor
+
+GSM8K
+calculation lines in the reference solution
+no (needs the answer)
+skyline
+
+PopQA
+entity popularity, dataset field
+no (external lookup)
+skyline
+
+• 
+
+When difficulty is a surface feature of the question – as on our synthetic
+arithmetic ladder, where it is operand digit count times operation count and a regex
+recovers it exactly – the baseline is a genuine zero-cost competitor. A signal that does
+not beat it provides no value, because the same routing decisions are available without any
+model call at all.
+
+• 
+
+When difficulty is latent – derived from the reference answer (GSM8K’s
+reasoning-step count) or requiring an external lookup (PopQA’s entity popularity) – the
+baseline is instead a skyline: it uses information unavailable at inference, since
+knowing how many reasoning steps a problem takes presupposes the solution one is trying to
+obtain. Beating it is then a strong result rather than a null one.
+
+This control is cheap and, in our experience, decisive: it converted our strongest
+synthetic result from a positive finding into a null one (Section 6.5),
+and it is what distinguishes that null from the genuine GSM8K result
+(Section 6.1). We recommend it be reported by default. Its absence is, we
+suspect, why difficulty-correlated signals are easy to over-credit: any signal that tracks
+difficulty will separate a difficulty-driven target, whether or not it contains
+query-specific information.
+
+We report two variants of this baseline, and recommend taking the larger of the two as the
+bar a signal must clear. The distinction turns on an assumption that scoring difficulty
+directly makes silently.
+
+##### The raw baseline assumes the target is monotone in difficulty.
+
+AUROC measures
+ranking quality, so using difficulty itself as the routing score asserts that higher
+difficulty implies a higher probability of the positive label. Where that assumption fails,
+the baseline scores poorly even when difficulty is highly informative, and a signal
+compared only against it can appear to add information it does not have.
+
+Target 1 is the clearest case, because its positives are concentrated in the middle of the
+difficulty range rather than at the top. Writing the three regimes out:
+
+Difficulty
+correct_small
+correct_large
+Target 1
+
+low
+yes
+yes
+negative
+
+medium
+no
+yes
+positive
+
+high
+no
+no
+negative
+
+Escalation helps only where the small model has failed and the large model succeeds.
+At low difficulty the small model is already correct; at high difficulty both fail. So
+ is single-peaked, and ranking by raw difficulty
+places the hardest items – which are negatives – at the top. The ranking is not merely
+uninformative but wrong at precisely the end that a router acts on. Empirically this is what
+we observe: raw difficulty scores against Target 1 on GSM8K
+(Table 2), indistinguishable from chance, despite difficulty plainly bearing
+on whether escalation helps.
+
+##### The calibrated baseline estimates the shape instead of assuming it.
+
+Rather than
+scoring difficulty, we score the empirical rate of the target among items of similar
+difficulty, computed leave-one-out: for each item, we take its nearest neighbors in
+difficulty among the remaining items and use the fraction of them that are positive. This
+estimates nonparametrically, so a single-peaked
+relationship is represented correctly – medium-difficulty items receive high scores, and
+both tails receive low ones. The leave-one-out construction is necessary rather than
+fastidious: including an item’s own label in its own score would make the score partly
+be the label.
+
+Concretely, the neighbor count is fixed at , not chosen by cross-validation: for each
+item we first collect every other item at the exact same difficulty value, and fall
+back to the nearest by absolute difficulty distance only when fewer than exact
+matches exist. This favors exact-match neighbors where the benchmark’s difficulty levels are
+discrete enough to supply them (as on the synthetic ladder), and degrades gracefully to a
+fixed-radius nearest-neighbor estimate otherwise (as on GSM8K, where difficulty values are
+less repetitive).
+
+The size of this effect is not merely theoretical, but we are careful here to cite only
+what we can verify. Target 1 is single-peaked by the argument above on every benchmark we
+test, and raw difficulty scores accordingly poorly against it throughout: on GSM8K
+(Table 2), – across GSM8K’s own -ablation samples
+(Table 5), and – on the synthetic benchmark
+(Table 7) – all indistinguishable from chance. We do
+not, however, have a verified instance in our own data of the calibrated variant turning
+this into a large gain on Target 1 specifically – GSM8K’s calibrated score (,
+Table 2) is if anything slightly worse than raw there, consistent with our
+later point that calibration helps only when the benchmark’s difficulty annotation itself
+correlates with outcomes, which GSM8K’s reasoning-step count does weakly at best. The
+clearest demonstrated instance of calibration recovering non-monotone structure in this
+paper is therefore the raw-difficulty failure itself, not a specific calibrated figure we
+can point to: a baseline that scores nothing against Target 1’s non-monotone shape would
+need calibration to express it at all, even where we cannot yet show by how much.
+
+##### Neither variant dominates.
+
+Calibration is not free: it estimates a rate from a
+handful of neighbors, and that estimate is noisy. Where the relationship genuinely is
+monotone, raw difficulty already expresses it exactly and calibration can only perturb the
+ordering. GSM8K Target 2 illustrates this – correct_small rises
+monotonically with difficulty, and raw difficulty () accordingly beats the calibrated
+variant (), which is estimating a shape that was not in doubt. The two variants are
+thus complementary: calibration recovers structure the raw form cannot express, and the raw
+form avoids estimation noise the calibrated form incurs. Reporting only one invites a signal
+to clear whichever bar happens to be lower on that dataset, which is why we take the maximum.
+
+##### An asymmetry worth stating.
+
+The calibrated baseline consumes other items’
+labels, whereas semantic entropy observes none. It is therefore a fair comparator for
+retrieval-based routers – a nearest-neighbor vote over cached outcomes is itself a
+calibrated conditional estimate, so scoring such a router against raw difficulty alone
+systematically overstates it (Section 7) – and a deliberately harsh one
+for live signals. Semantic entropy exceeding it by on GSM8K Target 2 is
+correspondingly stronger evidence than the margin alone conveys, since it is outperforming a
+predictor granted information the signal itself never receives.
+
+#### 3.7 Harmful and wasted escalation
+
+Beyond aggregate accuracy, we track two per-escalation diagnostics. Both are
+post-hoc evaluation quantities: they require ground-truth grading of both models and
+are therefore not computable at deployment time, but they characterize the failure modes a
+routing policy incurs in a way aggregate accuracy obscures:
+
+harmful
+
+(8)
+
+wasted
+
+(9)
+
+harmful captures the worst outcome – escalation actively breaking a correct
+answer; wasted captures the broader cost of escalating when the small model was
+already adequate, regardless of what the large model does.
+
+### 4 Implementation
+
+The pipeline consists of an inference module (InferenceEngine, wrapping any
+HuggingFace causal LM, generating samples with optional per-token log-probabilities),
+a semantic-entropy module (NLIEntailmentChecker and
+SemanticEntropyEstimator, implementing the clustering and entropy computation
+above), an answer-extraction module (AnswerExtractor, reducing a raw generation to
+a terse final answer via numeric extraction or last-sentence extraction before
+clustering), a router (Router, implementing the threshold escalation policy end to
+end), and an evaluation harness (evaluate.py) tying all of the above together
+across five benchmark loaders (synthetic arithmetic, GSM8K [14],
+PopQA [3], TriviaQA [15], TruthfulQA
+[16])
+with a pre-flight sanity check and full AUROC/AUPRC/Pareto reporting. This paper reports
+results on three of the five (synthetic arithmetic, GSM8K, PopQA); TriviaQA and TruthfulQA
+loaders exist in the harness but were not run for this study.
+
+#### 4.1 Experimental settings
+
+Unless stated otherwise, all runs use samples per query, an NLI entailment threshold
+of , a maximum generation length of 256 new tokens (raised from an initial 128
+to accommodate chain-of-thought reasoning; see Section 5), and nucleus
+sampling [18] at temperature with and .
+Stochastic sampling is required rather than optional: greedy decoding would return 
+identical samples and yield zero entropy regardless of the model’s true uncertainty.
+Generation models are loaded in bfloat16; the NLI model
+(microsoft/deberta-large-mnli [17], 400M parameters) is kept in float32
+(Section 5). We later ablate the sample budget 
+(Section 6.2); we did not perform a sensitivity analysis over , which
+remains a natural candidate for ablation.
+
+Costs are reported as escalation rate rather than in absolute units. This is
+without loss of generality: under the model of Section 3.4, a budget equal to
+fraction of always-large’s premium permits escalation rate for any
+, since . The cost ratio is thus a units
+conversion rather than a free parameter, and no sensitivity analysis over it is meaningful.
+
+##### Reproducibility.
+
+All runs were executed on a single NVIDIA L4 GPU. The
+-sample ablation of Section 6.2 used a fixed seed () for item
+selection across , so item selection did not vary across that ablation;
+the generations themselves are stochastic (temperature ) and are not separately
+seeded, which is the source of the run-to-run variance discussed in
+Section 6.5. From the timestamps recorded in our run logs, consecutive
+-item GSM8K runs at this range completed roughly – minutes apart; we
+report this as an approximate, retrospective interval between logged runs rather than a
+controlled timing measurement, since other processes may have run on the same hardware
+between them. Seed values for the GSM8K replication sample and the -item synthetic
+re-analysis (Sections 6.1 and 6.5) were not separately recorded
+beyond noting that they used a different or disjoint seed from the primary run; we report
+this limitation rather than reconstruct specific values we do not have.
+
+### 5 Debugging Log: Real Failure Modes Encountered
+
+Several non-obvious implementation issues surfaced during development, each of which
+would silently distort results if left unfixed. We record them here since they recurred
+across the project and are not specific to any one experiment.
+
+Stylistic-elaboration confound.
+
+Early raw-generation clustering conflated
+genuine disagreement with stylistic embellishment: for the query “What is the capital
+of Australia?”, several samples correctly named Canberra but appended fabricated
+tangential details (wrong region, invented history, fictitious statistics). Bidirectional
+entailment correctly failed on these pairs – the longer answer’s extra claims are not
+entailed by the short answer – inflating entropy to near-maximum () despite near-unanimous agreement on the actual answer. This motivated
+AnswerExtractor, which clusters a terse extracted answer instead of the raw
+generation.
+
+NLI question-context suppression.
+
+Wrapping each answer in a "Question:
+… Answer: …" template before the NLI check – intended to disambiguate
+short answers – turned out to be out-of-distribution for a general-purpose MNLI
+checkpoint, systematically suppressing entailment probabilities and inflating entropy
+even for textually near-identical answers. Disabling this wrapper by default resolved
+the issue; it is now opt-in.
+
+dtype mismatch on the NLI model.
+
+Loading the NLI model in bfloat16 (to save
+memory) produced a RuntimeError inside DeBERTa’s disentangled-attention matmul,
+since some internal buffers do not consistently cast across backends. The fix is to keep
+the (small, 400M-parameter) NLI model in float32 while using
+bfloat16 only for the (much larger) generation models, where the memory savings
+matter.
+
+OOM during model loading.
+
+Instantiating models with the library default
+(float32, without low_cpu_mem_usage) caused a transient peak roughly
+double the model’s steady-state memory footprint during the loading step itself,
+triggering an OOM kill even on hardware that could otherwise hold the model comfortably.
+Setting low_cpu_mem_usage=True and defaulting to bfloat16 resolved
+this.
+
+Prompt-induced capability-gap suppression.
+
+An early arithmetic prompt
+(“Answer with just the final number”) forced single-shot mental arithmetic with no
+scratchpad, for both models. At higher difficulty (multi-digit, multi-step
+expressions), this erased most of a larger model’s real advantage, which stems
+substantially from chain-of-thought reasoning (carrying digits, tracking intermediate
+sums). The small and large models then performed similarly poorly, which superficially
+resembled “the large model is too weak” but was actually an artifact of a prompt that
+suppressed the mechanism by which model scale helps on this task. Allowing reasoning
+(“Show your work step by step, then state the final answer”) and extracting only the
+last number for grading resolved this.
+
+Lone-surrogate Unicode crash.
+
+Generation occasionally produced invalid UTF-8 (a
+lone surrogate character), typically when max_new_tokens truncated output
+mid-multi-byte-character. This crashed CSV serialization at the very end of a full run.
+Sanitizing decoded text immediately after generation (encode(...,
+errors="replace").decode(...)) fixes this at the source.
+
+Small-sample AUROC instability.
+
+A promising result at (semantic-entropy
+AUROC against needs_escalation of – for the combined signal) did
+not replicate at on the same benchmark family (AUROC collapsed to
+–, chance level), despite the larger run having a more favorable
+escalation-worthy population by every other measure. We return to this in
+Section 6.5.
+
+### 6 Results
+
+We open with the two benchmarks side by side, because the contrast between them is the
+result. Semantic entropy posts a strong-looking score on both; on one it survives the
+controls of Section 3.6 and on the other it does not, and no number
+visible without those controls distinguishes the two cases. Sections 6.4
+and 6.5 then give the failing benchmarks in full, which is where most of the
+methodological content lies.
+
+Figure 1: The cost-quality frontier on GSM8K (, ), drawn from
+Table 10 together with the cost model of Section 3.4 (which
+supplies always-small’s cost of unit; always-small has no row in Table 10
+itself). Always-small and always-large never route, so they carry no AUROC and are shown as
+cost-only reference bars.
+
+#### 6.1 Two benchmarks, one signal, opposite verdicts
+
+##### The synthetic benchmark first, because it is the cautionary case.
+
+Our initial
+experiments used a synthetic chained-arithmetic ladder with difficulty controlled by operand
+digit count and operation count. On it, semantic entropy separates the fair target
+(correct_small) at AUROC and across two profiling runs –
+figures we accepted as a positive result. Applying the difficulty baseline of
+Section 3.6 withdraws it. Scoring the benchmark’s own difficulty
+directly, which on this ladder a regular expression recovers from the question text at no
+cost, gives and : a tie, with the sign of the difference flipping between
+runs and both gaps inside the noise floor. Ten stochastic generations and NLI
+clustering purchase no routing decisions a regex does not already supply. A second
+precondition fails independently – oracle headroom over always-large is only , so
+even a perfect router had almost nothing to win. Section 6.5 gives the full
+analysis; what matters here is that neither failure is visible in the itself.
+
+##### GSM8K, where the same signal survives the same controls.
+
+We evaluated a Gemma-3
+1B (small) / 12B (large) pair [20] on GSM8K [14] items with samples per query. This
+configuration passes the headroom precondition that synthetic arithmetic failed:
+always-small accuracy , always-large , and oracle , leaving of
+accuracy headroom – four times what the synthetic ladder offered. The both-wrong
+population is .
+
+Table 2: GSM8K, Gemma-3 1B/12B, , . AUROC with 95% bootstrap intervals
+[22].
+The difficulty baseline uses GSM8K’s own difficulty annotation as the routing score.
+
+Signal
+T1: needs_escalation
+T2: NOT correct_small
+T3: NOT correct_large
+
+Semantic entropy
+0.734 [0.668, 0.799]
+0.871 [0.820, 0.915]
+0.639 [0.570, 0.709]
+
+Token neg-logprob
+0.648 [0.562, 0.731]
+0.647 [0.577, 0.711]
+0.490 [0.419, 0.561]
+
+Combined
+0.749 [0.685, 0.813]
+0.852 [0.797, 0.900]
+0.608 [0.536, 0.678]
+
+Difficulty (raw)
+0.522 [0.444, 0.603]
+0.649 [0.584, 0.712]
+0.633 [0.564, 0.702]
+
+Difficulty-calibrated
+0.499 [0.416, 0.583]
+0.558 [0.486, 0.629]
+0.535 [0.460, 0.610]
+
+Three things stand out. First, semantic entropy separates Target 2 at , an interval
+well clear of chance, and the operationally relevant Target 1 at – substantially
+better than the and the same signal managed on synthetic arithmetic.
+
+Second, and decisively, the comparison that withdrew the synthetic result confirms this one.
+Entropy beats raw difficulty by on Target 1 and on Target 2, and the
+harsher difficulty-calibrated baseline by and , with disjoint confidence
+intervals on Target 2 ( vs. ). Where the synthetic gap was
+ and – inside the noise floor, with the sign unstable – these margins
+exceed it by a factor of five and hold in the same direction across both baselines. The two
+benchmarks are separated not by the raw AUROC, which is comparable ( against
+), but entirely by the margin over what difficulty already explains. Entropy carries
+query-specific information here and did not there.
+
+It is worth being precise about what the baseline had access to on this benchmark, because
+it strengthens the claim. GSM8K ships no difficulty label, so we approximate difficulty by
+the number of calculation lines in the reference solution
+(Section 3.6). That quantity is derived from the answer: knowing how many
+reasoning steps a problem requires presupposes having solved it. The difficulty baseline on
+GSM8K is therefore a skyline rather than a deployable competitor, and semantic entropy –
+which observes only the small model’s own samples, and no labels at all – outperforms a
+predictor that was permitted to inspect the ground-truth solution. The calibrated variant is
+stronger still in this respect, since it additionally consumes other items’ outcome labels.
+A signal beating both is doing something neither difficulty nor difficulty-conditioned
+outcome frequency can do: distinguishing between two problems that require the same number
+of steps.
+
+Note that on GSM8K the calibrated baseline is weaker than raw difficulty (
+vs. on Target 2), the reverse of what we observe on synthetic arithmetic. The two
+baselines are not ordered in general: calibration estimates from a handful of same-difficulty neighbors, which recovers
+non-monotonic structure that raw difficulty cannot express, but injects estimation noise
+where the relationship is monotone and neighbors are few. GSM8K’s difficulty annotation
+correlates only weakly with outcomes ( for entropy against difficulty, versus
+ on synthetic), so calibration costs more than it recovers. We therefore recommend
+reporting both and treating the maximum as the bar a signal must clear.
+
+Third, Target 3 is the exception: entropy () and raw difficulty () are
+indistinguishable, though entropy does beat the calibrated variant (). This is
+consistent with the structural argument of Section 3.3 – whatever a
+small-model-only signal knows about the large model’s success appears to be mediated
+by shared query difficulty, with little additional query-specific contribution.
+
+##### Routing performance.
+
+The signal converts into real routing gains
+(Table 3). Accuracy exceeds the random-at-matched-cost baseline at
+every operating point above a escalation rate, peaking at , and exceeds
+always-large accuracy for escalation rates between roughly and – that is,
+the router is not merely approximating the large model more cheaply, it is outperforming
+it, by declining to escalate items the large model would have gotten wrong.
+
+Table 3: GSM8K Pareto curve, routing on semantic entropy. “margin” is over
+random-at-matched-cost; “vs large” is over always-large accuracy ().
+
+Esc. rate
+Accuracy
+Random
+Margin
+vs large
+Harmful
+Wasted
+
+0.00
+0.372
+0.372
+0.000
+0.112
+0.000
+0.000
+
+0.17
+0.424
+0.391
+0.033
+0.060
+0.023
+0.093
+
+0.29
+0.468
+0.405
+0.064
+0.016
+0.014
+0.083
+
+0.37
+0.500
+0.413
+0.087
+0.016
+0.022
+0.087
+
+0.56
+0.528
+0.435
+
+0.044
+0.043
+0.135
+
+0.77
+0.516
+0.460
+0.056
+0.032
+0.073
+0.207
+
+0.89
+0.496
+0.473
+0.023
+0.012
+0.085
+0.300
+
+oracle
+0.572
+–
+–
+0.088
+0.000
+0.000
+
+##### Replication on an independent sample.
+
+The knowledge-base experiment of
+Section 7 incidentally profiles a second, disjoint GSM8K sample with the same
+model pair (, drawn with a different seed), which we can score with the same
+signals. It replicates the result above (Table 4). On Target 2 the
+two runs agree to within AUROC – a fifth of the noise floor of
+Section 6.5, and notably tighter than that floor despite being a harder test,
+since the floor is measured across re-samplings of a fixed item set whereas these two runs
+draw different items. Entropy’s margin over the stronger difficulty baseline is 
+and respectively. Target 1 differs more ( vs. ), which at these sample sizes we do not regard
+as resolvable: the two intervals overlap substantially. The intervals also show the two
+targets to be on different footings. On Target 2, entropy’s interval is disjoint from both
+difficulty baselines’ in both samples, so the margin is not a sampling artifact. On Target 1
+that separation holds only in the larger sample; at entropy’s interval
+() overlaps raw difficulty’s (), so the Target 1 margin
+should be read as directional rather than established.
+
+Table 4: The GSM8K result on two disjoint samples with the same Gemma-3 1B/12B pair. AUROC
+with percentile bootstrap intervals over resamples. On Target 2, entropy’s
+interval is disjoint from both difficulty baselines’ in both samples; on Target 1 the
+entropy intervals from the two samples overlap substantially, which is why we do not treat
+their difference as resolvable. The oracle headroom row is a point estimate and is not
+bootstrapped.
+
+T2: semantic entropy
+0.871 [0.820, 0.915]
+0.863 [0.790, 0.926]
+
+T2: difficulty (raw)
+0.649 [0.584, 0.712]
+0.621 [0.533, 0.708]
+
+T2: difficulty (calibrated)
+0.558 [0.486, 0.629]
+0.606 [0.512, 0.705]
+
+T1: semantic entropy
+0.734 [0.668, 0.799]
+0.648 [0.549, 0.743]
+
+T1: difficulty (raw)
+0.522 [0.444, 0.603]
+0.508 [0.414, 0.607]
+
+T1: difficulty (calibrated)
+0.499 [0.416, 0.583]
+0.497 [0.398, 0.602]
+
+Oracle headroom over always-large
+
+##### Token confidence is not universally anti-informative.
+
+On GSM8K, neg-logprob
+reaches / on Targets 1 and 2 – weak but clearly above chance – and fusing
+it with entropy improves Target 1 ( vs. ). This directly contradicts
+what we observed on synthetic arithmetic, where the same signal was below chance and fusion
+degraded entropy (Section 6.5). We take this as evidence that the earlier
+inversion was a property of that benchmark rather than of token confidence in general, and
+as a caution against generalizing fusion results across datasets.
+
+##### The cost case does not close, and the reason is structural.
+
+The accuracy result
+above does not by itself make this configuration deployable. Under the per-generation
+accounting of Section 3.5, routing at the best operating point ()
+is cheaper than always-large only if the large model costs more than 
+times a small-model generation. A 1B/12B pair is roughly by parameter count, so in
+absolute terms the policy costs units against always-large’s : one
+would pay more than calling the large model on every query. We use parameter count as
+a proxy for throughout this paper; real serving cost also depends on batching,
+quantization, KV-cache bandwidth, and hardware, none of which parameter count captures, and
+a measured cost ratio from an actual serving stack would be a stronger basis for this
+argument than the proxy we use here. This is the distinction
+the normalized cost model of Section 3.4 conceals, and it is worth reporting
+separately from signal quality.
+
+The binding term is , not the routing. Semantic entropy needs complete generations
+before it can decide anything, so its overhead is fixed rather than proportional to the
+escalation rate, and no threshold choice removes it. Any remedy must therefore attack the
+sampling budget rather than the routing policy. Section 7 examines one such
+remedy, and quantifies what it costs in signal quality.
+
+#### 6.2 The sample budget: ablating 
+
+ fails the break-even condition of Eq. 7 (costs 
+always-large). Re-running at : T2 AUROC is – and
+ agree to , an order of magnitude inside the noise floor, while costs
+. Always-small accuracy rises with too (), since the pipeline
+reports the majority-cluster answer, so doubles as a self-consistency ensemble.
+At , routing strictly dominates always-large: cost – units against
+always-large’s , at equal or better accuracy, versus ’s units (never
+competitive). The barrier we reported as a property of the method was a hyperparameter
+we had never varied. At , token confidence overtakes entropy on T1 ( vs. ) – entropy degrades with fewer samples, confidence does not, and their fusion’s
+advantage widens as shrinks.
+
+Table 5 gives all three targets across underlying this
+summary; Target 3’s difficulty baseline is identical across all three rows (), an
+internal check that the item set did not change with . Table 6 gives the
+cost-accuracy frontier in full: at no configuration dominates always-large, while
+four configurations at do.
+
+This ablation’s own row (T1 , T2 , T3 ) differs from
+Table 2’s headline numbers (, , ) for what is
+nominally the same configuration; T2’s gap () sits inside the noise floor, but T1’s
+() and T3’s () exceed it. The same re-sampling also moves the majority-cluster
+vote itself: always-small accuracy reads here against in
+Table 2, and oracle headroom against – gaps of the same size
+and origin as the AUROC ones, since which answer wins the cluster vote is exactly what a
+fresh -sample draw can flip. Both runs share the same seed and item selection (confirmed
+from our run manifests) but draw independent stochastic samples at generation time, so all of
+this is the same run-to-run variance documented in Section 6.5 rather than a
+discrepancy between the two tables – the ablation was a fresh -sample run, not a
+re-scoring of the cached run behind Table 2.
+
+Table 5: Ablating the sample budget on GSM8K (Gemma-3 1B/12B, ), AUROC with 95%
+bootstrap intervals for the live signals; the difficulty baseline is deterministic given the
+fixed item set and is reported as a point estimate rather than resampled.
+
+Target
+Signal
+
+T1: needs_escalation
+Semantic entropy
+0.630 [0.562,0.698]
+0.693 [0.624,0.758]
+0.682 [0.612,0.747]
+
+Token neg-logprob
+0.658 [0.583,0.731]
+0.632 [0.548,0.711]
+0.628 [0.550,0.707]
+
+Combined
+0.671 [0.599,0.745]
+0.720 [0.652,0.788]
+0.699 [0.632,0.766]
+
+Difficulty (raw)
+0.517
+0.522
+0.560
+
+T2 (fair)
+Semantic entropy
+0.791 [0.730,0.850]
+0.865 [0.814,0.909]
+0.862 [0.812,0.906]
+
+Token neg-logprob
+0.651 [0.580,0.721]
+0.645 [0.573,0.711]
+0.613 [0.540,0.682]
+
+Combined
+0.804 [0.740,0.865]
+0.852 [0.800,0.897]
+0.819 [0.761,0.872]
+
+Difficulty (raw)
+0.665
+0.663
+0.677
+
+T3
+Semantic entropy
+0.627 [0.558,0.688]
+0.644 [0.575,0.711]
+0.684 [0.616,0.749]
+
+Difficulty (raw)
+0.633
+0.633
+0.633
+
+Always-small accuracy
+0.312
+0.364
+0.392
+
+Oracle headroom over always-large
++0.068
++0.104
++0.112
+
+Table 6: Cost–accuracy frontier across on GSM8K, . Cost is per
+query in small-model-generation units; always-large costs at accuracy .
+
+Signal
+
+Accuracy
+Cost
+Dominates always-large?
+
+3
+combined
+0.70
+0.500
+11.40
+yes
+
+5
+entropy
+0.55
+0.520
+11.60
+yes
+
+5
+combined
+0.40
+0.508
+9.80
+yes
+
+5
+combined
+0.50
+0.520
+11.00
+yes
+
+10
+entropy
+0.55
+0.512
+16.60
+no
+
+10
+combined
+0.60
+0.516
+17.20
+no
+
+#### 6.3 Synthetic arithmetic: capability gap and prompt sensitivity
+
+On a synthetic chained-arithmetic ladder (difficulty controlled via operand digit-count
+and operation count), a Qwen2.5-0.5B/Qwen2.5-7B pair [21] showed a real but narrow accuracy
+gap before the prompt fix described in Section 5, and a much larger gap
+afterward. Pre-flight checks (small sample of 10 items, 1 generation each) proved useful
+for catching two degenerate regimes before committing to a full -sample run: both
+models at floor accuracy (no headroom for any signal), and both models with statistically
+indistinguishable accuracy (no capability gap for escalation to exploit).
+
+#### 6.4 PopQA: escalation is the wrong intervention
+
+PopQA proved unusable for this study, for a reason worth separating from ordinary
+experimental difficulty. Two effects had to be disentangled.
+
+First, an extraction/grading mismatch was suppressing measured accuracy by roughly half.
+Our QA pipeline reduced each generation with a last_sentence extractor before
+grading it with a substring alias matcher. But the matcher is designed to find a short
+answer embedded in prose, so extracting the final clause first discards the text it
+was built to search: a response such as “George Rankin was a politician. He served in the
+Australian House of Representatives until 1949.” is graded incorrect, because the
+extracted final sentence omits the answer. Grading the raw generation instead raised
+Gemma-3 12B from to and 1B from to on matched pre-flight
+samples. This is a genuine interaction bug between two individually correct components,
+and it is silent: it presents as uniformly weak models rather than as an error.
+
+Second, and decisively, the corrected numbers still leave of items wrong for
+both models, with zero pre-flight items on which the small model succeeded where
+the large one failed. The dominant failure mode on long-tail PopQA is not small-model
+uncertainty but absent parametric knowledge in both models, exactly as the dataset’s
+design rationale anticipates [3]. Escalation cannot repair an answer
+neither model knows; this is a retrieval problem wearing a routing problem’s clothing. We
+therefore regard PopQA as mis-specified for escalation research rather than as a negative
+result about semantic entropy, and note the general principle: a large small/large
+capability gap is not sufficient: what matters is whether the large model succeeds where
+the small one fails, which is a different quantity.
+
+#### 6.5 Synthetic arithmetic: three runs, and a null result once controlled
+
+Section 6.1 gave the headline: on this benchmark a regular expression matches
+semantic entropy, and oracle headroom is . This section supplies the full analysis,
+and the history that produced it – we ran the ladder three times with Gemma small/large
+pairs, and the three runs gave three different impressions of the same signal.
+A -item pilot showed
+semantic entropy separating the fair target almost perfectly (AUROC , and for
+the entropy/token-confidence fusion) while looking weak against needs_escalation
+(). A -item follow-up on the same benchmark family collapsed to chance against
+needs_escalation for every signal (–), with routed accuracy tracking the
+random-at-matched-cost baseline at every operating point of the Pareto sweep. Neither run
+carried confidence intervals, and neither was scored against a difficulty baseline.
+
+Both are superseded by a properly powered re-analysis. The knowledge-base experiments of
+Section 7 profiled a -item synthetic set twice, storing per-item entropy,
+token confidence, and both correctness labels; the entropy in each cached entry was computed
+by -sampling the small model at profiling time, so these are genuine live-signal
+measurements. The two runs share their item set and their model pair, and differ only in
+re-sampling: the greedily decoded large model returns identical labels, while the small
+model’s samples flip two of items. They therefore isolate the run-to-run variance
+of the pipeline itself, holding the data fixed. All figures carry percentile bootstrap intervals over resamples
+(Table 7), and the raw difficulty baseline of Section 3.6 is
+reported. We omit the calibrated variant here, unlike on GSM8K: this benchmark’s difficulty
+is lexically recoverable by regex, so raw difficulty is already the genuine zero-cost
+deployable competitor the calibrated baseline exists to approximate elsewhere, and adding
+it would re-estimate a shape that is not in question on this benchmark rather than add a
+harsher bar.
+
+Table 7: The same -item synthetic set profiled twice, with bootstrap CIs for the
+live signals (the difficulty-raw rows are deterministic point estimates, not resampled). The
+two runs differ only in the model used to embed questions for the retrieval experiments of
+Section 7, which does not enter any figure here; both score live semantic entropy
+computed by -sampling the same small model. The large model decodes greedily and is
+therefore identical across runs ( correct in each, always-large accuracy ),
+while re-sampling the small model flips two items ( versus correct, always-small
+ and ). Difficulty on this benchmark is recoverable from the question by a
+regular expression, so the baselines are free competitors rather than skylines.
+
+Target
+Signal
+Dataset A
+Dataset B
+
+T1: needs_escalation
+Semantic entropy
+0.613 [0.502, 0.726]
+0.666 [0.554, 0.774]
+
+Token neg-logprob
+0.413 [0.289, 0.542]
+0.381 [0.270, 0.502]
+
+Difficulty (raw)
+0.563
+0.559
+
+T2 (fair): correct_small
+Semantic entropy
+0.830 [0.742, 0.904]
+0.867 [0.787, 0.934]
+
+Token neg-logprob
+0.431 [0.310, 0.549]
+0.433 [0.311, 0.556]
+
+Combined
+0.752 [0.642, 0.854]
+0.759 [0.651, 0.858]
+
+Difficulty (raw)
+0.839
+0.830
+
+T3: correct_large
+Semantic entropy
+0.722 [0.601, 0.838]
+0.714 [0.594, 0.827]
+
+Difficulty (raw)
+0.791
+0.791
+
+Five findings follow, four of which revise claims made earlier in this paper.
+
+##### The central claim strengthens.
+
+Semantic entropy separates the fair target at
+AUROC and , with both intervals excluding by a wide margin, while
+performing far worse on Target 1 (, ). The target-choice effect is therefore
+not an artifact of the pilot: it replicates at with quantified uncertainty,
+and the gap between targets ( AUROC) exceeds the width attributable to
+sampling noise. The two runs also bound that noise directly, and do so in an unusually clean way: because
+they share their items and their model pair, entropy’s T2 AUROC differing by 
+between them ( versus ) is attributable to -sampling stochasticity alone,
+with no contribution from which items happened to be drawn. This is the relevant quantity
+for interpreting a single run, and it implies that AUROC differences below roughly 
+in this setting should not be read as findings. We use as a noise floor throughout,
+noting that it is measured at and would be somewhat tighter at .
+
+##### Token confidence is anti-informative, and the pilot figure does not replicate.
+
+Token neg-logprob falls below chance in all four measurements, against both targets and in
+both datasets. The recorded for this signal against the fair target in the -item
+pilot is not reproduced; at the same signal scores and . No
+individual interval here excludes , so we do not claim significant anti-correlation
+from any single measurement, but the consistency of the direction across four independent
+measurements makes chance an unattractive explanation. We treat the figure as
+small-sample noise and recommend against reading it as evidence for token confidence as a
+routing signal.
+
+##### The fusion question resolves.
+
+Section 6.7 reported that fusing
+neg-logprob into the combined score hurt performance, and noted that we lacked a principled
+account of when fusion helps versus hurts. Table 7 supplies one for this
+setting: the fused component is itself anti-correlated with the target, so an equal-weight
+combination necessarily degrades entropy alone – as observed ( vs. ;
+ vs. ). This is a property of the component signal, not an unexplained
+interaction. A plausible mechanism is a length confound: avg_neg_logprob averages
+surprise over tokens, and harder items elicit longer chain-of-thought containing more
+highly-predictable connective tokens, which lowers mean per-token surprise precisely where
+the answer is least reliable. We flag this as a hypothesis with a direct test (correlating
+the signal against ground-truth difficulty) rather than an established result.
+
+##### Live entropy does predict large-model failure, contradicting our earlier
+claim.
+
+On Target 3, live semantic entropy reaches AUROC and , with both
+intervals excluding . Earlier sections of this paper asserted that a small-model-only
+signal carries no information about large-model behavior; that is too strong. The
+correlational pathway anticipated in Section 3.3 – shared query difficulty
+influencing both models – is not marginal but substantial, recovering most of the
+discrimination that cached large-model outcomes achieve (Section 7). The
+defensible claim is that retrieval predicts large-model success better, not that live
+sampling cannot do it at all.
+
+##### The difficulty baseline eliminates the synthetic result entirely.
+
+Applying the
+control of Section 3.6 to these datasets is decisive. Scoring the
+benchmark’s ground-truth difficulty directly as a routing signal gives Target 2 AUROC
+ and – statistically indistinguishable from semantic entropy’s and
+, with the sign of the difference flipping between the two datasets and both gaps
+falling inside the noise floor established above. On Target 3 the baseline is
+better ( vs. and ), consistently across both runs.
+
+The difficulty of an item on this benchmark is its operand digit count times its operation
+count, both readable from the question string by a regular expression. Ten stochastic
+generations and NLI entailment computations therefore purchase no routing
+decisions that a regex does not already supply. A supporting diagnostic makes the mechanism
+explicit: entropy’s rank correlation with difficulty is , while its Somers’
+ against the Target 2 label is – two different statistics that agree closely at
+, indicating that essentially all of its discriminative power on this benchmark is
+difficulty tracking rather than query-specific uncertainty.
+
+We report this as a null result for the synthetic benchmark specifically, not for semantic
+entropy: on GSM8K the same signal beats the same baseline by 
+(Section 6.1). The lesson is about benchmark construction. A synthetic task with
+a parameterized difficulty ladder makes difficulty a surface feature of the input by
+design, which hands any difficulty-correlated signal an unearned result and makes the
+benchmark unable to distinguish a good uncertainty estimator from a difficulty regex. This
+failure is invisible without the control, and it coexisted in our data with the headroom
+failure described below – two independent reasons the same experiments could not have
+supported the conclusion we initially drew from them.
+
+##### A precondition we should have checked first.
+
+On these datasets the oracle
+router reaches against always-large’s : a perfect router gains
+. Since an oracle escalates exactly when , its accuracy is and its advantage over always-large is
+ – the items it protects by
+declining to escalate. When that quantity is small and the both-wrong population is large
+( here), no router can demonstrate a useful win over always-large regardless of
+signal quality. This is a property of the benchmark rather than of any signal; it is
+independent of the small/large capability gap being large (it is, vs. ), and
+it should be verified before committing to a full evaluation. Our observed best margin over
+matched-cost random escalation is , at a escalation rate – which
+Equation 7 shows requires to be worth paying for at all.
+
+#### 6.6 Why the two targets diverge
+
+The central conceptual finding of this work is that needs_escalation is an unfair
+evaluation target for any signal computed solely from the small model’s own behavior.
+Consider the negative class (needs_escalation = false) in the run: it
+contains both “small correct” items (naturally low entropy) and “both models wrong”
+items. The latter are, from the small model’s perspective, behaviorally
+indistinguishable from true escalation-worthy items – the small model is equally
+uncertain in both cases, because its uncertainty reflects its own difficulty with
+the query, not whether a specific other model would resolve that difficulty. When the
+“both wrong” subpopulation is large (as it was at , given always-large accuracy
+of only ), it fills the same high-entropy region as the true positives, collapsing
+AUROC toward chance – not because the signal is uninformative, but because the label it
+is being scored against encodes a fact (large-model success) that is causally downstream
+of a different model entirely.
+
+This reframing is consistent with the AUROC results throughout the paper: strong
+performance against Target 2 and weak performance against Target 1 throughout the synthetic
+runs of Section 6.5. The harm/waste
+diagnostics do not follow the same clean pattern across scales: they were near-zero at
+ but consistently nonzero at . This is expected rather than contradictory – these diagnostics
+measure the composition of the escalated set, which depends on the always-small accuracy
+and the size of the “both models wrong” population, and both differed substantially
+between the two runs. They are therefore not evidence for or against the target-choice
+argument, and we do not read them as such.
+
+#### 6.7 A learned alternative: the confidence-gated router
+
+A companion codebase developed by the present authors, using an independent
+implementation, applied a proper train/calibration/test methodology (rather than a single
+full-dataset pass) and added a learned hidden-state probe on top of semantic entropy,
+trained directly on needs_escalation using the small model’s
+mid-layer hidden states (layers 8–16, ensembled, strongly -regularized). Unlike
+the fixed signals in this paper, a learned probe can in principle pick up correlates of
+the large model’s likely success indirectly, to the extent such correlates are reflected
+in the small model’s internal representations (e.g. query type, topic, or difficulty
+features that correlate with the large model’s competence on this class of query, even
+though the small model cannot directly observe the large model’s behavior). On a
+72-item synthetic-arithmetic benchmark with a Gemma-3 270M/4B pair [20], this raised AUROC
+against needs_escalation from a semantic-entropy baseline of to 
+over the course of an iterative search (Table 8), and routed accuracy from
+ to – approximately 80% of the oracle’s achievable gain over
+always-small, escalating only 30% of queries.
+
+Table 8: Selected steps from an iterative signal search on synth72 (held-out test,
+); not every variant explored is itemized.
+
+Step
+
+Change
+
+AUROC
+ACC@30
+Verdict
+
+1
+
+Baseline: semantic entropy
+
+0.733
+0.577
+baseline
+
+2
+
+Logprob-weighted cluster probabilities
+
+0.743
+0.538
+keep
+
+3
+
++ neg-logprob fusion
+
+0.524
+0.500
+discard (anti-informative)
+
+4
+
+Hidden-state probe (on needs_escalation) + entropy
+
+0.848
+0.577
+keep
+
+5
+
+Strong probe regularization
+
+0.895
+0.615
+keep
+
+6
+
+Conformal calibration gate
+
+0.895
+0.615
+keep
+
+This result is compatible with, rather than contradictory to, the negative finding of
+Section 6.5: it demonstrates that a fixed, parameter-free signal cannot
+reliably predict needs_escalation at scale, but a signal with a learned component,
+explicitly trained against that exact label on internal model representations, can
+recover meaningful separation that entropy and log-probability alone cannot reach.
+The final iteration’s conformal calibration gate [23] adds a
+distribution-free coverage guarantee on the escalation decision rather than changing its
+ranking, which is why it leaves AUROC and ACC@30 unchanged from iteration 5
+(Table 8).
+
+Notably, this independently-implemented pipeline reported the same pattern under its
+original (pre-calibration-split) methodology: fusing neg-logprob into the combined score
+hurt performance relative to entropy alone, without the specific figures preserved for
+this run. This qualitatively corroborates our observation
+that fusion did not help and, in one instance (Section 6.5,
+), showed
+the opposite. We do not yet have a principled account of when fusion helps versus hurts;
+the balance of evidence suggests it should be validated per dataset/model pair rather than
+assumed either way.
+
+As explained in Section 3.5, the -sample overhead that live entropy routing pays before it can make any escalation decision can still be high. The next section proposes an approach based on knowledge-base retrieval that trades accuracy for cost.
+
+### 7 Knowledge-Base Retrieval: A Complementary, Cheaper Signal
+
+The signals evaluated so far all require live -sampling at inference time: generating
+ completions from the small model, clustering them, and computing entropy per query.
+An alternative is to profile a held-out set of queries once with the full expensive
+pipeline (samples, clustering, entropy, and a live call to the large model to obtain
+ground truth), cache the results in a knowledge base, and at inference time retrieve the
+ nearest cached neighbors by embedding similarity and vote – replacing model
+calls per query with a single embedding call.
+
+#### 7.1 Mechanism and an early methodological hazard
+
+Each cached entry stores its embedding, entropy statistics, and outcome labels
+(correct_small, correct_large, needs_escalation). At query time, a
+new item is embedded once, its nearest neighbors retrieved by cosine similarity, and a
+similarity-weighted vote over neighbors’ labels produces both an escalation score and a
+mean neighbor similarity, the latter serving as a built-in confidence/coverage check. This
+check proved essential in practice: two separate runs used a knowledge base built with one
+embedding model while querying with a different one, producing near-zero neighbor
+similarity (0.01–0.03) and, in the worse case, AUROC below chance – an
+inversion, not merely noise. Both incidents were caught only because neighbor similarity
+collapsed to noise-level values; a runtime warning was subsequently added to flag this
+condition automatically.
+
+#### 7.2 A structural asymmetry between the two signals
+
+Live semantic entropy is computed purely from the small model’s own samples and therefore
+carries no direct information about how the large model would behave on a new query.
+Knowledge-base retrieval is different: its cached neighbors carry real, ground-truth
+correct_large outcomes from build time, obtained precisely because the large model
+was called during profiling. Target 1 is therefore not equally hard for the two
+signals – retrieval has a direct channel to the quantity the label depends on, and live
+sampling has only an indirect one.
+
+We initially stated this asymmetry more strongly, as live entropy being
+structurally unable to say anything about large-model behavior. The 
+measurements in Section 6.5 show that this was wrong: live entropy predicts
+large-model failure at AUROC and , with intervals excluding chance, via the
+shared-difficulty pathway described in Section 3.3. Retrieval’s advantage is
+therefore quantitative rather than categorical, and the comparison below should be read in
+that light.
+
+To isolate this capability directly, we evaluate against Target 3
+(Section 3.3): correct_large alone, i.e. will the large model
+succeed on this query? We predict it via a similarity-weighted vote over neighbors’ cached
+correct_large labels. Live entropy has no analogous prediction for this target –
+it never touches the large model for a new query – so Target 3 is knowledge-base-only by
+definition.
+
+#### 7.3 Results: a weaker signal at a price the strong one cannot meet
+
+We evaluated the same retrieval pipeline on two benchmarks. On synthetic arithmetic
+(, Gemma-3 270M small / 1B embedding / 12B large) the results appeared to confirm the
+asymmetry argument above. On GSM8K ( eval against a -item knowledge base built
+with disjoint seeds, Gemma-3 1B/12B) one specific claim does not survive, while the broader
+case for retrieval survives in a different form (Table 9).
+
+Table 9: Knowledge-base retrieval vs. live -sampling (AUROC), on synthetic arithmetic
+and on GSM8K. The Target 3 capability collapses with the embedding–difficulty correlation
+that produced it. Cost is per query in small-model-generation units, at escalation rate
+ and . Unlike every other headline AUROC in this paper, the values
+here do not carry a bootstrap interval: the per-item scores from these single-run knowledge-base
+builds were not preserved, and we do not report a fabricated interval in their place. We
+flag this explicitly rather than let the absence of an interval be mistaken for omission or
+for unusual certainty, and especially so for the figure, which we describe as
+chance-level and would otherwise want an interval to support directly.
+
+Synthetic ()
+GSM8K ()
+
+Target
+KB
+Live
+KB
+Live
+
+1: needs_escalation
+0.700
+0.510
+0.570
+0.656
+
+2 (fair): correct_small
+0.621
+0.892
+0.607
+0.872
+
+3 (KB-only): correct_large
+0.908
+–
+0.518
+–
+
+embedding–difficulty 
+0.98
+0.23
+
+cost per query
+–
+6.8
+16.7
+
+##### Target 3 collapses from to .
+
+On synthetic arithmetic, retrieval
+predicted large-model success almost as well as any signal in this paper; on GSM8K it is
+indistinguishable from chance. Target 1 reverses as well – live entropy now outperforms
+retrieval ( vs. ), the opposite of the synthetic ordering that originally
+motivated the asymmetry argument.
+
+##### The collapse was predicted in advance, and identifies the mechanism.
+
+Before
+running GSM8K we probed the synthetic knowledge base by predicting each cached item’s
+difficulty leave-one-out from its neighbors’ difficulty, using the same similarity-weighted
+vote the KB uses for outcomes. It recovered difficulty at Spearman and
+ across two datasets: on that benchmark, “nearest in embedding space” and “same
+difficulty” are the same relation. Retrieval there was difficulty lookup, and its apparent
+skill on Target 3 was the difficulty-calibrated estimate of
+ described in
+Section 3.6 – an estimate available, we showed, without any embedding
+at all.
+
+GSM8K removes the mechanism. Its difficulty is the number of calculation lines in the
+reference solution (Section 3.6), a property of the answer rather
+than a lexical feature of the question, so no embedding of the question text can recover it
+the way digit-and-operator counts are recoverable on the synthetic ladder. Running the same
+probe on the GSM8K knowledge base confirms this directly: , against on
+synthetic. The mechanism is therefore measured on both sides of the comparison rather than
+inferred from one. We regard this as the strongest argument in this paper for reporting the
+difficulty probe by default: the prediction was made before GSM8K was run, from a diagnostic
+requiring no model calls, and it correctly forecast the collapse of our own most attractive
+result.
+
+##### Signal quality is not the only axis, and on this model pair it is not the binding
+one.
+
+Read as a contest, Table 9 says live sampling wins on GSM8K. Read
+against the cost constraint left open in Section 6.1, it says something else.
+Live entropy must pay complete generations before it can decide anything, so at
+ and it costs units against always-large’s
+ – a routing policy more expensive than calling the large model every time,
+however good its signal. Retrieval replaces those generations with a single embedding
+forward pass costing , relaxing the break-even condition from
+ to – from to under – and
+bringing the per-query cost to units, of
+always-large rather than . Of the two, only retrieval is deployable at this model
+ratio (Table 10).
+
+Retrieval’s -unit serving cost omits the one-time cost of building the knowledge base
+itself: profiling each of the GSM8K items requires the full expensive pipeline (
+small-model samples plus one large-model call for ground truth), at 
+units per item, or units total. This cost is amortized over every
+query the knowledge base subsequently serves, so it matters only in the volume-dependent
+sense of how many queries are needed before it is paid off. Against live sampling’s
+ units per query, retrieval’s total cost ( for queries) falls below
+live sampling’s () once – after roughly 
+queries, retrieval is cheaper in total, not just per query. Against always-large’s 
+units per query the crossover is later, at queries, since
+always-large’s per-query cost is itself lower than live sampling’s. Below these volumes the
+build cost dominates and retrieval is not yet the cheaper option in aggregate, even though
+its marginal cost per additional query already is.
+
+Table 10: The cost–quality trade-off on GSM8K at , . Cost is per
+query in small-model-generation units; always-large costs . Always-large
+escalates unconditionally and so ranks nothing, leaving its AUROC undefined rather than
+; random escalation does rank, on noise, but scores exactly by construction and
+carries no meaningful interval. Every row is a policy
+that could actually be run at inference time; the difficulty baselines of
+Section 3.6 are deliberately absent, for the reason given below. The live
+entropy and KB retrieval figures restate the same Target 2 measurements reported with full
+bootstrap intervals in Tables 2 and 9 respectively; see
+those tables for the interval on each ( for live entropy; no interval is
+available for KB retrieval, per the note on Table 9).
+
+Policy
+Target 2 AUROC
+Overhead
+Cost
+vs always-large
+Break-even 
+
+Always-large
+n/a
+–
+12.0
+
+–
+
+Live entropy
+0.872
+
+16.7
+
+KB retrieval
+0.607
+
+6.8
+
+Random
+0.500
+–
+6.7
+
+–
+
+The last two rows are the comparison that matters for retrieval’s defense: at essentially
+identical cost ( versus units), retrieval supplies a signal of where
+random escalation supplies none. Whatever else is true of the knowledge base on this
+benchmark, it is not paying for nothing.
+
+##### The difficulty baselines are not policies, and on GSM8K they are not buildable.
+
+Retrieval’s Target 2 score () essentially matches the difficulty-calibrated baseline
+(), and it would be natural to read that equivalence as a null result – as we did
+on synthetic arithmetic, where it was one. It is not one here, and the distinction is worth
+making carefully, because it determines whether the reader should conclude “use difficulty
+instead” or “difficulty is not on the menu.”
+
+On the synthetic ladder, difficulty is operand digit count times operation count. A regular
+expression over the question string recovers it exactly, at no cost, before any model is
+called. There the baseline is a competitor: a router built on it could be deployed
+tomorrow, and a signal that merely matches it is redundant.
+
+On GSM8K, difficulty is the number of calculation lines in the reference solution
+(Section 3.6). Obtaining it requires the solution – and a system that
+already possessed the solution would have no reason to route the query at all. The baseline
+is therefore circular as a policy: it consumes the very output the router exists to produce.
+The calibrated variant is more privileged still, since it additionally requires the graded
+outcomes of neighboring items, which is to say knowledge of whether the small model
+answered them correctly. Neither quantity is available at inference under any budget, which
+is why neither appears as a row in Table 10: they are not slower or more
+expensive alternatives, they are not alternatives.
+
+What they remain is an upper bound – the accuracy a router could reach if difficulty
+were handed to it for free – and that is the role in which we use them throughout. A signal
+falling well short of the bound has room to improve; a signal matching it has extracted what
+difficulty affords. On this benchmark retrieval reaches that bound using only an embedding of
+the question, which is information a deployed system actually has. The correct reading of
+ versus is therefore not that retrieval is redundant, but that it recovers,
+from the question alone, what an oracle with access to the reference solution and to
+neighboring items’ grades could achieve. That is a modest bound to reach – entropy exceeds
+it by a wide margin – but reaching it at of always-large’s cost is not nothing, and
+it is emphatically not the same finding as the synthetic null.
+
+##### A frontier rather than a winner.
+
+The honest summary is that the two methods
+occupy different points on a cost–quality frontier, and that neither dominates. Live
+sampling buys the strongest signal in this paper ( on Target 2) at a price this model
+pair cannot pay. Retrieval buys a weaker but real signal () at of
+always-large’s cost. A practitioner at has exactly one of these available; one
+at has both, and should prefer live sampling. What we retract is not the
+value of retrieval but the specific claim that motivated it – that cached large-model
+outcomes give retrieval a capability live sampling structurally lacks. On the benchmark
+where difficulty is not lexically recoverable, that capability is absent.
+
+The gap between and is, we think, the quantity worth attacking. It measures
+what is forfeited by declining to pay the -generation term. The learned probe of
+Section 6.7 is the natural candidate for closing it, since a forward pass over
+hidden states also avoids that term while retaining access to the model’s own computation on
+the specific query; Section 8 develops this and related directions.
+
+##### One limitation is resolved, in retrieval’s favour.
+
+We had noted that scoring the
+knowledge base on Target 2 using its escalation score – a vote over neighbors’
+needs_escalation labels – might understate it, since live entropy is scored on its
+native quantity. Implementing a dedicated vote over neighbors’ correct_small
+labels shows the concern is unfounded: versus , a bias of AUROC.
+
+##### A caveat on thresholds.
+
+On GSM8K the knowledge base’s binary escalation
+decisions, taken at the default score threshold of , are correct on of items –
+below the obtainable by never escalating at all, given Target 1’s prevalence of
+. This is a statement about the threshold rather than the ranking: a signal with
+AUROC above chance can still produce a poor classifier at an arbitrary cut point, and at low
+prevalence accuracy rewards silence. Operating points should be selected from the Pareto
+curve as in Section 6.1, not inherited from a default, and threshold-free and
+thresholded metrics should both be reported.
+
+#### 7.4 Limitations of the retrieval result
+
+The GSM8K result above supersedes the synthetic one, and resolves two of the three caveats
+we had attached to the latter. The Target 2 scoring concern is closed: a dedicated
+small-failure vote differs from the escalation score by AUROC. The independence
+concern is closed by construction: the GSM8K knowledge base and evaluation set were drawn
+with different seeds, and we verify by question-string comparison that they are disjoint,
+so retrieval cannot match an item against itself.
+
+Three limitations remain. First, both retrieval evaluations are single runs ( and
+) without repeated seeds, against a measured AUROC noise floor of 
+(Section 6.5). The synthetic-to-GSM8K collapse on Target 3 (0.908 -> 0.518) is
+far too large to be noise, but the smaller GSM8K differences – Target 1’s versus
+, for instance – are not individually resolvable at this precision.
+
+Second, while the difficulty probe now confirms the mechanism on both benchmarks
+( versus ), we have tested only two points on that axis. Whether
+retrieval degrades smoothly as lexical difficulty-salience decreases, or has a threshold, is
+unknown, and two benchmarks cannot distinguish those possibilities.
+
+Third, the retrieval approach assumes queries arrive from a distribution the knowledge base
+covers, and neither benchmark tests the regime where that fails. On synthetic, mean
+neighbor similarity sat near – the knowledge base had near-identical items to
+match against, which is closer to interpolation within a dense space than generalization to
+novel task types. Whether retrieval degrades gracefully or sharply under sparse coverage is
+untested, and matters more now that the mechanism we thought we had identified turns out not
+to be the one operating.
+
+### 8 Future Work
+
+#### 8.1 Retrieval keys that encode failure, not surface form
+
+The clearest direction this work points to is that the retrieval key is the wrong
+object. Our knowledge base embeds the question text with a general-purpose language model
+and retrieves by cosine similarity, which asks: what other questions look like this
+one? What a router actually needs is: what other questions does this model fail on in
+the same way? These coincide only when surface form happens to track failure – which is
+exactly the condition our difficulty probe measures, and exactly the condition that held on
+synthetic arithmetic () and failed on GSM8K (). Read this way, the
+probe is not only a diagnostic for catching artifacts after the fact but an
+objective: a good retrieval key is one whose neighborhoods are predictive of
+outcomes, and the probe measures precisely that property, at no model cost, before any
+routing experiment is run. It can therefore be used to select or train keys prospectively.
+We see four candidate directions.
+
+##### Learned keys trained on outcomes.
+
+Rather than adopting an off-the-shelf
+embedding, one can train an encoder so that items with the same outcome are close and items
+with different outcomes are far apart – standard metric learning, with
+correct_small (or needs_escalation) as the supervision signal, over the same
+profiled corpus the knowledge base already requires. The profiling pass that builds the
+knowledge base yields exactly the labeled data this needs, so the training set is free once
+the knowledge base exists. The risk is overfitting a small corpus, and the appropriate check
+is the probe itself applied to a held-out split.
+
+##### Keys drawn from the small model’s own state.
+
+A question embedding describes the
+question; it does not describe what this model does when confronted with it. Two
+arithmetic problems of identical surface form can sit on opposite sides of a model’s
+competence boundary, and no encoder of the question text can separate them. The small
+model’s hidden states at the point of answering do carry that information – this is
+precisely why the learned probe of Section 6.7 outperforms fixed statistics –
+and they are obtainable from a single forward pass, preserving the cost advantage that makes
+retrieval viable (Section 7). Using hidden states as retrieval keys rather than
+as probe inputs would combine the two lines of work in this paper: the probe’s access to
+model-internal signal with retrieval’s access to cached large-model outcomes.
+
+##### Explicit task-type and difficulty features.
+
+Retrieval need not operate in a
+single undifferentiated space. Partitioning by task type first – arithmetic versus
+multi-hop factual versus commonsense – and retrieving within a partition would prevent the
+coverage failure we could not test (Section 7.4), where a novel task type
+matches nothing meaningful yet still returns confident neighbors. Cheap explicit features
+are also available and unexploited: quantity count, operation types, entity rarity, syntactic
+depth. On GSM8K these would not recover the answer-derived reasoning-step count, but they
+need not: they need only correlate with it well enough to make neighborhoods informative,
+and the probe provides a direct, zero-cost measure of whether a given feature set achieves
+that.
+
+##### Hybrid keys using partial generation.
+
+The -sampling cost that makes live
+entropy undeployable (Section 3.5) is driven by generating complete
+answers. Much of the signal may be available far earlier – from a single sample, from the
+first few tokens of samples, or from the entropy of the first branch point – at a
+fraction of the cost. A key combining a question embedding with a short prefix of the model’s
+own attempted answer would sit between the two extremes we tested, and the break-even
+analysis of Equation 7 gives an explicit budget for how much such a prefix
+may cost before the advantage over live sampling is lost.
+
+#### 8.2 Closing the signal gap
+
+The gap between live entropy and retrieval on GSM8K ( versus on Target 2)
+quantifies what is lost by refusing to pay the -generation term, and is the natural
+target for the above. A useful intermediate result would be to establish whether that gap is
+a property of the key (in which case better keys close it) or of the information
+(in which case no question-side representation suffices, and only model-internal or
+partial-generation signals can help). The probe distinguishes these: if a learned key raises
+outcome-predictiveness substantially while routing performance does not follow, the
+limitation is informational rather than representational.
+
+#### 8.3 Ablations and validation we did not run
+
+Two parameters were fixed throughout and never varied: sampling temperature (),
+which directly determines the sample diversity semantic entropy measures and is therefore
+the most consequential remaining omission; and the NLI entailment threshold . We
+did ablate the sample count (Section 6.2); both remaining parameters
+admit cheap sensitivity analyses on the existing pipeline.
+
+Separately, and more concretely: the knowledge-base profiling runs behind
+Table 9 and Table 10 did not preserve per-item scores, so
+the AUROC figures there – including the Target 3 collapse – carry no
+bootstrap interval, unlike this paper’s other live-signal AUROC results, which do (the
+deterministic difficulty baselines and the exploratory synth72 search log of
+Section 6.7 are reported as point estimates for unrelated reasons and were never
+bootstrapped either). Re-running that profiling pass with per-item
+scores retained, so a bootstrap interval can be computed the same way as elsewhere in
+this paper, is a concrete, low-cost next step rather than an open research question, and we
+list it here as such rather than let it pass as an unexplained gap (see also the Limitations
+paragraph in Section 9).
+
+Our positive result also rests on one dataset and one model pair. It replicates across two
+disjoint GSM8K samples, but whether it transfers to another reasoning family, or to a model
+pair with a different competence relationship, is untested – and the reversals documented
+in Section 9 give ample reason not to assume it does.
+Finally, the mechanism relating embedding–difficulty correlation to retrieval performance
+rests on two points ( and ); whether degradation between them is smooth
+or threshold-like is unknown, and a benchmark of intermediate lexical difficulty-salience
+would settle it.
+
+#### 8.4 Beyond a fixed , a single pair, and a binary decision
+
+Several of this paper’s design choices were fixed for tractability rather than because they
+are the right choice in general, and each suggests a direction we did not pursue.
+
+Adaptive sample budgets. We use a fixed for every query (ablated in
+Section 6.2, but still fixed within any one configuration). Most of the
+-sample cost is spent on queries where the small model’s samples agree quickly; an
+adaptive scheme that samples until a stopping criterion is met – or until the running
+entropy estimate stabilizes – would spend the budget only on genuinely ambiguous queries,
+potentially closing much of the gap in Section 3.5 without the fixed-
+cost on easy queries.
+
+A three-way decision. Our router chooses between answer-with-small and
+escalate-to-large. A middle option – decline to answer at all – is standard in selective
+prediction [11] and would let the router abstain on queries where
+neither model is likely to be right (the both-wrong population that collapses several of
+this paper’s targets toward chance, Section 6.6), rather than being forced
+to pick one of two models that both fail.
+
+Multi-tier cascades. We test a single small/large pair throughout. A cascade with more
+than two tiers would let a query escalate incrementally, and the oracle-headroom and
+cost-overhead arguments of this paper apply at each tier boundary, not just once.
+
+Router portability. We do not test whether a router (fixed-threshold or learned)
+trained for one small/large pair transfers when either model is swapped for a different one
+of similar capability. If it does not, a router’s practical cost includes retraining for
+every model-pair change, which the cost accounting in this paper does not charge for.
+
+A self-updating knowledge base. Section 7’s knowledge base is a fixed,
+one-time profiling pass over items. A deployed system would instead see a stream of
+queries it could profile continuously, growing the knowledge base and plausibly improving
+its coverage and the validity of the difficulty-probe diagnostic over time rather than
+leaving both fixed at their initial values.
+
+### 9 Discussion
+
+Semantic entropy is a usable escalation signal, but establishing that took three benchmarks
+and the repeated discovery that our own positive results were artifacts. A fourth check
+corroborates the same conclusion under a different method: an independently implemented
+confidence-gated probe, trained on a separate 72-item synthetic benchmark
+(Section 6.7), recovered most of the achievable gain over always-small using
+semantic entropy as its base signal. The generalisable content of this paper is the set of
+controls that separated the two.
+
+##### Report the target explicitly.
+
+Target 1 (does escalation help) and Target
+2 (is the small model wrong) differ by more than AUROC on identical data. A
+signal computed from the small model’s samples has only indirect access to the large
+model’s behavior, mediated by shared query difficulty – substantial, as Target 3 shows
+( on synthetic), but not the same thing as observing the large model. Papers that
+report one target without naming it are not comparable to each other.
+
+##### Report a difficulty baseline.
+
+This is the control we most regret omitting. On
+synthetic arithmetic a regex over the question matched semantic entropy exactly, converting
+our strongest result into a null one; on GSM8K entropy beats the same baseline by 
+and the result stands. The two cases are indistinguishable without the baseline. Any signal
+correlated with difficulty will separate a difficulty-driven target, so the question is
+never “does the signal work” but “does it beat what the question text already tells
+you.”
+
+##### Check headroom before spending compute.
+
+A benchmark can exhibit a wide
+capability gap and still leave a perfect router over always-large, because the
+relevant quantity is – how
+often the small model is right where the large model is wrong – not the accuracy
+difference between the models. On PopQA that quantity was zero. This is a cheap pre-flight
+computation and it invalidates entire experiments.
+
+##### Cost the sampling overhead honestly.
+
+Normalizing the -sample pass to one
+unit hides that entropy routing pays generations on every query before deciding
+anything. Under per-generation accounting the method saves money only when
+, which at demands a large model more than the
+per-generation cost of the small one even at a escalation rate. Our GSM8K
+configuration wins on accuracy and loses on cost – both worth reporting, and the second
+invisible under the normalized model.
+
+##### On generalizing across datasets.
+
+Three of our findings reversed between
+benchmarks, which is the most uncomfortable result in this paper. Token confidence was below
+chance on synthetic arithmetic and above it on GSM8K; fusing it degraded entropy in the first
+case and improved Target 1 in the second; and retrieval-based prediction of large-model
+success went from to chance. In each case the single-benchmark result would have
+been reported as a property of the signal. We now think it should not be: a signal’s
+behavior here is a joint property of the signal and the benchmark’s structure, and claims
+of the form “signal predicts ” should be accompanied by the controls that establish
+which of the two is doing the work.
+
+The retrieval case is the one where we can say what the benchmark contributed. Its
+difficulty was lexically recoverable, embedding similarity therefore encoded difficulty, and
+neighbor voting reduced to difficulty-conditioned outcome frequency – an estimator our own
+difficulty-calibrated baseline computes without any embedding. That the probe forecast the
+collapse before we ran GSM8K is, to us, the clearest argument for reporting these controls
+by default.
+
+##### Limitations.
+
+Our positive result rests on one dataset and one model pair. It
+does replicate across two disjoint samples of that dataset ( and , agreeing to
+ AUROC on Target 2), but two samples from GSM8K are not two datasets, and nothing
+here establishes that the result transfers to another task family or another model pair. Sampling temperature was fixed at 
+throughout and never ablated, despite directly setting the diversity that semantic entropy
+measures. We ablated the sample budget (Section 6.2) but not the
+NLI entailment threshold , which was fixed at throughout. The knowledge-base result of
+Section 7 additionally depends on the profiling and evaluation sets being
+disjoint, which we verify by question-string comparison but which is weaker than sampling
+them independently. The knowledge-base AUROC figures in Table 9 and
+Table 10, including the collapse central to our retrieval
+discussion, do not carry bootstrap confidence intervals: the per-item scores from those
+single-run builds were not preserved, so an interval cannot be computed after the fact. This
+is to be determined rather than resolved – rerunning the knowledge-base profiling with
+per-item scores preserved, specifically so a bootstrap interval can be computed, is the
+concrete next step and is listed as such in Section 8. Finally, the failure
+modes cataloged here are the ones we happened to detect; the reason we present them as a
+methodological contribution is precisely that each was, for some period, invisible in
+results that looked reasonable.
+
+### Acknowledgments
+
+This report synthesizes an iterative empirical investigation conducted across two
+model pairs (Qwen2.5, Gemma-3), three reported benchmarks (synthetic arithmetic, GSM8K,
+PopQA) plus TriviaQA and TruthfulQA loaders implemented but not run for this study, and two
+independent codebases (a single-pass evaluation harness and a train/cal/test iterative
+research loop).
+
+### References
+
+[1]
+
+Farquhar, S., Kossen, J., Kuhn, L., & Gal, Y. (2024).
+Detecting hallucinations in large language models using semantic entropy.
+Nature.
+
+[2]
+
+Wang, X., Wei, J., Schuurmans, D., Le, Q., Chi, E., Narang, S., Chowdhery, A., & Zhou, D. (2023).
+Self-consistency improves chain of thought reasoning in language models.
+International Conference on Learning Representations (ICLR).
+
+[3]
+
+Mallen, A., Asai, A., Zhong, V., Das, R., Khashabi, D., & Hajishirzi, H. (2023).
+When not to trust language models: Investigating effectiveness of parametric and
+non-parametric memories.
+Proceedings of the 61st Annual Meeting of the Association for Computational
+Linguistics (ACL).
+
+[4]
+
+Kuhn, L., Gal, Y., & Farquhar, S. (2023).
+Semantic uncertainty: Linguistic invariances for uncertainty estimation in natural
+language generation.
+International Conference on Learning Representations (ICLR).
+
+[5]
+
+Soiffer, D., Kolawole, S., & Smith, V. (2025).
+Semantic agreement enables efficient open-ended LLM cascades.
+Proceedings of the 2025 Conference on Empirical Methods in Natural Language
+Processing: Industry Track (EMNLP), pp. 2499–2537.
+
+[6]
+
+Kolawole, S., Dennis, D., Talwalkar, A., & Smith, V. (2025).
+Agreement-based cascading for efficient inference.
+Transactions on Machine Learning Research.
+
+[7]
+
+Gupta, N., Narasimhan, H., Jitkrittum, W., Rawat, A. S., Menon, A. K., & Kumar, S. (2024).
+Language model cascades: Token-level uncertainty and beyond.
+International Conference on Learning Representations (ICLR).
+
+[8]
+
+Chen, L., Zaharia, M., & Zou, J. (2024).
+FrugalGPT: How to use large language models while reducing cost and improving performance.
+Transactions on Machine Learning Research.
+
+[9]
+
+Ong, I., Almahairi, A., Wu, V., Chiang, W.-L., Wu, T., Gonzalez, J. E., Kadous, M. W.,
+& Stoica, I. (2025).
+RouteLLM: Learning to route LLMs from preference data.
+International Conference on Learning Representations (ICLR).
+
+[10]
+
+Aggarwal, P., Madaan, A., Anand, A., et al. (2024).
+AutoMix: Automatically mixing language models.
+Advances in Neural Information Processing Systems (NeurIPS).
+
+[11]
+
+Geifman, Y., & El-Yaniv, R. (2017).
+Selective classification for deep neural networks.
+Advances in Neural Information Processing Systems (NeurIPS).
+
+[12]
+
+Yue, M., Zhao, J., Zhang, M., Du, L., & Yao, Z. (2024).
+Large language model cascades with mixture of thought representations for
+cost-efficient reasoning.
+International Conference on Learning Representations (ICLR).
+
+[13]
+
+Ding, D., Mallick, A., Wang, C., Sim, R., Mukherjee, S., Ruhle, V., Lakshmanan, L. V. S., & Awadallah, A. H. (2024).
+Hybrid LLM: Cost-efficient and quality-aware query routing.
+International Conference on Learning Representations (ICLR).
+
+[14]
+
+Cobbe, K., Kosaraju, V., Bavarian, M., Chen, M., Jun, H., Kaiser, L., Plappert, M., Tworek, J., Hilton, J., Nakano, R., Hesse, C., & Schulman, J. (2021).
+Training verifiers to solve math word problems.
+arXiv:2110.14168.
+
+[15]
+
+Joshi, M., Choi, E., Weld, D. S., & Zettlemoyer, L. (2017).
+TriviaQA: A large scale distantly supervised challenge dataset for reading comprehension.
+Proceedings of the 55th Annual Meeting of the Association for Computational Linguistics (ACL).
+
+[16]
+
+Lin, S., Hilton, J., & Evans, O. (2022).
+TruthfulQA: Measuring how models mimic human falsehoods.
+Proceedings of the 60th Annual Meeting of the Association for Computational Linguistics (ACL).
+
+[17]
+
+He, P., Liu, X., Gao, J., & Chen, W. (2021).
+DeBERTa: Decoding-enhanced BERT with disentangled attention.
+International Conference on Learning Representations (ICLR).
+
+[18]
+
+Holtzman, A., Buys, J., Du, L., Forbes, M., & Choi, Y. (2020).
+The curious case of neural text degeneration.
+International Conference on Learning Representations (ICLR).
+
+[19]
+
+Chow, C. K. (1970).
+On optimum recognition error and reject tradeoff.
+IEEE Transactions on Information Theory, 16(1), 41–46.
+
+[20]
+
+Gemma Team, Google DeepMind. (2025).
+Gemma 3 technical report.
+arXiv:2503.19786.
+
+[21]
+
+Qwen Team. (2024).
+Qwen2.5 technical report.
+arXiv:2412.15115.
+
+[22]
+
+Efron, B., & Tibshirani, R. J. (1993).
+An Introduction to the Bootstrap. Chapman & Hall.
+
+[23]
+
+Angelopoulos, A. N., & Bates, S. (2021).
+A gentle introduction to conformal prediction and distribution-free uncertainty quantification.
+arXiv:2107.07511.
+
+ Experimental support, please
+ view the build logs
+ for errors. Generated by
+
+ L
+ A
+ T
+ E
+
+ xml
+
+ .
+
+### Instructions for reporting errors
+
+ We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+ support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+ methods listed below:
+
+ Click the "Report Issue" (
+
+ ) button, located in the page header.
+
+ Tip: You can select the relevant text first, to include it in your report.
+
+ Our team has already identified the following issues. We appreciate your time reviewing and reporting rendering errors we
+ may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+ should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+ all.
+
+ Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a list of packages that need conversion, and welcome developer contributions.
+
+ We gratefully acknowledge support from our major funders,
+ member institutions, ,
+ and all contributors.
+
+ About ·
+ Help ·
+ Contact ·
+ Subscribe ·
+ Copyright ·
+ Privacy ·
+ Accessibility ·
+ Operational Status (opens in new tab)
+

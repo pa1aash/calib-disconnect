@@ -1,0 +1,2001 @@
+
+
+Unsure but Certain: Uncovering the Representation-Confidence Gap in Diffusion Language Models
+
+###### Report GitHub Issue
+
+ ×
+
+ Title:
+
+ Content selection saved. Describe the issue below:
+
+ Description:
+
+ Submit without GitHub
+ Submit in GitHub
+
+ arXiv is now an independent nonprofit!
+ Learn more
+ ×
+
+ Back to arXiv
+
+ Why HTML?
+
+ Report Issue
+
+ Back to Abstract
+
+ Download PDF
+
+Abstract
+
+Introduction
+
+Background and Problem Setup
+
+Diagnostic Findings on Model Robustness
+
+Method: From Corruption Routing to a Correctness Readout
+
+Experimental Setup
+
+Models, tasks and noise:
+
+Metrics:
+
+Protocol and splits:
+
+Baselines:
+
+Results
+
+Accuracy is largely recovered by a simple baseline
+
+Reliability degrades under noise and a readout recovers it
+
+The gain needs the hidden state
+
+Diffusion confidence loses more of its ranking
+
+Generalization and limitations
+
+Related Work
+
+Conclusion
+
+References
+
+SARabicsection Routing attempts: full derivations
+
+Routing attempt I—probe-gated confidence penalty (Ncc-Train)
+
+Routing attempt II—risk-deferred commitment (Ncc-Decode)
+
+SARabicsection Extended results and analyses
+
+Fit and notation conventions.
+
+The signal is localized to the answer, not the input
+
+The confidence degradation is disproportionately a diffusion phenomenon
+
+A direct test: silent repair versus confident error.
+
+A causal intervention on the hidden state.
+
+How far does one frozen readout reach?
+
+Corruption severity
+
+Real-world noise: human typos
+
+Ablations and analysis
+
+SARabicsection Additional supporting results
+
+The accuracy axis is largely recovered by a simple baseline
+
+The gain requires the hidden state, not a cheaper signal
+
+Combining the readout with cheap sampling
+
+SARabicsection Robustness of the predictive diagnostic
+
+Stability across input-noise realizations
+
+Stability across the calibration sample
+
+A deployment-facing metric agrees
+
+An end-to-end abstention gate
+
+The calibration gain is not a binning artifact
+
+SARabicsection Limitations
+
+ License: CC BY 4.0
+
+arXiv:2608.08791v1 [cs.CL] 09 Aug 2026
+
+## Unsure but Certain: Uncovering the Representation-Confidence Gap in Diffusion Language Models
+
+Saurabh Yadav
+
+Badri Narayana Patro
+
+Vijay Srinivas Agneeswaran
+
+####### Abstract
+
+Diffusion language models use broad context to create text, suggesting they might handle input noise better than standard models. Testing reveals this is only partially true. Internally, diffusion models detect text errors highly accurately. Externally, their reported certainty ignores this signal. As accuracy drops due to noise, confidence stays near its maximum and the ability to correctly rank answers degrades toward random chance. We call this mismatch the representation confidence gap. The visible concentration of high certainty scores is a misleading surface symptom. Standard math adjustments remove this concentration but fail to fix the underlying loss of ranking order. This ranking deficit favors standard models under noisy conditions and resists common remedies. Matching training recovers accuracy but not ranking, while score recalibration and input level error signals cannot reorder the final answers. However, the information needed to properly evaluate an answer survives in the hidden states. A lightweight extraction tool uses this signal to improve ranking. This approach is highly efficient because it leaves the base model completely frozen and requires zero additional text generation steps. We present this tool to prove the signal exists, while clearly noting its limits. Ultimately, certainty reliability is a more pressing limit than overall accuracy under noisy conditions.
+
+1Microsoft
+
+India
+
+### Introduction
+
+Diffusion language models like LLaDA (Nie et al. 2025) and DREAM (Ye et al. 2025) create text by revealing a full sequence with access to broad context instead of guessing one word at a time (Austin et al. 2021; Sahoo et al. 2024; Lou et al. 2024). This broad view suggests they might handle input noise better than standard models. Testing reveals this assumption is only partially true against the noise real systems actually encounter.
+
+We tested LLaDA 8B and DREAM 7B on logic puzzles using four common types of text errors to measure accuracy and certainty reliability. The internal states of a diffusion model detect errors highly accurately. However, the final output ignores this signal. As accuracy drops due to noise, overall certainty remains high and the ability to correctly rank answers degrades toward random chance. Adjusting the scale of these scores fails to fix the problem because it does not change the order of the answers. The model frequently predicts the wrong answer while reporting high certainty. We call this mismatch the representation confidence gap (Figure 1).
+
+Figure 1: The representation confidence gap and the Latent Correctness Readout. Under noisy conditions the model answers incorrectly while still reporting a high certainty score, so certainty no longer clearly separates correct answers from incorrect ones. Apply (top): in one single pass we average the answer word numbers at a specific layer, score them with a simple mathematical tool, and skip the question if the score falls below a set cutoff. Fit once (bottom): the simple tool is trained offline on a small set of labeled examples using the same frozen extraction process, leaving the base model weights completely untouched.
+
+Previous studies show that internal states of a standard model track correctness better than final probabilities (Burns et al. 2023; Azaria and Mitchell 2023; Kossen et al. 2024). We focus on how much of this internal signal survives in the final score when the input text has errors. This signal loss is notably larger for diffusion models. Under noisy conditions, standard models retain more ranking ability than diffusion models in our specific tests. On clean text, the results are much closer across the groups.
+
+Diffusion certainty is heavily concentrated near the very top of the scale. For example, LLaDA reports high certainty on the vast majority of its mistakes when facing errors, while the standard LLaMA 3 8B model rarely does this. This visible concentration is a misleading surface symptom. A standard temperature adjustment lowers the overall certainty scores without changing the actual ranking order. When evaluated at this adjusted point, the large difference between the model types shrinks significantly. The concentrated high scores mask the underlying loss of proper ranking. This shows that the way diffusion models sort their guesses does not entirely cause the main problem.
+
+We separate accuracy and certainty to evaluate robustness. Accuracy is straightforward to recover. A basic matching training method recovers most of the lost accuracy, performing as well as three specific diffusion methods we tested. However, this training does not fix the certainty problem. It simply forces noisy guesses to match clean guesses, which were already highly confident. Standard math adjustments (Li et al. 2026) also fall short for a structural reason. They reduce the overall error measurement but keep the answers in the exact same order. Because the order stays the same, the model still struggles to safely skip uncertain questions. Noise degrades the ranking, and simple score adjustments cannot restore it.
+
+A useful signal to improve this ranking is present inside the model. Our error detector looks at the whole question, so its score is mostly the same across all possible answers. Adding this score changes the certainty of the whole question without reordering the answers, acting just like basic math adjustments. Two methods that try to feed this signal into the final score fail to improve ranking exactly as expected. Fixing the ability to skip questions requires a signal linked to the specific answer. Therefore, we introduce the Latent Correctness Readout, or LCR. This is a lightweight extraction tool that looks at the internal states of the answer words to estimate correctness. This approach is highly efficient because it leaves the base model completely frozen and requires zero additional text generation steps. It fits quickly using the same small set of examples needed for basic adjustments.
+
+Our contributions are as follows. First, we define the representation confidence gap in diffusion language models under real world text noise. We separate the surface issue of concentrated high certainty scores from the deeper problem of lost ranking ability. Second, we explain the structural reasons why obvious fixes fall short. Matching training and basic score adjustments keep the answers in their original order. Furthermore, question level error signals stay mostly the same across all possible answers, so they cannot reorder the final answers either. We support this claim by showing two routing methods that did not improve results. Third, we show that the information needed to skip questions safely survives in the hidden states. We extract this signal using a lightweight tool that is highly efficient, requiring no model updates and zero additional generation passes. We present this tool to prove the signal exists, while clearly noting its limits.
+
+### Background and Problem Setup
+
+Masked diffusion language models
+A masked diffusion model generates text by reversing a process that hides it (Austin et al. 2021; Sahoo et al. 2024). During generation, the model runs for a set number of steps. At each step, every hidden position receives a probability distribution. The system commits to positions with the highest probabilities and leaves the rest for later. This certainty based scheduling is unique to diffusion generation. We record the certainty for each answer position at the step it is revealed.
+
+Confidence calibration and selective prediction
+
+We score a generated answer using the geometric average of its individual word certainties
+
+(1)
+
+taken over the answer positions. This average matches the model’s training math and is heavily influenced by the least certain word. It includes a selection effect because the system only records scores when they are the highest among the remaining hidden words. This selection changes the overall certainty scale, which we later show is separate from how the model ranks answers. We evaluate this score in two ways. Calibration checks if certainty matches actual accuracy using expected calibration error (Naeini et al. 2015; Guo et al. 2017). Selective prediction (Geifman and El-Yaniv 2017) checks if the certainty score helps the model skip questions, balancing answer rates against error risks. We measure this ranking quality using the area under the receiver operating characteristic curve, where 0.5 is random chance. Distinguishing calibration from ranking is crucial because simple math adjustments can fix calibration without reordering the answers. Correcting the certainty scale is completely different from fixing answer ranking.
+
+### Diagnostic Findings on Model Robustness
+
+We summarize the findings motivating our approach here, detailing the full setup in the Experimental Setup section. Unless stated otherwise, numbers apply to LLaDA 8B on the GSM8K test under character swapping noise. Every clean versus noisy comparison uses the exact same 400 prompts for fairness.
+
+Detecting errors from internal states:
+A simple tool evaluating frozen internal states separates clean from noisy text with very high reliability, scoring between 0.996 and 0.997 across multiple layers. A restricted version of this detector still reaches 0.986. The model clearly registers when its input contains errors.
+
+Certainty remains high under noise:
+While accuracy drops from 0.560 to 0.373 under noise, the average certainty score barely moves, falling from 0.988 to 0.982. Meanwhile, calibration error rises from 0.428 to 0.610. These models are already highly confident on clean text, and noise worsens this by lowering accuracy while leaving high certainty mostly untouched.
+
+Certainty loses connection to accuracy:
+This failure goes beyond a simple scale shift. On the noisy test set, certainty is higher for correct answers than incorrect ones by only 0.0022. This tiny gap of two parts per thousand is useless for deciding whether to trust a specific answer, especially given the much larger accuracy gap. Ranking quality drops from 0.666 to 0.575. We describe this behavior as being unsure of the answer but certain in the reported score.
+
+Standard fixes do not transfer:
+Standard temperature adjustments (Li et al. 2026) cannot repair a broken ranking order. On clean text, they reduce calibration error significantly while leaving useful ranking untouched. Under noise, they reduce calibration error from 0.610 to 0.133 but leave the ranking score frozen at 0.575. The adjusted temperature reaches the absolute limit of our search range, flattening the certainty scores completely. Expanding this search range would only change calibration error, not the underlying ranking failure.
+
+Basic matching training recovers most accuracy lost to noise, and three special diffusion methods we tested added no reliable improvement. Accuracy under noise is manageable with existing tools, but certainty reliability requires a different approach.
+
+### Method: From Corruption Routing to a Correctness Readout
+
+We build on a basic training method that restores accuracy and explore how to obtain a reliable certainty score. We initially tried to feed the model’s internal error signal into its final certainty output. This attempt fails for structural reasons, pointing to the need for a scoring method focused specifically on the generated answer.
+
+Accuracy baseline and consistency
+
+We train the model to match its noisy predictions to its clean predictions
+
+(2)
+
+where is the frozen base model and stops the gradient update. This approach recovers most of the lost accuracy. However, because it copies the clean text behavior it also copies the original overconfidence, leaving the certainty problem unfixed.
+
+Routing the error signal and why it fails:
+
+From the error detector we obtain a frozen score at each word position. We tested two methods to feed this score into the final certainty: a training penalty that lowers certainty at flagged positions and a decoding rule that delays decisions when errors are detected. Neither method improved ranking over the basic training. While the training penalty achieves the highest accuracy we measured, its ranking ability shows no statistical improvement.
+
+This failure happens for a structural reason. Skipping questions successfully depends on the relative order of certainty scores for different possible answers. The error detector score is a property of the input question, meaning it remains almost identical regardless of which answer the model generates. Adding this score shifts the certainty of the entire question up or down but leaves the internal ranking of candidate answers untouched. This makes input level detectors function like standard math adjustments: they might flag a difficult question, but they cannot help decide which specific answer to trust. A useful scoring method must look directly at the answer.
+
+The Latent Correctness Readout:
+
+Let denote the hidden state at layer for answer position . We average these states over the answer and score correctness using a simple logistic tool
+
+(3)
+
+where we fit the parameters on a small set of labeled examples. We call this the Latent Correctness Readout (LCR) and use it to rank answers and decide when to skip questions. The specific layer and mathematical settings are chosen using standard testing on the training data alone, consistently favoring the middle to late layers.
+
+Two properties make this approach practical and revealing. First, it requires no updates to the main language model, fitting in seconds on a standard processor using cached data. Second, because it looks at the full internal state instead of the final probabilities, it varies across different possible answers and can reorder them. This is exactly what standard math adjustments and input level detectors fail to do. Because it adds no text generation and changes no model weights, any ranking ability it finds was already present in the frozen model.
+
+Why the readout works:
+
+Previous research suggests that diffusion certainty on clean text measures how consistent the generated answer is with itself rather than whether it is actually correct (Li et al. 2026). This idea explains the failure we observe. When given text with a typo, the model fixes the prompt into a coherent problem and solves it consistently. Therefore, certainty remains high even though the answer is wrong compared to the user’s actual intent. The final output certainty simply measures this self consistency. In contrast, the internal hidden states still separate correct answers from incorrect ones, and our tool reads this deeper signal. This also explains why standard math adjustments fail, because noise destroys the actual ranking ability rather than just creating an excess of certainty.
+
+### Experimental Setup
+
+##### Models, tasks and noise:
+
+We evaluate LLaDA-8B-Instruct and DREAM-7B-Instruct with their standard confidence-ordered samplers, together with LLaMA-3-8B (Llama Team 2024) and Qwen-2.5-7B (Yang et al. 2024) as matched autoregressive controls. Fine-tuned baselines update only LoRA adapters (Hu et al. 2022) of rank , while base weights and all probes remain frozen at inference. The core study uses GSM8K and ARC-Challenge, and the generality analysis extends it to nine further benchmarks. Prompts are corrupted by character transposition, keyboard substitution, character insertion and word deletion at severities , and every corrupted prompt has a clean counterpart, which allows matched-pair testing. All experiments ran on two RTX 4090 GPUs.
+
+##### Metrics:
+
+The primary metric is the selective AUROC between confidence and correctness, which is independent of accuracy. We also report AURC, a deployment composite that additionally depends on accuracy, and ECE over bins on the noisy set. Exact-match accuracy is a constraint that every intervention must preserve. Confidence is the geometric mean of token confidences given in Eq. 1.
+
+##### Protocol and splits:
+
+The two axes use disjoint data. On the accuracy axis, LoRA methods are trained on GSM8K prompts under transposition noise at and scored on a separate -prompt cell. On the reliability axis, every confidence method, namely TS, DATS, the corruption probe and LCR, is fitted on a labeled calibration split of prompts and scored once on a disjoint held-out test split of prompts, with LCR hyperparameters chosen by five-fold cross-validation inside the calibration split. No test label is ever seen during fitting, and in deployment the operating threshold is likewise fixed on the calibration split to reach a target coverage. Throughout, denotes the empirical probability that a bootstrap effect exceeds zero over resamples of the test examples at a fixed noise draw. Variation across independent noise draws is reported separately below.
+
+##### Baselines:
+
+We compare LCR against the base model with its raw geometric-mean confidence, the consistency baseline, post-hoc calibration by TS and DATS, the corruption probe used directly as a detector, ten same-budget scalar signals such as token entropy and answer length together with their combinations, and two sampling-based estimators, self-consistency agreement and semantic entropy.
+
+### Results
+
+#### Accuracy is largely recovered by a simple baseline
+
+Basic matching training recovers most of the accuracy lost to noise. It raises accuracy from 0.370 to 0.490 on the accuracy testing set and from 0.372 to 0.405 on the larger reliability split. Three special diffusion training methods we designed did not reliably beat this basic approach. Because a standard training objective largely solves the accuracy problem, the rest of our evaluation focuses specifically on certainty reliability.
+
+#### Reliability degrades under noise and a readout recovers it
+
+Table 1 reports the reliability results. The base model has poor calibration and barely separates correct from incorrect answers. The standard mathematical adjustments behave exactly as our structural argument predicts. They reduce the calibration error to 0.133 but leave the ranking order entirely unchanged. An input level error detector is the most perfectly calibrated score in the table, yet it ranks answers near random chance while easily separating clean from noisy text. A score can therefore be perfectly calibrated and still remain completely useless for deciding which answers to trust, because it flags noisy inputs rather than wrong answers.
+
+Our tool raises ranking quality to 0.665 on the same training data without touching a single model weight. We use this 0.665 held out estimate as our primary performance number. This number establishes that the ranking order destroyed at the output is still recoverable from the internal representation. Standard math adjustments could never show this. At 50 percent coverage the error on kept answers falls from 0.575 to 0.495 (Figure 3). The basic training method reaches a lower overall risk, but it does so through accuracy rather than ranking. Stacking both gives the best single pass system available in our tests.
+
+Sampling ranks better and that is not a defeat:
+Generating extra answers ranks correctness better than any single pass score. Ten extra generations reach 0.842, and a single extra generation reaches 0.711, which sits above our tool’s 0.665. We are not proposing our tool as the primary method a practitioner with spare compute should choose. We state the ordering plainly because from two extra generations upward, sampling alone dominates every variant we tested.
+
+Our tool earns its place here as evidence rather than as a final product. It is fitted on frozen states, updates nothing, and adds zero generation steps. Therefore, the ranking it recovers can only come from information the model already held and failed to report. A sampling method cannot establish this because it creates new information rather than revealing hidden information. Two practical notes follow from this. Our tool is the only option listed that adds no generation, making it useful when an answer must be produced in one pass. At small budgets the two methods compose well. Averaging our tool with one sampled answer reaches 0.754 against 0.711 for sampling alone. At two generations the pair still leads slightly, but from three upward sampling alone is better. Every extra generation requires a full model run, making compute efficiency highly relevant (Figure 2).
+
+Figure 2: Inference cost against ranking ability on GSM8K under noise. Single pass methods sit on the left edge and ten sample estimators on the right. Intermediate budgets appear in Table 1.
+
+Table 1: Confidence reliability under noise on GSM8K. Bold marks the best value overall. Italics mark the best at a given budget.
+
+Method
+Gen
+ECE
+AUROC
+AURC
+Acc
+
+Base model
+1
+0.610
+0.575
+0.570
+0.372
+
+Rescale confidence
+
++ TS
+1
+0.133
+0.575
+0.570
+0.372
+
++ DATS
+1
+0.133
+0.575
+0.570
+0.372
+
+Recover accuracy or route corruption
+
+Consistency
+1
+0.581
+0.637
+0.478
+0.405
+
++ NCC Train
+1
+0.554
+0.632
+0.471
+
+Probe as detector
+1
+
+0.533
+0.586
+0.372
+
+Sample the model
+
+Self consistency ()
+2
+0.394
+0.711
+0.492
+0.372
+
+Self consistency ()
+3
+0.286
+0.771
+0.445
+0.372
+
+Semantic entropy ()
+11
+0.373
+0.791
+0.425
+0.372
+
+Self consistency ()
+11
+
+0.372
+
+SC majority vote
+11
+0.183
+0.778
+0.386
+
+Read out correctness
+
+LCR
+1
+0.123
+0.665
+0.524
+0.372
+
+Consist + LCR
+1
+0.120
+
+0.405
+
+LCR + SC ()
+2
+
+0.372
+
+Autoregressive control LLaMA 3 8B
+
+Base confidence
+1
+0.576
+0.628
+0.606
+0.315
+
++ LCR
+1
+0.091
+0.721
+0.539
+0.315
+
+Figure 3: Selective prediction under noise on GSM8K. Our tool cuts the error on kept answers significantly.
+
+Results across independent noise draws:
+The initial statistical values resample test examples at a fixed noise draw, which understates the variability of the noise itself. We therefore repeated the entire pipeline over four independent noise seeds. On ARC the readout gains 0.078 on average and remains positive on all four seeds. On GSM8K it gains 0.073 and is positive on three. The single negative seed traces to model selection during training rather than harsh corruption. The effect is reproducible on ARC and variable on GSM8K, and it relies on a selection step a deployer cannot easily audit without labels. This variability is one reason we pair the tool with the diagnostic check below.
+
+#### The gain needs the hidden state
+
+Ten cheaper single pass signals fitted on the same data stay below a ranking score of 0.590. Corruption and correctness are distinct variables, and no single number carries the correctness signal. The correctness signal also lives in the generated answer rather than the prompt. A tool restricted to prompt hidden states reaches only 0.647, whereas adding the answer states raises it to 0.720.
+
+#### Diffusion confidence loses more of its ranking
+
+Under identical noise both standard controls remain usable, while both diffusion models fall to the edge of random chance. All four cross family pairings favor the standard model under noise. On clean text the comparison is not consistent, as one standard model ranks below LLaDA. What we can reliably demonstrate is the specific deficit that noise induces.
+
+The limits of this comparison should be stated plainly. The statistical tests resample examples with the four models held fixed, so this supports a claim about these specific systems rather than a broad claim about all architectures. The certainty definitions also differ by construction. Diffusion scores aggregate maximum values recorded during generation, while standard scores aggregate standard probabilities. We report this comparison as a control, and our main internal arguments do not depend on it.
+
+Concentration is a symptom of the scale:
+The visible form of the failure is that diffusion certainty is clustered against its ceiling. Under noise LLaDA reports high certainty on 99.2 percent of its errors where LLaMA 3 8B reports it on 2.2 percent. It is tempting to read this concentration as the substance of the problem, but it is not.
+
+The fraction of errors above a fixed cutoff changes easily with standard math adjustments, whereas a true ranking decision does not. Applying a basic temperature adjustment removes this clustering entirely, driving the LLaDA error fraction from 0.992 down to 0.004 while leaving the ranking score completely unchanged. A statistic that changes by two orders of magnitude without altering a single model decision cannot be what breaks the ability to skip questions. Asking the same question at a matched operating point rather than a fixed cutoff confirms this. Most of the apparent gap between the model families is simply the location of the cutoff rather than the shape of the distribution. The true issue is the ranking deficit.
+
+The tool is a general instrument:
+The same tool fitted on standard hidden states lifts LLaMA 3 8B from 0.628 to 0.721 under noise. A linear correctness direction therefore survives noise in both families. The tool is a general instrument rather than a diffusion specific repair. What separates the families is not whether this internal truth exists, since both carry it, but how much of it reaches the number the model actually reports. Under noise the standard models retain enough signal for a cutoff to act on, while the diffusion models retain very little.
+
+Does the decoding schedule manufacture the effect:
+A diffusion sampler fills whichever hidden position is currently most certain, so the scores we record are maximums by design. It is fair to ask whether this design alone produces what we report. For the ranking claim, the design already answers this. The generation process is identical on clean and noisy prompts, so a mechanism constant across both conditions cannot produce a difference between them.
+
+Further observations limit this effect. The sampler discards nothing during generation, meaning it fixes the order in which positions are measured rather than which measurements survive. Standard models also take a maximum over their vocabulary. Most directly, scoring an answer by its weakest recorded word rather than its average still results in a poor ranking score of 0.573. No mathematical average we tried recovers the lost signal.
+
+Table 2: Where the families differ on the held out test split. The large fixed cutoff gap is a surface artifact completely removed by standard temperature scaling.
+
+err0.95
+err
+AUROC
+
+Model
+Fam
+Cln
+Noi
+Cln
+Noi
+Cln
+Noi
+
+LLaDA 8B
+D
+1.000
+0.992
+0.739
+0.777
+0.664
+0.575
+
+DREAM 7B
+D
+0.778
+0.180
+0.722
+0.775
+0.565
+0.540
+
+LLaMA 3 8B
+A
+0.024
+0.022
+0.549
+0.748
+0.741
+0.628
+
+Qwen 2.5 7B
+A
+0.084
+0.089
+0.723
+0.756
+0.624
+0.612
+
+D minus A pooled
++.835
++.531
++.095
++.024
+-.068
+-.063
+
+invariant
+no
+yes
+yes
+
+Figure 4: Confidence fails where comprehension does not. The diffusion model scores wrong and right answers alike on the raw scale.
+
+#### Generalization and limitations
+
+Unseen noise and tasks:
+Fitted once on clean and swapped text, the tool transfers to keyboard substitution and character insertion (Figure 5). Missing words shorten the prompt and disrupt word alignment, remaining a boundary case. The tool remains safe under unanticipated noise within a supported task. On a new task like ARC Challenge it restores 0.105 ranking quality, but only after a short fit on the new data. A deployed system must reuse one tool across noise conditions but refit it for each new task.
+
+Figure 5: Transfer to unseen noise types on GSM8K.
+
+Where the tool does not transfer:
+
+Across eleven benchmarks the tool helps on five and gives no test gain on the other six. On WinoGrande it actively hurts performance by 0.070. This is the tool’s clearest limitation and we report it directly. Task category does not fully explain this split. On CommonsenseQA a strong training fit collapsed entirely on the testing set, showing the tool can latch onto dataset specific structures instead of a stable correctness direction. Finding a stable correctness direction under noise is a property of some tasks and not a general guarantee.
+
+These failures are at least visible before deployment. Using the training data alone we calculate a margin score comparing our tool to the base model. All five successful tasks score high on this margin and all six failed tasks score low (Table 3). We claim this only as a screening heuristic, and it is a weak one. The separating window is narrow, eleven tasks is a small sample, and the scores only correlate moderately with the realized gain. Its main practical use is asymmetric. WinoGrande is the only task the tool would actively hurt, and the rule successfully screens it out.
+
+Figure 6: Screening before deployment. One threshold separates the tasks the tool helps from those it does not.
+
+Table 3: Screening tasks with training data alone. A threshold separates the successful tasks from the null ones.
+
+Task
+Base
+LCR cv
+
+Test 
+
+ARC Challenge (Clark et al. 2018)
+0.451
+0.624
+
++0.105
+
+GSM8K (Cobbe et al. 2021)
+0.619
+0.788
+
++0.090
+
+SciQ (Welbl et al. 2017)
+0.540
+0.666
+
++0.098
+
+TriviaQA (Joshi et al. 2017)
+0.685
+0.801
+
++0.082
+
+SVAMP (Patel et al. 2021)
+0.549
+0.658
+
++0.215
+
+WinoGrande (Sakaguchi et al. 2020)
+0.514
+0.595
++0.081
+-0.070
+
+PIQA (Bisk et al. 2020)
+0.584
+0.664
++0.080
+-0.007
+
+CommonsenseQA (Talmor et al. 2019)
+0.556
+0.616
++0.060
+-0.022
+
+Social IQa (Sap et al. 2019)
+0.509
+0.558
++0.049
+-0.034
+
+OpenBookQA (Mihaylov et al. 2018)
+0.612
+0.641
++0.030
+-0.007
+
+HellaSwag (Zellers et al. 2019)
+0.607
+0.612
++0.005
+-0.017
+
+Further ablations:
+Analyses in the appendix confirm that negative routing results hold at larger sample sizes, that the tool works with as few as 25 training examples, and that the improvements are robust to binning artifacts.
+
+### Related Work
+
+Diffusion language models:
+Masked diffusion models (Austin et al. 2021; Lou et al. 2024; Sahoo et al. 2024) generate text through repeated noise removal. Recent work scales these methods to larger models like LLaDA (Nie et al. 2025) and DREAM (Ye et al. 2025) alongside other improvements (Zhang et al. 2025; Khadangi et al. 2025). This research focuses on text quality and generation speed rather than how the models handle input errors.
+
+Robustness to text noise:
+Previous methods to handle text noise include smoothing goals (Miyato et al. 2019; Jiang et al. 2020; Zhu et al. 2020; Liang et al. 2021; Xie et al. 2020; Tarvainen and Valpola 2017), internal state defenses (Zhou et al. 2021; Wang et al. 2021), typo corrections (Pruthi et al. 2019; Jones et al. 2020; Jin et al. 2020), and adversarial training (Sheshadri et al. 2025). These were built for standard models to improve accuracy. Our basic training method comes from this group. We focus on the certainty problem these methods ignore, because fixing accuracy is the easier challenge for diffusion models.
+
+Confidence in diffusion language models:
+Existing studies on diffusion certainty only look at clean text. Li et al. (2026) note a certainty paradox on math problems where the raw score is poorly calibrated but still ranks answers well. This means standard math adjustments work well on clean text. We successfully reproduce this exact finding. Their adjustment lowers our calibration error from 0.410 to 0.015 on clean text while keeping the ranking score steady at 0.663. However, under noisy conditions this same adjustment leaves the ranking frozen at 0.571. The noisy environment causes the failure, not the adjustment method. Our overall clean ranking is slightly lower than their math results, likely due to a smaller generation budget and different scoring math. We build on their idea that diffusion certainty measures internal consistency rather than input accuracy.
+
+Calibration and the representation confidence gap:
+We use standard methods to measure calibration and question skipping (Naeini et al. 2015; Guo et al. 2017; Geifman and El-Yaniv 2017; Hendrycks and Gimpel 2017). For standard models, researchers already know that internal states predict correctness better than final output scores (Burns et al. 2023; Azaria and Mitchell 2023; Chen et al. 2024; Kossen et al. 2024; Xiong et al. 2024; Kadavath et al. 2022; Jiang et al. 2021). They also know that generating extra answers improves ranking (Wang et al. 2023; Kuhn et al. 2023). This extra generation is very expensive for diffusion models because each answer requires many steps. We do not claim to have discovered the gap between internal truth and final certainty. Our own standard models reproduce it. We add a careful measurement of this gap under text errors where it becomes most severe. Very high certainty scores might seem to mean the model has no low certainty errors to skip. We prove this surface reading is false. A simple math adjustment removes the high scores entirely without changing any actual model decisions. What survives this adjustment is a deep loss of ranking ability, an issue the field understands but has not yet measured in noisy environments.
+
+### Conclusion
+
+Under real world text errors diffusion models show a split behavior. Internal states detect errors highly accurately while final certainty stays near maximum and fails to separate right from wrong answers. Since basic training easily recovers lost accuracy, certainty reliability becomes the main roadblock for safe deployment. Concentrated high certainty is the most obvious but least important symptom. A simple math adjustment removes it entirely without altering any model decisions. Once adjusted the massive gap between diffusion and standard models shrinks significantly, revealing a real loss of ranking order. This loss favors standard models in all our noisy comparisons. Basic math adjustments and error detectors cannot fix this because they do not reorder answers.
+Our simple extraction tool partially fixes this to prove the internal signal exists. It updates no model weights and adds zero generation steps, meaning any recovered ranking comes from information the model already possessed but failed to report. Its limits are clear. It requires task specific training data, fails to improve six out of eleven benchmarks, and falls behind methods that generate two or more extra answers. The information needed to know when a diffusion model is wrong already exists inside it. What is missing is the proper connection between that internal truth and the certainty score the model actually reports.
+
+### References
+
+Austin et al. (2021)
+J. Austin, D. D. Johnson, J. Ho, D. Tarlow, and R. van den Berg
+
+Structured denoising diffusion models in discrete state-spaces.
+
+In Advances in Neural Information Processing Systems 34: Annual Conference
+on Neural Information Processing Systems 2021, NeurIPS 2021, December
+6-14, 2021, virtual, M. Ranzato, A. Beygelzimer, Y. N. Dauphin, P. Liang, and J. W. Vaughan (Eds.),
+
+pp. 17981–17993.
+
+External Links: Link
+
+Cited by: Introduction,
+Background and Problem Setup,
+Related Work.
+
+Azaria and Mitchell (2023)
+A. Azaria and T. M. Mitchell
+
+The internal state of an LLM knows when it’s lying.
+
+In Findings of the Association for Computational Linguistics: EMNLP
+2023, Singapore, December 6-10, 2023, H. Bouamor, J. Pino, and K. Bali (Eds.),
+
+Findings of ACL, Vol. EMNLP 2023, pp. 967–976.
+
+External Links: Link,
+Document
+
+Cited by: Introduction,
+Related Work.
+
+Bisk et al. (2020)
+Y. Bisk, R. Zellers, J. Gao, and Y. Choi
+
+Piqa: reasoning about physical commonsense in natural language.
+
+In Proceedings of the AAAI conference on artificial intelligence,
+
+Vol. 34, pp. 7432–7439.
+
+Cited by: Table 3.
+
+Burns et al. (2023)
+C. Burns, H. Ye, D. Klein, and J. Steinhardt
+
+Discovering latent knowledge in language models without supervision.
+
+In The Eleventh International Conference on Learning Representations,
+ICLR 2023, Kigali, Rwanda, May 1-5, 2023,
+
+External Links: Link
+
+Cited by: Introduction,
+Related Work.
+
+Chen et al. (2024)
+C. Chen, K. Liu, Z. Chen, Y. Gu, Y. Wu, M. Tao, Z. Fu, and J. Ye
+
+INSIDE: llms’ internal states retain the power of hallucination detection.
+
+In The Twelfth International Conference on Learning Representations,
+ICLR 2024, Vienna, Austria, May 7-11, 2024,
+
+External Links: Link
+
+Cited by: Related Work.
+
+Clark et al. (2018)
+P. Clark, I. Cowhey, O. Etzioni, T. Khot, A. Sabharwal, C. Schoenick, and O. Tafjord
+
+Think you have solved question answering? try arc, the ai2 reasoning challenge.
+
+arXiv preprint arXiv:1803.05457.
+
+Cited by: Table 3.
+
+Cobbe et al. (2021)
+K. Cobbe, V. Kosaraju, M. Bavarian, M. Chen, H. Jun, L. Kaiser, M. Plappert, J. Tworek, J. Hilton, R. Nakano, et al.
+
+Training verifiers to solve math word problems.
+
+arXiv preprint arXiv:2110.14168.
+
+Cited by: Table 3.
+
+Geifman and El-Yaniv (2017)
+Y. Geifman and R. El-Yaniv
+
+Selective classification for deep neural networks.
+
+In Advances in Neural Information Processing Systems 30: Annual Conference
+on Neural Information Processing Systems 2017, December 4-9, 2017,
+Long Beach, CA, USA, I. Guyon, U. von Luxburg, S. Bengio, H. M. Wallach, R. Fergus, S. V. N. Vishwanathan, and R. Garnett (Eds.),
+
+pp. 4878–4887.
+
+External Links: Link
+
+Cited by: Background and Problem Setup,
+Related Work.
+
+Guo et al. (2017)
+C. Guo, G. Pleiss, Y. Sun, and K. Q. Weinberger
+
+On calibration of modern neural networks.
+
+In Proceedings of the 34th International Conference on Machine Learning,
+ICML 2017, Sydney, NSW, Australia, 6-11 August 2017, D. Precup and Y. W. Teh (Eds.),
+
+Proceedings of Machine Learning Research, Vol. 70, pp. 1321–1330.
+
+External Links: Link
+
+Cited by: Background and Problem Setup,
+Related Work.
+
+Hendrycks and Gimpel (2017)
+D. Hendrycks and K. Gimpel
+
+A baseline for detecting misclassified and out-of-distribution examples in neural networks.
+
+In 5th International Conference on Learning Representations, ICLR 2017,
+Toulon, France, April 24-26, 2017, Conference Track Proceedings,
+
+External Links: Link
+
+Cited by: Related Work.
+
+Hu et al. (2022)
+E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen
+
+LoRA: low-rank adaptation of large language models.
+
+In The Tenth International Conference on Learning Representations, ICLR
+2022, Virtual Event, April 25-29, 2022,
+
+External Links: Link
+
+Cited by: Models, tasks and noise:.
+
+Jiang et al. (2020)
+H. Jiang, P. He, W. Chen, X. Liu, J. Gao, and T. Zhao
+
+SMART: robust and efficient fine-tuning for pre-trained natural language models through principled regularized optimization.
+
+In Proceedings of the 58th Annual Meeting of the Association for Computational
+Linguistics, ACL 2020, Online, July 5-10, 2020, D. Jurafsky, J. Chai, N. Schluter, and J. R. Tetreault (Eds.),
+
+pp. 2177–2190.
+
+External Links: Link,
+Document
+
+Cited by: Related Work.
+
+Jiang et al. (2021)
+Z. Jiang, J. Araki, H. Ding, and G. Neubig
+
+How can we know When language models know? on the calibration of language models for question answering.
+
+Trans. Assoc. Comput. Linguistics 9, pp. 962–977.
+
+External Links: Link,
+Document
+
+Cited by: Related Work.
+
+Jin et al. (2020)
+D. Jin, Z. Jin, J. T. Zhou, and P. Szolovits
+
+Is BERT really robust? A strong baseline for natural language attack on text classification and entailment.
+
+In The Thirty-Fourth AAAI Conference on Artificial Intelligence, AAAI
+2020, The Thirty-Second Innovative Applications of Artificial Intelligence
+Conference, IAAI 2020, The Tenth AAAI Symposium on Educational
+Advances in Artificial Intelligence, EAAI 2020, New York, NY, USA,
+February 7-12, 2020,
+
+pp. 8018–8025.
+
+External Links: Link,
+Document
+
+Cited by: Related Work.
+
+Jones et al. (2020)
+E. Jones, R. Jia, A. Raghunathan, and P. Liang
+
+Robust encodings: A framework for combating adversarial typos.
+
+In Proceedings of the 58th Annual Meeting of the Association for Computational
+Linguistics, ACL 2020, Online, July 5-10, 2020, D. Jurafsky, J. Chai, N. Schluter, and J. R. Tetreault (Eds.),
+
+pp. 2752–2765.
+
+External Links: Link,
+Document
+
+Cited by: Related Work.
+
+Joshi et al. (2017)
+M. Joshi, E. Choi, D. S. Weld, and L. Zettlemoyer
+
+TriviaQA: a large scale distantly supervised challenge dataset for reading comprehension.
+
+In Proceedings of the 55th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers),
+
+pp. 1601–1611.
+
+Cited by: Table 3.
+
+Kadavath et al. (2022)
+S. Kadavath, T. Conerly, A. Askell, T. Henighan, D. Drain, E. Perez, N. Schiefer, Z. Hatfield-Dodds, N. DasSarma, E. Tran-Johnson, S. Johnston, S. E. Showk, A. Jones, N. Elhage, T. Hume, A. Chen, Y. Bai, S. Bowman, S. Fort, D. Ganguli, D. Hernandez, J. Jacobson, J. Kernion, S. Kravec, L. Lovitt, K. Ndousse, C. Olsson, S. Ringer, D. Amodei, T. Brown, J. Clark, N. Joseph, B. Mann, S. McCandlish, C. Olah, and J. Kaplan
+
+Language models (mostly) know what they know.
+
+CoRR abs/2207.05221.
+
+External Links: Link,
+Document,
+2207.05221
+
+Cited by: Related Work.
+
+Khadangi et al. (2025)
+A. Khadangi, A. Sartipi, I. Tchappi, and R. Bahmani
+
+Noise augmented fine tuning for mitigating hallucinations in large language models.
+
+CoRR abs/2504.03302.
+
+External Links: Link,
+Document,
+2504.03302
+
+Cited by: Related Work.
+
+Kossen et al. (2024)
+J. Kossen, J. Han, M. Razzak, L. Schut, S. A. Malik, and Y. Gal
+
+Semantic entropy probes: robust and cheap hallucination detection in llms.
+
+CoRR abs/2406.15927.
+
+External Links: Link,
+Document,
+2406.15927
+
+Cited by: Introduction,
+Related Work.
+
+Kuhn et al. (2023)
+L. Kuhn, Y. Gal, and S. Farquhar
+
+Semantic uncertainty: linguistic invariances for uncertainty estimation in natural language generation.
+
+In The Eleventh International Conference on Learning Representations,
+ICLR 2023, Kigali, Rwanda, May 1-5, 2023,
+
+External Links: Link
+
+Cited by: Related Work.
+
+Li et al. (2026)
+Y. Li, G. Liu, and Z. Zhang
+
+The confidence paradox: unveiling the latent discriminative power of diffusion large language models in mathematical reasoning.
+
+In Findings of the Association for Computational Linguistics, ACL 2026,
+San Diego, California, United States, July 2-7, 2026, M. Liakata, V. P. Moreira, J. Zhang, and D. Jurgens (Eds.),
+
+pp. 43179–43196.
+
+External Links: Link
+
+Cited by: Introduction,
+Diagnostic Findings on Model Robustness,
+Method: From Corruption Routing to a Correctness Readout,
+Related Work.
+
+Liang et al. (2021)
+X. Liang, L. Wu, J. Li, Y. Wang, Q. Meng, T. Qin, W. Chen, M. Zhang, and T. Liu
+
+R-drop: regularized dropout for neural networks.
+
+In Advances in Neural Information Processing Systems 34: Annual Conference
+on Neural Information Processing Systems 2021, NeurIPS 2021, December
+6-14, 2021, virtual, M. Ranzato, A. Beygelzimer, Y. N. Dauphin, P. Liang, and J. W. Vaughan (Eds.),
+
+pp. 10890–10905.
+
+External Links: Link
+
+Cited by: Related Work.
+
+Llama Team (2024)
+Llama Team
+
+The llama 3 herd of models.
+
+CoRR abs/2407.21783.
+
+External Links: Link,
+Document,
+2407.21783
+
+Cited by: Appendix SARabicsection,
+Models, tasks and noise:.
+
+Lou et al. (2024)
+A. Lou, C. Meng, and S. Ermon
+
+Discrete diffusion modeling by estimating the ratios of the data distribution.
+
+In Forty-first International Conference on Machine Learning, ICML 2024,
+Vienna, Austria, July 21-27, 2024, R. Salakhutdinov, Z. Kolter, K. A. Heller, A. Weller, N. Oliver, J. Scarlett, and F. Berkenkamp (Eds.),
+
+Proceedings of Machine Learning Research, Vol. 235, pp. 32819–32848.
+
+External Links: Link
+
+Cited by: Introduction,
+Related Work.
+
+Mihaylov et al. (2018)
+T. Mihaylov, P. Clark, T. Khot, and A. Sabharwal
+
+Can a suit of armor conduct electricity? a new dataset for open book question answering.
+
+In Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing,
+
+pp. 2381–2391.
+
+Cited by: Table 3.
+
+Miyato et al. (2019)
+T. Miyato, S. Maeda, M. Koyama, and S. Ishii
+
+Virtual adversarial training: A regularization method for supervised and semi-supervised learning.
+
+IEEE Trans. Pattern Anal. Mach. Intell. 41 (8), pp. 1979–1993.
+
+External Links: Link,
+Document
+
+Cited by: Related Work.
+
+Mukhoti et al. (2020)
+J. Mukhoti, V. Kulharia, A. Sanyal, S. Golodetz, P. H. S. Torr, and P. K. Dokania
+
+Calibrating deep neural networks using focal loss.
+
+In Advances in Neural Information Processing Systems 33: Annual Conference
+on Neural Information Processing Systems 2020, NeurIPS 2020, December
+6-12, 2020, virtual, H. Larochelle, M. Ranzato, R. Hadsell, M. Balcan, and H. Lin (Eds.),
+
+External Links: Link
+
+Cited by: Appendix SARabicsection.
+
+Naeini et al. (2015)
+M. P. Naeini, G. F. Cooper, and M. Hauskrecht
+
+Obtaining well calibrated probabilities using bayesian binning.
+
+In Proceedings of the Twenty-Ninth AAAI Conference on Artificial Intelligence,
+January 25-30, 2015, Austin, Texas, USA, B. Bonet and S. Koenig (Eds.),
+
+pp. 2901–2907.
+
+External Links: Link,
+Document
+
+Cited by: Background and Problem Setup,
+Related Work.
+
+Nie et al. (2025)
+S. Nie, F. Zhu, Z. You, X. Zhang, J. Ou, J. Hu, J. Zhou, Y. Lin, J. Wen, and C. Li
+
+Large language diffusion models.
+
+CoRR abs/2502.09992.
+
+External Links: Link,
+Document,
+2502.09992
+
+Cited by: Introduction,
+Related Work.
+
+Patel et al. (2021)
+A. Patel, S. Bhattamishra, and N. Goyal
+
+Are nlp models really able to solve simple math word problems?.
+
+In Proceedings of the 2021 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies,
+
+pp. 2080–2094.
+
+Cited by: Table 3.
+
+Pereyra et al. (2017)
+G. Pereyra, G. Tucker, J. Chorowski, L. Kaiser, and G. E. Hinton
+
+Regularizing neural networks by penalizing confident output distributions.
+
+In 5th International Conference on Learning Representations, ICLR 2017,
+Toulon, France, April 24-26, 2017, Workshop Track Proceedings,
+
+External Links: Link
+
+Cited by: Appendix SARabicsection.
+
+Pruthi et al. (2019)
+D. Pruthi, B. Dhingra, and Z. C. Lipton
+
+Combating adversarial misspellings with robust word recognition.
+
+In Proceedings of the 57th Conference of the Association for Computational
+Linguistics, ACL 2019, Florence, Italy, July 28- August 2, 2019,
+Volume 1: Long Papers, A. Korhonen, D. R. Traum, and L. Màrquez (Eds.),
+
+pp. 5582–5591.
+
+External Links: Link,
+Document
+
+Cited by: Related Work.
+
+Sahoo et al. (2024)
+S. S. Sahoo, M. Arriola, Y. Schiff, A. Gokaslan, E. Marroquin, J. T. Chiu, A. Rush, and V. Kuleshov
+
+Simple and effective masked diffusion language models.
+
+In Advances in Neural Information Processing Systems 37: Annual Conference
+on Neural Information Processing Systems 2024, NeurIPS 2024, Vancouver,
+BC, Canada, December 10 - 15, 2024, A. Globersons, L. Mackey, D. Belgrave, A. Fan, U. Paquet, J. M. Tomczak, and C. Zhang (Eds.),
+
+External Links: Link
+
+Cited by: Introduction,
+Background and Problem Setup,
+Related Work.
+
+Sakaguchi et al. (2020)
+K. Sakaguchi, R. L. Bras, C. Bhagavatula, and Y. Choi
+
+WinoGrande: an adversarial winograd schema challenge at scale.
+
+In Proceedings of the AAAI Conference on Artificial Intelligence,
+
+Vol. 34, pp. 8732–8740.
+
+Cited by: Table 3.
+
+Sap et al. (2019)
+M. Sap, H. Rashkin, D. Chen, R. Le Bras, and Y. Choi
+
+Social iqa: commonsense reasoning about social interactions.
+
+In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP),
+
+pp. 4463–4473.
+
+Cited by: Table 3.
+
+Sheshadri et al. (2025)
+A. Sheshadri, A. Ewart, P. Guo, A. Lynch, C. Wu, V. Hebbar, H. Sleight, A. C. Stickland, E. Perez, D. Hadfield-Menell, and S. Casper
+
+Latent adversarial training improves robustness to persistent harmful behaviors in llms.
+
+Trans. Mach. Learn. Res. 2025.
+
+External Links: Link
+
+Cited by: Related Work.
+
+Talmor et al. (2019)
+A. Talmor, J. Herzig, N. Lourie, and J. Berant
+
+CommonsenseQA: a question answering challenge targeting commonsense knowledge.
+
+In Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long and Short Papers),
+
+pp. 4149–4158.
+
+Cited by: Table 3.
+
+Tarvainen and Valpola (2017)
+A. Tarvainen and H. Valpola
+
+Mean teachers are better role models: weight-averaged consistency targets improve semi-supervised deep learning results.
+
+In 5th International Conference on Learning Representations, ICLR 2017,
+Toulon, France, April 24-26, 2017, Workshop Track Proceedings,
+
+External Links: Link
+
+Cited by: Related Work.
+
+Wang et al. (2021)
+B. Wang, S. Wang, Y. Cheng, Z. Gan, R. Jia, B. Li, and J. Liu
+
+InfoBERT: improving robustness of language models from an information theoretic perspective.
+
+In 9th International Conference on Learning Representations, ICLR 2021,
+Virtual Event, Austria, May 3-7, 2021,
+
+External Links: Link
+
+Cited by: Related Work.
+
+Wang et al. (2023)
+X. Wang, J. Wei, D. Schuurmans, Q. V. Le, E. H. Chi, S. Narang, A. Chowdhery, and D. Zhou
+
+Self-consistency improves chain of thought reasoning in language models.
+
+In The Eleventh International Conference on Learning Representations,
+ICLR 2023, Kigali, Rwanda, May 1-5, 2023,
+
+External Links: Link
+
+Cited by: Related Work.
+
+Welbl et al. (2017)
+J. Welbl, N. F. Liu, and M. Gardner
+
+Crowdsourcing multiple choice science questions.
+
+In Proceedings of the 3rd Workshop on Noisy User-generated Text,
+
+pp. 94–106.
+
+Cited by: Table 3.
+
+Xie et al. (2020)
+Q. Xie, Z. Dai, E. H. Hovy, T. Luong, and Q. Le
+
+Unsupervised data augmentation for consistency training.
+
+In Advances in Neural Information Processing Systems 33: Annual Conference
+on Neural Information Processing Systems 2020, NeurIPS 2020, December
+6-12, 2020, virtual, H. Larochelle, M. Ranzato, R. Hadsell, M. Balcan, and H. Lin (Eds.),
+
+External Links: Link
+
+Cited by: Related Work.
+
+Xiong et al. (2024)
+M. Xiong, Z. Hu, X. Lu, Y. Li, J. Fu, J. He, and B. Hooi
+
+Can llms express their uncertainty? an empirical evaluation of confidence elicitation in llms.
+
+In The Twelfth International Conference on Learning Representations,
+ICLR 2024, Vienna, Austria, May 7-11, 2024,
+
+External Links: Link
+
+Cited by: Related Work.
+
+Yang et al. (2024)
+A. Yang, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Li, D. Liu, F. Huang, H. Wei, H. Lin, J. Yang, J. Tu, J. Zhang, J. Yang, J. Yang, J. Zhou, J. Lin, K. Dang, K. Lu, K. Bao, K. Yang, L. Yu, M. Li, M. Xue, P. Zhang, Q. Zhu, R. Men, R. Lin, T. Li, T. Xia, X. Ren, X. Ren, Y. Fan, Y. Su, Y. Zhang, Y. Wan, Y. Liu, Z. Cui, Z. Zhang, and Z. Qiu
+
+Qwen2.5 technical report.
+
+CoRR abs/2412.15115.
+
+External Links: Link,
+Document,
+2412.15115
+
+Cited by: Appendix SARabicsection,
+Models, tasks and noise:.
+
+Ye et al. (2025)
+J. Ye, Z. Xie, L. Zheng, J. Gao, Z. Wu, X. Jiang, Z. Li, and L. Kong
+
+Dream 7b.
+
+Note: https://hkunlp.github.io/blog/2025/dream/
+
+Cited by: Introduction,
+Related Work.
+
+Zellers et al. (2019)
+R. Zellers, A. Holtzman, Y. Bisk, A. Farhadi, and Y. Choi
+
+HellaSwag: can a machine really finish your sentence?.
+
+In Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics,
+
+pp. 3472–3482.
+
+Cited by: Table 3.
+
+Zhang et al. (2025)
+S. Zhang, F. Z. Peng, Y. Zhang, J. Pan, and G. G. Chrysos
+
+Corrective diffusion language models.
+
+CoRR abs/2512.15596.
+
+External Links: Link,
+Document,
+2512.15596
+
+Cited by: Related Work.
+
+Zhou et al. (2021)
+Y. Zhou, X. Zheng, C. Hsieh, K. Chang, and X. Huang
+
+Defense against synonym substitution-based adversarial attacks via dirichlet neighborhood ensemble.
+
+In Proceedings of the 59th Annual Meeting of the Association for Computational
+Linguistics and the 11th International Joint Conference on Natural
+Language Processing, ACL/IJCNLP 2021, (Volume 1: Long Papers), Virtual
+Event, August 1-6, 2021, C. Zong, F. Xia, W. Li, and R. Navigli (Eds.),
+
+pp. 5482–5492.
+
+External Links: Link,
+Document
+
+Cited by: Related Work.
+
+Zhu et al. (2020)
+C. Zhu, Y. Cheng, Z. Gan, S. Sun, T. Goldstein, and J. Liu
+
+FreeLB: enhanced adversarial training for natural language understanding.
+
+In 8th International Conference on Learning Representations, ICLR 2020,
+Addis Ababa, Ethiopia, April 26-30, 2020,
+
+External Links: Link
+
+Cited by: Related Work.
+
+This appendix collects the full derivations of the routing attempts,
+the extended autoregressive-vs-diffusion analysis, the localization and frozen-transfer
+controls, and the ablations, referred to from the main paper. Section, table, figure, and
+equation numbers here are prefixed with “S”; references without the “S” prefix (e.g. “Table 2”) point back into the main paper.
+
+### Appendix SARabicsection Routing attempts: full derivations
+
+#### Routing attempt I—probe-gated confidence penalty (Ncc-Train)
+
+The training component makes the model express the uncertainty it already
+perceives. During fine-tuning we have gold answers, so we can be precise: we penalize
+committed confidence only where (i) the probe flags corruption and (ii) the model is
+actually getting the token wrong. Let be the
+peak (commit) probability and the
+probability mass on the gold token. Define a per-position hedge weight
+
+(4)
+
+which is large exactly when a position is both corruption-influenced ( high) and
+likely wrong ( low), and small on confident-correct positions
+( high) so it does not punish justified confidence. The
+calibration penalty pushes down peak confidence in proportion to the hedge weight:
+
+(5)
+
+Intuitively, on corruption-influenced positions where the model is about to be
+confidently wrong, Eq. 5 spreads probability mass away from the (wrong) peak,
+raising entropy selectively. This is a corruption-gated, correctness-aware
+variant of the confident-output regularizers used for classifier
+calibration (Pereyra et al. 2017; Mukhoti et al. 2020), but tied to the DLM’s own internal
+corruption detector rather than applied uniformly. The full training loss is
+
+(6)
+
+where is the weighted masked negative log-likelihood on the noisy
+input and balance accuracy recovery and
+calibration. Only LoRA adapters are updated.
+
+#### Routing attempt II—risk-deferred commitment (Ncc-Decode)
+
+The decoding component is training-free and exploits the commitment schedule directly.
+The standard rule commits, at each reverse step, the positions with the highest raw
+confidence . We instead commit by a risk-discounted priority
+
+(7)
+
+so that a position that is confidently predicted but flagged as
+corruption-influenced is committed later. Deferring risky positions lets the
+bidirectional decoder first lock in the clean, unambiguous parts of the answer; the
+deferred positions are then resolved with strictly more committed context, which both
+improves their accuracy and makes their eventual commit-confidence more meaningful. Two
+properties matter. First, Eq. 7 changes the order of commitment, not
+the vocabulary distribution, so it is a pure scheduling intervention. Second, it is
+impossible in an AR model, which has a single fixed decoding order; it is a
+control lever unique to diffusion. NCC-Decode composes with any DLM and with
+NCC-Train.
+
+Algorithm 1 NCC decoding with risk-deferred commitment
+
+ 0:
+
+  noisy prompt ; DLM ; probe ;
+schedule ; discount 
+
+ 1:
+
+  initialize canvas 
+
+ 2:
+
+  for to do
+
+ 3:
+
+    for masked ; 
+
+ 4:
+
+// corruption score
+
+ 5:
+
+// risk-deferred priority (Eq. 7)
+
+ 6:
+
+   commit the masked positions with largest ; 
+record at commit
+
+ 7:
+
+  end for
+
+ 8:
+
+  return filled and confidence 
+
+### Appendix SARabicsection Extended results and analyses
+
+##### Fit and notation conventions.
+
+Unless stated otherwise, the extended
+analyses in this section fit the readout on the combined cleannoisy calibration
+pool—the labeled selective AUROC of reported alongside the main results—whereas
+the main-text headline uses the deployment-faithful noisy-only fit (; the
+main-paper calibration table). The two protocols agree on every qualitative
+conclusion and differ only in the size of the reported gain, as discussed in the main text.
+Where a paired-bootstrap appears below, it means the exceedance probability rounds
+to at three decimals—an empirical bound from a finite resample, not a claim of
+certainty.
+
+#### The signal is localized to the answer, not the input
+
+The same-budget table rules out cheaper scalars; a further question is where in
+the representation the readout’s signal lives. Does it read answer-level correctness, or merely
+how hard—or how corrupted—the input was? We separate the two by pooling hidden states over
+the prompt tokens instead of the answer tokens, under three progressively stricter
+controls, all fit with the identical protocol and scored on the same noisy test set
+(Table 4). A probe on the prompt representation from the same forward
+pass the readout uses (the committed prompt-plus-answer sequence) reaches . But DLM attention is bidirectional, so those prompt tokens have already attended to the answer—this is
+not a clean input-only probe. We therefore re-run the model over the prompt alone, with
+no answer appended; the prompt tokenization is byte-identical, so the only thing removed is the
+answer’s bidirectional influence. This truly input-only representation reaches (CI
+), numerically above the raw-confidence scalar ()—the model’s internal
+representation of a corrupted question already encodes some of its difficulty—but well below
+the readout.
+
+The key quantity is the increment the answer adds. The answer representation ()
+exceeds the truly input-only representation by (paired bootstrap , CI
+): a signal that appears only once the answer is written and is absent from
+any representation of the input, hence specifically answer-level rather than a restatement of
+input difficulty. Letting the prompt tokens attend to the answer (the bidirectional pass)
+recovers only of this gap (), leaving the answer representation still
+significantly ahead (, ). Input difficulty thus explains part of the readout’s
+gain over confidence, but a significant, irreducible part requires reading the answer itself—the
+readout’s edge is localized to the answer tokens.
+
+Representation (same budget)
+Sel. AUROC
+ CI
+
+Raw confidence (scalar)
+
+Input-only prompt (no answer, -d)
+
+Joint-pass prompt (attends answer, -d)
+
+Answer readout (LCR, -d)
+
+Table 4: Localizing the readout’s signal (GSM8K, transposition , , identical fit protocol). Pooling prompt tokens from the model’s forward pass gives , but bidirectional attention lets them absorb the answer. Re-running over the prompt alone isolates a genuinely input-only representation at , above the confidence scalar; the answer readout still adds (paired , CI ). Bold marks the best representation, italics the strongest alternative.
+
+#### The confidence degradation is disproportionately a diffusion phenomenon
+
+Is this confidence degradation a property of DLMs, or merely of hard inputs that would break any
+model’s confidence? We rerun the identical protocol—same prompts, transposition noise
+(), geometric-mean confidence, held-out selective AUROC ()—on
+an autoregressive model of the same scale, LLaMA-3-8B (Llama Team 2024), and—to guard against
+reading too much into a single AR—a second, architecturally distinct one, Qwen-7B (Yang et al. 2024);
+we compare their base-confidence discrimination to LLaDA’s and Dream’s
+(Table 5; Figure 7 visualizes the first AR and the two DLMs). Under
+noise both AR models’ confidence remains a better-than-chance ranker of correctness (LLaMA-3
+selective AUROC , CI ; Qwen , CI ; both CIs exclude
+), whereas the DLMs sit at the chance boundary
+(, CI ; , CI , the latter including ). A paired
+bootstrap over the shared prompts sharpens what is and is not established: LLaMA-3’s advantage is
+significant over Dream (, CI , ) but only directional over
+LLaDA (, CI , , n.s.). We therefore make the careful claim
+rather than the strong one—what is robust is that the ARs’ confidence stays
+above chance while both DLMs sit at the chance boundary, not that either
+AR is pairwise-separable from every individual DLM. The second AR, Qwen-7B, reproduces this
+picture: its noisy base confidence also stays above the boundary (, CI ) and is
+statistically indistinguishable from LLaMA-3 (paired difference , ), while its
+own gaps over the DLMs are directional but do not reach significance (vs. Dream ,
+; vs. LLaDA , )—which we report rather than round up. The cross-family
+statement thus does not rest on any single pairwise test. The ARs
+are not immune—their confidence does degrade under noise—but they retain an above-chance signal where
+the DLMs do not. This is consistent with the mechanism proposed in the main paper, which we probe
+behaviorally
+below (Table 6): both families can reconstruct the corrupted problem when asked, but only
+the DLM’s confidence stays high on the resulting errors—consistent with confidence tracking the
+internal consistency of the
+solution it decodes rather than the fidelity of the input, whereas the AR’s confidence still registers
+the corruption. The readout helps wherever confidence is degraded—on LLaMA-3 it adds a significant
+ under noise (, ) but nothing on clean inputs (, n.s.)—so
+it is a general remedy; but the need is greatest for diffusion models, whose confidence
+degrades furthest.
+
+Model
+Type
+Clean
+Noisy
+
+LLaMA-3-8B
+AR
+
+Qwen-7B
+AR
+
+LLaDA-8B
+DLM
+
+Dream-7B
+DLM
+
+Table 5: Base-model confidence as a correctness ranker (held-out selective AUROC, GSM8K, transposition , ). Under noise both autoregressive models retain ranking ability while both diffusion models fall to near chance, an edge that is significant against Dream and directional against LLaDA under a paired bootstrap. The restate-then-resolve probe (Table 6) localizes the collapse to confidence rather than comprehension. Bold marks the strongest ranker in each column.
+
+Figure 7: Base confidence as a correctness ranker, clean against noisy. LLaMA-3 keeps a signal that clears chance under noise, whereas both DLMs fall to the edge of usefulness and Dream’s interval covers chance. Qwen behaves like LLaMA-3 and is listed in Table 5.
+
+##### A direct test: silent repair versus confident error.
+
+The main paper hypothesizes a specific mechanism for the degradation—the model normalizes the
+corrupted prompt into a coherent problem and reports confidence in the solution to that
+problem, so confidence should track internal consistency rather than input fidelity. We test this
+behaviorally with a restate-then-resolve probe on the held-out noisy prompts—a
+functional probe of what the model does with the corrupted input, not a causal manipulation of its hidden
+state—run identically for
+the DLM and the AR baseline. For each committed answer we record its confidence and correctness; for
+every error we then ask the model to rewrite the corrupted prompt as a clean problem and re-solve
+ to obtain . We measure reconstruction fidelity (fraction of the clean problem’s
+numerals recovered in ), recovery ( equals gold), and coherent-misread (
+reproduces the committed error), with -resample bootstrap intervals (Table 6,
+visualized as Figure 4 of the main paper). Two
+facts emerge. (i) The confidence degradation is DLM-specific and complete: every one of the DLM’s
+ errors is high-confidence (mean , statistically indistinguishable from on correct
+answers), whereas the AR is confident on only of its errors at and
+ at (mean error-confidence , below its on correct answers).
+(ii) The two families are indistinguishable on what they do with the corrupted input: both
+reconstruct the clean problem at similar fidelity ( vs. ), reproduce the committed error
+at similar rates ( vs. ), and recover gold at similar rates ( vs. )—every
+DLMAR difference has a bootstrap CI spanning . (Recovery and misread do not sum to one because
+the remaining re-solves diverge from both, reflecting compounding noise in the two-step chain, e.g. an
+occasional language switch in the restatement.) The DLM can reconstruct the true problem when
+asked—the correct reading is accessible—yet its direct answer is confidently wrong. The
+families differ not in whether they repair the input but in whether their confidence registers that a
+repair was needed: the AR’s does, the DLM’s does not. This behavioral signature is
+consistent with the “consistency without fidelity” mechanism, which we confirm directly below
+with a causal intervention on the hidden state (Figure 8); the readout exploits it by
+scoring correctness from the representation rather than the saturated confidence.
+
+##### A causal intervention on the hidden state.
+
+The restate-then-resolve probe is behavioral; we now intervene directly on the representation the
+readout scores, to test whether its correctness axis is causally wired into the model or merely a
+passive correlate. Using the same frozen readout, we form its raw-space correctness direction
+ and add to each answer-token residual at layer 
+through a forward hook—because the readout mean-pools the answer span, this shifts its logit by exactly
+—measuring the effect in a teacher-forced pass over the fixed prompt–answer sequence and
+sweeping on the held-out noisy prompts against norm-matched random control
+directions (Figure 8). Three findings emerge.
+(i) The handle is calibrated (manipulation check): by construction , and
+empirically the intervention moves the readout logit by precisely (slope , CI
+), confirming the hook fires at the intended layer and the pooled readout responds as
+designed; this fixes the scale of (one unit one logit of readout) for the causal test that
+follows. (ii) It causally and specifically shifts the model’s own answer: steering monotonically
+changes the log-probability the model assigns to its committed answer ( per unit , paired
+bootstrap ), whereas norm-matched random directions of equal magnitude move it far less and in
+the opposite direction (paired readoutcontrol difference , )—so the signed
+de-commitment is carried by the correctness direction itself, not by generic perturbation of the residual
+stream. (iii) The sign is de-commitment, not correction: pushing the representation toward
+the readout’s “correct” side lowers the likelihood of the answer the model already committed to,
+and does so similarly whether that answer was in fact correct () or incorrect (;
+difference , ). The readout axis is thus locally opposed to committed-answer
+likelihood—consistent with “consistency without fidelity,” in which the model’s endorsement tracks
+structural coherence rather than correctness. Importantly, the intervention is a handle on confidence,
+not a controller of correctness: it does not raise the gold-answer likelihood ( per
+, ). A stronger, confound-free confirmation comes from re-running the full
+diffusion generation under the same intervention on a separate set (the gold answer is never
+visible): the readout handle remains exact during decoding (slope ), yet re-decoded accuracy
+does not move (LCR slope per , ) and is indistinguishable from the random
+control (specificity ). This is precisely why the effective remedy is a training-free
+readout for
+selective prediction rather than a decoding-time steering intervention: the corrupted reading is fixed
+upstream in prompt encoding (as argued in the main paper), so the answer representation faithfully carries
+the correctness signal—which the readout recovers—but steering it does not, by itself, raise the
+likelihood of the correct answer, consistent with the baseline’s finding that prompt- and decoding-level
+patching fails.
+
+Model
+Conf. on errors
+Fidelity
+Recovery
+Misread
+
+mean
+
+g
+
+LLaDA-8B (DLM)
+
+LLaMA-3-8B (AR)
+
+Table 6: Restate-then-resolve mechanism probe (GSM8K, transposition , held-out noisy prompts). “Conf. on errors” covers all committed errors (DLM , AR ); fidelity, recovery and misread cover confident errors (: DLM , AR ), each a -bootstrap estimate. The DLM is confident on every error, yet both models reconstruct the clean problem, recover gold (g) and reproduce their committed error () at indistinguishable rates (all pairwise CIs include ).
+
+Figure 8: Causal intervention on the readout axis (LLaDA-8B, GSM8K, transposition , held-out noisy prompts). We add along the readout’s correctness direction to each answer-token residual at layer and sweep , measuring in a teacher-forced pass against norm-matched random controls. (A) The intervention is an exact linear handle on the readout (slope ), which fixes the scale of . (B) Steering toward the readout’s “correct” side lowers the log-probability of the model’s own committed answer ( per , paired bootstrap ; bands are CIs), opposite in sign to the control, yet leaves the gold-token likelihood unmoved ( per , ). Re-decoding under the same intervention does not move accuracy (): the axis is a causal handle on confidence, not on correctness.
+
+#### How far does one frozen readout reach?
+
+The generalization experiments above re-fit the readout per condition. A stronger question is
+how far a single frozen readout reaches: we take one probe—fit once on the GSM8K
+cleantransposition calibration split (mean-pooled , )—and apply it
+with no refit to eight target test splits spanning three axes
+(Table 7). The frozen probe transfers across noise family (keyboard
+, insertion , both significant; deletion , n.s.—the same
+length-alignment boundary as before) and across severity (a probe fit at still
+adds , , and at ): it never sees these conditions
+yet recovers most of the in-domain gain. The boundary is task: the same frozen
+GSM8K probe adds only (n.s.) on ARC-Challenge, even though a probe re-fit on ARC
+recovers a significant (the ARC subsection above). The correctness direction is
+therefore noise- and severity-invariant but task-specific: one probe covers the
+corruption families and intensities a deployed model meets on a given task, but a new task needs
+its own one-time calibration fit. This localizes—rather than inflates—the method’s reach.
+
+Target split (one frozen probe)
+Axis
+Base
+Frozen LCR
+ (P)
+
+GSM8K transposition (in-domain)
+—
+
+ ()
+
+GSM8K keyboard
+noise
+
+ ()
+
+GSM8K insertion
+noise
+
+ ()
+
+GSM8K deletion
+noise
+
+ ()
+
+GSM8K 
+severity
+
+ ()
+
+GSM8K 
+severity
+
+ ()
+
+GSM8K 
+severity
+
+ ()
+
+ARC-Challenge
+task
+
+ ()
+
+Table 7: Reach of one frozen readout (GSM8K/transposition anchor, mean-pooled , ) applied with no refit to eight target splits (selective AUROC; in-domain, severity and ARC, for the held-out noise families). It transfers across noise family and severity but not across task, where a re-fit probe instead gains : the correctness direction is noise- and severity-invariant but task-specific. is the paired-bootstrap probability ; bold marks significant gains over base confidence.
+
+#### Corruption severity
+
+The main paper runs at a single severity, , so we check that the ranking gain is not
+an artifact of that operating point. Figure 9 sweeps transposition severity on
+GSM8K from to , re-fitting the readout at each level under the usual
+protocol. LCR stays above base confidence throughout—, , and at
+, , and —and every bootstrap interval excludes zero at
+. Accuracy falls steadily
+with severity while the ranking gain does not, and the two curves do not converge as corruption
+grows. The frozen-probe rows of Table 7 make the same point without refitting:
+a probe fit once at still adds , and at , 
+and .
+
+Figure 9: Ranking ability against corruption severity on GSM8K. The readout stays above base confidence at every severity and the curves do not converge, so the gain is not an artifact of one operating point.
+
+#### Real-world noise: human typos
+
+Our headline corruption is synthetic character transposition. To check that the confidence readout
+reflects the phenomenon rather than that particular process, we repeat the noisy-only protocol on
+real human misspellings, replacing whole words with attested misspellings from a
+machine-readable corpus (Wikipedia’s list of common misspellings; single-word entries).
+This corruption differs from transposition in two ways we state plainly: it is drawn from real human
+errors, and—because the corpus contains no numerals—it leaves the quantities in each problem
+intact. At a per-word rate of it changes of words (comparable to the 
+transposition headline) and touches every test prompt, while preserving the numerals in all .
+
+Two consequences follow, and we report both rather than only the favourable one
+(Table 8). First, because the numbers survive, the task stays largely solvable
+(LLaDA test accuracy versus under transposition), so the base-confidence degradation is
+milder: held-out selective AUROC falls from (clean) to under real typos, against
+ under transposition. Second—and this is the point of the check—the readout still recovers
+a significant amount of ranking ability, (CI , ), lifting
+selective AUROC to , a gain at least as large as the under synthetic noise. The
+readout is therefore not an artifact of character transposition; its benefit persists under a
+non-synthetic input distribution, while the depth of the base degradation tracks how much the
+corruption actually damages the problem.
+
+Noise process
+Acc.
+Base (cleannoisy)
+Readout (, )
+
+Transposition (, synthetic)
+
+ (, )
+
+Real typos (human, numerals kept)
+
+ (, )
+
+Table 8: The confidence readout replicates under real human typos (same noisy-only protocol, LLaDA, GSM8K, ). Real misspellings preserve the numerals, so the task stays solvable and base degradation is milder than under synthetic transposition; the readout’s recovery nonetheless replicates and is at least as large. Bold marks the better ranker under either noise process. Source: ncc_realtypo/realtypo_metrics.json.
+
+#### Ablations and analysis
+
+Five analyses support the readout. (i) The routing negative is real, not
+underpowered. At , NCC-Train exceeds base by selective AUROC (CI
+, n.s.) and differs from consistency by (CI ): the
+probe-gated penalty is indistinguishable from plain consistency, so the readout’s gain
+does not come from the corruption signal. (ii) Layer and pooling. Selective AUROC is
+highest for mean-pooled states at intermediate-to-late layers (L16–L20); CV on the
+calibration split selects this region without peeking at the test set. (iii)
+Abstention. Ranking by the readout and deferring the lowest-scoring answers cuts noisy
+error from to at coverage and lowers the area under the risk–coverage
+curve from (base) to , making the readout directly actionable for selective
+prediction. (iv) The degradation is not an artifact of corrupted labels. Character
+transposition does not protect numerals, so a corrupted GSM8K prompt could in principle alter
+the arithmetic and invalidate its clean gold answer, manufacturing a spurious drop in accuracy
+and confidence quality. We therefore split the noisy test set by whether every numeric token
+survives corruption. On the of prompts that are numeral-preserving—where the
+clean gold provably still applies—base confidence is if anything more degraded
+(selective AUROC ) and the readout recovers it more strongly (, a
+ gain) than on the full test set; on numeral-altered prompts the same pattern is weaker
+but present (base , readout , ). The representation–confidence gap and
+its readout remedy are therefore not driven by label noise from corrupted problems—they are
+strongest where the gold answer is guaranteed intact. Because the numeral test is a
+surface heuristic, we add an independent, model-based criterion: a held-out instruction model
+(LLaMA-3-8B, distinct from the confidence signal) reads each original and corrupted problem and
+judges, through the typos, whether the numbers and question are unchanged. This judge is stricter
+than the numeral test and only weakly correlated with it ( vs. of prompts judged
+preserving; Cohen ), reflecting that the two operationalize preservation
+differently and that neither replaces human annotation. Even so, the readout gain is essentially
+unchanged on the judge-preserving subset (, , ), and accuracy
+there is if anything lower than on the full set ( vs. ): on inputs an independent
+model reads as answer-preserving, the model’s confidence still degrades and the readout still recovers the
+ordering. The effect is thus stable across two different notions of meaning preservation.
+(v) The gain is stable
+across resampling and calibration budget. Over random re-partitions of the noisy
+pool into -calibration / -test (the clean calibration held fixed), the readout
+averages selective AUROC (CI ) against base (CI
+)—a gap (CI ) that is positive on all 
+splits—bracketing the fixed-seed combined-fit value of . A learning curve over the labeled
+calibration budget clears base confidence at every budget and rises with it after an initial
+plateau (Figure 10)— (), (), 
+(), (), ()—so even a -example budget already beats base, and
+the method is not relying on an unusually favorable split.
+
+Figure 10: Data efficiency of the readout. Selective AUROC against the labeled calibration budget (log axis), mean over resampled splits with a CI band. The readout beats base confidence (, dashed) at every budget, is flat between and (, ), and rises to at .
+
+### Appendix SARabicsection Additional supporting results
+
+#### The accuracy axis is largely recovered by a simple baseline
+
+Table 9 reports accuracy under noise on the testbed cell. The
+consistency baseline lifts noisy accuracy from to (a paired
+gain, significant). The three diffusion-native elaborations do not improve on it: a
+timestep-stratified consistency schedule ties it (, n.s.); a hidden-state
+corruption-invariance penalty ties it (, n.s.); and a multi-step rollout
+consistency is significantly worse (; McNemar ), because the
+free-running student chases its own compounding errors and never learns to answer. These
+negative results are, we argue, informative: within this fixed testbed cell the ordering is what matters—our
+diffusion-native elaborations do not beat plain consistency, and one is significantly
+worse—so we read it as a relative result that motivates reallocating effort to
+reliability, not as a claim of a universal accuracy ceiling. The larger reliability
+experiments below inherit consistency’s accuracy () and study the confidence axis on
+top of it.
+
+Method
+Noisy acc.
+ vs. base
+vs. baseline
+
+Base (no tuning)
+
+–
+–
+
+Consistency (baseline)
+
+∗
+–
+
++ stratified schedule
+
+ n.s.
+
++ invariance penalty
+
+ n.s.
+
++ rollout consistency
+
+Table 9: Accuracy under noise (GSM8K, transposition ). A simple consistency objective (italics) recovers most lost accuracy; three diffusion-native elaborations do not beat it, and the numerically best variant (bold) is within noise of the baseline while one is significantly worse. ∗: significant under paired bootstrap / McNemar.
+
+#### The gain requires the hidden state, not a cheaper signal
+
+Could a much cheaper single-pass signal match the readout at the same supervised budget? We
+fit ten same-budget competitors on the identical cleannoisy calibration split and score
+them on the same noisy test set (Table 10): the raw confidence; its
+mean- and minimum-token variants; the mean and maximum per-token predictive entropy; the
+decoded answer length; a supervised Platt rescaling of the confidence; a supervised
+non-monotone histogram binning of it; the score of a supervised corruption detector read off
+the same hidden states; and a supervised two-feature confidence-plus-corruption bundle. None
+clears selective AUROC. The obvious uncertainty proxies a practitioner would try
+first—least-confident token, per-token entropy, answer length—are no better than the
+aggregate confidence, all within noise of chance. Monotone
+rescaling cannot move the ranking at all (, by construction); letting the recalibrator be
+non-monotone lowers it (), i.e. the confidence scalar carries too little
+correctness information to re-rank usefully. Most informative is the corruption detector: on these
+same hidden states it separates clean from corrupted inputs almost perfectly (clean-vs-corrupt
+AUROC ), yet as a correctness ranker it is barely above chance (), and
+adding it to confidence buys only (). The full -dimensional readout
+reaches , a gain over that confidence-plus-corruption bundle (paired bootstrap CI
+, ). The correctness signal is thus broadly distributed in
+the answer-token representation: it is not the model’s confidence, not a one-dimensional
+“how corrupted is the input” axis, and not their linear combination—consistent with our
+thesis that input-level corruption and answer-level correctness are different variables.
+
+Single-pass signal (same budget)
+Sel. AUROC
+ CI
+
+Raw confidence (base)
+
+Mean-token confidence (sup., -d)
+
+Min-token confidence (sup., -d)
+
+Mean-token entropy (sup., -d)
+
+Max-token entropy (sup., -d)
+
+Answer length (sup., -d)
+
+Platt confidence (sup., monotone)
+
+Hist-bin confidence (sup., non-mono.)
+
+Corruption score (sup., -d)
+
+Conf. corruption (sup., -d)
+
+LCR hidden states (sup., -d)
+
+Table 10: Same-budget single-pass baselines (GSM8K, transposition , , all fit on the same clean and noisy calibration split). No cheap scalar clears selective AUROC (italics mark the strongest); only the full hidden-state readout does (bold, over the confidence-plus-corruption bundle, CI ). The corruption detector flags corrupted inputs almost perfectly yet ranks correctness at chance: corruption and correctness are distinct variables.
+
+#### Combining the readout with cheap sampling
+
+Self-consistency ranks correctness better than the readout on GSM8K ( vs. 
+selective AUROC) but costs additional full generations per input, whereas the readout is a
+single extra hidden-state read. It is therefore worth asking whether the free readout and a small
+sampling budget can be combined so that, when only a few samples are affordable, the pair improves
+on sampling alone. We test the simplest parameter-free fusion: for a budget of extra generations
+we form the self-consistency signal from samples, form the readout score, and combine them by
+averaging their ranks; we compare this against spending the same generations on self-consistency
+alone. Significance is a paired bootstrap over prompts that redraws the -sample subset on each
+resample.
+
+The free readout is worth roughly one extra generation in the low-budget regime. At the
+fusion reaches against for one-sample self-consistency (paired gap ,
+ CI , ; Table 11).
+The advantage is modest and confined to the smallest budget: at the gap is already only (), by sampling alone is ahead,
+and by self-consistency () is well ahead. The readout thus helps where sampling is
+least affordable and is dominated once several samples can be drawn; it complements rather than
+replaces sampling.
+
+Budget 
+sampling only
+readout sampling
+
+Table 11: Combining the free readout with cheap sampling. Selective AUROC on GSM8K deployment noise () for -sample self-consistency alone against a parameter-free rank-average of the readout with the same samples. Bold marks the better option at each budget: the fusion helps at (), is indistinguishable at (), and falls behind thereafter. For reference the readout alone scores and base confidence .
+
+### Appendix SARabicsection Robustness of the predictive diagnostic
+
+The main-paper diagnostic (Table 3) sorts eleven tasks
+into five the readout helps and six it does not, using a fit-only margin and a leave-one-task-out
+threshold. Three independent checks confirm that this split is not an artifact of a single
+noise draw, a single calibration sample, or the particular AUROC metric.
+
+#### Stability across input-noise realizations
+
+The headline gains fix one random seed for the input corruption. To test sensitivity to the noise
+draw we re-run the two clearest beneficiaries, GSM8K and ARC-Challenge, under three further seeds
+(the seed controls which characters are transposed; seed is the original headline run), re-fitting
+the readout per seed with the identical CV protocol (Table 12). ARC is uniformly
+robust: the readout beats base confidence on all four seeds (,
+every seed positive; a one-sample -test across the four seed-level gains rejects zero, , , CI ). GSM8K is positive on three of four seeds
+(); the one negative draw (seed ) is not an unusually harsh corruption, since its base AUROC of sits above the four-seed base mean of . What distinguishes it is model selection: cross-validation chose last-token pooling at on that seed, whereas all three positive seeds chose mean pooling at to , a regularization strength some thirty times tighter. The failure is therefore in the selection step rather than in the noise, which matters practically because a deployer cannot audit that step without labels. The other three seeds range to . Because of that spread the four-seed GSM8K mean is not significantly above zero at this sample size (, , CI ); we report it as positive-on-average but seed-sensitive and rest the cross-seed significance claim on ARC. The diagnostic’s beneficiary call
+is stable to the noise seed for both tasks—the calibration-set margin selects GSM8K and ARC at
+every seed; it is the realized GSM8K gain that varies with the noise draw, as expected of a
+task whose base confidence is already comparatively strong.
+
+Task
+seed 
+
+meansd
+
+GSM8K
+
+ARC-Challenge
+
+Table 12: The readout gain across input-noise seeds. Per-seed held-out gain (LCR base) under transposition noise (, ), re-fit independently at each seed. ARC is positive on all four seeds with a cross-seed mean above zero (, ); GSM8K is positive on three of four (seed is a model-selection failure rather than a harsh corruption) but its mean is not significant at this sample size (, ). Seed is the headline run.
+
+#### Stability across the calibration sample
+
+The margin and the deployed readout are estimated on one calibration split. To check that the
+help/null verdict does not hinge on that particular sample, we bootstrap-resample the calibration
+set (), re-fit the deployed readout (fixed CV-selected layer and regularizer) on each
+resample, and re-evaluate on the fixed noisy test set. The verdict is invariant: on every
+one of the five beneficiaries the refit gain stays positive with high probability—ARC
+ (), GSM8K (), SciQ (), TriviaQA 
+(), SVAMP ()—and on every one of the six nulls it does not,
+three of them turning significantly negative (WinoGrande , ; Social IQa ,
+; HellaSwag , ; CommonsenseQA, PIQA, OpenBookQA null). Which tasks
+benefit is therefore a property of the task, not of the calibration draw, and the three tasks the
+diagnostic most confidently withholds are those a refit would have harmed.
+
+#### A deployment-facing metric agrees
+
+Selective AUROC ranks answers; a deployer ultimately cares about the accuracy retained after
+abstaining on the least-trusted answers. We therefore score each task by selective accuracy at
+ coverage and by the area under the risk–coverage curve (AURC, lower is better), comparing the
+readout to base confidence (Table 13). The deployment metric reproduces the split:
+all five beneficiaries gain selective accuracy and lower AURC—SVAMP 
+(AURC ), ARC , SciQ , GSM8K ,
+TriviaQA , all with —while no null improves
+and WinoGrande, the task the readout hurts, gets worse (, AURC ).
+The readout’s advantage is thus not a quirk of the ranking metric: it delivers the operationally
+relevant quantity—more correct answers retained at fixed coverage—on precisely the tasks the
+fit-only diagnostic green-lights.
+
+Task
+sel-acc @
+AURC
+
+(baseLCR)
+(baseLCR)
+
+ARC-Challenge
+
+GSM8K
+
+SciQ
+
+TriviaQA
+
+SVAMP
+
+WinoGrande
+
+PIQA
+
+CommonsenseQA
+
+Social IQa
+
+OpenBookQA
+
+HellaSwag
+
+Table 13: A deployment-facing metric reproduces the help/null split. Selective accuracy at coverage (higher is better) and AURC (lower is better) under deployment noise, base confidence against the readout; is the paired-bootstrap probability the readout is better, bold where it wins. All five beneficiaries improve on both metrics, no null task does, and WinoGrande worsens.
+
+#### An end-to-end abstention gate
+
+The selective metrics above rank answers; a deployer needs a gate that is fixed on calibration data
+and then applied online. We freeze the readout (layer , mean-pooled, ) on the 
+noisy calibration prompts, storing the standardizer, the linear weights, and per-coverage thresholds
+as a small serialized artifact. At serve time each new noisy input contributes one hidden-state read,
+the frozen probe scores it, and the gate answers the top-coverage fraction of the stream.
+
+On the held-out noisy prompts the frozen gate retains more accuracy than a base-confidence gate
+at every coverage (Table 14): at coverage the readout gate keeps 
+against for the base-confidence gate and for answering every input, and the ordering
+holds at ( vs. ) and ( vs. ). These values reproduce the
+GSM8K row of Table 13 from a frozen, serialized probe rather than a re-fit. As an
+execution check we also ran the frozen probe on the diffusion model over further held-out noisy
+prompts end to end—the model generates, the probe consumes the live hidden states, and the gate
+fires online—retaining against for answering all. At this small stream the
+calibration threshold overshoots the intended coverage ( actual vs. target), so the
+coverage-controlled numbers are those from the validation; the live run establishes only
+that the frozen probe drives a working gate outside the fitting pipeline.
+
+Coverage
+answer all
+base-conf. gate
+readout gate
+
+Table 14: A frozen readout drives a working abstention gate. Retained accuracy on held-out noisy GSM8K prompts when the gate answers the top-coverage fraction by score, for answering everything, a base-confidence gate and the frozen readout. The readout gate retains the most accuracy at every coverage, and the column matches the GSM8K row of Table 13.
+
+#### The calibration gain is not a binning artifact
+
+The headline calibration improvement—base to readout on GSM8K under
+deployment noise—is reported with equal-width bins. Because base confidence is saturated
+(mean ), its probability mass sits in the top bin, a regime where equal-width ECE can in
+principle be sensitive to the binning choice. We therefore recompute both ECE values under two
+schemes—equal-width and equal-count (quantile) bins—at , , and bins. The base
+ECE is identical () in all six settings—with saturated confidence
+ irrespective of the bins—and the readout ECE stays in
+, so the base-to-readout reduction lies in a narrow band across every
+scheme and bin count. The calibration gain is therefore a property of the scores, not of the
+binning.
+
+### Appendix SARabicsection Limitations
+
+Several limitations qualify the result, and they fall into three groups.
+
+The first concerns what the readout achieves. It is a modest ranker: its selective AUROC remains well short of what sampling achieves at any budget, and even a single extra generation ranks better. Its case rests on adding no generation at all, and on composing with sampling when the budget is small. Absolute selective performance under noise also stays far from what these systems would need in a setting where abstention genuinely matters.
+
+The second concerns stability. The gain across independent noise draws is significant on ARC but only directional on GSM8K. The one negative draw traces to an unstable model-selection step, not to the corruption itself, which is a failure mode a deployer cannot detect without labels. The benefit is task-dependent, so the calibration-set screening rule belongs to the method and is not an optional extra, and that rule is itself validated on eleven tasks with a narrow margin. The method further assumes a labeled calibration set drawn from the deployment task, a stronger requirement than temperature scaling makes in practice, because the readout does not transfer across tasks the way a scalar does.
+
+The third concerns the scope of our evidence. Our corruption model is programmatic and leaves numerals intact so that answers stay well defined, so the real-typo evaluation we report inherits that restriction and speaks to naturally occurring surface noise, not to adversarial or numeric corruption. The cross-family comparison is suggestive rather than exact, because confidence-ordered decoding selects the diffusion scores we read and no equivalent selection applies autoregressively; the behavioral evidence carries that claim. Finally, we study two diffusion models at the seven to eight billion parameter scale on English benchmarks, and whether the gap narrows with scale, with noise-aware instruction tuning, or in other languages remains open.
+
+ Experimental support, please
+ view the build logs
+ for errors. Generated by
+
+ L
+ A
+ T
+ E
+
+ xml
+
+ .
+
+### Instructions for reporting errors
+
+ We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+ support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+ methods listed below:
+
+ Click the "Report Issue" (
+
+ ) button, located in the page header.
+
+ Tip: You can select the relevant text first, to include it in your report.
+
+ Our team has already identified the following issues. We appreciate your time reviewing and reporting rendering errors we
+ may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+ should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+ all.
+
+ Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a list of packages that need conversion, and welcome developer contributions.
+
+ We gratefully acknowledge support from
+ our major funders,
+ member institutions, ,
+ and all contributors.
+
+ About
+ ·
+ Help
+ ·
+ Contact
+ ·
+ Subscribe
+ ·
+ Copyright
+ ·
+ Privacy
+ ·
+ Accessibility
+ ·
+ Operational Status (opens in new tab)
+
+ Major funding support from
+
