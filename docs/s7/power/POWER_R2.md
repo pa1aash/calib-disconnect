@@ -387,3 +387,106 @@ Script `power_sim_r2_rule2.py` (imports `power_sim_r2.py` unchanged); merge and 
 - Interpolated crossings are linear between sweep points and noisy; the verification table is the check.
 - The refit-noise structure (independent relative perturbations per model and seed, same data across seeds) is an assumption; real fold re-partitioning also changes which samples enter each fit, which would add variance not modeled here.
 - Kappa, mu, and the heterogeneity SDs are those of the R1-rule run (assumptions above).
+
+
+## Red-team follow-up
+
+Scripts: `power_sim_r2_redteam.py` (imports `power_sim_r2.py` unchanged; run `python3 -I docs/s7/parts/power-B2/power_sim_r2_redteam.py`, 1637 s), `redteam_fix.py` (corrects and verifies the k = 20 threshold, see RT5), `merge_redteam.py` (stores results under `r2_refit_rule.redteam` in `power_r2.json` and `thresholds_r2.json`, writes the tables). Raw output `power_r2_redteam.json`. All runs use the R2 refit rule, refit relative SD 0.10 trained and 0.05 probe, kappa 0.801 unless a scenario changes it, delta 0.03 unless stated. Headline, heterogeneous-count, rho_e, and verification cells have 480 replicates (40 worlds x 12); sweep and scenario cells have 240 (20 worlds x 12), so their SE is up to about 0.03 near 0.90. Both widening multipliers are applied to the same replicates: z = 1.645 and t_{12, 0.95} = 1.782 (the multiplier on s_refit; the unwidened rate is also shown).
+
+**Scenario construction.** In the mu scenarios all six mu values are shifted by a common offset chosen (analytic, `brentq`) so the mean mixed count at n = 542 hits a target (k = 10: 200, 170, 140, 120, 100; k = 20: 230, 190, 150, 120, 95, 75). Calibration of the trained separation is redone for every scenario. In the kappa scenarios kappa is 0.4, 0.5, 0.6, 0.7 with the assumed mu. For the heterogeneous-count run model 3 (mu 0.80) is moved to mu 0.9528 so it has about 60 mixed problems at k = 10; the other five keep their assumed mu (207 to 259 mixed, mean about 238).
+
+### RT1. Widening multiplier 1.645 versus t = 1.782 (R2 rule, n = 542, 480 replicates; D1 / D2 / D3, min; SE of D1 in the last column)
+
+| Heterogeneity | k | delta | mean mixed | unwidened | z = 1.645 | t = 1.782 | SE (t = 1.782, D1) |
+|---|---|---|---|---|---|---|---|
+| nominal | 10 | 0.03 | 233.4 | 0.994 / 0.994 / 0.996, min 0.994 | 0.983 / 0.994 / 0.981, min 0.981 | 0.979 / 0.992 / 0.979, min 0.979 | 0.007 |
+| nominal | 10 | 0.02 | 233.4 | 0.802 / 0.890 / 0.915, min 0.802 | 0.704 / 0.854 / 0.831, min 0.704 | 0.685 / 0.848 / 0.812, min 0.685 | 0.021 |
+| nominal | 20 | 0.03 | 277.6 | 1.000 / 1.000 / 1.000, min 1.000 | 0.994 / 0.998 / 0.996, min 0.994 | 0.994 / 0.998 / 0.994, min 0.994 | 0.004 |
+| conservative | 10 | 0.03 | 233.4 | 0.994 / 0.977 / 0.998, min 0.977 | 0.983 / 0.971 / 0.990, min 0.971 | 0.981 / 0.971 / 0.983, min 0.971 | 0.006 |
+| conservative | 10 | 0.02 | 233.4 | 0.806 / 0.871 / 0.910, min 0.806 | 0.673 / 0.812 / 0.829, min 0.673 | 0.662 / 0.804 / 0.817, min 0.662 | 0.024 |
+| conservative | 20 | 0.03 | 277.6 | 0.998 / 0.992 / 1.000, min 0.992 | 0.996 / 0.990 / 0.996, min 0.990 | 0.994 / 0.990 / 0.996, min 0.990 | 0.004 |
+
+(The k = 20, delta 0.02 cells are also in the JSON: nominal min 0.858 and conservative 0.848 at t = 1.782.)
+
+### RT2. Heterogeneous mixed counts (k = 10, delta 0.03, n = 542, 480 replicates): one model at 60 mixed, five near 207 to 259
+
+| Heterogeneity | mixed per model (six) | unwidened | z = 1.645 | t = 1.782 |
+|---|---|---|---|---|
+| nominal | [259.3, 207.5, 259.2, 60.0, 259.0, 208.2] | 0.954 / 0.975 / 0.979, min 0.954 | 0.919 / 0.963 / 0.948, min 0.919 | 0.915 / 0.963 / 0.942, min 0.915 |
+| conservative | [259.3, 207.5, 259.2, 60.0, 259.0, 208.2] | 0.950 / 0.954 / 0.981, min 0.950 | 0.923 / 0.940 / 0.952, min 0.923 | 0.917 / 0.938 / 0.946, min 0.917 |
+
+### RT3. Residual-error correlation rho_e (delta 0.03, n = 542, 480 replicates; baseline rho_e = 0.5 is in RT1)
+
+| Heterogeneity | k | rho_e | SD of point | bootstrap h | t = 1.782: D1 / D2 / D3, min |
+|---|---|---|---|---|---|
+| conservative | 10 | 0.2 | 0.0079 | 0.0114 | 0.944 / 0.952 / 0.965, min 0.944 |
+| conservative | 10 | 0.8 | 0.0061 | 0.0068 | 1.000 / 0.994 / 0.996, min 0.994 |
+| nominal | 10 | 0.2 | 0.0084 | 0.0115 | 0.931 / 0.967 / 0.958, min 0.931 |
+| nominal | 10 | 0.8 | 0.0065 | 0.0069 | 1.000 / 1.000 / 0.994, min 0.994 |
+| nominal | 20 | 0.2 | 0.0065 | 0.0079 | 0.992 / 1.000 / 0.994, min 0.992 |
+| nominal | 20 | 0.8 | 0.0053 | 0.0047 | 1.000 / 1.000 / 0.998, min 0.998 |
+
+### RT4. Min power (t = 1.782, delta 0.03) versus mean mixed count and mean pass-fail pairs per model
+
+n sweep: 240 replicates per point (20 worlds x 12) except the n = 542 point (480). mu and kappa scenarios: n = 542, nominal heterogeneity, 240 replicates, all six models' mu shifted together (offset in `scenario_info`) or kappa changed.
+
+| k | scenario | setting | mean mixed | mean pairs | D1 / D2 / D3 | min |
+|---|---|---|---|---|---|---|
+| 10 | n_sweep | n = 150 | 64.7 | 1090 | 0.579 / 0.804 / 0.733 | 0.579 |
+| 10 | n_sweep | n = 200 | 85.5 | 1440 | 0.725 / 0.842 / 0.854 | 0.725 |
+| 10 | n_sweep | n = 250 | 107.9 | 1822 | 0.846 / 0.942 / 0.892 | 0.846 |
+| 10 | n_sweep | n = 300 | 128.8 | 2173 | 0.867 / 0.958 / 0.908 | 0.867 |
+| 10 | n_sweep | n = 400 | 172.0 | 2900 | 0.967 / 0.983 / 0.975 | 0.967 |
+| 10 | n_sweep | n = 542 | 233.4 | 3928 | 0.979 / 0.992 / 0.979 | 0.979 |
+| 10 | mu_sweep | mu offset +0.1555 | 100.4 | 1653 | 0.675 / 0.838 / 0.838 | 0.675 |
+| 10 | mu_sweep | mu offset +0.1365 | 120.5 | 1987 | 0.762 / 0.863 / 0.871 | 0.762 |
+| 10 | mu_sweep | mu offset +0.1164 | 140.2 | 2321 | 0.858 / 0.912 / 0.921 | 0.858 |
+| 10 | mu_sweep | mu offset +0.0836 | 170.3 | 2832 | 0.904 / 0.963 / 0.917 | 0.904 |
+| 10 | mu_sweep | mu offset +0.0469 | 200.2 | 3347 | 0.929 / 0.971 / 0.975 | 0.929 |
+| 10 | mu_sweep | baseline (mu 0.72/0.80, kappa 0.801, n = 542) | 233.4 | 3928 | 0.979 / 0.992 / 0.979 | 0.979 |
+| 10 | kappa_sweep | kappa 0.4 | 152.7 | 2515 | 0.904 / 0.954 / 0.946 | 0.904 |
+| 10 | kappa_sweep | kappa 0.5 | 177.0 | 2935 | 0.946 / 0.975 / 0.958 | 0.946 |
+| 10 | kappa_sweep | kappa 0.6 | 198.2 | 3303 | 0.942 / 0.971 / 0.975 | 0.942 |
+| 10 | kappa_sweep | kappa 0.7 | 216.6 | 3626 | 0.950 / 0.983 / 0.979 | 0.950 |
+| 10 | kappa_sweep | baseline (mu 0.72/0.80, kappa 0.801, n = 542) | 233.4 | 3928 | 0.979 / 0.992 / 0.979 | 0.979 |
+| 20 | n_sweep | n = 150 | 76.6 | 4581 | 0.921 / 0.958 / 0.938 | 0.921 |
+| 20 | n_sweep | n = 200 | 102.5 | 6111 | 0.950 / 0.983 / 0.954 | 0.950 |
+| 20 | n_sweep | n = 250 | 127.6 | 7620 | 0.975 / 0.992 / 0.971 | 0.971 |
+| 20 | n_sweep | n = 300 | 153.5 | 9161 | 0.988 / 0.996 / 0.979 | 0.979 |
+| 20 | n_sweep | n = 400 | 204.9 | 12217 | 1.000 / 1.000 / 0.988 | 0.988 |
+| 20 | n_sweep | n = 542 | 277.6 | 16570 | 0.994 / 0.998 / 0.994 | 0.994 |
+| 20 | mu_sweep | mu offset +0.1896 | 75.2 | 4251 | 0.412 / 0.708 / 0.667 | 0.412 |
+| 20 | mu_sweep | mu offset +0.1754 | 95.3 | 5406 | 0.821 / 0.892 / 0.887 | 0.821 |
+| 20 | mu_sweep | mu offset +0.1568 | 120.4 | 6871 | 0.950 / 0.975 / 0.963 | 0.950 |
+| 20 | mu_sweep | mu offset +0.133 | 150.4 | 8652 | 0.958 / 0.975 / 0.963 | 0.958 |
+| 20 | mu_sweep | mu offset +0.0978 | 190.6 | 11074 | 0.988 / 1.000 / 1.000 | 0.988 |
+| 20 | mu_sweep | mu offset +0.0576 | 230.7 | 13553 | 0.992 / 1.000 / 1.000 | 0.992 |
+| 20 | mu_sweep | baseline (mu 0.72/0.80, kappa 0.801, n = 542) | 277.6 | 16570 | 0.994 / 0.998 / 0.994 | 0.994 |
+| 20 | kappa_sweep | kappa 0.4 | 186.0 | 10645 | 1.000 / 1.000 / 0.992 | 0.992 |
+| 20 | kappa_sweep | kappa 0.5 | 214.4 | 12431 | 0.996 / 1.000 / 0.992 | 0.992 |
+| 20 | kappa_sweep | kappa 0.6 | 238.9 | 13993 | 0.996 / 1.000 / 0.992 | 0.992 |
+| 20 | kappa_sweep | kappa 0.7 | 259.9 | 15369 | 1.000 / 1.000 / 0.996 | 0.996 |
+| 20 | kappa_sweep | baseline (mu 0.72/0.80, kappa 0.801, n = 542) | 277.6 | 16570 | 0.994 / 0.998 / 0.994 | 0.994 |
+
+### RT5. Thresholds T10 and T20 (delta 0.03, t = 1.782)
+
+| k | bracketed crossings of 0.90 (mean mixed per model) | not bracketed | T (largest bracketed crossing x 1.10, rounded up to 5) | verification run (480 replicates, separate seeds) |
+|---|---|---|---|---|
+| 10 | {'n_sweep': 143.1, 'mu_sweep': 167.7} | min power >= 0.90 at every kappa tested (mixed 152.7 to 233.4) | **185** | mixed 184.8, pairs 3082: D1 0.94, D2 0.983, D3 0.948, min 0.94 |
+| 20 | {'mu_sweep': 110.7} | min power >= 0.90 at every n tested (mixed 76.6 to 277.6); min power >= 0.90 at every kappa tested (mixed 186.0 to 277.6) | **125** | mixed 125.3, pairs 7149: D1 0.946, D2 0.988, D3 0.954, min 0.946 |
+
+
+### Reading the red-team results
+
+1. **t = 1.782 versus 1.645 (RT1).** The change in power is small. At delta 0.03 the minimum over decisions moves from 0.981 to 0.979 (nominal, k = 10), 0.971 to 0.971 (conservative, k = 10), and 0.994 and 0.990 at k = 20 (unchanged to 0.004). At delta 0.02, k = 10, the minimum moves from 0.704 to 0.685 (nominal) and 0.673 to 0.662 (conservative), still far below 0.90, so the margin rule still selects delta = 0.03. With 1.782 the unwidened-to-widened cost at delta 0.03 is 0.015 (nominal) and 0.006 (conservative) at k = 10.
+2. **Heterogeneous counts (RT2).** With one model at 60 mixed and the others at 207 to 259 (mean 209), the six-model decisions are D1 0.915, D2 0.963, D3 0.942 (nominal) and 0.917, 0.938, 0.946 (conservative) at t = 1.782: above 0.90 but 0.06 below the homogeneous cell (233 mixed, min 0.979), limited by D1. The low-count model enters the mean with the same weight as the others and contributes the largest bootstrap variance. A floor on the mean mixed count does not protect against this case; the pilot should report the per-model counts (and pairs) beside the mean.
+3. **Residual-error correlation (RT3).** Lower rho_e is worse: at rho_e = 0.2, k = 10, the minimum is 0.931 (nominal) and 0.944 (conservative); at rho_e = 0.8 it is 0.994 for both. The bootstrap half-width h changes from 0.0115 (rho_e 0.2) to 0.0069 (rho_e 0.8) at k = 10, nominal, because the paired difference P minus S loses variance when their errors are positively correlated. At k = 20 the minimum is 0.992 (rho_e 0.2). The primary value 0.5 sits between; the power conclusion at delta 0.03 holds across the range.
+4. **Pass rate and pass-fail pairs (RT4).** At the same mean mixed count, high-mu scenarios have fewer pass-fail pairs and lower power than the n sweep. At k = 10, 140 mixed problems give min power 0.858 by shifting mu (2321 pairs per model) and about 0.87 by the n sweep at 129 mixed (2173 pairs, 0.867 at 128.8); the crossing of 0.90 comes at 168 mixed in the mu sweep against 143 in the n sweep. At k = 20, the mu sweep falls from 0.95 at 120 mixed to 0.82 at 95 and 0.41 at 75 mixed (4251 pairs), whereas the n sweep is still 0.92 at 77 mixed (4581 pairs). Power tracks pairs more closely than mixed problems alone, and a low count caused by a high pass rate is the worse case. The kappa sweep (kappa 0.4 to 0.7, mixed 153 to 217 at k = 10; 186 to 260 at k = 20) never fell below 0.90, so it brackets no crossing; kappa at 0.4 is the lowest value tested, as instructed.
+5. **Thresholds (RT5).** Take the larger bracketed crossing of the n sweep and the mu sweep, add 10 percent, round up to a multiple of 5: **T10 = 185 mixed problems per model (mean of six), T20 = 125**. Verification runs at these counts (separate seeds, 480 replicates) have minimum power 0.940 (k = 10; 184.8 mixed, 3082 pairs) and 0.946 (k = 20; 125.3 mixed, 7149 pairs). These supersede the R2-rule values of 140 and 90, which came from an n sweep at 1.645 only; the first pass of this run had also set T20 from a kappa-sweep point that was not a bracketed crossing, and that value (205) is superseded (`T_corrected` in the JSON; the original is kept under `T_first_pass_superseded_for_k20`). Against the assumed counts at n = 542 (233 for k = 10, 277 for k = 20) the floors leave factors of 1.3 and 2.2.
+
+### Limits of the red-team run
+
+- Scenario and sweep cells use nominal heterogeneity and 240 replicates; conservative heterogeneity was run only for the headline, heterogeneous-count, and rho_e cells (T10 and T20 are therefore nominal-based; the conservative n-sweep crossings under the R2 rule at z = 1.645 were 139 and 74, versus 131 and 88 nominal, so differences between settings were within 15).
+- Crossings are linear interpolations on noisy points (non-monotone in places); the 10 percent margin and the verification runs are the safeguard, not a proof.
+- The mu-shift scenarios shift all models together by the same offset; the heterogeneous-count run is the only unequal case, with one model.
+- The refit-noise model, kappa, mu, and heterogeneity SDs are the assumptions listed earlier.

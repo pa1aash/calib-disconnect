@@ -1,8 +1,11 @@
 """Wave 7 GPU-hour budget for design R2 (planning arithmetic, not measurements).
 
-Recomputes the R1 section 12 table for the rebalanced model matrix (design R2 section 3)
+Recomputes the R1 section 12 table for the rebalanced model matrix (design R2 section 3).
+The version committed with R2 wrote budget_r2.json; this version adds the red-team V1 change
+(recipe selection repeated under fold seeds 1 and 2) and the V14e correction (LiveCodeBench adapters
+train on four folds, not three) and writes budget_frozen.json for the frozen design
 at k = 10 and at k = 20 (the pre-registered k rule). Throughputs are the R1 planning
-assumptions, with a 12B row interpolated between 8B and 14B. Run: python3 -I budget_r2.py
+assumptions, with a 12B row interpolated between 8B and 14B. Run: python3 -I budget_r2.py budget_frozen.json
 """
 import json, sys
 
@@ -32,7 +35,7 @@ def budget(k):
     # The isotonic map of the trained readout needs out-of-fold scores on all 4 training folds,
     # so each (outer fold, suite) needs 4 inner adapters (R1 counted 1; corrected in R2).
     # Recipe selection (3 learning rates) uses the first inner split only (R2 section 7.4).
-    fin = 0.8 * s_lv * 900; inner = 0.6 * s_lv * 900; lcb_ad = 0.6 * s_lcb * 900
+    fin = 0.8 * s_lv * 900; inner = 0.6 * s_lv * 900; lcb_ad = 0.8 * s_lcb * 900  # four training folds (red team V14e)
     sel = 3 * inner                                   # 3 rates on inner split 1 (EvalPlus suite)
     ev_inner = 3 * inner                              # inner splits 2-4, selected rate, EvalPlus suite
     or_inner = 4 * inner                              # inner splits 1-4, original suite
@@ -43,7 +46,9 @@ def budget(k):
     per_reuse = 5 * (2 * fin)
     # Refits for the R2 refit rule: R is within-problem AUROC, on which the isotonic map is a null player
     # (lexicographic tie-break), so a refit needs only the final adapter (EvalPlus suite).
-    per_refit_seed = 5 * fin
+    # Frozen design (red team V1): recipe selection is repeated per (fold seed, outer fold), so a seed refit
+    # needs the three selection adapters plus the final adapter.
+    per_refit_seed = 5 * (sel + fin)
     # generation
     for sz in ("8B", "12B", "14B", "32B"):
         ms = [m for m, z in PRIMARY.items() if z == sz]
@@ -82,7 +87,7 @@ def budget(k):
     h = cap / LORA["8B"] / 3600 * OVH + cap / LORA["14B"] / 3600 * OVH
     add("Capacity controls (Olmo-3-7B-Instruct and Qwen3-14B)", f"{cap/1e6:.1f}M per model", 2, h)
     h = sum(2 * per_refit_seed / LORA[sz] / 3600 * OVH for sz in PRIMARY.values())
-    add("LoRA refits under fold seeds 1 and 2, all six primary models (final adapters, EvalPlus suite)", f"{2*per_refit_seed/1e6:.1f}M per model", 6, h)
+    add("LoRA refits under fold seeds 1 and 2, all six primary models (selection and final adapters, EvalPlus suite)", f"{2*per_refit_seed/1e6:.1f}M per model", 6, h)
     # generation shift, label-validity, k_g = k
     tr = 2 * 5 * fin / LORA_FULL_8B / 3600 * OVH_FULL
     fresh = N_LV * k * 200 * 2 / ADAPT_GEN_8B / 3600
