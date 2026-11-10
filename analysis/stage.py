@@ -55,9 +55,12 @@ from pipeline.contracts.schemas import FoldPlan, MetricResult
 
 from . import metrics as M
 from .bootstrap import bca_interval, draw, interval_dict, jackknife_counts, percentile_interval
-from .budget import model_budget, pooled_budget
+from . import gap as G
+from . import sensitivity as SENS
+from . import strata as ST
+from .budget import model_budget, pooled_budget, three_player_report
 from .decisions import pooled_residual_report, primary_report
-from .gap import GapInputs, Scores, per_seed_residual, tie_rates
+from .gap import GapInputs, Scores, per_seed_residual, replace_inputs, subset_inputs, tie_rates
 from .generation_shift import GenSet, contrasts, set_rates
 from .krule import k_rule_report
 from .recon_checks import Term, contrast, run_check
@@ -275,7 +278,11 @@ def metrics_rows(scores: dict, md: ModelData, fop, counts) -> list[dict]:
         sc = align(df, md.uids)
         if sc is None:
             continue
-        for lab in ([suite] if suite in md.suites else list(md.suites)):
+        if suite is not None and suite not in md.suites:
+            continue
+        for lab in ([suite] if suite is not None else list(md.suites)):
+            if lab == "lcb_full" and readout.startswith("AGREE"):
+                continue      # section 4: the full-suite labeling sensitivity has no agreement readout
             s = md.scored(sc, lab)
             # Readouts that can be missing for a sample (AGREE for a problem with no agreement inputs,
             # section 4) are scored on the non-missing samples only; never imputed. A non-finite score on
@@ -343,6 +350,134 @@ def seed_residuals(scores, md: ModelData, counts, jk):
         jks.append(rj)
         w_st.append(M.within_problem_auroc(md.scored(st, l1), n_problems=md.n_problems))
     return {"points": pts, "reps": reps, "jk": jks, "w_st": w_st, "flagged": flagged}
+
+
+# ---------------------------------------------------------------------------------------------------
+# Sensitivities, strata, and listings
+# ---------------------------------------------------------------------------------------------------
+def load_release_dates(layout: RunLayout) -> dict[str, str | None]:
+    p = layout.problems("lcb_v6")
+    out: dict[str, str | None] = {}
+    if p.exists():
+        for line in p.read_text().splitlines():
+            if line.strip():
+                r = json.loads(line)
+                out[r["problem_id"]] = r.get("release_date")
+    return out
+
+
+def sensitivity_for(scores, md: ModelData, inp: GapInputs, store: dict, counts, chain: str, labels,
+                    problems, fop, notes: list) -> dict:
+    """Section 1.2, 1.3, 1.5, 4, 6, 7.1 to 7.4, 7.11 sensitivities for one model (analysis.sensitivity)."""
+    m, pop = md.model, md.pop
+    l0, l1 = md.suites
+    out: dict = {"adjustment": "unadjusted (section 9)", "level": SHAPLEY_MARGINAL_LEVEL}
+    subs = {}
+    for name in SENS.PROBE_SUBSTITUTES + SENS.STATED_SUBSTITUTES:
+        df = find(scores, m, pop, name, l1, 0)
+        sc = align(df, md.uids)
+        if sc is not None:
+            subs[name] = sc
+    if subs:
+        out["readout_substitutions"] = SENS.r_substitutions(inp, subs, counts)
+    if "ST_r16" in subs and "ST_r1" in subs:
+        out["capacity_rule"] = SENS.capacity_rule(inp, subs["ST_r16"], subs["ST_r1"], counts)
+    if "ST_head" in subs:
+        out["head_contrast"] = SENS.head_contrast(inp, subs["ST_head"], counts)
+    out["no_tiebreak_budget"] = SENS.budget_vs_primary(store, replace_inputs(inp, use_tiebreak=False), counts)
+    # V1-drop budget
+    if chain == "SZ_V1":
+        dz = find(scores, m, pop, "SZ_V1_drop", None, 0)
+        if dz is not None:
+            ok = np.isfinite(pd.to_numeric(dz["rank_score"], errors="coerce").to_numpy(np.float64))
+            if "missing" in dz:
+                ok &= ~dz["missing"].astype(bool).to_numpy()
+            kept = set(dz.loc[ok, "sample_uid"])
+            mask = np.array([u in kept for u in md.uids])
+            sub_uids = [u for u, k in zip(md.uids, mask) if k]
+            zs = align(dz, sub_uids)
+            zsi = {s: align(find(scores, m, pop, "iso:SZ_V1_drop", s, 0), sub_uids) for s in md.suites}
+            if mask.any() and zs is not None and all(v is not None for v in zsi.values()):
+                alt = replace_inputs(subset_inputs(inp, mask), zero_shot=zs, zero_shot_iso=zsi)
+                out["v1_drop_budget"] = SENS.budget_vs_primary(store, alt, counts)
+                out["v1_drop_budget"]["n_dropped"] = int((~mask).sum())
+    # isotonic-map sensitivities for S^T
+    for name in ("ST_inner234", "ST_insample"):
+        found = {s: align(find(scores, m, pop, f"iso:{name}", s, 0), md.uids) for s in md.suites}
+        found = {s: v for s, v in found.items() if v is not None}
+        if found:
+            alt = replace_inputs(inp, trained_iso={**inp.trained_iso, **found})
+            out[f"iso_map_{name}"] = SENS.budget_vs_primary(store, alt, counts)
+            out[f"iso_map_{name}"]["suites_replaced"] = sorted(found)
+    # extraction-failure and truncation excluded
+    if md.excluded:
+        mask = ~(md.excluded[l0] | md.excluded[l1])
+        n_ex = int((~mask).sum())
+        if n_ex == 0:
+            out["extraction_excluded_budget"] = {"n_excluded": 0, "note": "no excluded sample; equals the primary"}
+        elif mask.any():
+            out["extraction_excluded_budget"] = SENS.budget_vs_primary(store, subset_inputs(inp, mask), counts)
+            out["extraction_excluded_budget"]["n_excluded"] = n_ex
+    # readout-format contrast S^R against S^T at g = 0
+    sr = {s: align(find(scores, m, pop, "SR", s, 0), md.uids) for s in md.suites}
+    sr = {s: v for s, v in sr.items() if v is not None}
+    if sr:
+        out["readout_format_contrast_g0"] = SENS.readout_format_contrast(inp, sr, counts)
+    # LiveCodeBench full-suite labeling sensitivity (no agreement readout)
+    if pop == "lcb":
+        mdf = ModelData(m, pop, ("lcb_public", "lcb_full"), labels, problems)
+        if mdf.uids:
+            alt = gap_inputs(scores, mdf, chain, fop)
+            if alt is not None:
+                rep_f = SENS.budget_vs_primary(store, alt, counts)
+                tp, _ = three_player_report(G.discrimination_cells(alt)["cells"],
+                                            None if counts is None else G.discrimination_cells(alt, counts)["cells"])
+                rep_f["three_player"] = tp
+                out["lcb_full_labeling"] = rep_f
+            else:
+                notes.append(f"{m}/lcb: lcb_full readouts incomplete; full-suite sensitivity skipped")
+    return out
+
+
+def contamination_for(md: ModelData, inp: GapInputs, problems, release_dates, counts) -> tuple[dict, dict]:
+    part = ST.contamination_partition(md.model, problems, release_dates)
+    rep: dict = {"count_date": part["count_date"], "count_date_stated": part["count_date_stated"],
+                 "has_stratum": part["has_stratum"], "adjustment": ST.UNADJUSTED, "partitions": {}}
+    stores: dict = {}
+    if not part["has_stratum"]:
+        rep["note"] = "no LiveCodeBench problem is released after the count date; no contamination stratum"
+    for label, pmask in part["masks"].items():
+        smask = np.asarray(pmask)[inp.problem_index]
+        entry = {"n_problems": int(np.asarray(pmask).sum())}
+        if smask.any() and part["has_stratum"]:
+            r, s = model_budget(subset_inputs(inp, smask), counts, None, secondary=False, routing=False,
+                                three_player=True, diagnostics=False)
+            entry["budget"] = r
+            stores[label] = s
+        rep["partitions"][label] = entry
+    if "post" in stores:
+        other = "pre" if "pre" in stores else "pre_or_unknown" if "pre_or_unknown" in stores else None
+        if other:
+            rep["post_minus_" + other] = ST.term_contrast([stores["post"]], [stores[other]], f"post minus {other}")
+    return rep, stores
+
+
+def lcb_listings(labels: pd.DataFrame, problems: list[str]) -> dict:
+    """Section 6: problems no sample of any model passes under lcb_public, and problems whose public and
+    full-suite labels disagree for every sample that passes the public tests."""
+    lab = labels[labels["problem_id"].isin(set(problems)) & labels["suite_id"].isin(["lcb_public", "lcb_full"])]
+    pub = lab[lab["suite_id"] == "lcb_public"]
+    passes = pub.groupby("problem_id")["y"].max()
+    none_pass = sorted(q for q in problems if q in passes.index and int(passes[q]) == 0)
+    disagree = None
+    if (lab["suite_id"] == "lcb_full").any():
+        wide = lab.pivot_table(index=["problem_id", "sample_uid"], columns="suite_id", values="y", aggfunc="first")
+        wide = wide.dropna()
+        pp = wide[wide["lcb_public"] == 1]
+        g = pp.groupby(level="problem_id")["lcb_full"].max()
+        disagree = sorted(str(q) for q, v in g.items() if int(v) == 0)
+    return {"no_sample_passes_public": none_pass, "public_full_disagree_for_every_passing_sample": disagree,
+            "n_problems_with_public_labels": int(passes.size)}
 
 
 # ---------------------------------------------------------------------------------------------------
@@ -545,7 +680,8 @@ def run(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool 
     sealed = bool(cfg.seal_gamma)
     ops: dict = {"reference_checks": ref_info, "models": {}}
     res: dict = {"metrics": [], "budgets": {}, "per_seed": {}, "pooled": {}, "generation_shift": {},
-                 "reconciliation": None}
+                 "reconciliation": None, "sensitivity": {}, "contamination": {}, "strata": {}}
+    release_dates = load_release_dates(layout) if "lcb" in pops else {}
     draws_by_pop: dict = {}
     written: list[Path] = []
 
@@ -557,7 +693,7 @@ def run(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool 
         draws_by_pop[pop] = draws
         jk = jackknife_counts(len(problems))
         fop = fold_of_problem(layout, pop, problems)
-        stores, chains, seeds = {}, {}, {}
+        stores, chains, seeds, contam = {}, {}, {}, {}
         for m in models:
             md = ModelData(m, pop, suites, labels, problems)
             if not md.uids:
@@ -571,6 +707,12 @@ def run(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool 
             if m in cfg.generation_only_models:
                 continue
             res["metrics"].extend(metrics_rows(scores, md, fop, draws.counts))
+            if pop == "lcb":
+                md_full = ModelData(m, pop, ("lcb_full",), labels, problems)
+                if md_full.uids:
+                    res["metrics"].extend(metrics_rows(scores, md_full, fop, draws.counts))
+            v2s = align(find(scores, m, pop, "SZ_V2", None, None), md.uids)
+            op["v2_degenerate"] = None if v2s is None else bool(np.unique(v2s.rank_score).size == 1)
             inp = gap_inputs(scores, md, chain, fop)
             if inp is None:
                 report.notes.append(f"{m}/{pop}: readouts of the 16-cell game incomplete; budget skipped")
@@ -579,11 +721,19 @@ def run(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool 
                 inp_v2 = gap_inputs(scores, md, "SZ_V2", fop) if chain == "SZ_V1" else None
                 rep, store = model_budget(inp, draws.counts, inp_v2,
                                           secondary=bool(cfg.extra.get("secondary_budgets", True)),
-                                          routing=bool(cfg.extra.get("routing", True)))
+                                          routing=bool(cfg.extra.get("routing", True)),
+                                          three_player=(pop == "lcb"))
                 rep["primary_chain"] = chain
                 res["budgets"][f"{m}|{pop}"] = rep
                 stores[m] = store
                 chains[m] = chain
+                if cfg.extra.get("sensitivities", True):
+                    res["sensitivity"][f"{m}|{pop}"] = sensitivity_for(scores, md, inp, store, draws.counts, chain,
+                                                                       labels, problems, fop, report.notes)
+                if pop == "lcb":
+                    crep, cst = contamination_for(md, inp, problems, release_dates, draws.counts)
+                    res["contamination"][m] = crep
+                    contam[m] = cst
             sr = seed_residuals(scores, md, draws.counts, jk)
             if sr is not None:
                 seeds[m] = sr
@@ -598,7 +748,31 @@ def run(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool 
                                            cfg.benchmarks, draws.counts, report.notes)
                 if gsr is not None:
                     res["generation_shift"][f"{m}|{pop}"] = gsr
+        if stores:
+            res["strata"][pop] = ST.stratum_contrasts(stores)
+        if pop == "lcb":
+            ops["lcb_listings"] = lcb_listings(labels, problems)
+            if contam:
+                pooled_c: dict = {"models": [x for x in ST.CONTAMINATION_POOLED if x in contam],
+                                  "no_stratum": sorted(x for x in contam if not res["contamination"][x]["has_stratum"]),
+                                  "adjustment": ST.UNADJUSTED}
+                for part in ("post", "pre"):
+                    have = [x for x in ST.CONTAMINATION_POOLED if part in contam.get(x, {})]
+                    if have == list(ST.CONTAMINATION_POOLED):
+                        pooled_c[part] = {"four_player": pooled_budget({x: contam[x][part] for x in have}),
+                                          "three_player": ST.term_intervals([contam[x][part] for x in have],
+                                                                            f"{part}, Olmo 3 and Gemma 4", "three")}
+                if "post" in pooled_c and "pre" in pooled_c:
+                    pooled_c["post_minus_pre"] = ST.term_contrast([contam[x]["post"] for x in ST.CONTAMINATION_POOLED],
+                                                                  [contam[x]["pre"] for x in ST.CONTAMINATION_POOLED],
+                                                                  "post minus pre, Olmo 3 and Gemma 4")
+                res["contamination"]["pooled_olmo3_gemma4"] = pooled_c
         if pop == "label_validity":
+            prim = {mm: ops["models"].get(f"{mm}|{pop}", {}).get("v2_degenerate") for mm in PRIMARY_MODELS}
+            n_deg = sum(1 for v in prim.values() if v)
+            ops["k3_degenerate_v2"] = {"per_model": prim, "n_degenerate": n_deg,
+                                       "n_with_v2": sum(1 for v in prim.values() if v is not None),
+                                       "fires": n_deg > len(PRIMARY_MODELS) / 2}
             lv = {mm: ops["models"].get(f"{mm}|{pop}") for mm in PRIMARY_MODELS}
             if all(v is not None for v in lv.values()):
                 ops["k_rule"] = k_rule_report(
@@ -618,6 +792,9 @@ def run(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool 
             pst = {mm: stores[mm] for mm in PRIMARY_MODELS}
             pooled = res["pooled"].setdefault(pop, {})
             pooled["budget_primary_chain"] = pooled_budget(pst)
+            if pop == "lcb":
+                pooled["budget_three_player"] = ST.term_intervals(list(pst.values()), "six primary models, l = lcb_label",
+                                                                  "three")
             pooled["k3_switched_models"] = sorted(mm for mm in PRIMARY_MODELS if chains[mm] == "SZ_V2")
             v2 = {}
             for mm in PRIMARY_MODELS:
@@ -662,6 +839,9 @@ def run(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool 
         if res["generation_shift"]:
             written.append(_write_json(alayout.result("generation_shift"),
                                        {**header, "generation_shift": res["generation_shift"]}))
+        for name in ("sensitivity", "contamination", "strata"):
+            if res[name]:
+                written.append(_write_json(alayout.result(name), {**header, name: res[name]}))
         if res["reconciliation"] is not None:
             written.append(_write_json(alayout.result("reconciliation"), {**header, **res["reconciliation"]}))
     written.append(_write_json(alayout.result("operational"), {**header, **ops}))

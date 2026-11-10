@@ -61,6 +61,7 @@ class GapInputs:
     trained_iso: Mapping[str, Scores]         # fit suite -> iso:S^T
     suites: tuple[str, str] = ("O", "E")
     fold_of_problem: np.ndarray | None = None  # fold seed 0 fold of each problem (d diagnostics)
+    use_tiebreak: bool = True                 # False: the no-tie-break sensitivity (section 1.2)
     _cache: dict = field(default_factory=dict, compare=False, repr=False)
 
 
@@ -97,7 +98,8 @@ def _set(inp: GapInputs, role: str, fit: str | None, label_suite: str) -> Scored
     return scored(inp, _scores_for(inp, role, fit), label_suite)
 
 
-def rank_stats(inp: GapInputs, role: str, fit: str | None, label_suite: str, use_tiebreak: bool = True) -> M.RankStats:
+def rank_stats(inp: GapInputs, role: str, fit: str | None, label_suite: str, use_tiebreak: bool | None = None) -> M.RankStats:
+    use_tiebreak = inp.use_tiebreak if use_tiebreak is None else use_tiebreak
     key = ("rank", role, fit, label_suite, use_tiebreak)
     if key not in inp._cache:
         inp._cache[key] = M.RankStats(_set(inp, role, fit, label_suite), inp.n_problems, use_tiebreak)
@@ -341,3 +343,29 @@ def per_seed_residual(problem_index: np.ndarray, n_problems: int, labels_l1: np.
     point = _first(rp.W()) - _first(rs.W())
     reps = None if counts is None else rp.W(counts) - rs.W(counts)
     return point, reps
+
+
+# ---------------------------------------------------------------------------------------------------
+# Variants of the inputs
+# ---------------------------------------------------------------------------------------------------
+def _sub_scores(sc: Scores, m: np.ndarray) -> Scores:
+    return Scores(rank_score=np.asarray(sc.rank_score)[m], rank_tiebreak=np.asarray(sc.rank_tiebreak)[m],
+                  prob=np.asarray(sc.prob)[m], imputed=None if sc.imputed is None else np.asarray(sc.imputed)[m])
+
+
+def subset_inputs(inp: GapInputs, mask: np.ndarray) -> GapInputs:
+    """The same game on a subset of samples (problem indexing unchanged, so the same draws apply:
+    samples outside the subset simply carry no weight)."""
+    m = np.asarray(mask, dtype=bool)
+    sub = lambda d: {k: _sub_scores(v, m) for k, v in d.items()}  # noqa: E731
+    return GapInputs(problem_index=inp.problem_index[m], n_problems=inp.n_problems,
+                     labels={k: np.asarray(v)[m] for k, v in inp.labels.items()}, probe=sub(inp.probe),
+                     zero_shot=_sub_scores(inp.zero_shot, m), zero_shot_iso=sub(inp.zero_shot_iso),
+                     trained=sub(inp.trained), trained_iso=sub(inp.trained_iso), suites=inp.suites,
+                     fold_of_problem=inp.fold_of_problem, use_tiebreak=inp.use_tiebreak)
+
+
+def replace_inputs(inp: GapInputs, **changes) -> GapInputs:
+    """A copy with some fields replaced and an empty cache."""
+    import dataclasses
+    return dataclasses.replace(inp, _cache={}, **changes)

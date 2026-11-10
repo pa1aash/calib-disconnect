@@ -19,7 +19,26 @@ from . import gap as G
 from . import routing as RT
 from .bootstrap import interval_dict, percentile_interval
 from .decisions import heterogeneity
-from .shapley import SPLIT_POSITIONS, point_terms, readout_change_split, shapley, shapley_replicates
+from pipeline.contracts.schemas import TOGGLES
+
+from .shapley import (LABELS_FIRST, READOUT_FIRST, SPLIT_POSITIONS, point_terms, readout_change_split, shapley,
+                      shapley_replicates)
+
+THREE_PLAYERS = ("r", "t", "d")
+THREE_LABELS_FIRST = ("d", "t", "r")      # the labels-first order without l
+THREE_READOUT_FIRST = ("r", "t", "d")
+
+
+def three_player_cells(cells4: Mapping[str, object], l: int = 1) -> dict:
+    """Cells of the (r, t, d) game at a fixed label coordinate l, keyed "rtd" (section 4: the
+    LiveCodeBench budget has three toggles, at l = lcb_label)."""
+    return {k[:3]: cells4[k] for k in cells4 if k[3] == str(l)}
+
+
+def three_player_report(cells4_pt, cells4_rep, l: int = 1) -> tuple[dict, dict | None]:
+    pt = three_player_cells(cells4_pt, l)
+    rp = None if cells4_rep is None else three_player_cells(cells4_rep, l)
+    return game_report(pt, rp, THREE_PLAYERS, (THREE_LABELS_FIRST, THREE_READOUT_FIRST))
 
 LEVELS = (SHAPLEY_MARGINAL_LEVEL, SHAPLEY_SIMULTANEOUS_LEVEL)
 
@@ -33,20 +52,22 @@ def intervals(points: Mapping[str, float], reps: Mapping[str, np.ndarray], level
             for k in points}
 
 
-def game_report(cells_pt: Mapping[str, float], cells_rep: Mapping[str, np.ndarray] | None) -> tuple[dict, dict | None]:
+def game_report(cells_pt: Mapping[str, float], cells_rep: Mapping[str, np.ndarray] | None,
+                players=TOGGLES, orders=(LABELS_FIRST, READOUT_FIRST)) -> tuple[dict, dict | None]:
     """Shapley result with intervals. Returns (serializable report, per-resample term arrays)."""
-    res = shapley(cells_pt)
+    res = shapley(cells_pt, players, orders)
     rep_terms = None
     out = {"shapley": res.to_dict()}
     if cells_rep is not None:
-        rep_terms = shapley_replicates(cells_rep)
+        rep_terms = shapley_replicates(cells_rep, players, orders)
         out["term_intervals"] = intervals(point_terms(res), rep_terms)
         out["cell_intervals"] = intervals(dict(cells_pt), dict(cells_rep), (SHAPLEY_MARGINAL_LEVEL,))
     return out, rep_terms
 
 
 def model_budget(inp: G.GapInputs, counts: np.ndarray | None, inp_v2: G.GapInputs | None = None,
-                 secondary: bool = True, routing: bool = True) -> tuple[dict, dict]:
+                 secondary: bool = True, routing: bool = True, three_player: bool = False,
+                 diagnostics: bool = True) -> tuple[dict, dict]:
     """Everything per model at fold seed 0. Returns (report, replicate store); the store holds the
     per-resample cells and terms used for model pooling and is not serialized."""
     report: dict = {}
@@ -60,6 +81,14 @@ def model_budget(inp: G.GapInputs, counts: np.ndarray | None, inp_v2: G.GapInput
     store["disc_cells_pt"] = d_pt["cells"]
     store["disc_cells_rep"] = None if d_rep is None else d_rep["cells"]
     store["disc_terms_rep"] = disc_terms
+    store["disc_terms_pt"] = point_terms(shapley(d_pt["cells"]))
+    if three_player:
+        tp, tp_terms = three_player_report(d_pt["cells"], None if d_rep is None else d_rep["cells"])
+        tp["label_coordinate"] = inp.suites[1]
+        report["discrimination_three_player"] = tp
+        store["three_terms_pt"] = point_terms(shapley(three_player_cells(d_pt["cells"]), THREE_PLAYERS,
+                                                      (THREE_LABELS_FIRST, THREE_READOUT_FIRST)))
+        store["three_terms_rep"] = tp_terms
 
     if inp_v2 is not None:
         v_pt = G.discrimination_cells(inp_v2)
@@ -81,6 +110,8 @@ def model_budget(inp: G.GapInputs, counts: np.ndarray | None, inp_v2: G.GapInput
         report["readout_change_split"] = split
         store["split_pt"] = {name: split[name]["point"] for name in split}
 
+    if not diagnostics:
+        return report, store
     report["diagnostics"] = {}
     dd_pt = G.d_diagnostics(inp)
     entry = {"point": dd_pt}

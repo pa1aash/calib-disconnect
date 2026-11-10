@@ -96,6 +96,10 @@ def test_stage_unsealed(tmp_path):
     # one problem excluded by the reference check under E
     assert ops["reference_checks"]["n_valid"] == N_P - 1
     assert ops["k_rule"]["k"] == 20          # tiny synthetic counts are far below T10
+    k3 = ops["k3_degenerate_v2"]           # continuous synthetic V2: never degenerate
+    assert k3["n_with_v2"] == 6 and k3["n_degenerate"] == 0 and k3["fires"] is False
+    assert "P1|label_validity" in json.loads((res / "sensitivity.json").read_text())["sensitivity"]
+    assert "instruct_minus_base" not in json.loads((res / "strata.json").read_text())["strata"]["label_validity"]
     budgets = json.loads((res / "budgets.json").read_text())["budgets"]
     sh = budgets["P1|label_validity"]["discrimination"]["shapley"]
     assert abs(sh["efficiency_gap"]) <= 1e-12

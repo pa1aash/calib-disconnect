@@ -13,10 +13,12 @@ paper comes from a generated LaTeX macro traced to a file there (`paper/STYLE.md
 | `bootstrap.py` | Problem-clustered draws, replicates, percentile intervals with the undefined-replicate rule, BCa |
 | `refit.py`, `decisions.py` | Seed averaging, refit widening, D1 to D3, Holm per model, heterogeneity, K4 sensitivity, R_pool |
 | `shapley.py` | Shapley values, order-2 interaction indices, sequential orders, the split of the readout-change term |
-| `gap.py`, `budget.py` | The 16 cells per model, secondary budgets, diagnostics, per-seed residual; pooled budgets |
+| `gap.py`, `budget.py` | The 16 cells per model, secondary budgets, diagnostics, per-seed residual; pooled budgets; the three-player (r, t, d) LiveCodeBench game at l = lcb_label, which is primary there |
+| `sensitivity.py` | Pre-specified sensitivities as paired differences from the primary on the same draws: readout substitutions, the 7.11 capacity rule, the LoRA-plus-head contrast, no-tie-break, V1-drop, isotonic-map, extraction-excluded, and lcb_full budgets, and the S^R against S^T readout-format contrast; all unadjusted, each skipped when its readout is absent |
+| `strata.py` | Contamination partition by release date against the count date ("post", "pre", "pre_or_unknown"); instruct minus base, reasoning, coder against primary, trajectory, family, and scale contrasts; all unadjusted |
 | `generation_shift.py`, `routing.py` | Section 1.5 contrasts; section 10 routing replay and decision-cost games |
 | `krule.py`, `reconciliation.py`, `recon_checks.py` | Section 13 k rule; section 2.1 outcome rules and verbs; paired check contrasts |
-| `stage.py` | `analysis.stage:run`, the only module with file IO; sealing for the pilot |
+| `stage.py` | `analysis.stage:run`, the only module with file IO; sealing for the pilot. Also writes sensitivity, contamination, and strata results (sealed with the rest), the K3 degenerate-V2 flag, and the LiveCodeBench problem listings (operational) |
 
 Tests: `uv run pytest tests/analysis -q`.
 
