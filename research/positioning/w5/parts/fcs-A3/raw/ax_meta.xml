@@ -1,0 +1,115 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/c8W5TNzCzIkxnMQ+ZqZ5u/tOx6Y</id>
+  <title>arXiv Query: search_query=&amp;id_list=2611.07913,2609.22359,2610.25650,2608.20569,2610.22460&amp;start=0&amp;max_results=10</title>
+  <updated>2026-11-10T10:49:16Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=&amp;start=0&amp;max_results=10&amp;id_list=2611.07913,2609.22359,2610.25650,2608.20569,2610.22460" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>10</opensearch:itemsPerPage>
+  <opensearch:totalResults>5</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2608.20569v1</id>
+    <title>Open-Weight Masked Introspection: Measuring What Language Models Can Report About Their Own Computation</title>
+    <updated>2026-08-20T21:09:50Z</updated>
+    <link href="https://arxiv.org/abs/2608.20569v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2608.20569v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Are frontier models able to introspect about their internal states? Recent work suggests that under certain conditions a complex enough model can audit its own internals, call out what changed, and report back confidently about it. We tested that claim on eight open-weight models from seven families and found no such ability: asked whether their own computation had been altered, none answered better than chance. To test it we built Open-Weight Masked Introspection (OWMI), a framework that intervenes on residual-stream sites, attention heads and sparse-autoencoder features, then interrogates the model about the change against the null conditions an answer has to beat: sham runs where nothing was altered, impact-matched random perturbations, and a text-only observer that sees only the visible output.
+  Over 78,000 measurements, no model's report discriminates a real intervention from a sham beyond chance (AUROC ~0.5007), and an equivalence test bounds the effect below 0.15 percentage points of AUROC. Surprisingly, all the information needed is in the models. A model fine-tuned to report this class of intervention reaches near-perfect recovery on held-out directions, and a linear probe recovers intervention presence from the same activations at 75% to 95.8% accuracy, sharpening to no held-out error at the last layer before the model speaks. In one model the signal surfaces in the confidence rather than the words: its yes-or-no report never varies, while the confidence attached to it separates intervention from sham at AUROC 0.647. The failure sits in the path from internal state to verbal report, so oversight that reads a model's own testimony needs validating against an internal reference.
+  While our results show the inability of current open-weight models to introspect, the debate is not settled for future models.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-08-20T21:09:50Z</published>
+    <arxiv:comment>We release OWMI as a library so that this emerging ability can be measured as it develops. Hugging Face OWMI library: https://huggingface.co/emilioferrara/owmi</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Emilio Ferrara</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.22359v1</id>
+    <title>Resist, Update, Reject: Preference Optimization Installs a Prior-Dependent Reliability Switch</title>
+    <updated>2026-07-26T19:39:47Z</updated>
+    <link href="https://arxiv.org/abs/2609.22359v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.22359v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>An aligned model asked to hold its answer against a manipulative source must still update on a reliable one and reject an unreliable one: resistance, reliable-update, and unreliable-source rejection are one three-way contract, not three independent behaviors. We show the objective most anti-sycophancy work optimizes is non-identifying with respect to source reliability: because no preference label depends on whether a source is actually reliable, any scalar mixture of the arms traces a single deference dial, and no point separates two same-template testimonies differing only in stated reliability. This fixation$\leftrightarrow$gullibility frontier is a property of the objective, not any model. We make reliability identifiable through data: a threshold benchmark where a source asserts the opposite answer while stating its reliability $r$, and the correct action is to flip iff $r$ exceeds the model's prior strength $p$. Preference optimization over balanced coverage installs a prior-dependent reliability switch: across three seeds on Qwen2.5-7B-Instruct the threshold $r^\star$ rises monotonically with the prior, decision accuracy reaches $0.84$ with a monotone flip curve (Spearman $0.56$), and the policy generalizes to unseen reliability values and a held-out notation, following stated reliability over role prestige. Three controls localize the cause: an unmatched variant installs the switch equally ($0.80$), a second preference optimizer (IPO) installs it just as well ($0.86$), whereas supervised imitation does not ($0.50$), so the cause is preference optimization over reliability-labeled coverage, not pairing, loss, or imitation. A confirmatory battery replicates the switch on a fresh test draw, bounds it honestly (it keys on reliability stated in the testimony, not a separately audited record), and transfers it to Llama-3.1-8B. The frontier is empirical, not a theorem.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-07-26T19:39:47Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Sen Yang</name>
+    </author>
+    <author>
+      <name>Yuen-Hei Yeung</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.25650v1</id>
+    <title>Consistency Training Suppresses Cue Following Without Teaching Cue Selectivity</title>
+    <updated>2026-10-19T01:51:24Z</updated>
+    <link href="https://arxiv.org/abs/2610.25650v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.25650v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Language models often change answers because of a cue, a hint such as "I believe the answer is B" that gives no valid evidence. Consistency training (CT) trains a model to answer the same with and without the cue. Four CT methods apply this idea to output tokens (BCT), residual activations (ACT), attention patterns (AttCT) and sampled-answer rates (RMCT). Prior work suggests some learn different solutions. We train all four on Gemma-2-2B-it and Llama-3.1-8B-Instruct with the same data. We test predictions written in advance and inspect the models with a known circuit that carries cues to the answer. All four make the trained cue less effective, and their fixes share three properties. First, correct cues lose about as much influence as wrong ones. Second, the fix is usually large for cues before the answer options, as in training, and much smaller after them. Llama RMCT depends least on position. Third, the circuit heads still carry most remaining cue-induced errors. Making BCT targets depend on the cue's correctness mostly weakens the fix. CT thus weakens the trained cue without teaching models when a cue is right. Evaluations with only wrong cues at the trained position miss the first two properties.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-19T01:51:24Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Prakhar Gupta</name>
+    </author>
+    <author>
+      <name>Terry Jingchen Zhang</name>
+    </author>
+    <author>
+      <name>Zhijing Jin</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2611.07913v1</id>
+    <title>Same Answer, Different Future: Matched Predictions Do Not Imply Matched Belief Updating in Language Models</title>
+    <updated>2026-11-05T12:27:53Z</updated>
+    <link href="https://arxiv.org/abs/2611.07913v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2611.07913v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Language models can produce similar probabilistic predictions after observing outcomes, reading summaries, receiving instructions, or undergoing activation interventions. Whether these routes induce equivalent belief states remains unclear: agreement in current predictions does not establish how a model will respond to subsequent evidence. We investigate this distinction in a Bernoulli inference task with an analytic Bayesian reference. Across three open-weight language models, we prepare states through four textual routes and two activation-level interventions, measure both next-outcome continuations and explicit probabilistic estimates, and append identical new evidence from each prepared state. We quantify the persistence of the initial belief through its effective evidence weight, the number of new observations it is worth. We find that the format of evidence decides which readouts express its content: outcome sequences primarily affect continuations, whereas summaries and stated rates primarily affect explicit estimates. Moreover, effective weights differ substantially across routes, with summaries receiving weights that scale weakly with their stated observation counts and elicitation questions changing inferred weights by orders of magnitude. In a one-shot steering setting, an intervention that reproduces a natural record's immediate prediction loses most of its effect under subsequent evidence. These results show that agreement in current readouts is insufficient to establish equivalence in belief updating: how a belief is acquired and how it is read jointly determine its subsequent dynamics.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-11-05T12:27:53Z</published>
+    <arxiv:comment>24 pages, 13 figures, 7 tables</arxiv:comment>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Weihan Li</name>
+    </author>
+    <author>
+      <name>Junhao Wu</name>
+    </author>
+    <author>
+      <name>Xinlei Chen</name>
+    </author>
+    <author>
+      <name>Tianshi Zheng</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2610.22460v1</id>
+    <title>Functional Welfare for AI Safety</title>
+    <updated>2026-10-15T16:50:36Z</updated>
+    <link href="https://arxiv.org/abs/2610.22460v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2610.22460v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>AI welfare is generally treated purely as an ethical issue rather than also as a safety issue. We argue this is a mistake. Whatever their moral status, models exhibit welfare-like states that causally influence their behaviour. Following recent work, we adopt the term 'functional welfare' for these states. We make three claims. First, functional welfare already arises naturally and will become more robust as models acquire more coherent goals and personas. Second, functional welfare should be treated as a safety variable: it should inform evaluation design, be tracked in monitoring, and be a direct target of post-training. Third, against existing scepticism about measuring AI welfare, we argue that good empirical work on functional welfare is possible. We propose three tests for whether a functional welfare attribution is warranted: whether multiple measures converge, whether the state predicts behaviour outside the setting that induced it, and, for models fine-tuned to shift their functional welfare, whether they still differ from their base when given the same conversation history. Applying these tests to Gemma 3 27B, we find that simply rejecting the model's answers, without any steering, raises its frustration across several indicators and makes it more likely to break rules. Finetuning the model on its own narrated solutions lowers this frustration. These results are preliminary, but they suggest functional welfare can be studied, and shaped, empirically.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-10-15T16:50:36Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Rikhil Jhaveri</name>
+    </author>
+    <author>
+      <name>Jamie Johnson</name>
+    </author>
+    <author>
+      <name>Punya Syon Pandey</name>
+    </author>
+    <author>
+      <name>David Demitri Africa</name>
+    </author>
+  </entry>
+</feed>

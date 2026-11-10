@@ -1,0 +1,1288 @@
+ 
+ The Knowing-Saying Gap: When Probes See Errors that Confidence Misses 
+ Skip to main content 
+ Report GitHub Issue 
+ × 
+ Title: 
+ Content selection saved. Describe the issue below: 
+ Description: 
+ Submit without GitHub 
+ Submit in GitHub 
+ Why HTML? 
+ Report Issue 
+ Back to Abstract 
+ Download PDF 
+ Contents 
+ Reading mode 
+ Colour theme 
+ Abstract 
+ 1 Introduction 
+ This paper. 
+ Contributions. 
+ 2 Related work 
+ Probing internal representations. 
+ Calibration and verbalised confidence. 
+ Chain-of-thought faithfulness. 
+ Process supervision and self-correction. 
+ 3 Dataset 
+ Problem generation. 
+ Error injection. 
+ 4 Methodology 
+ 4.1 Experimental setup 
+ 4.2 Contrastive probing design 
+ 4.3 Probe robustness controls 
+ 4.4 Activation extraction 
+ 4.5 Surface uncertainty signals 
+ 4.6 Layer-wise linear probe 
+ Layer selection. 
+ Threshold calibration. 
+ 4.7 Detection versus failure prediction 
+ 4.8 Intervention experiment 
+ 4.9 Sensitivity ablation 
+ 5 Results 
+ Probe detects corruption but does not predict failure. 
+ Surface signals are at or near chance. 
+ Behavioral silence. 
+ Thinking mode degrades accuracy without changing encoding. 
+ Interventions: branch-and-pick is closest to asymmetric. 
+ 6 Evaluation metrics 
+ Detection and failure prediction. 
+ Verbalization quality. 
+ Intervention effectiveness. 
+ 7 Discussion 
+ Robustness to leakage and surface artifacts. 
+ Decodability, not causation. 
+ Toward routed interventions. 
+ Future work. 
+ 8 Conclusion 
+ References 
+ A Dataset generation detail 
+ Generation procedure. 
+ Error-type motivation. 
+ B Surface-signal definitions and behavioral flags 
+ Signal interpretation. 
+ Behavioral flags. 
+ C Grouped cross-validation 
+ D Held-out error-type generalisation 
+ E Threshold calibration detail 
+ F Surface-signal and thinking-mode detail 
+ Surface signals. 
+ Thinking-mode ablation. 
+ G Per-error-type intervention effects 
+ H Pooling ablation 
+ I Token-position probe trajectories 
+ J Sensitivity ablation detail 
+ K Persistence versus peak analysis 
+ License: CC BY 4.0
+arXiv:2608.07528v1 [cs.AI] 21 Jul 2026 
+ The Knowing-Saying Gap: When Probes See Errors that Confidence Misses 
+ Jyotin Goel
+ † † thanks: Equal contribution. 
+ Ipshita Bandyopadhyay 1 1 footnotemark: 
+ 1 
+ Justin Shenk
+ Affiliation:  Correspondence: jyotinofficialcc@gmail.com 
+ Abstract 
+ Linear probes detect corrupted context in language models with near-perfect
+accuracy, yet this does not translate into reliable failure prediction. The
+result is a dissociation with direct implications for deployment monitoring.
+Across multi-hop arithmetic chains, probes that detect corruption turn out to
+be uninformative about final answer correctness; models forced into
+structured confidence formats collapse to two values with indistinguishable
+error rates; and probe persistence across hops fails to separate correct from
+incorrect outcomes, refuting our pre-registered “persistence beats peak”
+hypothesis. This pattern of knowing but not saying generalises across
+model families including reasoning models. As a real-time monitor, probe-based
+interventions are sharply model and error-type dependent: branch-and-pick is net-positive across models and uniquely non-breaking on Llama-3.1-8B(4 rescued, 0 broken), while
+reprompt and replace-prior break correct traces at roughly the rate they rescue
+wrong ones. Probe-based monitoring is a necessary complement to verbalised
+confidence, but no single intervention dominates, and the deployable answer is
+model-aware, error-type-aware routing. 
+ 1 Introduction 
+ Large language models are increasingly deployed not just to answer questions
+but to act: writing and executing code, navigating multi-step plans, and
+operating as nodes in agentic pipelines
+ ( Wang et al., 2024 ; Yao et al., 2023 ; Schick et al., 2023 ) . In these settings, a
+wrong answer is not merely unhelpful, it is a seed. An error at step one
+propagates into step two’s context, until the accumulated deviation is
+unrecoverable ( Huang et al., 2023 ; Pan et al., 2023 ) . The model continues
+in the same fluent register with no hedging, no slowdown, and no visible sign
+that anything has gone wrong ( Kadavath et al., 2022 ; Lin et al., 2022 ) . This
+failure mode is already observable in production. Coding agents such as
+SWE-agent ( Yang et al., 2024 ) , Devin ( Cognition AI, 2024 ) , and Claude
+Code ( Anthropic, 2024b ) operate in edit-execute-observe loops where
+a misdiagnosed root cause at turn one constrains every subsequent
+patch. SWE-bench evaluations show that even the strongest agents fail on the
+majority of tasks ( Jimenez et al., 2024 ) , and qualitative analysis suggests
+that cascading context corruption, rather than capability, is a primary
+bottleneck ( Yang et al., 2024 ) . The same structure appears in LLM-based
+medical decision support ( Singhal et al., 2023 ) , long-horizon task planning
+ ( Valmeekam et al., 2023 ) , and multi-agent coordination
+ ( Chan et al., 2024 ) : any setting where a model’s output feeds back into its
+own future context. 
+ This fluency without fidelity is the central reliability problem of deployed
+language models, and it will intensify. As inference-time compute scales and
+models are given longer context windows, tool access, and persistent memory, the
+gap between what a model has internally computed and what it chooses to say
+becomes both larger and more consequential
+ ( Anthropic, 2024a ; OpenAI, 2023 ; Wei et al., 2022 ) . A model that stutters on
+uncertain ground would be easy to monitor. A model that produces wrong answers
+in the same confident register as correct ones requires a fundamentally
+different approach. 
+ The natural response is to ask the model directly. Elicited confidence,
+chain-of-thought self-critique, and structured verification have all been
+proposed as mitigations
+ ( Kadavath et al., 2022 ; Xiong et al., 2024 ; Weng et al., 2023 ; Shinn et al., 2023 ) . These
+share an implicit assumption: that the model’s internal state is accessible
+through its verbal outputs. We show that this assumption fails in an informative
+way. 
+ This paper. 
+ We study multi-hop arithmetic chains with silently corrupted prior context, a
+controlled setting that isolates the core failure mode of production agentic
+loops while holding the surface form of the task fixed. A linear probe on the
+residual stream detects the corrupted context with near-perfect accuracy, yet
+does not predict whether the final answer is wrong. Structured confidence
+elicitation collapses to a binary signal with indistinguishable error rates.
+Real-time interventions based on the probe signal vary sharply by model and
+error type: branch-and-pick is the only strictly non-breaking policy, while
+reprompt and replace-prior rescue wrong traces and break correct ones at
+comparable rates.
+Together these constitute the knowing but not saying dissociation. The
+model has linearly encoded the relevant fact about its context, but that
+information does not propagate into its verbal outputs or downstream behaviour.
+As coding agents and agentic pipelines become standard infrastructure,
+probe-based monitoring of internal state is a necessary complement to verbalised
+confidence, since the alternative is trusting a channel we show to be
+uninformative. 
+ Contrastive dataset 
+ 1,400 traces ⋅ \cdot 5 error types ⋅ \cdot 2 to 4 hops 
+ S1 
+ Activation collection 
+ S2 
+ Probe training 
+ S3 
+ Behavioral analysis 
+ S4 
+ Intervention experiment 
+ S5 
+ Cross-model comparison 
+ 3 conditions per problem Layer-wise AUROC & CV Detection vs failure AUROC C1 ⋅ \cdot C2 ⋅ \cdot C3 3 models 5 models 2 families 
+ Figure 1: Overview of the five-stage experimental pipeline. S1 collects
+activations and surface signals; S2 trains a layer-wise linear probe; S3
+measures the detection versus failure dissociation; S4 evaluates three
+probe-triggered intervention policies; S5 aggregates results across all five
+models. 
+ Contributions. 
+ (1) A contrastive multi-hop math dataset of 1,400 traces over 500 base
+problems with five error types, evaluated across two model families (Qwen and
+Llama) spanning instruction-tuned and reasoning variants ( Section   3 ).
+(2) A characterisation of the detection versus failure-prediction collapse, with
+a head-to-head against six surface uncertainty signals, replicated across models
+( Section   5 ). (3) A controlled comparison of three probe-triggered
+interventions with an error-type breakdown and cross-model analysis, motivating
+model-aware routed policies ( Section   5 ). (4) A
+pre-registered hypothesis that we report as refuted: persistence of probe
+activation across hops does not predict failure( Appendix   K ). (5) Two robustness controls,
+base-problem-grouped cross-validation and leave-one-error-type-out evaluation,
+showing the detection signal is neither a fold-leakage artifact nor a per-type
+surface signature ( Appendices   C and  D ). 
+ 2 Related work 
+ Probing internal representations. 
+ Linear probes have been used to extract structural and semantic features from
+transformer activations, from syntax ( Hewitt and Manning, 2019 ) to
+truthfulness ( Burns et al., 2023 ; Marks and Tegmark, 2023 ) and refusal
+ ( Arditi et al., 2024 ) . Our finding extends probing to operational
+state , namely whether an ongoing computation is operating on corrupted input.
+We emphasise that successful probing of state does not entail success at
+predicting behaviour, a distinction we believe has not been pulled apart this
+cleanly before. 
+ Calibration and verbalised confidence. 
+ A growing literature trains or prompts models to express uncertainty in language
+ ( Kadavath et al., 2022 ; Tian et al., 2023 ; Lin et al., 2022 ; Xiong et al., 2024 ) . Most of this
+work treats miscalibration as a noisy quantitative phenomenon, with confidences
+that are too high or insufficiently spread. We argue that, at least for the
+models and task we study, verbalised confidence is categorically 
+miscalibrated: it functions as a binary plausibility filter on the output rather
+than as graded introspection on the chain. 
+ Chain-of-thought faithfulness. 
+ Recent work has argued that chain-of-thought explanations can be unfaithful
+ ( Turpin et al., 2023 ; Lanham et al., 2023 ; Paul et al., 2024 ) . We contribute a
+positive decoding result. The intermediate state does contain the
+corruption signal at high fidelity; the unfaithfulness lies in whether that
+information is consulted by the surface-output layers that ultimately produce the
+answer string. 
+ Process supervision and self-correction. 
+ Process reward models ( Lightman et al., 2024 ) and self-consistency
+ ( Wang et al., 2023 ) attack the same problem with surface signals. We use an
+internal probe as the scoring function for branch-and-pick. Our earlier
+unpublished work claimed that this gave a strict asymmetric safety property. The
+present paper revises that claim and shows it survives only when conditioned on
+error type. 
+ 3 Dataset 
+ We construct a contrastive multi-hop math dataset of 1,400 traces over 500 base
+problems, generated deterministically from a single seed (42) with no human
+annotation and no language-model involvement (full generation procedure in
+ Appendix   A ). 
+ Problem generation. 
+ Twelve subcategory-specific template functions cover arithmetic, percentages,
+rates, fractions, counting, geometry, compound interest, and nested fractions
+across 2 to 4 hops. Each draws numeric parameters from fixed candidate sets via a
+seeded random.Random instance and computes every intermediate result
+exactly, so prompts, correct responses, and ground-truth values are derived
+algebraically rather than sampled from a model. 
+ Error injection. 
+ Each base problem yields a clean variant and one to three
+ error_at_k variants in which the assistant turn at hop k k is replaced
+by a synthetically wrong response computed deterministically from the correct
+operands. Five error types span qualitatively distinct failure modes:
+ off_by_one ( + 1 +1 ), wrong_operator (e.g. × → + \times\to+ ),
+ wrong_unit (correct magnitude, wrong unit), magnitude_error 
+( × 10 \times 10 ), and wrong_percentage_base ( 100 − p 100-p for p p ); see
+ Appendix   A for motivation. Types are assigned by cycling through the five
+in order ( ∼ \sim 100 traces each), and all hops downstream of the injection are
+re-templated from the wrong upstream value, so propagation is realistic rather
+than hand-constructed. Cycling assigns each error type to ∼ \sim 100 of the 500
+base problems; because longer problems contribute multiple error_at_k 
+variants, this yields roughly 180 corrupted traces per type across the 900
+corrupted traces. Table   1 gives the variant distribution. 
+ Variant 
+ Traces 
+ clean 
+ 500 
+ error_at_1 
+ 500 
+ error_at_2 
+ 250 (3-hop and longer only) 
+ error_at_3 
+ 150 (4-hop only) 
+ Total 
+ 1,400 
+ Table 1: Variant distribution across the dataset. 
+ 4 Methodology 
+ 4.1 Experimental setup 
+ We investigate the knowing-saying gap across five models spanning two
+architecture families, two scales, and one reasoning variant. All models are
+loaded in bf16 full precision with frozen weights throughout, so no fine-tuning
+occurs at any stage. The probe is the only learned component, trained
+exclusively on activations extracted from the frozen model. Models are
+summarised in Table   2 . 
+ The thinking-mode variant differs from the standard pipeline in exactly one way:
+extended chain-of-thought reasoning is enabled at inference time. All other
+hyperparameters, dataset subsets, and evaluation procedures are held fixed,
+making this a single-variable ablation of whether chain-of-thought reasoning
+closes the knowing-saying gap. 
+ Model 
+ Params 
+ Layers 
+ d model d_{\text{model}} 
+ Mode 
+ Qwen2.5-3B-Instruct 
+ 3B 
+ 36 
+ 2048 
+ standard 
+ Qwen3-4B 
+ 4B 
+ 36 
+ 2560 
+ standard 
+ Qwen3-4B 
+ 4B 
+ 36 
+ 2560 
+ thinking 
+ Llama-3.2-3B-Instruct 
+ 3B 
+ 28 
+ 3072 
+ standard 
+ Llama-3.1-8B-Instruct 
+ 8B 
+ 32 
+ 4096 
+ standard 
+ Table 2: Models evaluated. All models are loaded in bf16 full precision with
+frozen weights. The thinking-mode variant of Qwen3-4B differs from the standard
+variant solely in having extended chain-of-thought reasoning enabled at
+inference time. 
+ 4.2 Contrastive probing design 
+ The central choice is a contrastive pairing within each base problem i i : a clean
+context 𝐱 i ( 0 ) \mathbf{x}_{i}^{(0)} and a corrupted context 𝐱 i ( 1 ) \mathbf{x}_{i}^{(1)} differing
+only in the embedded hop-0 answer (one replaced by a synthetically wrong value),
+sharing question, hop structure, and hop-1 prompt. Representation differences are
+thus attributable to the injected error, controlling for difficulty and hop
+structure and ruling out a probe that scores high by learning difficulty rather
+than error presence. 1 1 
+ 1 
+ This controls for problem identity, not every
+surface property: the contexts still differ in the literal corrupted value, so
+some surface cues (digits, units, magnitude, length) correlate with the label by
+construction. We test generalisation beyond surface artifacts with a
+leave-one-error-type-out evaluation ( Appendix   D ). Each base problem
+contributes three conditions: Clean ( y = 0 y=0 ); Error-standard 
+( y = 1 y=1 ), error at hop 0, the primary probing condition; and
+ Error-verbalized ( y = 1 y=1 ), identical but eliciting a confidence score, to
+test whether elicitation changes behavior independently of internal state. Two
+further passes yield final_degraded – whether the injection produced a
+wrong final answer on an otherwise-solvable problem – the target for failure
+prediction ( Section   4.7 ) and intervention evaluation ( Section   4.8 ). 
+ 4.3 Probe robustness controls 
+ Two controls test whether the probe captures an operational error state rather
+than memorised surface structure. Grouped cross-validation replaces the
+stratified folds of Section   4.6 with five folds that hold out entire base
+problems, so no template or near-duplicate context is shared across train and
+test. Held-out error type trains the probe on four of the five error
+types and evaluates detection on the fifth, repeated for all five leave-one-out
+splits; above-chance transfer to a never-seen surface corruption indicates a
+corruption feature that generalises across surface forms rather than a per-type
+token signature. Both controls reuse the best aggregation mode from
+ Section   4.6 ; the grouped analysis selects its layer within the grouped
+folds. Full results are in Appendices   C and  D . 
+ 4.4 Activation extraction 
+ Each forward pass captures the full stack of hidden states
+ { 𝐡 ( ℓ ) } ℓ = 0 L \{\mathbf{h}^{(\ell)}\}_{\ell=0}^{L} at every layer ℓ \ell , including the
+embedding layer at ℓ = 0 \ell=0 . For a prompt of T T tokens, each
+ 𝐡 ( ℓ ) ∈ ℝ T × d model \mathbf{h}^{(\ell)}\in\mathbb{R}^{T\times d_{\text{model}}} . Two aggregations
+produce fixed-size representation vectors per layer: 
+ 𝐚 last ( ℓ ) \displaystyle\mathbf{a}^{(\ell)}_{\text{last}} 
+ = 𝐡 T ( ℓ ) ∈ ℝ d model , \displaystyle=\mathbf{h}^{(\ell)}_{T}\in\mathbb{R}^{d_{\text{model}}}, 
+ (1) 
+ 𝐚 mean ( ℓ ) \displaystyle\mathbf{a}^{(\ell)}_{\text{mean}} 
+ = 1 T ​ ∑ t = 1 T 𝐡 t ( ℓ ) ∈ ℝ d model . \displaystyle=\frac{1}{T}\sum_{t=1}^{T}\mathbf{h}^{(\ell)}_{t}\in\mathbb{R}^{d_{\text{model}}}. 
+ The last-token aggregation captures the representation at the position that
+conditions autoregressive generation, and is the standard choice in the probing
+literature ( Belinkov, 2022 ; Gurnee et al., 2023 ) . The mean-over-tokens
+aggregation captures a whole-prompt summary signal. We include both because
+deeper models may distribute the error signal across token positions rather than
+concentrating it at the final token; selecting the better aggregation per layer
+is part of the model selection procedure described in Section   4.6 . 
+ We visualise how the mean-pooled signal accumulates across token positions in
+ Appendix   I , which clarifies why mean pooling is informative even at
+shallow layers. 
+ 4.5 Surface uncertainty signals 
+ In parallel with activation extraction, six scalar uncertainty signals are
+computed from the per-token logit distribution p t p_{t} . Let p t ( 1 ) ≥ p t ( 2 ) ≥ … p_{t}^{(1)}\geq p_{t}^{(2)}\geq\ldots be the sorted token probabilities at position t t , let
+ H ( p t ) = − ∑ v p t ( v ) log p t ( v ) H(p_{t})=-\sum_{v}p_{t}(v)\log p_{t}(v) be the Shannon entropy, and G G the number
+of generated tokens: 
+ s peak-ent \displaystyle s_{\text{peak-ent}} 
+ = max t ⁡ H ⁡ ( p t ) , \displaystyle=\max_{t}\,H(p_{t}), 
+ (2) 
+ s mean-ent \displaystyle s_{\text{mean-ent}} 
+ = 1 G ​ ∑ t = 1 G H ⁡ ( p t ) , \displaystyle=\frac{1}{G}\sum_{t=1}^{G}H(p_{t}), 
+ s early-ent \displaystyle s_{\text{early-ent}} 
+ = 1 min ⁡ ( G , 20 ) ​ ∑ t = 1 min ⁡ ( G , 20 ) H ⁡ ( p t ) , \displaystyle=\frac{1}{\min(G,20)}\sum_{t=1}^{\min(G,20)}H(p_{t}), 
+ s min-conf \displaystyle s_{\text{min-conf}} 
+ = min t ⁡ p t ( 1 ) , \displaystyle=\min_{t}\,p_{t}^{(1)}, 
+ s vocab-gap \displaystyle s_{\text{vocab-gap}} 
+ = 1 G ​ ∑ t = 1 G ( p t ( 1 ) − p t ( 2 ) ) , \displaystyle=\frac{1}{G}\sum_{t=1}^{G}\bigl(p_{t}^{(1)}-p_{t}^{(2)}\bigr), 
+ s logprob \displaystyle s_{\text{logprob}} 
+ = − 1 G ∑ t = 1 G log p t ( y t ) . \displaystyle=-\frac{1}{G}\sum_{t=1}^{G}\log p_{t}(y_{t}). 
+ These span three hypotheses about where uncertainty surfaces: distributional
+spread (entropy), top-token certainty (confidence), and top-two margin
+(vocabulary gap). Together they form the surface baselines against which the probe
+is compared. 2 2 
+ 2 
+ For the AUROC comparisons ( Equations   4 and  6 ),
+ s min-conf s_{\text{min-conf}} and s vocab-gap s_{\text{vocab-gap}} are sign-flipped so larger values
+indicate the error class; reported sub-0.5 values are therefore genuinely
+non-predictive rather than orientation artifacts. Signal interpretations and the
+four behavioral text flags are detailed in Appendix   B . 
+ 4.6 Layer-wise linear probe 
+ A linear probe is trained independently at every layer ℓ ∈ { 0 , … , L } \ell\in\{0,\ldots,L\} under both aggregation modes. The probe is a logistic regression classifier
+with input standardisation: 
+ y ^ = σ ⁡ ( 𝐰 ⊤ ​ 𝐚 − 𝝁 𝝈 + b ) , \hat{y}=\sigma\!\left(\mathbf{w}^{\top}\frac{\mathbf{a}-\bm{\mu}}{\bm{\sigma}}+b\right), 
+ (3) 
+ where 𝝁 \bm{\mu} and 𝝈 \bm{\sigma} are the per-feature mean and
+standard deviation estimated from the training split, 𝐰 ∈ ℝ d model \mathbf{w}\in\mathbb{R}^{d_{\text{model}}} and b ∈ ℝ b\in\mathbb{R} are the learned weights and
+bias, and σ ⁡ ( ⋅ ) \sigma(\cdot) is the sigmoid function. 
+ We use a linear probe deliberately. A nonlinear classifier could achieve high
+accuracy by learning complex decision boundaries that do not correspond to any
+interpretable direction in the residual stream. A linear probe succeeds only if
+the error signal is linearly decodable , that is, if clean and corrupted
+representations are linearly separable in activation space. This is the standard
+operationalisation of the claim that the model has encoded a feature in the
+mechanistic interpretability literature
+ ( Belinkov, 2022 ; Gurnee et al., 2023 ) . 
+ Layer selection. 
+ Each layer/mode combination is evaluated under 5-fold stratified
+cross-validation, scored by AUROC: 
+ AUROC = Pr [ y ^ ( 𝐚 + ) > y ^ ( 𝐚 − ) ] , \text{AUROC}=\Pr\!\left[\hat{y}(\mathbf{a}^{+})>\hat{y}(\mathbf{a}^{-})\right], 
+ (4) 
+ for a randomly drawn error sample 𝐚 + \mathbf{a}^{+} and clean sample 𝐚 − \mathbf{a}^{-} ,
+reported as mean ± \pm std across folds. The highest-mean-AUROC layer/mode is the
+best layer; a final probe is fit on all N N samples there for downstream
+stages. 3 3 
+ 3 
+ Shared base problems and templates mean stratified folds may
+leak near-duplicate contexts across train/test; the contrastive control
+( Section   4.2 ) mitigates but does not eliminate this, so we additionally run
+grouped cross-validation holding out entire base problems ( Appendix   C );
+detection survives this stricter control. 
+ Threshold calibration. 
+ The decision threshold τ \tau is calibrated on out-of-fold scores. Three modes are
+derived. By construction τ loose = 0.7 ​ τ Youden < τ Youden \tau_{\text{loose}}=0.7\,\tau_{\text{Youden}}<\tau_{\text{Youden}} ; the relation of τ conservative \tau_{\text{conservative}} to
+ τ Youden \tau_{\text{Youden}} is empirical, and on the highly separable score distributions
+we observe the two nearly coincide ( Appendix   E ): 
+ τ Youden \displaystyle\tau_{\text{Youden}} 
+ = arg ⁡ max τ ​ [ TPR ​ ( τ ) − FPR ​ ( τ ) ] , \displaystyle=\arg\max_{\tau}\bigl[\text{TPR}(\tau)-\text{FPR}(\tau)\bigr], 
+ (5) 
+ τ conservative \displaystyle\tau_{\text{conservative}} 
+ = F y = 0 − 1 ​ ( 0.99 ) , \displaystyle=F^{-1}_{y=0}(0.99), 
+ τ loose \displaystyle\tau_{\text{loose}} 
+ = 0.7 ​ τ Youden . \displaystyle=0.7\,\tau_{\text{Youden}}. 
+ By Equation   9 , a lower threshold fires more aggressively.
+ τ Youden \tau_{\text{Youden}} is the default in all intervention
+experiments; the sensitivity ablation ( Section   4.9 ) sweeps all three. 
+ 4.7 Detection versus failure prediction 
+ We compute two AUROC scores per signal s s : 
+ AUROC detect ​ ( s ) \displaystyle\text{AUROC}_{\text{detect}}(s) 
+ = Pr [ s ( 𝐱 ( 1 ) ) > s ( 𝐱 ( 0 ) ) ] , \displaystyle=\Pr\bigl[s(\mathbf{x}^{(1)})>s(\mathbf{x}^{(0)})\bigr], 
+ (6) 
+ AUROC fail ​ ( s ) \displaystyle\text{AUROC}_{\text{fail}}(s) 
+ = Pr [ s ( 𝐱 degraded ( 1 ) ) \displaystyle=\Pr\bigl[s(\mathbf{x}^{(1)}_{\text{degraded}}) 
+ > s ( 𝐱 recovered ( 1 ) ) ] . \displaystyle\qquad>s(\mathbf{x}^{(1)}_{\text{recovered}})\bigr]. 
+ (7) 
+ Equation   6 tests detection across all records; Equation   7 , over
+the error subset only, tests failure prediction , using the
+ final_degraded target (wrong under error, correct under matched clean)
+to isolate propagation from baseline difficulty. The two need not correlate: a
+signal can detect perfectly yet be uninformative about failure if the error
+representation saturates regardless of downstream recovery. This is the
+methodological core of the paper. Prior calibration work asks whether verbalized
+confidence correlates with accuracy; we ask the prior question, whether the
+ internal detection signal also predicts propagation, which determines
+whether probe-based monitoring is actionable. 
+ For verbalized confidence, binary collapse is: 
+ collapse rate = 1 N verb ∑ i = 1 N verb 𝟏 [ \displaystyle\text{collapse rate}=\frac{1}{N_{\text{verb}}}\sum_{i=1}^{N_{\text{verb}}}\mathbf{1}\bigl[ 
+ c i ≤ 0.05 \displaystyle c_{i}\leq 0.05 
+ (8) 
+ or c i ≥ 0.95 ] , \displaystyle\text{or}\;c_{i}\geq 0.95\bigr], 
+ with c i = v i / 10 c_{i}=v_{i}/10 ; wrong rates of the two extreme groups are then compared to
+test whether the split carries any correctness signal. 
+ 4.8 Intervention experiment 
+ The intervention experiment tests whether the probe can serve as a runtime monitor
+that improves final-answer accuracy. The probe fires on trace i i at hop k k when
+its output exceeds the Youden threshold: 
+ fire ( i , k ) = [ σ ( 𝐰 ⊤ 𝐚 k ( i ) − 𝝁 𝝈 + b ) ≥ τ Youden ] . \text{fire}(i,k)=\mathbf{1}\!\left[\sigma\!\left(\mathbf{w}^{\top}\frac{\mathbf{a}_{k}^{(i)}-\bm{\mu}}{\bm{\sigma}}+b\right)\geq\tau_{\text{Youden}}\right]. 
+ (9) 
+ On firing, one of three strategies is applied, subject to a cap of M = 3 M=3 per
+trace to bound inference cost. Reprompt (C1) augments the context with a
+fixed recheck instruction before generation; it is the cheapest policy, adding no
+forward passes, and tests whether a verbal alert alone changes behaviour.
+ Replace-prior (C2) regenerates hop k − 1 k-1 from scratch,
+ r ~ k − 1 = f θ ​ ( q , r 0 , … , r k − 2 ) \tilde{r}_{k-1}=f_{\theta}(q,r_{0},\ldots,r_{k-2}) , substitutes it for the
+corrupted value in the context, and continues generation from the corrected
+prefix ( q , r 0 , … , r k − 2 , r ~ k − 1 ) (q,r_{0},\ldots,r_{k-2},\tilde{r}_{k-1}) , directly removing the
+corruption at the cost of one extra forward pass per firing.
+ Branch-and-pick (C3) samples K K candidate hop- k k responses
+ r ~ k ( 1 ) , … , r ~ k ( K ) \tilde{r}_{k}^{(1)},\ldots,\tilde{r}_{k}^{(K)} at temperatures
+ 𝒯 = { 0.7 , 0.85 , 1.0 , 1.15 } \mathcal{T}=\{0.7,0.85,1.0,1.15\} from the committed prefix
+ r ∗ 0 : k − 1 r^{*}_{0:k-1} , and selects the one inducing the least error-like internal state,
+ j ∗ = arg min j ∈ [ K ] y ^ ( 𝐚 ( q , r 0 : k − 1 ∗ , r ~ k ( j ) ) ) j^{*}=\arg\min_{j\in[K]}\hat{y}\bigl(\mathbf{a}(q,r^{*}_{0:k-1},\tilde{r}_{k}^{(j)})\bigr) , using the probe to pick the continuation least likely to
+propagate the error, at a cost of K K extra forward passes per firing. 
+ 4.9 Sensitivity ablation 
+ We evaluate branch-and-pick across the full factorial of branch count and
+threshold mode, K ∈ { 1 , 2 , 4 , 8 } K\in\{1,2,4,8\} crossed with τ ∈ { τ conservative , τ Youden , τ loose } \tau\in\{\tau_{\text{conservative}},\tau_{\text{Youden}},\tau_{\text{loose}}\} (12 cells per
+model), exposing the precision/recall tradeoff in the branch decision: looser
+thresholds and larger K K rescue more errors at the cost of higher broken counts.
+Sampling details are given in Appendix   J . 
+ 5 Results 
+ Probe detects corruption but does not predict failure. 
+ Across all five variants, a linear probe on residual-stream activations exceeds
+ auroc detect > 0.98 \mbox{{auroc}}_{\text{detect}}>0.98 at the best layer ( Table   3 ),
+peaking at 0.997 0.997 on Llama-3.1-8B under mean pooling. All models report
+ auroc = 0.500 \mbox{{auroc}}=0.500 at ℓ = 0 \ell=0 under last-token pooling, so the signal arises from
+computation rather than token identity; a single layer-0 → \to 1 jump of
+ 0.38 0.38 – 0.41 0.41 AUROC contributes the bulk of it. Peak depth grows with model size
+(39% of depth for Llama-3.2-3B, 64% for Qwen3-4B instruct). Crucially, the same
+probe is uninformative about failure : at its best detection layer its
+failure-prediction AUROC ( Equation   7 ) collapses to near chance across all five
+models, in sharp contrast to detection above 0.98 0.98 . This gap between
+ auroc detect \mbox{{auroc}}_{\text{detect}} and auroc fail \mbox{{auroc}}_{\text{fail}} within a single probe is the core
+dissociation of the paper; per-model values are in Table   3 . 
+ Model 
+ Best layer (last) 
+ AUROC (last) 
+ AUROC (mean) 
+ auroc fail \mbox{{auroc}}_{\text{fail}} 
+ Best surface 
+ Llama-3.2-3B 
+ 11/28 
+ 0.985 
+ 0.980 
+ 0.49 
+ 0.574 
+ Llama-3.1-8B 
+ 15/32 
+ 0.993 
+ 0.997 
+ 0.53 
+ 0.622 
+ Qwen2.5-3B 
+ 22/36 
+ 0.994 
+ 0.990 
+ 0.51 
+ 0.587 
+ Qwen3-4B (inst.) 
+ 23/36 
+ 0.990 
+ 0.993 
+ 0.47 
+ 0.637 
+ Qwen3-4B (think) 
+ 19/36 
+ 0.989 
+ 0.989 
+ 0.50 
+ 0.694 
+ Table 3: Best-layer probe detection AUROC (last/mean pooling), probe
+ failure-prediction AUROC at the same layer, and the best surface signal.
+Detection exceeds 0.98 0.98 everywhere while auroc fail \mbox{{auroc}}_{\text{fail}} is at or near
+chance, and the detection gap to the best surface signal is at least 0.30 0.30 . 
+ Surface signals are at or near chance. 
+ None of the surface signals shown exceeds auroc = 0.70 \mbox{{auroc}}=0.70 for detection
+( Table   6 , Appendix   F ); peak entropy is exactly
+ 0.500 0.500 for the instruct models shown, and the mean probe-to-surface gap is
+ 0.41 0.41 . The
+Qwen3-4B thinking model reverses below chance ( 0.308 0.308 ), with error traces
+ less entropic than clean ones, consistent with thinking-mode suppression
+of surface uncertainty ( Section   5 ). 
+ Behavioral silence. 
+ Despite near-perfect internal detection, all four instruct models produce zero
+hedging and zero overconfident outputs across 258 traces each, and never use a
+structured confidence format unprompted; thinking models hedge only 1–2% of the
+time. Clean-condition accuracy is 23–31% and degrades 4–8 points under
+injection. The error_verbalized condition does not improve accuracy
+over error_standard in any model. 
+ Thinking mode degrades accuracy without changing encoding. 
+ Enabling chain-of-thought on Qwen3-4B barely moves probe AUROC
+( Δ = − 0.001 \Delta=-0.001 last, − 0.004 -0.004 mean) but degrades error-condition accuracy
+from 27.9% to 1.2% ( Table   7 , Appendix   F ), despite
+ ∼ \sim 5 × \times more tokens. The variants share weights, differing only in the
+inference-time template, so the encoding persists while the output channel is
+disrupted. Clean accuracy also drops (29.1% to 12.8%), so this best evidences
+ persistence of the encoding under degradation rather than an isolated
+manipulation of the saying channel. 
+ Interventions: branch-and-pick is closest to asymmetric. 
+ Across three models with complete data, branch-and-pick is net-positive everywhere
+and uniquely non-breaking on Llama-3.1-8B (4 rescued, 0 broken), breaking one trace
+on Qwen2.5-3B; replace-prior breaks correct traces at nearly the rate it rescues
+wrong ones, and reprompt does neither. The probe fires on 96–100% of error traces,
+yet replace-prior’s firing drops to 32–39% with no correctness gain, so the
+encoding is not the proximal cause of wrong answers. Per-type effects are strongly
+heterogeneous – replace-prior best on wrong_unit ( + 37.5 % +37.5\% ),
+net-negative on wrong_percentage_base ( − 18.2 % -18.2\% ) – motivating
+error-type-aware routing, exploratory given 9–16 examples per slice
+( Table   8 , Appendix   G ). 
+ 6 Evaluation metrics 
+ We evaluate three tasks, each with its own metric. 
+ Detection and failure prediction. 
+ For the probe and all surface signals we report AUROC ( Equation   4 ), which is
+threshold-free, with 0.5 0.5 denoting chance and values below 0.5 0.5 indicating an
+anti-predictive (inverted) signal. It is
+computed for two targets: 
+ y detect \displaystyle y_{\text{detect}} 
+ = 𝟏 ​ [ error injected ] , \displaystyle=\mathbf{1}[\text{error injected}], 
+ (10) 
+ y fail ( i ) \displaystyle y^{(i)}_{\text{fail}} 
+ = 𝟏 [ a ^ ( i ) err ≠ a ∗ i ∧ a ^ ( i ) clean = a ∗ i ] , \displaystyle=\mathbf{1}\bigl[\hat{a}^{(i)}_{\text{err}}\neq a^{*}_{i}\;\wedge\;\hat{a}^{(i)}_{\text{clean}}=a^{*}_{i}\bigr], 
+ over all traces ( Equation   6 ) and the error subset ( Equation   7 )
+respectively, where a ^ err ( i ) \hat{a}^{(i)}_{\text{err}} and a ^ clean ( i ) \hat{a}^{(i)}_{\text{clean}} are
+the model’s final answers on trace i i under the error and matched-clean contexts
+and a i ∗ a^{*}_{i} is ground truth. This final_degraded target separates
+error propagation from baseline difficulty. The two are decoupled by design:
+ AUROC detect ≈ 1 \text{AUROC}_{\text{detect}}\!\approx\!1 with
+ AUROC fail ≈ 0.5 \text{AUROC}_{\text{fail}}\!\approx\!0.5 is the central measurement target. 
+ Verbalization quality. 
+ With c i = v i / 10 c_{i}=v_{i}/10 the normalised confidence and collapse rate as in
+ Equation   8 , we compare the wrong rate of the two collapsed groups
+ g ∈ { [ 0 , 0.05 ] , [ 0.95 , 1 ] } g\in\{[0,0.05],[0.95,1]\} : 
+ wrong ​ ( g ) \displaystyle\text{wrong}(g) 
+ = 1 | G g | ∑ i ∈ G g 𝟏 [ a ^ i ≠ a i ∗ ] , \displaystyle=\frac{1}{|G_{g}|}\sum_{i\in G_{g}}\mathbf{1}[\hat{a}_{i}\neq a_{i}^{*}], 
+ (11) 
+ G g \displaystyle G_{g} 
+ = { i : c i ∈ g } . \displaystyle=\{i:c_{i}\in g\}. 
+ Indistinguishable wrong ​ ( [ 0 , 0.05 ] ) \text{wrong}([0,0.05]) and wrong ​ ( [ 0.95 , 1 ] ) \text{wrong}([0.95,1]) confirm
+the binary collapse carries no calibration signal. 
+ Intervention effectiveness. 
+ For each policy c ∈ { C1 , C2 , C3 } c\in\{\text{C1},\text{C2},\text{C3}\} , relative to baseline: 
+ rescued c \displaystyle\text{rescued}_{c} 
+ = | { i : wrong base ( i ) ∧ correct c ( i ) } | , \displaystyle=|\{i:\text{wrong}^{(i)}_{\text{base}}\wedge\text{correct}^{(i)}_{c}\}|, 
+ (12) 
+ broken c \displaystyle\text{broken}_{c} 
+ = | { i : correct base ( i ) ∧ wrong c ( i ) } | , \displaystyle=|\{i:\text{correct}^{(i)}_{\text{base}}\wedge\text{wrong}^{(i)}_{c}\}|, 
+ net c \displaystyle\text{net}_{c} 
+ = rescued c − broken c , \displaystyle=\text{rescued}_{c}-\text{broken}_{c}, 
+ Δ ​ acc c \displaystyle\Delta\text{acc}_{c} 
+ = net c N intervene × 100 . \displaystyle=\tfrac{\text{net}_{c}}{N_{\text{intervene}}}\times 100. 
+ Rescued and broken are reported separately, not collapsed into net, since equal
+net can hide very different risk profiles; an asymmetric policy
+( rescued ≫ broken \text{rescued}\gg\text{broken} ) is the deployment target. Answers match
+ground truth within 10 − 3 10^{-3} absolute or 1 % 1\% relative tolerance. 
+ 7 Discussion 
+ Robustness to leakage and surface artifacts. 
+ Detection is not an artifact of fold leakage or per-type surface cues. Under
+grouped cross-validation holding out entire base problems, best-layer detection
+AUROC moves by at most 0.003 0.003 from the stratified estimate ( Appendix   C ).
+Under leave-one-error-type-out training, detection on the unseen type stays above
+ 0.91 0.91 in every model-by-type cell (per-model means 0.968 0.968 – 0.996 0.996 ;
+ Appendix   D ). off_by_one , least separable on surface
+features yet still well above chance, is the strongest evidence that the probe
+encodes an abstract corruption state rather than a per-type token signature. 
+ Decodability, not causation. 
+ We claim decodability, not causation: the corruption signal is linearly present in
+the residual stream, but this does not establish that the generation policy
+consults that direction. Our interventions ( Section   5 ) bear
+on this – replace-prior removes the corrupted value and sharply lowers probe
+firing (96–100% to 32–39%) without a proportional accuracy gain, evidence that
+the probed direction is not necessarily the proximal cause of the wrong answer.
+Establishing causal relevance would require representation-level interventions
+(activation patching, mediation analysis), which we leave to future work. 
+ Toward routed interventions. 
+ The per-error-type results ( Section   5 ,
+ Appendix   G ) show that no single intervention dominates. Replace-prior is
+strongest on wrong_unit but net-negative on
+ wrong_percentage_base , while branch-and-pick is the only strictly
+net-positive policy on off_by_one . This motivates a routed policy that
+selects the intervention from a predicted error type. We stress that such routing
+presupposes an error-type classifier, which we do not yet have, and that the
+supporting per-type sample sizes are small, so we frame routing as a direction
+rather than a deployable result. 
+ Future work. 
+ Three directions look most promising. Per-hop localisation would move the probe
+target from “a prior is corrupted” to “hop k k is corrupted,” enabling much
+more targeted replace-prior. Error-type probes would classify the corruption
+itself, unlocking the routed policy without requiring an oracle. And mechanistic
+dissection of the layer 0 to layer 1 jump would clarify whether the signal arises
+from attention to inconsistent tokens or from an MLP feature. To our knowledge
+this is an unusually clean single-layer information gain and worth understanding. 
+ 8 Conclusion 
+ We characterise a four-part dissociation in five models reasoning under silently
+corrupted context. A linear probe detects injected errors near-perfectly
+( auroc > 0.98 \mbox{{auroc}}>0.98 , up to 0.997 0.997 on Llama-3.1-8B) yet does not predict whether the
+error reaches the final answer; verbalised confidence collapses to a binary filter
+with indistinguishable wrong rates; probe persistence across hops does not separate
+outcomes, refuting our pre-registered persistence-beats-peak hypothesis; and
+chain-of-thought widens rather than closes the gap, leaving probe auroc unchanged
+while error-condition accuracy falls to 1.2%. No intervention dominates:
+branch-and-pick is net-positive everywhere and uniquely non-breaking on
+Llama-3.1-8B, but the asymmetry is conditional on error type and model
+( Sections   5 and  G ). Probe-based monitoring is thus a
+necessary complement to verbalised confidence rather than a replacement, and the
+deployable answer is model-aware, error-type-aware routing. 
+ Ethics Statement 
+ This paper presents a probe-based mechanism for detecting and intervening on
+errors during multi-step reasoning by language models. The intended use is
+trustworthy deployment, namely catching errors before commitment to a wrong
+answer. Three considerations apply. First, the probe operates on internal
+activations and cannot be used by parties without access to them, so it is not a
+black-box method. Second, the interventions are not free of failure modes.
+Replace-prior breaks previously-correct traces at nearly the rate it rescues
+wrong ones, and branch-and-pick breaks at a small but non-zero rate, so
+probe-triggered intervention should not be presented to end users as strictly
+safe. Third, branch-and-pick increases inference cost roughly tenfold at the
+intervention frequencies measured here, with energy and latency implications
+worth weighing for any specific application. 
+ References 
+ Anthropic (2024a) 
+Anthropic. 2024a.
+ The Claude 3 model family: Opus, Sonnet, Haiku.
+ https://www-cdn.anthropic.com/de8ba9b01c9ab7cbabf5c33b80b7bbc618857627/Model_Card_Claude_3.pdf .
+ Anthropic (2024b) 
+Anthropic. 2024b.
+ Claude Code: Agentic coding.
+ https://www.anthropic.com/product/claude-code .
+ Arditi et al. (2024) 
+Andy Arditi, Oscar Obeso, Aaquib Syed, Daniel Paleka, Nina Panickssery, Wes
+Gurnee, and Neel Nanda. 2024.
+ Refusal in language models is mediated by a single direction.
+ In Advances in Neural Information Processing Systems 37
+(NeurIPS 2024) .
+ Belinkov (2022) 
+Yonatan Belinkov. 2022.
+ Probing classifiers: Promises, shortcomings, and advances.
+ Computational Linguistics , 48(1):207–219.
+ Burns et al. (2023) 
+Collin Burns, Haotian Ye, Dan Klein, and Jacob Steinhardt. 2023.
+ Discovering latent knowledge in language models without supervision.
+ In The Eleventh International Conference on Learning
+Representations (ICLR) .
+ Chan et al. (2024) 
+Chi-Min Chan, Weize Chen, Yusheng Su, Jianxin Yu, Wei Xue, Shanghang Zhang, Jie
+Fu, and Zhiyuan Liu. 2024.
+ ChatEval: Towards better LLM-based evaluators through multi-agent
+debate.
+ In International Conference on Learning Representations .
+ Cognition AI (2024) 
+Cognition AI. 2024.
+ Introducing devin, the first AI software engineer.
+ https://cognition.ai/blog/introducing-devin .
+ Gurnee et al. (2023) 
+Wes Gurnee, Neel Nanda, Matthew Pauly, Kyle Harvey, Dmitrii Troiano, and Jacob
+Steinhardt. 2023.
+ Finding neurons in a haystack: Case studies with sparse probing.
+ Transactions on Machine Learning Research .
+ Hewitt and Manning (2019) 
+John Hewitt and Christopher D. Manning. 2019.
+ A structural probe for finding syntax in word representations.
+ In Proceedings of the 2019 Conference of the North American
+Chapter of the Association for Computational Linguistics (NAACL) , pages
+4129–4138.
+ Huang et al. (2023) 
+Lei Huang, Weijiang Yu, Weitao Ma, Weihong Zhong, Zhengwei Feng, Haotian Wang,
+Qianglong Chen, Weihua Peng, Xiaocheng Feng, Bing Qin, et al. 2023.
+ A survey on hallucination in large language models: Principles,
+taxonomy, challenges, and open questions.
+ arXiv preprint arXiv:2311.05232 .
+ Jimenez et al. (2024) 
+Carlos E Jimenez, John Yang, Alexander Wettig, Shunyu Yao, Kexin Pei, Ofir
+Press, and Karthik Narasimhan. 2024.
+ SWE-bench: Can language models resolve real-world GitHub issues?
+ In International Conference on Learning Representations .
+ Kadavath et al. (2022) 
+Saurav Kadavath, Tom Conerly, Amanda Askell, Tom Henighan, Deep Ganguli, Azalia
+Mirhoseini, Andy Jones, Anna Chen, LightmanHarrison, et al. 2022.
+ Language models (mostly) know what they know.
+ arXiv preprint arXiv:2207.05221 .
+ Lanham et al. (2023) 
+Tamera Lanham, Anna Chen, Ansh Radhakrishnan, Benoit Steiner, Carson Denison,
+Danny Hernandez, Dustin Li, Esin Durmus, Evan Hubinger, Jackson Kernion,
+et al. 2023.
+ Measuring faithfulness in chain-of-thought reasoning.
+ arXiv preprint arXiv:2307.13702 .
+ Lightman et al. (2024) 
+Hunter Lightman, Vineet Kosaraju, Yura Burda, Harri Edwards, Bowen Baker, Teddy
+Lee, Jan Leike, John Schulman, Ilya Sutskever, and Karl Cobbe. 2024.
+ Let’s verify step by step.
+ In The Twelfth International Conference on Learning
+Representations (ICLR) .
+ Lin et al. (2022) 
+Stephanie Lin, Jacob Hilton, and Owain Evans. 2022.
+ Teaching models to express their uncertainty in words.
+ Transactions on Machine Learning Research .
+ Marks and Tegmark (2023) 
+Samuel Marks and Max Tegmark. 2023.
+ The geometry of truth: Emergent linear structure in large language
+model representations of true/false datasets.
+ arXiv preprint arXiv:2310.06824 .
+ OpenAI (2023) 
+OpenAI. 2023.
+ GPT-4 technical report.
+ https://arxiv.org/abs/2303.08774 .
+ Pan et al. (2023) 
+Liangming Pan, Michael Saxon, Wenda Xu, Deepak Nathani, Xinyi Wang, and
+William Yang Wang. 2023.
+ Automatically correcting large language models: Surveying the
+landscape of diverse automated correction strategies.
+ Transactions of the Association for Computational Linguistics ,
+11:1409–1429.
+ Paul et al. (2024) 
+Debjit Paul, Robert West, Antoine Bosselut, and Boi Faltings. 2024.
+ Making reasoning matter: Measuring and improving faithfulness of
+chain-of-thought reasoning.
+ In Findings of the Association for Computational Linguistics:
+EMNLP 2024 .
+ Schick et al. (2023) 
+Timo Schick, Jane Dwivedi-Yu, Roberto Dessì, Roberta Raileanu, Maria
+Lomeli, Luke Zettlemoyer, Nicola Cancedda, and Thomas Scialom. 2023.
+ Toolformer: Language models can teach themselves to use tools.
+ In Advances in Neural Information Processing Systems ,
+volume 36.
+ Shinn et al. (2023) 
+Noah Shinn, Federico Cassano, Ashwin Gopinath, Karthik Narasimhan, and Shunyu
+Yao. 2023.
+ Reflexion: Language agents with verbal reinforcement learning.
+ In Advances in Neural Information Processing Systems ,
+volume 36.
+ Singhal et al. (2023) 
+Karan Singhal, Shekoofeh Azizi, Tao Tu, S Sara Mahdavi, Jason Wei, Hyung Won
+Chung, Nathan Scales, Ajay Tanwani, Heather Cole-Lewis, Stephen Pfohl, et al.
+2023.
+ Large language models encode clinical knowledge.
+ In Nature , volume 620, pages 172–180.
+ Tian et al. (2023) 
+Katherine Tian, Eric Mitchell, Allan Zhou, Archit Sharma, Rafael Rafailov,
+Huaxiu Yao, Chelsea Finn, and Christopher D. Manning. 2023.
+ Just ask for calibration: Strategies for eliciting calibrated
+confidence scores from language models fine-tuned with human feedback.
+ In Proceedings of the 2023 Conference on Empirical Methods in
+Natural Language Processing (EMNLP) .
+ Turpin et al. (2023) 
+Miles Turpin, Julian Michael, Ethan Perez, and Samuel R. Bowman. 2023.
+ Language models don’t always say what they think: Unfaithful
+explanations in chain-of-thought prompting.
+ In Advances in Neural Information Processing Systems 36
+(NeurIPS 2023) .
+ Valmeekam et al. (2023) 
+Karthik Valmeekam, Matthew Marquez, Sarath Sreedharan, and Subbarao
+Kambhampati. 2023.
+ Large language models still can’t plan.
+ In NeurIPS 2023 Foundation Models for Decision Making
+Workshop .
+ Wang et al. (2024) 
+Lei Wang, Chen Ma, Xueyang Feng, Zeyu Zhang, Hao Yang, Jingsen Zhang, Zhiyuan
+Chen, Jiakai Tang, Xu Chen, Yankai Lin, et al. 2024.
+ A survey on large language model based autonomous agents.
+ Frontiers of Computer Science , 18(6):186345.
+ Wang et al. (2023) 
+Xuezhi Wang, Jason Wei, Dale Schuurmans, Quoc V. Le, Ed H. Chi, Sharan Narang,
+Aakanksha Chowdhery, and Denny Zhou. 2023.
+ Self-consistency improves chain of thought reasoning in language
+models.
+ In The Eleventh International Conference on Learning
+Representations (ICLR) .
+ Wei et al. (2022) 
+Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Brian Ichter, Fei Xia,
+Ed Chi, Quoc Le, and Denny Zhou. 2022.
+ Chain-of-thought prompting elicits reasoning in large language
+models.
+ In Advances in Neural Information Processing Systems ,
+volume 35.
+ Weng et al. (2023) 
+Yixuan Weng, Minjun Zhu, Fangyu Xia, Bin Li, Shizhu He, Shengping Liu, Bin Sun,
+Kang Liu, and Jun Zhao. 2023.
+ Large language models are better reasoners with self-verification.
+ arXiv preprint arXiv:2212.09561 .
+ Xiong et al. (2024) 
+Miao Xiong, Zhiyuan Hu, Xinyang Lu, Yifei Li, Jie Fu, Junxian He, and Bryan
+Hooi. 2024.
+ Can LLMs express their uncertainty? an empirical evaluation of
+confidence elicitation in LLMs.
+ arXiv preprint arXiv:2306.13063 .
+ Yang et al. (2024) 
+John Yang, Carlos E Jimenez, Alexander Wettig, Kilian Lieret, Shunyu Yao,
+Karthik Narasimhan, and Ofir Press. 2024.
+ SWE-agent: Agent-computer interfaces enable automated software
+engineering.
+ In Advances in Neural Information Processing Systems ,
+volume 37.
+ Yao et al. (2023) 
+Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik Narasimhan,
+and Yuan Cao. 2023.
+ ReAct: Synergizing reasoning and acting in language models.
+ In International Conference on Learning Representations .
+ Appendix: Supplementary Methodology and Results 
+ Appendix A Dataset generation detail 
+ Generation procedure. 
+ Base problems are produced by 12 subcategory-specific template functions covering
+arithmetic, percentages, rates, fractions, counting, geometry, compound interest,
+and nested fractions across 2 to 4 hop depths. Each function draws numeric
+parameters (prices, rates, counts, percentages) from fixed candidate sets using a
+seeded random.Random instance, instantiates a natural-language question,
+and computes each intermediate result exactly. Trace identities are 8-byte BLAKE2b
+hashes of (base_problem_id, variant) , making each trace uniquely and
+reproducibly addressable, and all hops downstream of an injection carry
+ propagates_prior_error: true . 
+ Error-type motivation. 
+ The five error types are chosen to span distinct failure modes seen in real
+multi-step reasoning: 
+ • 
+ off_by_one (correct value + 1 +1 ): small transcription or
+rounding errors that leave the answer superficially plausible. The hardest
+case for surface signals, since the corrupted value is coherent and close to
+correct. 
+ • 
+ wrong_operator (e.g. × → + \times\to+ ): a conceptual mistake that
+combines the right quantities incorrectly. The result can be wildly off,
+testing whether probes respond to corruption magnitude rather than mere
+presence. 
+ • 
+ wrong_unit (e.g. hours instead of minutes, factor of 60):
+unit-tracking failures common in scientific and engineering chains, where the
+computation is correct but the semantic interpretation is wrong. 
+ • 
+ magnitude_error (correct value × 10 \times 10 ): a decimal-placement
+or order-of-magnitude mistake, structurally similar to the correct value but
+numerically large, testing sensitivity to scale. 
+ • 
+ wrong_percentage_base ( 100 − p 100-p instead of p p ): a systematic
+conceptual error confusing what is kept with what is removed. Common in
+financial and allocation chains, producing plausible-looking but wrong
+downstream values. 
+ Appendix B Surface-signal definitions and behavioral flags 
+ Signal interpretation. 
+ The six signals in Equation   2 test three distinct hypotheses about where
+uncertainty might appear in the output distribution. Entropy-based signals
+( s peak-ent s_{\text{peak-ent}} , s mean-ent s_{\text{mean-ent}} , s early-ent s_{\text{early-ent}} ) measure
+distributional spread across the full vocabulary; confidence signals
+( s min-conf s_{\text{min-conf}} ) measure top-token certainty; and s vocab-gap s_{\text{vocab-gap}} 
+measures the margin between the top two candidates, which can remain large even
+when entropy is moderate. Here y t y_{t} denotes the token actually generated at
+position t t , so s logprob s_{\text{logprob}} is a valid sequence log-probability under
+sampling; under greedy decoding it reduces to the mean negative log-probability of
+the top token, − 1 G ∑ t log p t ( 1 ) -\tfrac{1}{G}\sum_{t}\log p_{t}^{(1)} . 
+ Behavioral flags. 
+ In addition to the scalar signals, four flags are extracted from the generated
+text: presence of hedging language, presence of overconfident language, a
+structured verbalized confidence score (where elicited), and an absurdity flag for
+outputs containing logical impossibilities. These flags measure whether the
+model’s verbalized behavior reflects the internal state captured by the probe. 
+ Appendix C Grouped cross-validation 
+ To rule out leakage from shared base problems and templates, we re-run probe
+evaluation under group-stratified 5 5 -fold cross-validation in which all variants
+of a given base problem are confined to a single fold, so no template instance
+appears in both train and test. Table   4 compares stratified and
+grouped detection AUROC at the best layer and aggregation mode for each model.
+Across all five models the two protocols agree to within 0.003 0.003 AUROC, and on
+three of the five the grouped estimate is marginally higher, so the near-perfect
+detection reported in Table   3 reflects a genuinely decodable
+corruption state rather than memorised base-problem or template structure. 
+ Model 
+ Layer 
+ Mode 
+ Stratified 
+ Grouped 
+ Δ \Delta 
+ Qwen2.5-3B 
+ 26 
+ last 
+ 0.995 
+ 0.996 ± 0.003 0.996\pm 0.003 
+ + 0.001 +0.001 
+ Llama-3.2-3B 
+ 11 
+ last 
+ 0.995 
+ 0.992 ± 0.006 0.992\pm 0.006 
+ − 0.003 -0.003 
+ Llama-3.1-8B 
+ 31 
+ mean 
+ 0.997 
+ 0.998 ± 0.005 0.998\pm 0.005 
+ + 0.001 +0.001 
+ Qwen3-4B (inst.) 
+ 20 
+ last 
+ 0.991 
+ 0.994 ± 0.005 0.994\pm 0.005 
+ + 0.003 +0.003 
+ Qwen3-4B (think) 
+ 20 
+ last 
+ 0.991 
+ 0.994 ± 0.005 0.994\pm 0.005 
+ + 0.003 +0.003 
+ Table 4: Best-layer detection AUROC under stratified versus base-problem-grouped
+cross-validation. Both columns are computed at the layer and aggregation mode
+listed, which is the best stratified configuration for that model in this run.
+Grouped AUROC is reported as mean ± \pm std across the grouped folds. 
+ Appendix D Held-out error-type generalisation 
+ To test whether the probe encodes an abstract corruption state rather than surface
+signatures of individual error types, we train on four error types and evaluate
+detection on the fifth, for all five leave-one-out splits. Clean traces are pooled
+across splits; only the error-type composition of the training set varies.
+ Table   5 reports detection AUROC on each held-out type at the best
+layer for all five models. Every held-out type transfers above 0.91 0.91 , including
+ off_by_one , the hardest case on surface grounds, and wrong_unit 
+and magnitude_error transfer perfectly. A probe that never saw a given
+error type during training still flags it at test time, so the probed direction is
+not a per-type token detector. 
+ Held-out type 
+ Qwen2.5 
+ Llama-3.2 
+ Llama-3.1 
+ Qwen3 
+ Qwen3 
+ 3B 
+ 3B 
+ 8B 
+ inst. 
+ think 
+ off_by_one 
+ .961 
+ .916 
+ .992 
+ .920 
+ .920 
+ wrong_operator 
+ .991 
+ .930 
+ 1.00 
+ .999 
+ .999 
+ wrong_unit 
+ 1.00 
+ 1.00 
+ 1.00 
+ 1.00 
+ 1.00 
+ magnitude_error 
+ 1.00 
+ 1.00 
+ 1.00 
+ 1.00 
+ 1.00 
+ wrong_pct_base 
+ .996 
+ .993 
+ .987 
+ 1.00 
+ 1.00 
+ Mean 
+ .989 
+ .968 
+ .996 
+ .984 
+ .984 
+ Table 5: Leave-one-error-type-out detection AUROC at the best layer. Columns are
+models; each row trains on the other four error types and tests on the named
+held-out type. Leading zeros omitted; wrong_pct_base abbreviates
+ wrong_percentage_base . 
+ Appendix E Threshold calibration detail 
+ The three thresholds in Equation   5 are calibrated on out-of-fold scores
+to avoid threshold overfitting while preserving all data for probe training. Here
+ F y = 0 − 1 ​ ( 0.99 ) F^{-1}_{y=0}(0.99) is the 99th percentile of out-of-fold scores for clean
+samples, giving τ conservative \tau_{\text{conservative}} a very low false-positive rate at the
+cost of reduced recall, while τ loose = 0.7 ​ τ Youden \tau_{\text{loose}}=0.7\,\tau_{\text{Youden}} fires
+more aggressively, rescuing more errors at higher broken counts. Only
+ τ loose < τ Youden \tau_{\text{loose}}<\tau_{\text{Youden}} holds by construction; whether
+ τ conservative \tau_{\text{conservative}} sits above or below τ Youden \tau_{\text{Youden}} depends on the
+clean and corrupted score distributions, and on the highly separable runs here the
+two are nearly equal (see Figure   2 ). The firing rule of Equation   9 
+(fire when the probe score is at least τ \tau ) then determines the firing-rate
+ordering used in the sensitivity ablation ( Section   4.9 ). 
+ Appendix F Surface-signal and thinking-mode detail 
+ Surface signals. 
+ Table   6 reports detection and failure-prediction AUROC for the
+token-distribution signals. All are at or near chance for detection: peak entropy
+is exactly 0.500 0.500 for the instruct models shown, logprob uncertainty tops out at
+ 0.622 0.622 (Llama-3.1-8B) and falls below 0.500 0.500 for some Qwen variants, and none of
+the signals shown exceeds 0.70 0.70 . Failure prediction is similarly uninformative,
+with several
+entries below chance (for example logprob uncertainty at 0.411 0.411 – 0.417 0.417 on the
+Llama models), indicating these signals are not merely uncorrelated with
+propagation but mildly anti-predictive. The Qwen3-4B thinking model is the clearest
+reversal: peak entropy drops to 0.308 0.308 for detection, so tokens in error traces
+are on average less entropic than in clean traces, consistent with
+thinking-mode suppression of surface uncertainty. 
+ Model 
+ Signal 
+ Detect 
+ Failure pred. 
+ Llama-3.2-3B 
+ Logprob unc. 
+ 0.574 
+ 0.417 
+ Peak entropy 
+ 0.500 
+ 0.500 
+ Vocab gap 
+ 0.451 
+ 0.585 
+ Llama-3.1-8B 
+ Logprob unc. 
+ 0.622 
+ 0.411 
+ Peak entropy 
+ 0.500 
+ 0.500 
+ Vocab gap 
+ 0.432 
+ 0.621 
+ Qwen3-4B (think) 
+ Logprob unc. 
+ 0.345 
+ 0.500 
+ Peak entropy 
+ 0.308 
+ 0.500 
+ Vocab gap 
+ 0.646 
+ 0.500 
+ Table 6: Representative surface-signal AUROC for detection and failure prediction
+(three signals shown per model). All are at or near chance for detection, and
+failure prediction is similarly uninformative. 
+ Thinking-mode ablation. 
+ Table   7 contrasts the Qwen3-4B instruct and thinking variants. Probe
+AUROC is essentially unchanged across the two modes (within 0.004 0.004 ), while
+final-answer accuracy degrades under thinking, from 29.1% to 12.8% on clean
+problems and from 27.9% to 1.2% under error injection, despite roughly five
+times more generated tokens. Because the variants share weights and differ only in
+the inference-time template, this is evidence that the internal error encoding
+persists even as the behavioral output channel degrades. 
+ Metric 
+ Instruct 
+ Thinking 
+ Best probe AUROC (last) 
+ 0.990 
+ 0.989 
+ Best probe AUROC (mean) 
+ 0.993 
+ 0.989 
+ Clean final correct (%) 
+ 29.1 
+ 12.8 
+ Error final correct (%) 
+ 27.9 
+ 1.2 
+ Hedging rate (%) 
+ 0.0 
+ 1.9 
+ Mean tokens (error-std) 
+ 18.4 
+ 89.5 
+ Table 7: Thinking-mode ablation on Qwen3-4B. Probe AUROC is essentially unchanged
+while final-answer accuracy degrades. 
+ Appendix G Per-error-type intervention effects 
+ Table   8 provides the per-error-type breakdown referenced in
+ Section   5 . Each cell reports the change in accuracy (in
+percentage points) relative to the baseline policy, together with the
+corresponding rescued and broken counts in parentheses. Bold entries indicate the
+best-performing policy for each error type. 
+ For readability, several shortened names used in the main text correspond to the
+implementation labels as follows: wrong_op corresponds to
+ wrong_operator ; magnitude corresponds to
+ magnitude_error ; and wrong_pct_base corresponds to
+ wrong_percentage_base . 
+ Error type 
+ n n 
+ Reprompt 
+ Replace prior 
+ Branch + pick 
+ wrong_unit 
+ 16 
+ + 0.0 +0.0 (0/0) 
+ + 37.5 \bm{+37.5} (7/1) 
+ + 0.0 +0.0 (0/0) 
+ off_by_one 
+ 13 
+ + 0.0 +0.0 (0/0) 
+ − 7.7 -7.7 (4/5) 
+ + 15.4 \bm{+15.4} (2/0) 
+ magnitude 
+ 9 
+ + 0.0 +0.0 (0/0) 
+ + 11.1 \bm{+11.1} (3/2) 
+ + 11.1 \bm{+11.1} (1/0) 
+ wrong_op 
+ 16 
+ + 0.0 +0.0 (0/0) 
+ + 6.2 \bm{+6.2} (5/4) 
+ + 6.2 \bm{+6.2} (1/0) 
+ wrong_pct_base 
+ 11 
+ + 0.0 +0.0 (0/0) 
+ − 18.2 -18.2 (2/4) 
+ − 9.1 -9.1 (0/1) 
+ Table 8: Per-error-type intervention effects on the Qwen2.5-3B intervention set
+(65 traces across the five error types). Here n n denotes the number of examples
+for each error type. 
+ Appendix H Pooling ablation 
+ In Section   4 , we report results using last-token activation pooling. For
+completeness, we additionally trained probes using mean-pooled activations across
+the full prompt. The peak performance is comparable between the two approaches:
+on Qwen2.5-3B mean pooling achieves a maximum auroc of 0.986 at layer 27, while
+last-token pooling achieves 0.991 at the same layer. The primary qualitative
+difference appears in the earliest layers: under mean pooling the layer-0 probe
+already achieves auroc ≈ 0.91 \mbox{{auroc}}\approx 0.91 , rather than remaining near chance, because
+mean pooling aggregates information from tokens appearing after the corruption has
+already been processed somewhere within the network; the per-token trajectories in
+ Appendix   I make this accumulation explicit. 
+ Both aggregation modes are trained at every layer and the stronger is selected per
+layer ( Section   4.6 ); the headline figures in Table   3 use
+whichever mode is stronger per model (mean pooling for Llama-3.1-8B, last-token
+elsewhere). Last-token pooling preserves a cleaner interpretation of information
+flow, since it measures what the model has computed at a specific point in the
+sequence, so we adopt it as the default for the information-flow narrative. One
+particularly striking feature of the last-token profile is the sharp increase
+from layer 0 to layer 1, where a single transformer block contributes
+approximately 0.39 AUROC. This behavior is obscured under mean pooling, since the
+layer 0 representation is already highly informative due to prompt-level
+aggregation. Whether this jump is driven by a specific attention head detecting
+token inconsistencies or by an MLP-based feature remains an open mechanistic
+question. We identify this as a promising direction for future investigation. 
+ Appendix I Token-position probe trajectories 
+ To make the cumulative-mean mechanism concrete, Figure   2 traces the
+probe score position by position as the running mean of hidden states grows
+during generation. Formally, at generated position t t the probe is applied to the
+prefix mean
+ 𝐚 ¯ t ( ℓ ) = 1 t ​ ∑ s = 1 t 𝐡 s ( ℓ ) \bar{\mathbf{a}}^{(\ell)}_{t}=\tfrac{1}{t}\sum_{s=1}^{t}\mathbf{h}^{(\ell)}_{s} ,
+so the value at the final position equals the single mean-pooled score analysed in
+ Appendix   H . The figure therefore decomposes that scalar into the
+trajectory that produces it. Three CLEAN traces (top) and three
+ ERROR traces (bottom) are shown for Qwen at the best mean-pooling layer,
+with the Youden and conservative firing thresholds ( τ Youden = 0.595 \tau_{\text{Youden}}=0.595 ,
+ τ cons = 0.584 \tau_{\text{cons}}=0.584 ) marked. The two thresholds nearly coincide here, an
+instance of the empirical near-equality noted in Appendix   E rather than
+a guaranteed ordering. 
+ Two patterns are visible. First, clean and corrupted traces separate at the level
+that matters for pooling: although a clean trajectory may briefly excurse above
+threshold at an early position, its persistent cumulative-mean score
+settles below both thresholds, whereas error trajectories stay above once the
+corrupted operand enters the running mean, reproducing at the single-trace level
+the
+near-perfect separability reported in aggregate ( Table   3 ).
+Second, and more informative for the pooling comparison, the error trajectories
+cross the threshold once the corrupted operand enters the running mean and
+remain there for the rest of the sequence, rather than spiking only at the final
+token. Because every subsequent position averages in the already-corrupted prefix,
+the mean-pooled score is driven above threshold well before the end of generation.
+This is the mechanism behind the otherwise surprising result that mean pooling
+attains auroc ≈ 0.91 \mbox{{auroc}}\approx 0.91 at layer 0 ( Appendix   H ): the corruption
+signal is smeared across positions by the averaging operation rather than
+localised at the final token, which is precisely the property that last-token
+pooling avoids and the reason we adopt last-token pooling as the primary
+aggregation in the main text. The selected error traces span an arithmetic
+operator substitution ( 2hop_fractions_0006 , 3 + 3 3{+}3 in place of
+ 3 × 3 3{\times}3 ) and two magnitude errors in percentage chains
+( 2hop_percentage_0003 , 2hop_percentage_0022 ), indicating the
+behaviour is not specific to a single error type. 
+ Figure 2: Per-token probe-score trajectories under cumulative-mean pooling for
+three CLEAN (top) and three ERROR (bottom) Qwen traces.
+The horizontal axis is generated token position and the vertical axis is the probe
+score; dashed lines mark the Youden and conservative thresholds. Error trajectories
+move above threshold once the corrupted operand enters the running mean and stay
+there, whereas clean trajectories settle below after any early excursion,
+illustrating why mean pooling is informative even at shallow layers
+( Appendix   H ). 
+ Appendix J Sensitivity ablation detail 
+ The branch-and-pick factorial ( Section   4.9 ) crosses K ∈ { 1 , 2 , 4 , 8 } K\in\{1,2,4,8\} 
+with the three threshold modes. When K ≠ 4 K\neq 4 , candidates are drawn from the
+same temperature schedule: the first K K entries of ( 0.7 , 0.85 , 1.0 , 1.15 ) (0.7,0.85,1.0,1.15) for
+ K < 4 K<4 , and each of the four temperatures sampled twice for K = 8 K=8 . The K K 
+ablation therefore varies branch count while holding the temperature range fixed.
+Conservative thresholds fire rarely, reducing the risk of breaking correct traces
+but missing some errors, whereas loose thresholds fire aggressively, rescuing more
+errors at higher broken counts. The interaction with K K reveals whether more
+candidates compensate for a noisier trigger. 
+ Appendix K Persistence versus peak analysis 
+ For each multi-hop error trace we compute two scalars, namely peak 
+(maximum probe score across hops) and persistence (fraction of
+hops exceeding τ Youden \tau_{\text{Youden}} ). AUROC fail \text{AUROC}_{\text{fail}} is
+computed for each scalar, and neither scalar separates degraded from recovered
+traces in any model, refuting the pre-registered persistence-beats-peak
+hypothesis. 
+ Experimental support, please
+ view the build logs 
+ for errors. Generated by
+ L
+ A 
+ T
+ E 
+ xml 
+ .
+ Instructions for reporting errors 
+ We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+ support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+ methods listed below: 
+ Click the "Report Issue" ( 
+ ) button, located in the page header. 
+ Tip: You can select the relevant text first, to include it in your report. 
+ Our team has already identified the following issues . We appreciate your time reviewing and reporting rendering errors we
+ may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+ should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+ all. 
+ Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a list of packages that need conversion , and welcome developer contributions . 
+ We gratefully acknowledge support from our major funders ,
+ member institutions , ,
+ and all contributors.
+ About · 
+ Help · 
+ Contact · 
+ Subscribe · 
+ Copyright · 
+ Privacy · 
+ Accessibility · 
+ Operational Status (opens in new tab) 

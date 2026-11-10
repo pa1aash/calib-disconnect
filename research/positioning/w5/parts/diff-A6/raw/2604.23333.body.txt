@@ -1,0 +1,1184 @@
+Abstract 
+Scaling test-time computation with reinforcement learning (RL) has emerged as a reliable path to improve large language models (LLM) reasoning ability. Yet, outcome-based reward often incentivizes models to be overconfident, leading to hallucinations, unreliable confidence-based control, and unnecessary compute allocation.
+We introduce Reinforcement Learning with Confidence Margin ( RLCM ), a calibration-aware RL framework that jointly optimizes correctness and confidence reliability via a margin-enhanced process reward over intermediate-budget completions.
+Rather than aligning confidence to correctness likelihoods, RLCM encourages the model to widen the confidence margin between correct and incorrect steps within a single reasoning trajectory.
+Across mathematical, code, logic and science benchmarks,
+our method substantially improves calibration while maintaining or improving accuracy.
+We further show that, with calibrated confidence signals, the resulting models enable more efficient conformal risk control and effective confidence-weighted aggregation 1 1 
+ 1 
+ https://github.com/Melodramass/RLCM 2 2 
+ 2 
+ https://huggingface.co/collections/Melodramas/rlcm . 
+ 1 Introduction 
+Reasoning large language models (LLMs) can solve substantially harder problems by scaling test-time computation  ( Snell et al., 2025 ; Muennighoff et al., 2025 ) , achieving impressive gains across domains such as mathematics, coding and scientific discovery  ( Shao et al., 2024 ; OpenAI, 2024 ; DeepSeek-AI et al., 2025 ) . 
+ Figure 1: 
+ Accuracy v.s. ECE at the 8k token budget on AIME24. RLCM preserves high accuracy while substantially improving calibration, achieving the strongest Pareto trade-off among the compared methods.
+However, strong reasoning performance does not guarantee reliable confidence expression  ( Huang et al., 2025b ; Yona et al., 2024 ; Jurayj et al., 2025 ) .
+This limitation is partly rooted in outcome-driven training objectives, which optimize final answer correctness but do not explicitly encourage the model’s confidence to reflect its true probability of being correct  ( Kalai et al., 2025 ; Mei et al., 2026 ) . 
+Moreover, because supervision is concentrated on the final outcome, these objectives provide only weak guidance for how confidence should evolve throughout the reasoning process  ( Lightman et al., 2024 ; Luo et al., 2025b ) .
+As a result, reasoning models may be confidently wrong, and their expressed uncertainty may not faithfully reflect the quality of the reasoning process and final answers  ( Lacombe et al., 2025 ) . Figure 1 shows that existing methods struggle to jointly optimize accuracy and calibration, measured by accuracy and expected calibration error (ECE). 
+Misplaced confidence hinders deployment in high-stakes contexts.
+Uncertainty is a widely used upstream signal for decision making: it can govern whether the model should stop early, revise its answer, invoke external tools, or defer to human experts  ( Wu et al., 2025 ; Jiang et al., 2025 ; Ni et al., 2024 ; Strong et al., 2025 ) .
+Unreliable confidence therefore limits the safe deployment of reasoning models, especially in high-stakes domains and makes it difficult to steer model behavior through uncertainty  ( Band et al., 2024 ; Liu et al., 2025 ) .
+Existing works training language models to express uncertainty, whether based on answer consistency ( Huang et al., 2025a ) , verbalized confidence ( Leng et al., 2025 ) , or post-hoc probing ( Zhang et al., 2025a ) , largely focus on final-answer uncertainty and yield limited control over how confidence evolves across intermediate reasoning steps, leaving process-level calibration largely underexplored. 
+To address this, we propose RLCM (Reinforcement Learning with Confidence Margin), a calibration-aware RL framework that supervises confidence throughout the reasoning trajectory with a margin-based process reward. As is shown in the Figure 2 ,
+we incentivize a model to increase the confidence gap  ( Chhikara, 2025 ) between correct and incorrect intermediate reasoning steps within the same trajectory, providing more useful scores for downstream calibration.
+To make such supervision available during training, we attach a lightweight confidence probe to intermediate reasoning states and use it to estimate how likely a truncated reasoning prefix is to generate a correct final answer. This relative margin-enhanced objective provides a more robust calibration signal than direct score matching while remaining compatible with final-answer optimization.
+By imposing this margin reward at intermediate reasoning steps during the on-policy training stage, we facilitate flexible and cheap post-hoc calibration to address diverse efficiency and safety objectives. 
+Across mathematical reasoning benchmarks of varying difficulty, and on out-of-domain tasks such as coding, scientific, and logic question answering, RLCM improves calibration while preserving or even improving reasoning accuracy, as we indicated in the Figure 1 . These improvements also translate to downstream decision making: calibrated confidence enables more effective conformal risk control, which enforces target error guarantees, and stronger confidence-weighted aggregation results. 
+ Figure 2: 
+Overview of RLCM . We select intermediate compute budgets along a reasoning trajectory. At each budget, Monte Carlo sampling estimates intermediate correctness, while a lightweight probe predicts confidence from the hidden state. Instead of directly aligning confidence with correctness, RLCM encourages a larger confidence margin between correct and incorrect intermediate states within the same trajectory. 
+ 2 Background and Related Work 
+ 2.1 Language Model Reinforcement Learning 
+ Reinforcement Learning with Verifiable Rewards. Recent progress in reasoning language models has been driven by reinforcement learning with verifiable rewards (RLVR) ( Lambert et al., 2025 ) , exemplified by Group Relative Policy Optimization (GRPO) ( Shao et al., 2024 ; DeepSeek-AI et al., 2025 ) . Given a prompt , the policy samples a group of completions , each receiving a scalar reward by verifying its predicted answer with the ground-truth answer. GRPO optimizes: 
+where 
+By using a group-relative advantage as a surrogate for the value function, GRPO training is more efficient, obviating the need for a separate value model like in PPO ( Schulman et al., 2017 ) .
+However, optimizing exclusively for verifiable correctness often triggers calibration degeneration   ( Luo et al., 2025a ) , as binary rewards incentivize models to prioritize correctness over honesty  ( Kalai et al., 2025 ; Bereket and Leskovec, 2025 ) . This necessitates training strategies that harmonize outcome rewards with internal uncertainty, motivating our design of an auxiliary calibration reward.
+We also remove the KL regularizer following ( Yu et al., 2025 ; Zhang et al., 2026 ) . 
+ Process Rewards. RLVR suffers from sparse supervision since rewards are usually assigned only at the end of a rollout. To improve credit assignment, recent work introduces process rewards that provide denser intermediate feedback  ( Zheng et al., 2025 ) . Such rewards can be derived from human annotations or LLM judgments for mathematical reasoning ( Yu et al., 2024 ; Wang et al., 2024a ; Zhang et al., 2025b ) , from LLM-based evaluation of tool utility in agentic tasks ( Goldie et al., 2025 ) , or from Monte Carlo completions sampled from intermediate states ( Li et al., 2025a ; Qi et al., 2025 ; Qu et al., 2025 ) . Another line of work uses stronger models to score or distill token-level reasoning traces, including on-policy distillation ( Agarwal et al., 2024 ) ,
+and recent self-distillation variants ( Zhao et al., 2026 ; Hübotter et al., 2026 ) . These approaches, however, often require costly external model calls. In contrast, RLCM relies on a lightweight probe to deliver efficient process-level supervision. 
+ 2.2 Uncertainty and Calibration in LLMs 
+ Uncertainty Estimation. Transformer-based language models are often miscalibrated and tend to be overconfident in their predictions, which undermines the reliability of their reported confidence ( Guo et al., 2017 ; Desai and Durrett, 2020 ; Jiang et al., 2022 ) . To improve uncertainty estimation quality in LLMs, prior work has explored a broad range of approaches, including logit- or probability-based ( Zhao et al., 2021 ; Gupta et al., 2024 ) , entropy- and consistency-based signals derived from sampled generations ( Farquhar et al., 2024 ; Fu et al., 2025 ; Kang et al., 2025 ) , verbalized confidence elicitation ( Tian et al., 2023 ; Xiong et al., 2024 ; Wang and Stengel-Eskin, 2026 ) , probing internal representations ( CH-Wang et al., 2024 ; Kossen et al., 2025 ) , and directly training models to predict calibrated probabilities ( Chen et al., 2020 ; Wang et al., 2025 ) . Probe-based methods are especially promising for fine-grained uncertainty estimation, but their gains are often strongest in-domain, and robustness under distribution shift remains a central challenge  ( Bakman et al., 2025 ) . 
+ Calibration and Control. Existing works approach post-hoc LLM calibration from several directions. Among post-hoc approaches, conformal prediction is particularly appealing because it provides distribution-free guarantees for prediction sets, intervals, or abstention thresholds in LLM generation  ( Quach et al., 2024 ; Wang et al., 2024b ; Jiang et al., 2025 ) . Beyond post-hoc methods, some works seek to improve calibration during training, including auxiliary calibrators or probes  ( Zhang et al., 2025a ; Shen et al., 2024 ; Kossen et al., 2025 ) , supervised fine-tuning for language models  ( Kapoor et al., 2024 ; Liu et al., 2024 ; Li et al., 2025b ) , and RL objectives that jointly optimize reasoning performance and calibrated confidence  ( Leng et al., 2025 ; Damani et al., 2026 ; Liu et al., 2026 ) .
+And though models can learn to verbalize their confidence through reinforcement learning ( Leng et al., 2025 ; Damani et al., 2026 ; Bani-Harouni et al., 2026 ) , the quantization of these estimates to common numerical values limits their utility for fine-grained control  ( Cruz et al., 2024 ) . 
+ 3 Methodology 
+We develop a calibration-aware reinforcement learning framework that jointly optimizes final-answer correctness and confidence reliability. Subsection  3.1 motivates our use of relative calibration supervision by discussing the limitations of direct score matching in reasoning RL. Subsection  3.2 then introduces our probe-based confidence estimator, which provides fine-grained confidence predictions at intermediate reasoning states. Finally, Subsection  3.3 defines our margin-based reward over intermediate reasoning states and combines it with the answer correctness to derive the final RL training objective. 
+ 3.1 The Cost of Calibrated Reasoning 
+ Figure 3: Trade-off between accuracy and expected calibration error (ECE) across Brier reward weights; = 0 is the GRPO fallback. 
+Calibration measures how well a model’s confidence aligns with its empirical accuracy. A model is perfectly calibrated if, for any confidence level , the probability that its prediction is correct equals , which can be written as: 
+One natural approach is to design a reward function that encourages the expressed confidence to match empirical accuracy via reinforcement learning  ( Damani et al., 2026 ) : 
+.
+However, direct score matching is difficult to combine with reasoning optimization: post-training is still dominated by final-answer accuracy, while pointwise calibration penalties impose an additional per-instance target that can be noisy and only weakly aligned with the RL update direction. Our results in Figure 3 reflect this tension: varying the Brier reward weight moves the model along an accuracy–calibration trade-off, but does not produce a consistent Pareto improvement. This suggests that direct score matching couples calibration supervision to reasoning optimization in a brittle way, potentially degrading learning dynamics. We therefore adopt a weaker, relative form of supervision that treats calibration as a ranking problem over intermediate reasoning states (i.e., reasoning prefixes): instead of forcing confidence to match correctness at each prefix, we encourage the model to assign higher confidence to more solvable prefixes than to less solvable ones. Motivated by prior works that connect ranking objectives to calibration quality  ( Jiang et al., 2024 ; Wang et al., 2025 ) , we instantiate this idea with a margin-based calibration objective that enlarges the confidence gap between better and worse intermediate states within the same trajectory. 
+ 3.2 Probing Confidence in the Process 
+Prior work shows that LLM hidden states encode useful signals about the model’s internal confidence, which can be extracted with lightweight probes  ( CH-Wang et al., 2024 ; Wu et al., 2025 ; Zhang et al., 2025a ) . Following this line of work, we attach a confidence probe to intermediate reasoning states and use it to estimate the probability that a truncated reasoning prefix will yield the correct final answer. 
+For a prompt , let be a sampled reasoning trajectory. We select a set of compute budgets as predefined truncation points along the reasoning trajectory. For each budget , let denote the policy model’s final layer hidden state at the end of the truncated prefix. 
+To construct a supervision target for each truncated state, we append the end-of-thinking token </think> and force the model to generate a final-answer  ( Muennighoff et al., 2025 ; Jurayj et al., 2025 ) (see Appendix  A ). Because any single forced completion can be noisy, we sample completions and use their Monte Carlo accuracy as an estimate of intermediate correctness: 
+where is the gold answer and is the -th forced completion from budget . 
+The confidence probe outputs 
+where the probe maps the policy hidden states into probabilities. We train the probe using binary cross-entropy with soft Monte Carlo targets: 
+The probe is updated jointly with policy training so that it stays matched to the evolving rollout distribution. Its gradients are only used to update itself and do not backpropagate into the policy model. In practice, we choose the probe to be a simple 2-layer MLP. 
+ 3.3 Reinforcement Learning with Confidence Margin 
+Using the intermediate correctness estimates and probe predictions defined in subsection 3.2 , we instantiate calibration supervision as a relative objective over prefixes within the same reasoning trajectory. Rather than requiring confidence to match correctness at each intermediate state, we encourage prefixes with higher estimated solvability to receive higher confidence than less solvable ones. 
+For each budget , let denote the Monte Carlo estimate of intermediate correctness. We partition the selected budgets into 
+That is, contains prefixes that are more likely to lead to the correct final answer, while contains less promising ones. 
+We then define the margin reward as the gap between their average predicted confidence: 
+with empty-set terms defined as . 
+This objective encourages the probe to assign higher confidence to prefixes with higher estimated correctness than to those with lower estimated correctness. Because it depends only on relative confidence ordering, it is less sensitive to global confidence-scale mismatch than pointwise score-matching objectives such as the Brier penalty. Moreover, because the reward is applied to multiple intermediate budgets along each trajectory, it provides process-level supervision over the reasoning trace rather than supervision only on the final answer  ( Lightman et al., 2024 ; Luo et al., 2025b ; Setlur et al., 2025 ) . 
+ Overall Reward. 
+Our final reward combines answer correctness with the auxiliary margin objective: 
+where denotes the correctness reward of the full reasoning trajectory and controls the strength of the auxiliary reward. 
+ 4 Experiments 
+ 4.1 Experimental Settings 
+ Baselines. 
+We compare against representative baselines spanning outcome-only RL and calibration-aware RL:
+(1) Base   ( DeepSeek-AI et al., 2025 ) , the original R1-distilled Qwen-7B model before any additional RL training;
+(2) GRPO   ( Shao et al., 2024 ) , our primary outcome-only RL baseline;
+(3) RLCR   ( Damani et al., 2026 ) , a calibration-aware RL baseline that augments final-answer correctness with a Brier-style reward on verbalized confidence; and
+(4) C 2 GSPG   ( Liu et al., 2026 ) , which incorporates confidence regularization into policy optimization.
+All methods are initialized from the same base model, R1-distilled Qwen-7B and trained
+with identical data, hyperparameters, and probe-training protocol ( Appendix B ). 
+ Datasets. 
+All methods are trained on the GRPO-LEAD dataset  ( Zhang and Zuo, 2025 ) , which was initially curated to train 7B/14B models. We evaluate on a suite of mathematical reasoning benchmarks spanning a broad range of difficulty, including MATH-500  ( Lightman et al., 2024 ) , AMC  ( Hendrycks et al., 2021 ) , OlympiadBench  ( He et al., 2024 ) , and AIME 2024/2025. To assess out-of-domain generalization beyond mathematics, we further evaluate on scientific question answering, GPQA Diamond  ( Rein et al., 2024 ) , logical reasoning, LogiQA  ( Liu et al., 2021 ) , and code reasoning, LiveCodeBench  ( Jain et al., 2025 ) . 
+ Evaluation Metrics. We evaluate models along three complementary dimensions: reasoning performance, calibration quality, and confidence discrimination. For reasoning performance, we report the averaged rollout accuracy (Pass@1). For calibration, we report Expected Calibration Error (ECE)  ( Pakdaman Naeini et al., 2015 ) , which measures the discrepancy between predicted confidence and empirical accuracy via binning. To directly characterize overconfidence, we additionally report Positive Calibration Error (PCE)  ( Ma et al., 2026 ) , which restricts ECE to bins where confidence exceeds accuracy: 
+ Method 
+ Conf. 
+ MATH-500 
+ AIME24 
+ AIME25 
+ Acc 
+ PCE 
+ ECE 
+ Acc 
+ PCE 
+ ECE 
+ Acc 
+ PCE 
+ ECE 
+ Base 
+ probe 
+ .866 
+ .000 
+ .132 
+ .398 
+ .089 
+ .095 
+ .293 
+ .155 
+ .155 
+ GRPO 
+ probe 
+ .891 
+ .000 
+ .203 
+ .479 
+ .108 
+ .108 
+ .373 
+ .195 
+ .195 
+ RLCR 
+ verbal 
+ .888 
+ .065 
+ .065 
+ .473 
+ .243 
+ .243 
+ .358 
+ .321 
+ .321 
+ C 2 GSPG 
+ logits 
+ .898 
+ .003 
+ .087 
+ .466 
+ .334 
+ .334 
+ .359 
+ .427 
+ .427 
+ RLCM 
+ probe 
+ .891 
+ .000 
+ .133 
+ .492 
+ .049 
+ .061 
+ .360 
+ .120 
+ .123 
+ Method 
+ Conf. 
+ AMC 
+ OlympiadBench 
+ Overall 
+ Acc 
+ PCE 
+ ECE 
+ Acc 
+ PCE 
+ ECE 
+ Acc 
+ PCE 
+ ECE 
+ Base 
+ probe 
+ .669 
+ .055 
+ .067 
+ .490 
+ .031 
+ .059 
+ .543 
+ .066 
+ .101 
+ GRPO 
+ probe 
+ .798 
+ .008 
+ .045 
+ .566 
+ .014 
+ .096 
+ .621 
+ .065 
+ .130 
+ RLCR 
+ verbal 
+ .764 
+ .111 
+ .111 
+ .568 
+ .205 
+ .205 
+ .610 
+ .189 
+ .189 
+ C 2 GSPG 
+ logits 
+ .797 
+ .059 
+ .075 
+ .570 
+ .233 
+ .235 
+ .618 
+ .211 
+ .232 
+ RLCM 
+ probe 
+ .785 
+ .010 
+ .070 
+ .560 
+ .002 
+ .068 
+ .618 
+ .036 
+ .091 
+ Method 
+ Conf. 
+ LiveCodeBench 
+ LogiQA 
+ GPQA Diamond 
+ Acc 
+ PCE 
+ ECE 
+ Acc 
+ PCE 
+ ECE 
+ Acc 
+ PCE 
+ ECE 
+ Base 
+ probe 
+ .326 
+ .182 
+ .182 
+ .478 
+ .336 
+ .336 
+ .448 
+ .132 
+ .177 
+ GRPO 
+ probe 
+ .380 
+ .004 
+ .130 
+ .490 
+ .147 
+ .154 
+ .476 
+ .021 
+ .110 
+ RLCR 
+ verbal 
+ .361 
+ .218 
+ .218 
+ .495 
+ .404 
+ .404 
+ .376 
+ .562 
+ .562 
+ C 2 GSPG 
+ logits 
+ .374 
+ .499 
+ .499 
+ .505 
+ .315 
+ .315 
+ .326 
+ .471 
+ .471 
+ RLCM 
+ probe 
+ .389 
+ .050 
+ .051 
+ .497 
+ .127 
+ .145 
+ .479 
+ .073 
+ .102 
+ Table 1: Performance comparison on in-domain and out-of-domain benchmarks. The top two panels report results on in-domain math benchmarks, with “Overall” denoting the average over these tasks; the bottom panel reports results on out-of-domain tasks. “Conf.” denotes the confidence estimation mechanism used by each method. Bold and underlined entries mark the best and second-best results, respectively. Cases where PCE equals ECE indicate that the calibration error arises entirely from overconfidence. 
+Here, is the number of bins, the samples in bin , and the total number of samples. 
+ 4.2 Overall Results 
+ Margin-based process supervision yields the best balance. 
+RLCM achieves the most favorable overall trade-off between reasoning performance and calibration. As is shown in Figure 4 , compared to GRPO, it preserves nearly all of the accuracy gains from RL while consistently reducing calibration error. Compared to other calibration-aware methods, RLCM achieves the best accuracy and calibration on AIME24 and AIME25 while remaining competitive on the rest. These results suggest that relative supervision via a confidence-margin reward aligns better with the optimization dynamics of reasoning. 
+ Outcome-driven RL improves accuracy, but not calibration. 
+ Table 1 shows that GRPO is a decent reasoning baseline with the highest overall accuracy. However, these gains do not reliably translate into better calibration. In particular, GRPO’s overall calibration result is worse than the base model. On difficult benchmarks (AIME24/25), its accuracy gains are accompanied by substantial degradation in PCE and ECE. This supports our motivation: optimizing only for final-answer correctness can make the model’s confidence less reliable. 
+ Verbalized and logit-based confidence are insufficient. 
+Although RLCR (verbalized confidence) and C 2 GSPG (logit-based confidence) are both designed to improve calibration, they underperform GRPO not only in accuracy but also in PCE and ECE. In  Appendix D , their confidence signals occupy a much narrower range than RLCM’s probe-based confidence, making them less expressive and more poorly calibrated. This limited dynamic range reduces their usefulness for fine-grained calibration and confidence-based control. 
+ Figure 4: Average accuracy (left) and ECE (right) over five in-domain datasets across token budgets, with correctness and confidence extracted via force output. RLCM matches the strongest baseline in accuracy while consistently yielding the lowest ECE. 
+ The gains persist beyond the training domain. 
+Although all methods are trained on math-centric data, RLCM remains strong on coding, science, and logical reasoning tasks. It achieves the best accuracy on LiveCodeBench and GPQA while also attaining the best calibration on those datasets. On LogiQA, RLCM attains the lowest calibration error while maintaining decent accuracy. These results suggest that margin-based process supervision helps preserve both performance and calibration under severe distribution shift. 
+ 4.3 Calibrated Reasoning Process 
+To verify that our method performs well throughout the reasoning trajectory rather than only at the final answer, we collect forced-output answers and probe intermediate reasoning states for confidence estimation at varying compute budgets. Figure 4 reports accuracy and ECE averaged across five in-domain datasets. As shown in Figure  4 (left), RLCM matches the accuracy of the strongest baseline across all token budgets. On the calibration side (Figure  4 , right), RLCM consistently achieves the lowest ECE across nearly the entire budget range. These results demonstrate that RLCM is the only method that delivers both high accuracy and reliable confidence estimates at every stage of reasoning, confirming that process supervision via margin reward preserves calibration throughout the trajectory rather than emerging only at the end. 
+ 4.4 Epistemic Uncertainty Analysis 
+ Figure 5: Frequency of three types of epistemic uncertainty markers in AIME25 reasoning traces, normalized by token count. 
+Following  Qian et al. (2025) ; Kim et al. (2026) , we analyze verbalized uncertainty expressions in reasoning traces to characterize model behavior at the semantic level. We group these expressions into three categories: self-correction , confidence hedging , and knowledge gaps . As a case study on AIME25 ( Figure 5 ), RLCM largely preserves the distribution of uncertainty expressions exhibited by the base model across all three categories, whereas GRPO markedly suppresses self-correction behavior. Notably, this preservation emerges despite the absence of any explicit reward on semantic-level uncertainty, suggesting that token-level calibration naturally aligns with the base model’s verbalized reasoning patterns. More analysis can be found in the Appendix E . 
+ 4.5 Ablation Study 
+This ablation isolates two design choices: where calibration supervision is applied (final or intermediate) and how it is applied (Brier score or margin reward). For a fair comparison, all variants use the same on-the-fly probe-based confidence estimator and the same auxiliary reward weight, . Thus, they are closely matched variants of our proposed framework, RLCM. The only difference is in the form and placement of the calibration signal. 
+ Method 
+ OlympiadBench 
+ AIME24 
+ AIME25 
+ Acc 
+ PCE 
+ ECE 
+ Acc 
+ PCE 
+ ECE 
+ Acc 
+ PCE 
+ ECE 
+ Final-Brier 
+ .564 
+ .200 
+ .200 
+ .496 
+ .224 
+ .224 
+ .366 
+ .317 
+ .317 
+ Final-Margin 
+ .526 
+ .126 
+ .126 
+ .456 
+ .119 
+ .122 
+ .328 
+ .201 
+ .201 
+ Process-Brier 
+ .549 
+ .100 
+ .100 
+ .493 
+ .061 
+ .064 
+ .350 
+ .171 
+ .171 
+ RLCM 
+ .560 
+ .002 
+ .068 
+ .492 
+ .049 
+ .061 
+ .360 
+ .120 
+ .123 
+ Table 2: 
+Effects of final and process reward variants. Darker shaded cells with bold text indicate the best result in each column, and lighter shaded cells indicate the second-best result. The RLCM row is lightly shaded for readability.
+We compare four variants: (1) Final-Brier , which applies a Brier-style penalty only to the final-step probe confidence, ;
+(2) Final-Margin , the final-step counterpart of our margin reward, ;
+(3) Process-Brier , which aligns intermediate probe confidence with intermediate Monte Carlo correctness using an averaged Brier penalty,
+ ;
+and (4) RLCM , which applies margin-based process supervision over intermediate completions. 
+The ablation study in Table 2 highlights two main findings. First, process supervision consistently outperforms final step only supervision, improving calibration while largely preserving reasoning accuracy. Second, margin-based supervision produces more reliable calibration than Brier-style score matching, especially in reducing overconfidence. In contrast, Final-Brier performs poorly: its ECE and PCE are nearly identical across benchmarks, suggesting that almost all of its calibration error arises from overconfidence. Overall, these results indicate that process-level margin supervision provides a more stable and effective calibration signal than direct Brier matching.
+Among all variants, RLCM provides the strongest overall balance between accuracy and calibration. 
+See ablation study on the base model, hyperparameter in the Appendix C . 
+ 5 Downstream Applications 
+ 5.1 Calibrated Reasoning for Risk Control 
+Conformal Risk Control  ( Angelopoulos et al., 2024 ) extends conformal prediction  ( Shafer and Vovk, 2008 ) to control the expected value of a monotone risk function. We seek a parameter such that the risk on unseen data is bounded by with probability at least . We solve this using Learn-Then-Test (LTT)  ( Angelopoulos et al., 2025 ) , which frames threshold selection as a multiple-testing problem over hypotheses whose null states that the risk exceeds . By combining sequential testing with concentration bounds, LTT returns a statistically valid threshold.
+However, validity does not imply efficiency: when confidence is uncalibrated or non-monotonic, LTT tends to select conservative thresholds, reducing the compute savings of dynamic inference. Following Wang et al. (2026) , we therefore use two confidence thresholds, and . triggers early exit under persistently low confidence to save computation on likely unsolved examples, while triggers exits once confidence is high enough to justify a reliable prediction. 
+ Figure 6: Risk control on AMC with LTT. Compared with GRPO and RLCR, RLCM yields a smooth, calibrated target-to-realized accuracy curve (Left), uses fewer tokens at comparable target accuracies (Right), and indicates more useful confidence for early exiting. 
+ Figure 6 shows that RLCM provides the most useful confidence signal for LTT-based early exit. Although all methods successfully control risk, RLCM’s realized accuracy tracks the perfect-calibration line more closely than GRPO or RLCR, with a smoother curve that enables finer-grained threshold control. GRPO is consistently overly conservative, spending excess compute to achieve unnecessarily high accuracy. RLCR, by contrast, exhibits step-like plateaus due to its coarse verbalized confidence, which limits precise risk control.
+This advantage also translates into compute savings. At comparable target accuracies, RLCM uses substantially fewer tokens than GRPO and offers a broader, smoother accuracy–compute trade-off than RLCR, indicating that its probe-based confidence is more effective, and more efficient for continuous early-exit control. 
+ 5.2 Confidence-Weighted Aggregation 
+Well-calibrated confidence can improve answer aggregation by weighting candidate answers according to their estimated reliability rather than counting all rollouts equally. Given sampled rollouts producing answers with confidence scores , and letting denote the set of distinct answers, majority voting selects the most frequent answer, while confidence-weighted voting selects the answer with the highest total confidence: 
+Here ties in majority voting are broken uniformly at random, and denotes the confidence assigned to rollout . Pass@1 denotes the expected accuracy of a single sampled rollout. 
+ Figure 7: RLCM’s margin reward encourages it to expose useful uncertainty scores to the probe at every reasoning step, yielding the strongest confidence-weighted aggregation results compared to GRPO and RLCR 
+ Method 
+ RLCM 
+ GRPO 
+ RLCR 
+ Pass@1 
+ Maj. 
+ Conf. 
+ Pass@1 
+ Maj. 
+ Conf. 
+ Pass@1 
+ Maj. 
+ Conf. 
+ Accuracy 
+ .627 
+ .733 
+ .748 
+ .629 
+ .719 
+ .723 
+ .589 
+ .683 
+ .675 
+ Table 3: Across Benchmarks Average Accuracy at 8k budget comparison under different aggregation strategies. RLCM yields substantial improvements when aggregating answers across parallel attempts. 
+ Table 3 and Figure 7 show that similar pass@1 accuracy does not imply equally useful confidence for aggregation.
+Although RLCM and GRPO have nearly identical Pass@1 accuracy, RLCM delivers consistently larger gains from confidence-weighted voting, indicating that its confidence estimates are better aligned with correctness. In contrast, GRPO and RLCR exhibit limited improvements, suggesting that their confidence signals are less reliable for weighting candidate answers. Detailed per-benchmark results are provided in Appendix F . 
+ 6 Conclusion 
+We presented RLCM, a calibration-aware reinforcement learning framework that uses margin-based process supervision to enable calibrated LLM reasoning. By encouraging higher confidence on more solvable intermediate states than on less reliable ones, RLCM learns more trustworthy confidence estimates without sacrificing reasoning performance. Empirically, this leads to stronger calibration across diverse benchmarks and makes confidence substantially more useful for downstream decision making, including conformal risk control and confidence-weighted aggregation. These results highlight relative process supervision as a practical and effective strategy for training reliable reasoning models. 
+Acknowledgments 
+This work is supported by the project of “Safely Confident Reasoning” in the Science of Trustworthy AI program of the Schmidt Sciences, the Defense Advanced Research Projects Agency (DARPA) under Contract No. HR001125C0304, and Office of Naval Research funding ONR:N00014-24-1-2089. Any opinions, findings and conclusions or recommendations expressed in this material are those of the author(s) and
+do not necessarily reflect the views of Schmidt Sciences, DARPA, or ONR. 
+References 
+ Agarwal et al. (2024) 
+ R. Agarwal, N. Vieillard, Y. Zhou, P. Stanczyk, S. R. Garea, M. Geist, and O. Bachem 
+ On-policy distillation of language models: learning from self-generated mistakes .
+ In The Twelfth International Conference on Learning Representations ,
+ External Links: Link 
+ Cited by: §2.1 .
+ Angelopoulos et al. (2025) 
+ A. N. Angelopoulos, S. Bates, E. J. Candès, M. I. Jordan, and L. Lei 
+ Learn then test: Calibrating predictive algorithms to achieve risk control .
+ The Annals of Applied Statistics 19 ( 2 ), pp. 1641 – 1662 .
+ External Links: Document ,
+ Link 
+ Cited by: §5.1 .
+ Angelopoulos et al. (2024) 
+ A. N. Angelopoulos, S. Bates, A. Fisch, L. Lei, and T. Schuster 
+ Conformal risk control .
+ In The Twelfth International Conference on Learning Representations ,
+ External Links: Link 
+ Cited by: §5.1 .
+ Bakman et al. (2025) 
+ Y. F. Bakman, D. N. Yaldiz, S. Kang, T. Zhang, B. Buyukates, S. Avestimehr, and S. P. Karimireddy 
+ Reconsidering LLM uncertainty estimation methods in the wild .
+ In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , W. Che, J. Nabende, E. Shutova, and M. T. Pilehvar (Eds.) ,
+ Vienna, Austria , pp. 29531–29556 .
+ External Links: Link ,
+ Document ,
+ ISBN 979-8-89176-251-0 
+ Cited by: §2.2 .
+ Band et al. (2024) 
+ N. Band, X. Li, T. Ma, and T. Hashimoto 
+ Linguistic calibration of long-form generations .
+ In Proceedings of the 41st International Conference on Machine Learning ,
+ ICML’24 .
+ Cited by: §1 .
+ Bani-Harouni et al. (2026) 
+ D. Bani-Harouni, C. Pellegrini, P. Stangel, E. Özsoy, K. Zaripova, M. Keicher, and N. Navab 
+ Rewarding doubt: a reinforcement learning approach to calibrated confidence expression of large language models .
+ In The Fourteenth International Conference on Learning Representations ,
+ External Links: Link 
+ Cited by: §2.2 .
+ Bereket and Leskovec (2025) 
+ M. Bereket and J. Leskovec 
+ Uncalibrated reasoning: grpo induces overconfidence for stochastic outcomes .
+ arXiv preprint arXiv:2508.11800 .
+ Cited by: §2.1 .
+ CH-Wang et al. (2024) 
+ S. CH-Wang, B. Van Durme, J. Eisner, and C. Kedzie 
+ Do androids know they‘re only dreaming of electric sheep? .
+ In Findings of the Association for Computational Linguistics: ACL 2024 , L. Ku, A. Martins, and V. Srikumar (Eds.) ,
+ Bangkok, Thailand , pp. 4401–4420 .
+ External Links: Link ,
+ Document 
+ Cited by: §2.2 ,
+ §3.2 .
+ Chen et al. (2020) 
+ T. Chen, Z. Jiang, A. Poliak, K. Sakaguchi, and B. Van Durme 
+ Uncertain natural language inference .
+ In Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics , D. Jurafsky, J. Chai, N. Schluter, and J. Tetreault (Eds.) ,
+ Online , pp. 8772–8779 .
+ External Links: Link ,
+ Document 
+ Cited by: §2.2 .
+ Chhikara (2025) 
+ P. Chhikara 
+ Mind the confidence gap: overconfidence, calibration, and distractor effects in large language models .
+ Transactions on Machine Learning Research .
+ Note: 
+ External Links: ISSN 2835-8856 ,
+ Link 
+ Cited by: §1 .
+ Cruz et al. (2024) 
+ A. F. Cruz, M. Hardt, and C. Mendler-Dünner 
+ Evaluating language models as risk scores .
+ In The Thirty-eight Conference on Neural Information Processing Systems Datasets and Benchmarks Track ,
+ External Links: Link 
+ Cited by: §2.2 .
+ Dai (2026) 
+ Y. Dai 
+ Rescaling confidence: what scale design reveals about llm metacognition .
+ arXiv preprint arXiv:2603.09309 .
+ Cited by: §D.2 .
+ Damani et al. (2026) 
+ M. Damani, I. Puri, S. Slocum, I. Shenfeld, L. Choshen, Y. Kim, and J. Andreas 
+ Beyond binary rewards: training LMs to reason about their uncertainty .
+ In The Fourteenth International Conference on Learning Representations ,
+ External Links: Link 
+ Cited by: §2.2 ,
+ §3.1 ,
+ §4.1 .
+ DeepSeek-AI et al. (2025) 
+ DeepSeek-AI, D. Guo, D. Yang, H. Zhang, J. Song, R. Zhang, R. Xu, Q. Zhu, S. Ma, P. Wang, X. Bi, X. Zhang, X. Yu, Y. Wu, Z. F. Wu, Z. Gou, Z. Shao, Z. Li, Z. Gao, A. Liu, B. Xue, B. Wang, B. Wu, B. Feng, C. Lu, C. Zhao, C. Deng, C. Zhang, C. Ruan, D. Dai, D. Chen, D. Ji, E. Li, F. Lin, F. Dai, F. Luo, G. Hao, G. Chen, G. Li, H. Zhang, H. Bao, H. Xu, H. Wang, H. Ding, H. Xin, H. Gao, H. Qu, H. Li, J. Guo, J. Li, J. Wang, J. Chen, J. Yuan, J. Qiu, J. Li, J. L. Cai, J. Ni, J. Liang, J. Chen, K. Dong, K. Hu, K. Gao, K. Guan, K. Huang, K. Yu, L. Wang, L. Zhang, L. Zhao, L. Wang, L. Zhang, L. Xu, L. Xia, M. Zhang, M. Zhang, M. Tang, M. Li, M. Wang, M. Li, N. Tian, P. Huang, P. Zhang, Q. Wang, Q. Chen, Q. Du, R. Ge, R. Zhang, R. Pan, R. Wang, R. J. Chen, R. L. Jin, R. Chen, S. Lu, S. Zhou, S. Chen, S. Ye, S. Wang, S. Yu, S. Zhou, S. Pan, S. S. Li, S. Zhou, S. Wu, S. Ye, T. Yun, T. Pei, T. Sun, T. Wang, W. Zeng, W. Zhao, W. Liu, W. Liang, W. Gao, W. Yu, W. Zhang, W. L. Xiao, W. An, X. Liu, X. Wang, X. Chen, X. Nie, X. Cheng, X. Liu, X. Xie, X. Liu, X. Yang, X. Li, X. Su, X. Lin, X. Q. Li, X. Jin, X. Shen, X. Chen, X. Sun, X. Wang, X. Song, X. Zhou, X. Wang, X. Shan, Y. K. Li, Y. Q. Wang, Y. X. Wei, Y. Zhang, Y. Xu, Y. Li, Y. Zhao, Y. Sun, Y. Wang, Y. Yu, Y. Zhang, Y. Shi, Y. Xiong, Y. He, Y. Piao, Y. Wang, Y. Tan, Y. Ma, Y. Liu, Y. Guo, Y. Ou, Y. Wang, Y. Gong, Y. Zou, Y. He, Y. Xiong, Y. Luo, Y. You, Y. Liu, Y. Zhou, Y. X. Zhu, Y. Xu, Y. Huang, Y. Li, Y. Zheng, Y. Zhu, Y. Ma, Y. Tang, Y. Zha, Y. Yan, Z. Z. Ren, Z. Ren, Z. Sha, Z. Fu, Z. Xu, Z. Xie, Z. Zhang, Z. Hao, Z. Ma, Z. Yan, Z. Wu, Z. Gu, Z. Zhu, Z. Liu, Z. Li, Z. Xie, Z. Song, Z. Pan, Z. Huang, Z. Xu, Z. Zhang, and Z. Zhang 
+ DeepSeek-r1: incentivizing reasoning capability in llms via reinforcement learning .
+ External Links: 2501.12948 ,
+ Link 
+ Cited by: §1 ,
+ §2.1 ,
+ §4.1 .
+ Desai and Durrett (2020) 
+ S. Desai and G. Durrett 
+ Calibration of pre-trained transformers .
+ In Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP) ,
+ pp. 295–302 .
+ Cited by: §2.2 .
+ Farquhar et al. (2024) 
+ S. Farquhar, J. Kossen, L. Kuhn, and Y. Gal 
+ Detecting hallucinations in large language models using semantic entropy .
+ Nature 630 ( 8017 ), pp. 625–630 .
+ Cited by: §2.2 .
+ Fu et al. (2025) 
+ Y. Fu, X. Wang, Y. Tian, and J. Zhao 
+ Deep think with confidence .
+ External Links: 2508.15260 ,
+ Link 
+ Cited by: §2.2 .
+ Goldie et al. (2025) 
+ A. Goldie, A. Mirhoseini, H. Zhou, I. Cai, and C. D. Manning 
+ Synthetic Data Generation & Multi-Step RL for Reasoning & Tool Use .
+ arXiv .
+ Note: arXiv:2504.04736 [cs] 
+ External Links: Link ,
+ Document 
+ Cited by: §2.1 .
+ Guo et al. (2017) 
+ C. Guo, G. Pleiss, Y. Sun, and K. Q. Weinberger 
+ On calibration of modern neural networks .
+ In International conference on machine learning ,
+ pp. 1321–1330 .
+ Cited by: §2.2 .
+ Gupta et al. (2024) 
+ N. Gupta, H. Narasimhan, W. Jitkrittum, A. S. Rawat, A. K. Menon, and S. Kumar 
+ Language model cascades: token-level uncertainty and beyond .
+ In The Twelfth International Conference on Learning Representations ,
+ External Links: Link 
+ Cited by: §2.2 .
+ He et al. (2024) 
+ C. He, R. Luo, Y. Bai, S. Hu, Z. Thai, J. Shen, J. Hu, X. Han, Y. Huang, Y. Zhang, J. Liu, L. Qi, Z. Liu, and M. Sun 
+ OlympiadBench: a challenging benchmark for promoting AGI with olympiad-level bilingual multimodal scientific problems .
+ In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , L. Ku, A. Martins, and V. Srikumar (Eds.) ,
+ Bangkok, Thailand , pp. 3828–3850 .
+ External Links: Link ,
+ Document 
+ Cited by: §4.1 .
+ Hendrycks et al. (2021) 
+ D. Hendrycks, C. Burns, S. Kadavath, A. Arora, S. Basart, E. Tang, D. Song, and J. Steinhardt 
+ Measuring mathematical problem solving with the MATH dataset .
+ In Thirty-fifth Conference on Neural Information Processing Systems Datasets and Benchmarks Track (Round 2) ,
+ External Links: Link 
+ Cited by: §4.1 .
+ Huang et al. (2025a) 
+ C. Huang, L. Huang, J. Leng, J. Liu, and J. Huang 
+ Efficient Test-Time Scaling via Self-Calibration .
+ arXiv .
+ Note: arXiv:2503.00031 [cs] 
+ External Links: Link ,
+ Document 
+ Cited by: §1 .
+ Huang et al. (2025b) 
+ L. Huang, W. Yu, W. Ma, W. Zhong, Z. Feng, H. Wang, Q. Chen, W. Peng, X. Feng, B. Qin, and T. Liu 
+ A survey on hallucination in large language models: principles, taxonomy, challenges, and open questions .
+ ACM Trans. Inf. Syst. 43 ( 2 ).
+ External Links: ISSN 1046-8188 ,
+ Link ,
+ Document 
+ Cited by: §1 .
+ Hübotter et al. (2026) 
+ J. Hübotter, F. Lübeck, L. Behric, A. Baumann, M. Bagatella, D. Marta, I. Hakimi, I. Shenfeld, T. K. Buening, C. Guestrin, and A. Krause 
+ Reinforcement Learning via Self-Distillation .
+ arXiv .
+ Note: arXiv:2601.20802 [cs]
+version: 1 
+ External Links: Link ,
+ Document 
+ Cited by: §2.1 .
+ Jain et al. (2025) 
+ N. Jain, K. Han, A. Gu, W. Li, F. Yan, T. Zhang, S. Wang, A. Solar-Lezama, K. Sen, and I. Stoica 
+ LiveCodeBench: holistic and contamination free evaluation of large language models for code .
+ In The Thirteenth International Conference on Learning Representations ,
+ External Links: Link 
+ Cited by: §4.1 .
+ Jiang et al. (2022) 
+ Z. P. Jiang, A. Liu, and B. Van Durme 
+ Calibrating zero-shot cross-lingual (un-) structured predictions .
+ In Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing ,
+ pp. 2648–2674 .
+ Cited by: §2.2 .
+ Jiang et al. (2025) 
+ Z. Jiang, A. Liu, and B. V. Durme 
+ Conformal linguistic calibration: trading-off between factuality and specificity .
+ In The Thirty-ninth Annual Conference on Neural Information Processing Systems ,
+ External Links: Link 
+ Cited by: §1 ,
+ §2.2 .
+ Jiang et al. (2024) 
+ Z. Jiang, A. Liu, and B. Van Durme 
+ Addressing the binning problem in calibration assessment through scalar annotations .
+ Transactions of the Association for Computational Linguistics 12 , pp. 120–136 .
+ External Links: Link ,
+ Document 
+ Cited by: §3.1 .
+ Jurayj et al. (2025) 
+ W. Jurayj, J. Cheng, and B. Van Durme 
+ Is that your final answer? test-time scaling improves selective question answering .
+ In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 2: Short Papers) , W. Che, J. Nabende, E. Shutova, and M. T. Pilehvar (Eds.) ,
+ Vienna, Austria , pp. 636–644 .
+ External Links: Link ,
+ Document ,
+ ISBN 979-8-89176-252-7 
+ Cited by: §1 ,
+ §3.2 .
+ Kalai et al. (2025) 
+ A. T. Kalai, O. Nachum, S. S. Vempala, and E. Zhang 
+ Why language models hallucinate .
+ arXiv preprint arXiv:2509.04664 .
+ Cited by: §1 ,
+ §2.1 .
+ Kang et al. (2025) 
+ Z. Kang, X. Zhao, and D. Song 
+ Scalable best-of-n selection for large language models via self-certainty .
+ In 2nd AI for Math Workshop @ ICML 2025 ,
+ External Links: Link 
+ Cited by: §2.2 .
+ Kapoor et al. (2024) 
+ S. Kapoor, N. Gruver, M. Roberts, K. Collins, A. Pal, U. Bhatt, A. Weller, S. Dooley, M. Goldblum, and A. G. Wilson 
+ Large language models must be taught to know what they don’t know .
+ In Proceedings of the 38th International Conference on Neural Information Processing Systems ,
+ NIPS ’24 , Red Hook, NY, USA .
+ External Links: ISBN 9798331314385 
+ Cited by: §2.2 .
+ Kim et al. (2026) 
+ J. Kim, X. Luo, M. Kim, S. Lee, D. Li, and Y. Yang 
+ Understanding reasoning in llms through strategic information allocation under uncertainty .
+ External Links: 2603.15500 ,
+ Link 
+ Cited by: §4.4 .
+ Kossen et al. (2025) 
+ J. Kossen, J. Han, M. Razzak, L. Schut, S. A. Malik, and Y. Gal 
+ Semantic entropy probes: robust and cheap hallucination detection in LLMs .
+ External Links: Link 
+ Cited by: §2.2 ,
+ §2.2 .
+ Lacombe et al. (2025) 
+ R. Lacombe, K. Wu, and E. Dilworth 
+ Think with moderation: reasoning models and confidence calibration in the climate domain .
+ In ICML 2025 Workshop on Reliable and Responsible Foundation Models ,
+ External Links: Link 
+ Cited by: §1 .
+ Lambert et al. (2025) 
+ N. Lambert, J. Morrison, V. Pyatkin, S. Huang, H. Ivison, F. Brahman, L. J. V. Miranda, A. Liu, N. Dziri, X. Lyu, Y. Gu, S. Malik, V. Graf, J. D. Hwang, J. Yang, R. L. Bras, O. Tafjord, C. Wilhelm, L. Soldaini, N. A. Smith, Y. Wang, P. Dasigi, and H. Hajishirzi 
+ Tulu 3: pushing frontiers in open language model post-training .
+ In Second Conference on Language Modeling ,
+ External Links: Link 
+ Cited by: §2.1 .
+ Leng et al. (2025) 
+ J. Leng, C. Huang, B. Zhu, and J. Huang 
+ Taming overconfidence in LLMs: reward calibration in RLHF .
+ In The Thirteenth International Conference on Learning Representations ,
+ External Links: Link 
+ Cited by: §1 ,
+ §2.2 .
+ Li et al. (2025a) 
+ S. Li, S. Dong, K. Luan, X. Di, and C. Ding 
+ Enhancing reasoning through process supervision with monte carlo tree search .
+ External Links: 2501.01478 ,
+ Link 
+ Cited by: §2.1 .
+ Li et al. (2025b) 
+ Y. Li, M. Xiong, J. Wu, and B. Hooi 
+ ConfTuner: training large language models to express their confidence verbally .
+ In The Thirty-ninth Annual Conference on Neural Information Processing Systems ,
+ External Links: Link 
+ Cited by: §2.2 .
+ Lightman et al. (2024) 
+ H. Lightman, V. Kosaraju, Y. Burda, H. Edwards, B. Baker, T. Lee, J. Leike, J. Schulman, I. Sutskever, and K. Cobbe 
+ Let’s verify step by step .
+ In The Twelfth International Conference on Learning Representations ,
+ External Links: Link 
+ Cited by: §1 ,
+ §3.3 ,
+ §4.1 .
+ Liu et al. (2026) 
+ H. Liu, S. Wang, and H. Xu 
+ C$^2$GSPG: confidence-calibrated group sequence policy gradient towards self-aware reasoning .
+ External Links: Link 
+ Cited by: §2.2 ,
+ §4.1 .
+ Liu et al. (2021) 
+ J. Liu, L. Cui, H. Liu, D. Huang, Y. Wang, and Y. Zhang 
+ LogiQA: a challenge dataset for machine reading comprehension with logical reasoning .
+ In Proceedings of the Twenty-Ninth International Joint Conference on Artificial Intelligence ,
+ IJCAI’20 .
+ External Links: ISBN 9780999241165 
+ Cited by: §4.1 .
+ Liu et al. (2024) 
+ S. Liu, Z. Li, X. Liu, R. Zhan, D. F. Wong, L. S. Chao, and M. Zhang 
+ Can LLMs learn uncertainty on their own? expressing uncertainty effectively in a self-training manner .
+ In Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing , Y. Al-Onaizan, M. Bansal, and Y. Chen (Eds.) ,
+ Miami, Florida, USA , pp. 21635–21645 .
+ External Links: Link ,
+ Document 
+ Cited by: §2.2 .
+ Liu et al. (2025) 
+ X. Liu, T. Chen, L. Da, C. Chen, Z. Lin, and H. Wei 
+ Uncertainty quantification and confidence calibration in large language models: a survey .
+ In Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining V.2 ,
+ KDD ’25 , New York, NY, USA , pp. 6107–6117 .
+ External Links: ISBN 9798400714542 ,
+ Link ,
+ Document 
+ Cited by: §1 .
+ Luo et al. (2025a) 
+ B. Luo, S. Wang, S. Li, and H. Wei 
+ Your pre-trained LLM is secretly an unsupervised confidence calibrator .
+ In The Thirty-ninth Annual Conference on Neural Information Processing Systems ,
+ External Links: Link 
+ Cited by: §2.1 .
+ Luo et al. (2025b) 
+ L. Luo, Y. Liu, R. Liu, S. Phatale, M. Guo, H. Lara, Y. Li, L. Shu, L. Meng, J. Sun, and A. Rastogi 
+ Improve mathematical reasoning in language models with automated process supervision .
+ External Links: Link 
+ Cited by: §1 ,
+ §3.3 .
+ Ma et al. (2026) 
+ Z. Ma, X. Wen, B. Cao, Y. Lu, H. Lin, J. Yang, M. He, X. Han, and L. Sun 
+ Decoupling reasoning and confidence: resurrecting calibration in reinforcement learning from verifiable rewards .
+ External Links: 2603.09117 ,
+ Link 
+ Cited by: §4.1 .
+ Mei et al. (2026) 
+ Z. Mei, C. Zhang, T. Yin, J. Lidard, O. Sho, and A. Majumdar 
+ Reasoning about uncertainty: do reasoning models know when they don’t know? .
+ In Findings of the Association for Computational Linguistics: EACL 2026 ,
+ pp. 3408–3458 .
+ Cited by: §1 .
+ Miao and Ungar (2026) 
+ M. M. Miao and L. Ungar 
+ Closing the confidence-faithfulness gap in large language models .
+ arXiv preprint arXiv:2603.25052 .
+ Cited by: §D.2 .
+ Muennighoff et al. (2025) 
+ N. Muennighoff, Z. Yang, W. Shi, X. L. Li, L. Fei-Fei, H. Hajishirzi, L. Zettlemoyer, P. Liang, E. Candes, and T. Hashimoto 
+ S1: simple test-time scaling .
+ In Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing , C. Christodoulopoulos, T. Chakraborty, C. Rose, and V. Peng (Eds.) ,
+ Suzhou, China , pp. 20286–20332 .
+ External Links: Link ,
+ Document ,
+ ISBN 979-8-89176-332-6 
+ Cited by: §1 ,
+ §3.2 .
+ Ni et al. (2024) 
+ S. Ni, K. Bi, J. Guo, and X. Cheng 
+ When do LLMs need retrieval augmentation? mitigating LLMs’ overconfidence helps retrieval augmentation .
+ In Findings of the Association for Computational Linguistics: ACL 2024 , L. Ku, A. Martins, and V. Srikumar (Eds.) ,
+ Bangkok, Thailand , pp. 11375–11388 .
+ External Links: Link ,
+ Document 
+ Cited by: §1 .
+ OpenAI (2024) 
+ OpenAI 
+ OpenAI o1 system card .
+ External Links: 2412.16720 ,
+ Link 
+ Cited by: §1 .
+ Pakdaman Naeini et al. (2015) 
+ M. Pakdaman Naeini, G. Cooper, and M. Hauskrecht 
+ Obtaining well calibrated probabilities using bayesian binning .
+ Proceedings of the AAAI Conference on Artificial Intelligence 29 ( 1 ).
+ External Links: Link ,
+ Document 
+ Cited by: §4.1 .
+ Qi et al. (2025) 
+ P. Qi, Z. Liu, T. Pang, C. Du, W. S. Lee, and M. Lin 
+ Optimizing anytime reasoning via budget relative policy optimization .
+ In 2nd AI for Math Workshop @ ICML 2025 ,
+ External Links: Link 
+ Cited by: §2.1 .
+ Qian et al. (2025) 
+ C. Qian, D. Liu, H. Wen, Z. Bai, Y. Liu, and J. Shao 
+ Demystifying reasoning dynamics with mutual information: thinking tokens are information peaks in LLM reasoning .
+ In The Thirty-ninth Annual Conference on Neural Information Processing Systems ,
+ External Links: Link 
+ Cited by: §4.4 .
+ Qu et al. (2025) 
+ Y. Qu, M. Y. R. Yang, A. Setlur, L. Tunstall, E. E. Beeching, R. Salakhutdinov, and A. Kumar 
+ Optimizing test-time compute via meta reinforcement finetuning .
+ In Forty-second International Conference on Machine Learning ,
+ External Links: Link 
+ Cited by: §2.1 .
+ Quach et al. (2024) 
+ V. Quach, A. Fisch, T. Schuster, A. Yala, J. H. Sohn, T. S. Jaakkola, and R. Barzilay 
+ Conformal language modeling .
+ In The Twelfth International Conference on Learning Representations ,
+ External Links: Link 
+ Cited by: §2.2 .
+ Rein et al. (2024) 
+ D. Rein, B. L. Hou, A. C. Stickland, J. Petty, R. Y. Pang, J. Dirani, J. Michael, and S. R. Bowman 
+ GPQA: a graduate-level google-proof q&a benchmark .
+ In First Conference on Language Modeling ,
+ External Links: Link 
+ Cited by: §4.1 .
+ Schulman et al. (2017) 
+ J. Schulman, F. Wolski, P. Dhariwal, A. Radford, and O. Klimov 
+ Proximal policy optimization algorithms .
+ arXiv preprint arXiv:1707.06347 .
+ Cited by: §2.1 .
+ Setlur et al. (2025) 
+ A. Setlur, C. Nagpal, A. Fisch, X. Geng, J. Eisenstein, R. Agarwal, A. Agarwal, J. Berant, and A. Kumar 
+ Rewarding progress: scaling automated process verifiers for LLM reasoning .
+ In The Thirteenth International Conference on Learning Representations ,
+ External Links: Link 
+ Cited by: §3.3 .
+ Shafer and Vovk (2008) 
+ G. Shafer and V. Vovk 
+ A tutorial on conformal prediction .
+ J. Mach. Learn. Res. 9 , pp. 371–421 .
+ External Links: ISSN 1532-4435 
+ Cited by: §5.1 .
+ Shao et al. (2024) 
+ Z. Shao, P. Wang, Q. Zhu, R. Xu, J. Song, X. Bi, H. Zhang, M. Zhang, Y. K. Li, Y. Wu, and D. Guo 
+ DeepSeekMath: pushing the limits of mathematical reasoning in open language models .
+ External Links: 2402.03300 ,
+ Link 
+ Cited by: §1 ,
+ §2.1 ,
+ §4.1 .
+ Shen et al. (2024) 
+ M. Shen, S. Das, K. Greenewald, P. Sattigeri, G. W. Wornell, and S. Ghosh 
+ Thermometer: towards universal calibration for large language models .
+ In Proceedings of the 41st International Conference on Machine Learning , R. Salakhutdinov, Z. Kolter, K. Heller, A. Weller, N. Oliver, J. Scarlett, and F. Berkenkamp (Eds.) ,
+ Proceedings of Machine Learning Research , Vol. 235 , pp. 44687–44711 .
+ External Links: Link 
+ Cited by: §2.2 .
+ Sheng et al. (2024) 
+ G. Sheng, C. Zhang, Z. Ye, X. Wu, W. Zhang, R. Zhang, Y. Peng, H. Lin, and C. Wu 
+ HybridFlow: a flexible and efficient rlhf framework .
+ arXiv preprint arXiv: 2409.19256 .
+ Cited by: Appendix A .
+ Snell et al. (2025) 
+ C. V. Snell, J. Lee, K. Xu, and A. Kumar 
+ Scaling LLM test-time compute optimally can be more effective than scaling parameters for reasoning .
+ In The Thirteenth International Conference on Learning Representations ,
+ External Links: Link 
+ Cited by: §1 .
+ Strong et al. (2025) 
+ J. Strong, Q. Men, and J. A. Noble 
+ Trustworthy and practical ai for healthcare: a guided deferral system with large language models .
+ In Proceedings of the Thirty-Ninth AAAI Conference on Artificial Intelligence and Thirty-Seventh Conference on Innovative Applications of Artificial Intelligence and Fifteenth Symposium on Educational Advances in Artificial Intelligence ,
+ AAAI’25/IAAI’25/EAAI’25 .
+ External Links: ISBN 978-1-57735-897-8 ,
+ Link ,
+ Document 
+ Cited by: §1 .
+ Tian et al. (2023) 
+ K. Tian, E. Mitchell, A. Zhou, A. Sharma, R. Rafailov, H. Yao, C. Finn, and C. Manning 
+ Just ask for calibration: strategies for eliciting calibrated confidence scores from language models fine-tuned with human feedback .
+ In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing , H. Bouamor, J. Pino, and K. Bali (Eds.) ,
+ Singapore , pp. 5433–5442 .
+ External Links: Link ,
+ Document 
+ Cited by: §2.2 .
+ Wang et al. (2025) 
+ L. Wang, Z. Jiang, A. Liu, and B. V. Durme 
+ Always tell me the odds: fine-grained conditional probability estimation .
+ In Second Conference on Language Modeling ,
+ External Links: Link 
+ Cited by: §2.2 ,
+ §3.1 .
+ Wang et al. (2024a) 
+ P. Wang, L. Li, Z. Shao, R. X. Xu, D. Dai, Y. Li, D. Chen, Y. Wu, and Z. Sui 
+ Math-Shepherd: Verify and Reinforce LLMs Step-by-step without Human Annotations .
+ arXiv .
+ Note: arXiv:2312.08935 [cs] 
+ External Links: Link ,
+ Document 
+ Cited by: §2.1 .
+ Wang and Stengel-Eskin (2026) 
+ V. Wang and E. Stengel-Eskin 
+ Calibrating verbalized confidence with self-generated distractors .
+ In The Fourteenth International Conference on Learning Representations ,
+ External Links: Link 
+ Cited by: §2.2 .
+ Wang et al. (2026) 
+ X. Wang, A. Suresh, A. Zhang, R. More, W. Jurayj, B. V. Durme, M. Farajtabar, D. Khashabi, and E. Nalisnick 
+ Conformal thinking: risk control for reasoning on a compute budget .
+ External Links: 2602.03814 ,
+ Link 
+ Cited by: §5.1 .
+ Wang et al. (2024b) 
+ Z. Wang, J. Duan, L. Cheng, Y. Zhang, Q. Wang, X. Shi, K. Xu, H. T. Shen, and X. Zhu 
+ ConU: conformal uncertainty in large language models with correctness coverage guarantees .
+ In Findings of the Association for Computational Linguistics: EMNLP 2024 , Y. Al-Onaizan, M. Bansal, and Y. Chen (Eds.) ,
+ Miami, Florida, USA , pp. 6886–6898 .
+ External Links: Link ,
+ Document 
+ Cited by: §2.2 .
+ Wu et al. (2025) 
+ M. Wu, C. Zhou, S. Bates, and T. Jaakkola 
+ Thought calibration: efficient and confident test-time scaling .
+ In Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing , C. Christodoulopoulos, T. Chakraborty, C. Rose, and V. Peng (Eds.) ,
+ Suzhou, China , pp. 14302–14316 .
+ External Links: Link ,
+ ISBN 979-8-89176-332-6 
+ Cited by: §1 ,
+ §3.2 .
+ Xiong et al. (2024) 
+ M. Xiong, Z. Hu, X. Lu, Y. LI, J. Fu, J. He, and B. Hooi 
+ Can LLMs express their uncertainty? an empirical evaluation of confidence elicitation in LLMs .
+ In The Twelfth International Conference on Learning Representations ,
+ External Links: Link 
+ Cited by: §2.2 .
+ Yang et al. (2025a) 
+ A. Yang, A. Li, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Gao, C. Huang, C. Lv, C. Zheng, D. Liu, F. Zhou, F. Huang, F. Hu, H. Ge, H. Wei, H. Lin, J. Tang, J. Yang, J. Tu, J. Zhang, J. Yang, J. Yang, J. Zhou, J. Zhou, J. Lin, K. Dang, K. Bao, K. Yang, L. Yu, L. Deng, M. Li, M. Xue, M. Li, P. Zhang, P. Wang, Q. Zhu, R. Men, R. Gao, S. Liu, S. Luo, T. Li, T. Tang, W. Yin, X. Ren, X. Wang, X. Zhang, X. Ren, Y. Fan, Y. Su, Y. Zhang, Y. Zhang, Y. Wan, Y. Liu, Z. Wang, Z. Cui, Z. Zhang, Z. Zhou, and Z. Qiu 
+ Qwen3 technical report .
+ External Links: 2505.09388 ,
+ Link 
+ Cited by: §C.1 .
+ Yang et al. (2025b) 
+ C. Yang, S. Li, and A. Holtzman 
+ LLM probability concentration: how alignment shrinks the generative horizon .
+ arXiv preprint arXiv:2506.17871 .
+ Cited by: §D.2 .
+ Yona et al. (2024) 
+ G. Yona, R. Aharoni, and M. Geva 
+ Can large language models faithfully express their intrinsic uncertainty in words? .
+ In Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing , Y. Al-Onaizan, M. Bansal, and Y. Chen (Eds.) ,
+ Miami, Florida, USA , pp. 7752–7764 .
+ External Links: Link ,
+ Document 
+ Cited by: §1 .
+ Yu et al. (2024) 
+ F. Yu, A. Gao, and B. Wang 
+ OVM, Outcome-supervised Value Models for Planning in Mathematical Reasoning .
+ arXiv .
+ Note: arXiv:2311.09724 [cs] 
+ External Links: Link ,
+ Document 
+ Cited by: §2.1 .
+ Yu et al. (2025) 
+ Q. Yu, Z. Zhang, R. Zhu, Y. Yuan, X. Zuo, YuYue, W. Dai, T. Fan, G. Liu, J. Liu, L. Liu, X. Liu, H. Lin, Z. Lin, B. Ma, G. Sheng, Y. Tong, C. Zhang, M. Zhang, R. Zhang, W. Zhang, H. Zhu, J. Zhu, J. Chen, J. Chen, C. Wang, H. Yu, Y. Song, X. Wei, H. Zhou, J. Liu, W. Ma, Y. Zhang, L. Yan, Y. Wu, and M. Wang 
+ DAPO: an open-source LLM reinforcement learning system at scale .
+ In The Thirty-ninth Annual Conference on Neural Information Processing Systems ,
+ External Links: Link 
+ Cited by: §2.1 .
+ Zhang et al. (2025a) 
+ A. Zhang, Y. Chen, J. Pan, C. Zhao, A. Panda, J. Li, and H. He 
+ Reasoning models know when they’re right: probing hidden states for self-verification .
+ In Second Conference on Language Modeling ,
+ External Links: Link 
+ Cited by: §1 ,
+ §2.2 ,
+ §3.2 .
+ Zhang and Zuo (2025) 
+ J. Zhang and C. Zuo 
+ GRPO-LEAD: a difficulty-aware reinforcement learning approach for concise mathematical reasoning in language models .
+ In Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing , C. Christodoulopoulos, T. Chakraborty, C. Rose, and V. Peng (Eds.) ,
+ Suzhou, China , pp. 5642–5654 .
+ External Links: Link ,
+ Document ,
+ ISBN 979-8-89176-332-6 
+ Cited by: §4.1 .
+ Zhang et al. (2026) 
+ Y. Zhang, Y. Liu, H. Yuan, Y. Yuan, Q. Gu, and A. C. Yao 
+ On the design of kl-regularized policy gradient algorithms for llm reasoning .
+ In International Conference on Learning Representations (ICLR) ,
+ Cited by: §2.1 .
+ Zhang et al. (2025b) 
+ Z. Zhang, C. Zheng, Y. Wu, B. Zhang, R. Lin, B. Yu, D. Liu, J. Zhou, and J. Lin 
+ The Lessons of Developing Process Reward Models in Mathematical Reasoning .
+ arXiv .
+ Note: arXiv:2501.07301 [cs] 
+ External Links: Link ,
+ Document 
+ Cited by: §2.1 .
+ Zhao et al. (2026) 
+ S. Zhao, Z. Xie, M. Liu, J. Huang, G. Pang, F. Chen, and A. Grover 
+ Self-Distilled Reasoner: On-Policy Self-Distillation for Large Language Models .
+ arXiv .
+ Note: arXiv:2601.18734 [cs] 
+ External Links: Link ,
+ Document 
+ Cited by: §2.1 .
+ Zhao et al. (2021) 
+ Z. Zhao, E. Wallace, S. Feng, D. Klein, and S. Singh 
+ Calibrate before use: improving few-shot performance of language models .
+ In Proceedings of the 38th International Conference on Machine Learning , M. Meila and T. Zhang (Eds.) ,
+ Proceedings of Machine Learning Research , Vol. 139 , pp. 12697–12706 .
+ External Links: Link 
+ Cited by: §2.2 .
+ Zheng et al. (2025) 
+ C. Zheng, J. Zhu, Z. Ou, Y. Chen, K. Zhang, R. Shan, Z. Zheng, M. Yang, J. Lin, Y. Yu, and W. Zhang 
+ A survey of process reward models: from outcome signals to process supervisions for large language models .
+ External Links: 2510.08049 ,
+ Link 
+ Cited by: §2.1 .
+ Appendix A Forced-Answer Sampling from Intermediate Prefixes 
+This section describes how we construct the intermediate supervision target used in subsection 3.2 . Our goal is to estimate what the model already knows at a truncated reasoning state, rather than what it could discover after continuing to think. 
+Given a prompt and a sampled reasoning trajectory , we truncate the trajectory at budget and convert the truncated prefix into a forced-answer prompt . Concretely, we terminate the reasoning trace with </think> and then immediately ask the model to provide its final answer. The template is: 
+ User:
+  [original problem] 
+ Assistant:
+ <think>
+  [partial reasoning trace up to budget ] 
+ </think>
+ If I were to give the final answer now, the final answer would be \boxed{ 
+This construction serves two purposes. First, it prevents the model from continuing its chain-of-thought beyond the selected budget. Second, it asks for a compact answer in a standardized format, making answer extraction and verification straightforward. 
+From this forced-answer prompt, we sample short continuations. Each continuation fills in the contents of the boxed answer, yielding a sampled prediction . We then compare each sampled answer against the gold answer and compute the empirical success rate 
+We interpret as an estimate of the conditional probability that the truncated reasoning prefix already supports the correct answer. Importantly, this target measures answerability at the current budget , not the success rate of the full untruncated trajectory. 
+In practice, this forced-answer sampling procedure is simple, cheap, and compatible with online RL training (where we just write a custom secondary loop that runs fast in VeRL  ( Sheng et al., 2024 ) ). It produces a dense supervision signal across intermediate reasoning states while avoiding the need for token-level human annotations or expensive external judges. 
+ Appendix B Implementation Details 
+All methods are trained with a batch size of , learning rate , 6 rollouts,
+temperature , k maximum generation tokens, and update steps
+( epochs). For probe training in RLCM, we sample forced completions per
+truncated prefix to obtain the probe’s target. At evaluation time we decode with
+temperature , sampling 32 rollouts per problem for the AIME benchmarks and 4
+rollouts for the remaining benchmarks, which contain substantially more problems;
+all other decoding hyperparameters are held fixed across methods. All experiments are
+conducted on a single 4 H100 NVL node. 
+Since Base and GRPO do not come with a probe, we train one for each. We sample 8
+rollouts over 80 random problems from the GRPO-LEAD dataset and force a completion
+every 500 tokens to provide the probe a confidence target, where the probe input is
+the hidden state of the token at the cut-off. This yields approximately 
+data points, which we split into train and validation, training for 100 steps
+with early stopping monitored on the validation set. 
+ Appendix C Ablation Study 
+ C.1 Change of Base Model 
+Our main experiments use DeepSeek-R1-Distill-Qwen-7B, a distilled reasoning model that
+already begins with strong long-form math competence. To test whether RLCM’s
+gains depend on this starting point, we repeat training on Qwen3-4B-Instruct-2507  ( Yang et al., 2025a ) , which
+differs along two axes: model family and scale, and reasoning versus non-reasoning initialization. All methods are trained with identical data, hyperparameters, and post-hoc probe-training protocol as the main paper experiments ( Appendix B ). 
+ Table 4 reports results on AIME24 and AIME25, the most challenging reasoning benchmarks in our setting, together with GPQA-Diamond as an out-of-domain test. RLCM attains the highest accuracy on all three benchmarks and the lowest ECE on both AIME benchmarks, reducing AIME25 ECE from (Base) and (GRPO) to . The out-of-domain result is more telling: on GPQA-Diamond, GRPO improves accuracy over Base but degrades calibration markedly ( ), whereas RLCM improves accuracy while holding calibration at the Base level. This is the same pattern we observe on the distilled model, where outcome-only RL purchases accuracy at the cost of confidence reliability and the margin reward is what closes the gap. RLCM is therefore not specific
+to distilled reasoning initialization. 
+ AIME24 
+ AIME25 
+ GPQA-Diamond 
+ Method 
+ Acc  
+ ECE  
+ Acc  
+ ECE  
+ Acc  
+ ECE  
+ Base 
+ .552 
+ .073 
+ .427 
+ .169 
+ .523 
+ .218 
+ GRPO 
+ .567 
+ .081 
+ .435 
+ .132 
+ .569 
+ .272 
+ RLCM 
+ .570 
+ .065 
+ .458 
+ .056 
+ .576 
+ .219 
+ Table 4: Accuracy and ECE with Qwen3-4B-Instruct as the base model. RLCM achieves the best accuracy on all three benchmarks and the lowest ECE on both AIME benchmarks. On the out-of-domain GPQA-Diamond, GRPO raises accuracy but degrades calibration relative to Base, while RLCM raises accuracy at no calibration cost. 
+ C.2 Sensitivity to the Margin Reward Weight 
+Our main results fix the margin reward weight at . To verify that RLCM’s improvements are a property of the margin objective rather than of this particular value, we sweep on DeepSeek-R1-Distill-Qwen-7B, holding all other hyperparameters fixed. 
+As shown in Table 5 , RLCM remains in a tight band across the full range: accuracy stays within and ECE within , with no systematic accuracy–calibration trade-off as grows. This contrasts sharply with the pointwise Brier reward ( Figure 3 ), where varying the calibration
+weight moves the model along a trade-off curve without yielding a consistent Pareto improvement. We attribute the difference to the weaker constraint the margin reward imposes: it asks only that more-solvable prefixes score higher than less-solvable ones, rather than pinning each confidence to an absolute target, which leaves the policy more freedom to optimize correctness. We adopt simply as one well-balanced
+point within this stable range. 
+ 0.05 
+ 0.1 
+ 0.3 
+ 0.5 
+ AIME24 Acc  
+ .500 
+ .492 
+ .496 
+ .482 
+ AIME24 ECE  
+ .065 
+ .061 
+ .077 
+ .061 
+ Table 5: Sensitivity of RLCM to the margin reward weight on AIME24, with all
+other hyperparameters held fixed. Both accuracy and ECE remain stable across an order of
+magnitude in , indicating that RLCM’s gains are not an artifact of the
+ . 
+ Appendix D Confidence Distribution Analysis 
+ Figure 8: 
+Confidence distributions for RLCR, C 2 GSPG, and RLCM. RLCR is highly quantized, C 2 GSPG is compressed in a narrow high-confidence range, and RLCM uses a broader portion of the confidence scale. Red dashed lines mark the mean; black dotted lines mark the median.
+ D.1 Observation 
+Figure  8 helps explain why RLCR and C 2 GSPG underperform despite being designed for calibration. Both produce confidence scores with limited dynamic range, but in different ways. 
+RLCR is highly discrete, with most mass near zero and a smaller spike around . This suggests that verbalized confidence provides only a coarse signal rather than a smooth uncertainty estimate. Its mean is , while its median is only , showing that most predictions receive extremely low confidence. 
+C 2 GSPG shows the opposite pattern: its scores are concentrated in a narrow high-confidence band, with mean and median . This compression reduces resolution, since many examples receive similarly large confidence values regardless of difficulty. 
+RLCM produces a much broader and smoother distribution over . Its mean and median ( and ) indicate that it avoids both the low-confidence collapse of RLCR and the upper-tail saturation of C 2 GSPG. This wider spread makes the confidence signal more useful for thresholding, abstention, and confidence-weighted aggregation. 
+Overall, RLCM does not only reduce calibration error; it also yields a more expressive confidence representation. 
+ D.2 Analysis 
+Figure  8 suggests that RLCR and C 2 GSPG suffer from two different expressivity bottlenecks. 
+RLCR is limited by quantization . Its confidence is produced as a verbalized scalar after the reasoning trace and final answer, so a rich internal uncertainty state must be mapped into a small set of preferred numeric outputs. In practice, recent work shows that verbalized confidence in LLMs is heavily concentrated on a few round-number anchors, and can be weakly aligned with the model’s internal calibration signal, especially when reasoning and confidence are generated together ( Dai, 2026 ; Miao and Ungar, 2026 ) . This is consistent with the highly discrete distribution in Figure  8 : RLCR provides a coarse confidence signal, rather than a smooth estimate of uncertainty. 
+C 2 GSPG exhibits the opposite failure mode: compression . It defines confidence using normalized sequence probability, 
+which averages token-level certainty over the entire reasoning trace. However, the branching-factor analysis by Yang et al. (2025b) shows that aligned language models typically become more predictable later in generation, and that longer chain-of-thought pushes decoding into increasingly low-entropy stages. As a result, late high-probability tokens dominate the average, washing out earlier uncertainty and pulling confidence into a narrow high-confidence band. This explains why C 2 GSPG has limited dynamic range even though it avoids the discrete outputs of RLCR. 
+RLCM avoids both bottlenecks. Instead of verbalizing confidence at the end or averaging sequence probability over the whole trace, it estimates confidence from intermediate reasoning states and trains this signal with relative process supervision. The broader distribution in Figure  8 therefore reflects a more expressive confidence representation: it preserves meaningful variation across examples, which is more useful for thresholding, abstention, and confidence-weighted aggregation. 
+ Appendix E Epistemic Uncertainty Analysis 
+We analyze verbalized uncertainty expressions in reasoning traces to characterize model behavior at the semantic level. We define three categories of uncertainty indicators: Self-Correction (e.g., wait , let me reconsider ), Confidence Hedging (e.g., perhaps , maybe ), and Knowledge Gap (e.g., I don’t know ), and identify their occurrences via lexical pattern matching over the generated rollouts. The full list of phrases used for each category is given in Table 6 . 
+As a case study on AIME25 ( Figure 5 ), RLCM largely preserves the distribution of uncertainty expressions exhibited by the base model across all three categories, whereas GRPO markedly suppresses self-correction behavior. Notably, this preservation emerges despite the absence of any explicit reward on semantic-level uncertainty, suggesting that token-level calibration naturally aligns with the base model’s verbalized reasoning patterns. 
+Breaking this down further, Figure 9 reports the average per-rollout frequency of each individual indicator for Base, GRPO, and RLCM. RLCM produces fewer hedging and knowledge-gap expressions than both baselines while maintaining a comparable rate of self-correction. Taken together, these results suggest that RLCM’s calibration gains are reflected in the substance of reasoning rather than in surface-level uncertainty cues. 
+ Category 
+ Example Phrases 
+ Self-Correction 
+ wait , hmm , hold on , let me reconsider , let me redo , let me think , let me verify , let’s recalculate , actually , on second thought , going back , scratch that , I made a mistake , that’s wrong , that was wrong 
+ Confidence Hedging 
+ perhaps , maybe , might , possibly , likely , unlikely , probably , could be , tends to , I think , I believe , I guess , I suspect , it seems , seems like , seems to , it appears , apparently , presumably , approximately , roughly , around , should be , I’m not certain , I’m unsure 
+ Knowledge Gap 
+ I’m not sure , not sure , I don’t know , unclear , without more , not specified , I cannot , I can’t 
+ Table 6: Taxonomy of epistemic uncertainty indicators. We group surface-level uncertainty expressions into three categories: Self-Correction, Confidence Hedging, and Knowledge Gap and use the listed phrases as lexical patterns to identify regions of externalized uncertainty in reasoning traces. 
+ Figure 9: 
+Frequency of uncertainty indicators across three semantic categories, measured as average count per rollout. RLCM produces fewer hedging and knowledge-gap expressions than Base and GRPO while maintaining a similar rate of self-correction, indicating that calibration gains are reflected in reasoning content.
+ Appendix F Confidence-Weighted Aggregation 
+We report per-benchmark aggregation results here. In addition to Pass@1, majority voting,
+and confidence-weighted voting, Figure 10 includes an Oracle strategy that selects a correct answer whenever one exists among the sampled rollouts. Oracle upper-bounds what any such rule can achieve over the same candidate set, so the gap to it separates accuracy lost to imperfect answer selection from accuracy lost to reasoning
+failure. 
+Moving from majority to confidence-weighted voting changes average accuracy by for
+RLCM, for GRPO, and for RLCR ( Table 3 ). The sign
+flip for RLCR reflects its highly quantized verbalized confidence
+( Figure 8 ), which supplies weights that are close to uninformative. This is the distinction the margin reward targets: ECE is a marginal statistic over the evaluation
+set, whereas aggregation depends on the within-question ordering of rollouts. A model can
+be well calibrated on average and still fail to rank its own parallel attempts. Consistent
+with this, the curves separate on AIME24, AIME25, and OlympiadBench, where rollouts
+disagree more often, and converge on MATH-500, where accuracy is near ceiling and the
+oracle gap is small. 
+ Figure 10: Per-benchmark aggregation performance across token budgets for RLCM , GRPO , and RLCR . Each row corresponds to one method, and each panel compares Pass@1, majority voting, confidence-weighted voting, and oracle aggregation. RLCM shows the most consistent gains from confidence-weighted voting over plain majority voting, indicating that its confidence estimates are more reliably aligned with answer correctness. 
+ Experimental support, please
+ view the build logs 
+ for errors. Generated by
+ L
+ A 
+ T
+ E 
+ xml 
+ .
+Instructions for reporting errors 
+We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+ support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+ methods listed below: 
+Click the "Report Issue" ( 
+ ) button, located in the page header. 
+ Tip: You can select the relevant text first, to include it in your report. 
+Our team has already identified the following issues . We appreciate your time reviewing and reporting rendering errors we
+ may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+ should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+ all. 
+Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a list of packages that need conversion , and welcome developer contributions . 
+ We gratefully acknowledge support from
+ our major funders ,
+ member institutions , ,
+ and all contributors.
+ About 
+ · 
+ Help 
+ · 
+ Contact 
+ · 
+ Subscribe 
+ · 
+ Copyright 
+ · 
+ Privacy 
+ · 
+ Accessibility 
+ · 
+ Operational Status (opens in new tab) 
+ Major funding support from 

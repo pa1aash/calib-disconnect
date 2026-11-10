@@ -1,0 +1,1518 @@
+ 
+ Correctness-Optimized Residual Activation Lens (CORAL): Transferrable and Calibration-Aware Inference-Time Steering 
+ Skip to main content 
+ Report GitHub Issue 
+ × 
+ Title: 
+ Content selection saved. Describe the issue below: 
+ Description: 
+ Submit without GitHub 
+ Submit in GitHub 
+ Why HTML? 
+ Report Issue 
+ Back to Abstract 
+ Download PDF 
+ Contents 
+ Reading mode 
+ Colour theme 
+ Abstract 
+ 1 Introduction 
+ 2 Related Works 
+ 3 Methodology 
+ 3.1 Problem Formulation: Residual Correctness 
+ 3.2 CORAL Architecture 
+ 3.2.1 Activation Extraction 
+ 3.2.2 Weight-Decay MLP Probe 
+ 3.2.3 Inference-Time Steering 
+ 3.3 Experimental Setup 
+ 3.3.1 Training Datasets 
+ Construct Training Dataset. 
+ MMLU Split Dataset. 
+ Prompting. 
+ Validation. 
+ 3.3.2 Transfer Benchmarks 
+ 3.3.3 Evaluation Metrics 
+ Accuracy. 
+ Expected Calibration Error (ECE). 
+ Class-wise Expected Calibration Error (cwECE). 
+ 3.3.4 Baselines 
+ 4 CORAL Results 
+ 4.1 CORAL Steering Results 
+ 4.2 Layer Analysis 
+ 4.3 CORAL’s Transferability 
+ 5 Sparse Autoencoders Analysis 
+ 5.1 SAE Methodology 
+ 5.2 SAE Ablation Results 
+ 6 Discussion 
+ Regularization Captures What Sparse Methods Miss. 
+ Transfer Results Suggest General Correctness Signals. 
+ Practical Efficiency for MCQA Deployment. 
+ 7 Conclusion 
+ 8 Limitations 
+ 9 Impact Statement 
+ References 
+ A Appendix 
+ A.1 Sparse Autoencoder Implementation Details 
+ Feature Selection via Correlation Filtering. 
+ Feature Selection via Activation Magnitude. 
+ SAE Feature Steering. 
+ A.2 Attention-Head Activations Analysis 
+ Methodology. 
+ Results. 
+ A.3 Signal Dimensionality Analysis 
+ Methodology. 
+ Results. 
+ B Baseline Implementation Details 
+ B.1 Inference-Time Intervention (ITI) for Attention Head Steering 
+ Stage 1: Activation Collection. 
+ Stage 2: Probe Training and Head Selection. 
+ Stage 3: Intervention Direction Computation. 
+ Stage 4: Inference-Time Steering. 
+ B.2 Confidence-Conditioned Prediction with Shifting (CCPS) 
+ Stage 1: Perturbation-Based Feature Extraction. 
+ Stage 2: Contrastive Embedding Learning. 
+ Stage 3: Correctness Classification. 
+ Inference. 
+ B.3 Confidence Steering via Prompt Shifting (SteerConf) 
+ Prompt Design. 
+ Confidence Shifting Instructions. 
+ Multi-Query Aggregation. 
+ Final Answer Selection. 
+ B.4 Hyperparameters and Training Details 
+ ITI. 
+ CCPS. 
+ SteerConf. 
+ B.5 Baseline Tuning and Validation Protocols 
+ ITI (Inference-Time Intervention). 
+ CCPS (Confidence-Conditioned Prediction with Shifting). 
+ SteerConf (Confidence Steering via Prompt Shifting). 
+ Summary. 
+ License: arXiv.org perpetual non-exclusive license
+arXiv:2602.06022v1 [cs.LG] 05 Feb 2026 
+ Correctness-Optimized Residual Activation Lens (CORAL): 
+ Transferrable and Calibration-Aware Inference-Time Steering 
+ Miranda Muqing Miao
+ Affiliation:  Department of Computer and Information Science, University of Pennsylvania, Philadelphia, USA
+ Correspondence to: miaom@seas.upenn.edu 
+ Young-Min Cho
+ Affiliation:  Department of Computer and Information Science, University of Pennsylvania, Philadelphia, USA
+ Lyle Ungar
+ Affiliation:  Department of Computer and Information Science, University of Pennsylvania, Philadelphia, USA
+ Abstract 
+ Large language models (LLMs) exhibit persistent miscalibration, especially after instruction tuning and preference alignment. Modified training objectives can improve calibration, but retraining is expensive. Inference-time steering offers a lightweight alternative, yet most existing methods optimize proxies for correctness rather than correctness itself. We introduce CORAL (Correctness-Optimized Residual Activation Lens), a regularized inference-time steering method that captures distributed correctness signals from model internal activations using weight-decay MLP probes. We evaluate CORAL across three 7B-parameter models and find that it consistently improves accuracy by 10% and expected calibration error (ECE) by 50% on average. We additionally demonstrate that these gains transfer without retraining to the complete published test sets of four held-out benchmarks (ARC-Challenge, HellaSwag, Math-MC, OpenBookQA), averaging 14% accuracy improvements and 49% ECE improvements. Our results support the hypothesis that distributed information in model internals can be extracted using regularized probes when individual neurons are insufficient. CORAL thus provides a compute-efficient, transferable, and calibration-aware approach to improve MCQA performance during inference. 
+ Keywords:  Mechanistic Interpretability, Probe Steering, LLM
+ 1 Introduction 
+ Inference-time steering has emerged as a promising approach for modifying LLM behavior without retraining overhead. Most steering methods target behavioral goals such as honesty, refusal, or stylistic attributes ( Rimsky et al., 2024 ) . In this paper, we focus on a more direct objective: steering for factuality while simultaneously improving calibration. This dual goal is important because miscalibration persists across models and post-training pipelines, and common alignment methods like Reinforcement Learning with Human Feedback (RLHF) and Direct Policy Optimization (DPO) worsen calibration even as they improve other metrics ( Jiang et al., 2021 ; Leng et al., 2025 ; Ouyang et al., 2022 ; Rafailov et al., 2023 ) . 
+ Steering methods divide into two paradigms. Sparse approaches search for discrete, localized features, often using Sparse Autoencoders (SAEs) to identify individual neurons that causally influence behavior ( Bricken et al., 2023 ; Templeton et al., 2024 ) . Distributed approaches instead treat the relevant signal as spread across many dimensions ( Zou et al., 2025 ) . 
+ Recent mechanistic work suggests that confidence and correctness signals fall into the distributed category. While some behaviors localize to interpretable circuits, many others cannot be fully captured by individual features ( Olah et al., 2024 ; Lindsey et al., 2025 ) . We focus on the distributed setting and show that regularized probes extract correctness signals that sparse methods miss. 
+ Within distributed steering for factuality and calibration, three recent methods are most relevant: Inference-Time Intervention (ITI) ( Li et al., 2023 ) , SteerConf ( Zhou et al., 2025 ) , and Calibrating LLM Confidence by Probing Perturbed Representation Stability (CCPS) ( Khanmohammadi et al., 2025 ) . ITI performs distributed steering on attention head activations to improve truthfulness, but its effect on factual correctness remains underexplored. SteerConf elicits verbalized confidence through prompting and uses expressed confidence as a proxy for calibration. CCPS measures representation stability under adversarial perturbations to predict correctness, achieving calibration improvements and occasional accuracy gains. These methods share two limitations: they optimize proxies for correctness rather than correctness itself, and they do not leverage internal activations to directly steer model outputs. Furthermore, none of them demonstrates transferability to out-of-distribution benchmarks. 
+ In this paper, we address these gaps with CORAL, a regularized inference-time steering method that captures distributed correctness signals from model internal activations using weight-decay MLP probes. We train a regularized probe that predicts correctness directly from frozen residual stream activations, then use these predictions to steer model behavior at inference time. By jointly optimizing for the accuracy and calibration components of the Brier score, CORAL improves both metrics and transfers its impact successfully to unseen benchmarks without any retraining. 
+ Our contributions are as follows: 
+ 1. 
+ We introduce CORAL, a lightweight weight-decay MLP probe that consistently improves both accuracy and calibration across three 7B-parameter models and multiple MCQA benchmarks, using only 8.4k–10k training questions. 
+ 2. 
+ We demonstrate that CORAL transfers without retraining to the complete published test sets of four held-out benchmarks (ARC-Challenge, HellaSwag, Math-MC, OpenBookQA), averaging 14% accuracy improvements and 49% ECE improvements. This transfer indicates that the probe captures a general-purpose correctness subspace rather than task-specific patterns. 
+ 3. 
+ We provide evidence that correctness signals are distributed across many neurons. SAE-based ablations show negligible individual neural effects, while regularized probes successfully aggregate these distributed signals into effective steering vectors. 
+ 2 Related Works 
+ Probing and internal representations. Linear probes have long been used to decode task-relevant variables from intermediate representations ( Alain and Bengio, 2017 ) . Research on transformer feed-forward layers shows that residual streams contain rich, interpretable information that accumulates across layers ( Geva et al., 2021 ; Geva et al., 2022 ) . Recent studies demonstrate that LLM activations can predict answer correctness from question-only signals, though this work focuses on prediction rather than intervention ( Cencerrado et al., 2025 ) . 
+ Inference-time intervention (ITI). ITI methods modify activations during forward passes to shift model behavior, and attention-head interventions have improved truthfulness by targeting a small set of heads ( Li et al., 2023 ) . Contrastive activation addition instead trains steering vectors from positive and negative examples to control behavioral attributes ( Rimsky et al., 2024 ) . These methods demonstrate that activation edits can causally influence outputs, but they typically target softer behavioral goals rather than factuality directly. 
+ Sparse Autoencoders and mechanistic interpretability. SAEs decompose activations into sparse, approximately monosemantic features ( Bricken et al., 2023 ; Huben et al., 2024 ) . Practitioners use SAE features for steering or ablation because they appear more interpretable than raw neurons ( Templeton et al., 2024 ; Gao et al., 2024 ) . However, circuit tracing work reveals that many model behaviors arise from distributed computation across many features rather than isolated units ( Conmy et al., 2023 ; Ameisen et al., 2025 ; Lindsey et al., 2025 ) . Our SAE ablation experiments confirm this finding for correctness signals: individual features produce negligible causal effects. 
+ Calibration in LLMs. Neural networks, including LLMs, often exhibit miscalibration where predicted confidence fails to match empirical accuracy ( Guo et al., 2017 ; Jiang et al., 2021 ) . Post-hoc methods like temperature scaling and isotonic regression adjust output probabilities but cannot improve accuracy ( Guo et al., 2017 ; Zadrozny and Elkan, 2002 ) . Recent work identifies entropy neurons that regulate confidence without affecting task performance ( Stolfo et al., 2024 ) , and shows that calibration information evolves across layers ( Joshi et al., 2025 ) . CORAL differs from these approaches by using internal activations to jointly improve accuracy and calibration through direct residual prediction. 
+ Figure 1 : Overview of CORAL. Given an MCQA question, a frozen LLM produces per-option hidden states and base probabilities. Hidden states are mean-pooled over answer tokens, z-score normalized, and passed through a trained probe to predict residual correctness. At inference, predicted residuals are centered and used to steer base probabilities toward better calibration. 
+ 3 Methodology 
+ Having established that existing methods optimize proxies rather than correctness directly, we now describe CORAL’s methodology. Probing literature shows that intermediate representations contain rich task-relevant information beyond what surfaces in final predictions. We exploit this insight by training lightweight probes on frozen activations to predict residual correctness: the gap between a model’s assigned probability and the ideal target. This formulation directly optimizes the Brier score and enables inference-time steering that improves both accuracy and calibration without modifying model weights. 
+ We first formalize residual correctness ( 3.1 ), then describe CORAL’s architecture ( 3.2 ), and finally detail our experimental setup ( 3.3 ). 
+ 3.1 Problem Formulation: Residual Correctness 
+ Consider a multiple-choice question answering task where a model assigns probability p j p_{j} to each option j ∈ { 1 , 2 , … , n } j\in\{1,2,\ldots,n\} . We define residual correctness r j r_{j} as the gap between the ideal target distribution and the model’s prediction: 
+ r j = { 1 − p j if option  ​ j ​  is correct − p j if option  ​ j ​  is incorrect r_{j}=\begin{cases}1-p_{j}&\text{if option }j\text{ is correct}\\
+-p_{j}&\text{if option }j\text{ is incorrect}\end{cases} 
+ (1) 
+ Positive residuals indicate underconfidence on correct answers; negative residuals indicate overconfidence on incorrect answers. A perfectly calibrated model has r j = 0 r_{j}=0 for all options. 
+ This formulation directly targets the Brier score, a proper scoring rule. The Brier score decomposes as ∑ j ( p j − y j ) 2 = ∑ j r j 2 \sum_{j}(p_{j}-y_{j})^{2}=\sum_{j}r_{j}^{2} , where y j ∈ { 0 , 1 } y_{j}\in\{0,1\} indicates correctness. Training a probe to predict r ^ j \hat{r}_{j} and applying the correction p j ′ = p j + r ^ j p^{\prime}_{j}=p_{j}+\hat{r}_{j} minimizes expected squared error between predictions and ground truth. CORAL thus optimizes a principled calibration objective rather than fitting an empirical pattern. 
+ 3.2 CORAL Architecture 
+ CORAL consists of three components: activation extraction, a regularized MLP probe, and inference-time steering. 
+ 3.2.1 Activation Extraction 
+ For each question with n n answer options, we perform n n forward passes, concatenating the question prompt with each candidate answer. We record hidden states 𝐡 j , t ( l ) ∈ ℝ d \mathbf{h}_{j,t}^{(l)}\in\mathbb{R}^{d} at layer l l while the model processes answer tokens, then mean-pool over token positions: 
+ 𝐡 j ( l ) = 1 T j ​ ∑ t = T prompt + 1 T prompt + T j 𝐡 j , t ( l ) \mathbf{h}_{j}^{(l)}=\frac{1}{T_{j}}\sum_{t=T_{\text{prompt}}+1}^{T_{\text{prompt}}+T_{j}}\mathbf{h}_{j,t}^{(l)} 
+ (2) 
+ The resulting dataset contains N × 4 N\times 4 activation vectors, where N N is the number of questions. Each vector has dimensionality d model d_{\text{model}} (e.g., 4096 for 7B parameter models). We pair each activation with its corresponding residual correctness label r j r_{j} , computed from the model’s softmax probabilities and ground truth. This structure preserves the grouped nature of the data, where each question contributes exactly n n samples corresponding to its answer options. In the end, we apply z-score normalization using training set statistics before passing activations to the probe. 
+ 3.2.2 Weight-Decay MLP Probe 
+ We train a four-hidden-layer MLP (dimensions 1024, 512, 256, 128) with ReLU activations, dropout (p=0.2), and tanh output to bound predictions to [ − 1 , 1 ] [-1,1] . The loss combines mean squared error with an output penalty: 
+ ℒ = 1 N ∑ i = 1 N ( r i − r ^ i ) 2 + λ out ⋅ 1 N ∑ i = 1 N r ^ i 2 \mathcal{L}=\frac{1}{N}\sum_{i=1}^{N}(r_{i}-\hat{r}_{i})^{2}+\lambda_{\text{out}}\cdot\frac{1}{N}\sum_{i=1}^{N}\hat{r}_{i}^{2} 
+ (3) 
+ We optimize using AdamW with weight decay, selecting hyperparameters via grid search over validation R 2 R^{2} . Training requires under 5 hours on a single GPU. 
+ 3.2.3 Inference-Time Steering 
+ At inference, we extract activations for each answer option, compute probe predictions r ^ j \hat{r}_{j} , center them to ensure zero-sum, and apply additive corrections: 
+ p j ′ = max ⁡ ( p j + γ ⋅ r ~ j , 0 ) ∑ j ′ = 1 n max ⁡ ( p j ′ + γ ⋅ r ~ j ′ , 0 ) p^{\prime}_{j}=\frac{\max(p_{j}+\gamma\cdot\tilde{r}_{j},0)}{\sum_{j^{\prime}=1}^{n}\max(p_{j^{\prime}}+\gamma\cdot\tilde{r}_{j^{\prime}},0)} 
+ (4) 
+ where r ~ j = r ^ j − 1 n ​ ∑ j ′ r ^ j ′ \tilde{r}_{j}=\hat{r}_{j}-\frac{1}{n}\sum_{j^{\prime}}\hat{r}_{j^{\prime}} and γ \gamma controls steering strength. This shifts probability mass toward options the probe identifies as correct while maintaining a valid distribution. 
+ 3.3 Experimental Setup 
+ 3.3.1 Training Datasets 
+ We train two independent probes on two sets of datasets to demonstrate the generalization and robustness of CORAL. 
+ Construct Training Dataset. 
+ We first construct a custom training dataset by aggregating questions from two reasoning benchmarks. Specifically, we evenly sample 5,000 questions each from CommonsenseQA and RACE training questions, yielding 10,000 total training questions ( Talmor et al., 2019 ; Lai et al., 2017 ) . We partition this construct dataset into 80% train / 20% validation at the question level. We use GroupKFold to ensure all options from the same question remain in the same split, preventing information leakage across partitions. We then test on those benchmarks’ corresponding and complete test questions. We call the probe trained on this Construct Training Dataset Probe 1. 
+ MMLU Split Dataset. 
+ We also train a probe based on Massive Multitask Language Understanding (MMLU), which is a benchmark that tests the models’ knowledge and reasoning on a broad range of topics, using multiple choice questions ( Hendrycks et al., 2021 ) . We partition the 14k test questions from MMLU into training (8,400 questions, 60%), validation (2,800 questions, 20%), and evaluation (2,800 questions, 20%) splits.
+This is because MMLU provides no in-distribution training split. The dev set contains only 1,531 questions, which is insufficient for training probes over 4,096-dimensional activations. The 90k auxiliary train dataset of MMLU contains a vast number of question included in other benchmarks. Training on the 90k auxiliary dataset would therefore contaminate our transfer experiments. We call the probe trained on this MMLU Split Dataset Probe 2. 
+ We partition the 14k test questions from MMLU into training (8,400 questions, 60%), validation (2,800 questions, 20%), and evaluation (2,800 questions, 20%) splits. 
+ Prompting. 
+ We collect activations strictly following few-shot prompting template from EleutherAI lm-eval harness templates ( Sutawika et al., 2023 ) . For each question, we extract mean-pooled hidden states over answer tokens at each layer. 
+ Validation. 
+ We solely use the validation data sets to determine the optimal steering layer and steering strength γ \gamma . 
+ 3.3.2 Transfer Benchmarks 
+ We evaluate generalization on on the complete published test sets of four held-out benchmarks: HellaSwag, OpenBookQA, Math-MC, and ARC-Challenge ( Li et al., 2025 ; Banerjee et al., 2019 ; Amini et al., 2019 ; Clark et al., 2018 ) . These benchmarks share no questions with training data and evaluate CORAL’s helpfulness topics spanning commonsense NLP completion, multi-step question answering, math reasoning, and abstraction reasoning. 
+ 3.3.3 Evaluation Metrics 
+ We report accuracy and four calibration metrics: Expected Calibration Error (ECE), class-wise ECE (cwECE), Brier score, and negative log-likelihood (NLL). ECE measures alignment between confidence and accuracy across binned predictions. The Brier score captures both accuracy and calibration as mean squared error against ground truth. Lower values indicate better performance for all calibration metrics. 
+ Accuracy. 
+ For each question, we select the answer option with the highest probability and compare it to the ground truth label: 
+ Accuracy = 1 N ∑ i = 1 N 𝟏 [ arg max j p i , j = y i ] \text{Accuracy}=\frac{1}{N}\sum_{i=1}^{N}\mathbf{1}\left[\arg\max_{j}p_{i,j}=y_{i}\right] 
+ (5) 
+ where N N is the number of questions, p i , j p_{i,j} is the probability assigned to option j j for question i i , and y i y_{i} is the correct answer. 
+ Expected Calibration Error (ECE). 
+ ECE measures the alignment between predicted confidence and actual accuracy. We partition predictions into B B equally-spaced bins based on the maximum probability (confidence) and compute the weighted average of the gap between accuracy and confidence within each bin: 
+ ECE = ∑ b = 1 B | S b | N ​ | acc ​ ( S b ) − conf ​ ( S b ) | \text{ECE}=\sum_{b=1}^{B}\frac{|S_{b}|}{N}\left|\text{acc}(S_{b})-\text{conf}(S_{b})\right| 
+ (6) 
+ where S b S_{b} is the set of samples whose confidence falls in bin b b , acc ​ ( S b ) \text{acc}(S_{b}) is the accuracy of samples in bin b b , and conf ​ ( S b ) \text{conf}(S_{b}) is the average confidence in bin b b . Lower ECE indicates better calibration. A perfectly calibrated model should have ECE = 0. For all statistics reported, the chosen bin count B B = 25 unless otherwise stated. 
+ Class-wise Expected Calibration Error (cwECE). 
+ While ECE only considers the top predicted class, cwECE evaluates calibration across all answer options. For each class c ∈ { 1 , … , n } c\in\{1,\ldots,n\} , we compute a per-class ECE by binning the predicted probabilities p i , c p_{i,c} and comparing them to the binary correctness indicator 𝟏 [ y i = c ] \mathbf{1}[y_{i}=c] : 
+ ECE c = ∑ b = 1 B | S b , c | N ​ | acc c ​ ( S b , c ) − conf c ​ ( S b , c ) | \text{ECE}_{c}=\sum_{b=1}^{B}\frac{|S_{b,c}|}{N}\left|\text{acc}_{c}(S_{b,c})-\text{conf}_{c}(S_{b,c})\right| 
+ (7) 
+ where S b , c S_{b,c} contains samples whose probability for class c c falls in bin b b , acc c ​ ( S b , c ) \text{acc}_{c}(S_{b,c}) is the fraction of samples in the bin where class c c is correct, and conf c ​ ( S b , c ) \text{conf}_{c}(S_{b,c}) is the average probability for class c c in the bin. The overall cwECE is the average across all classes: 
+ cwECE = 1 n ​ ∑ c = 1 n ECE c \text{cwECE}=\frac{1}{n}\sum_{c=1}^{n}\text{ECE}_{c} 
+ (8) 
+ For all statistics reported, the chosen bin count B B = 25 unless otherwise stated. 
+ Brier Score. The Brier score measures the mean squared error between predicted probabilities and ground truth labels. For each question i i with predicted distribution 𝐩 i = ( p i , 1 , … , p i , n ) \mathbf{p}_{i}=(p_{i,1},\ldots,p_{i,n}) and correct answer y i y_{i} , the Brier score is: 
+ Brier = 1 N ∑ i = 1 N ∑ j = 1 n ( p i , j − 𝟙 [ j = y i ] ) 2 \text{Brier}=\frac{1}{N}\sum_{i=1}^{N}\sum_{j=1}^{n}\left(p_{i,j}-\mathbbm{1}[j=y_{i}]\right)^{2} 
+ (9) 
+ where 𝟙 [ j = y i ] \mathbbm{1}[j=y_{i}] equals 1 if option j j is correct and 0 otherwise. Lower Brier scores indicate better calibrated and more accurate predictions. Unlike ECE, the Brier score is a proper scoring rule that jointly rewards accuracy and calibration. 
+ Negative Log-Likelihood (NLL). NLL measures the negative log-probability assigned to the correct answer: 
+ NLL = − 1 N ∑ i = 1 N log p i , y i \text{NLL}=-\frac{1}{N}\sum_{i=1}^{N}\log p_{i,y_{i}} 
+ (10) 
+ where p i , y i p_{i,y_{i}} is the probability assigned to the correct option for question i i . Lower NLL indicates higher confidence on correct answers. NLL heavily penalizes confident incorrect predictions, making it sensitive to calibration failures. 
+ 3.3.4 Baselines 
+ We compare CORAL against established steering and calibration methods. These include (1) Inference Time Intervention (ITI)  ( Li et al., 2023 ) , which performs activation steering at attention heads rather than residual stream positions; (2) SteerConf  ( Zhou et al., 2025 ) , which targets confidence elicitation as a proxy for correctness; (3) Contrastive Confidence Probing and Steering (CCPS)  ( Khanmohammadi et al., 2025 ) , which uses contrastive learning on correct versus incorrect activations. We also report Few-Shot Prompting results using the Eval Harness framework  ( Sutawika et al., 2023 ) . Detailed descriptions of baseline implementations are provided in Appendix  B . 
+ 4 CORAL Results 
+ Table 1 : Comparison of steering methods across different models and benchmarks. Blue rows are CORAL-steered results. Bold numbers indicate best performance and underlined numbers indicate second best under Accuracy, ECE, cwECE, NLL, and Brier Score. Baseline methods are SteerConf ( Zhou et al., 2025 ) , Few-Shot Prompting (Eval Harness) ( Sutawika et al., 2023 ) , Inference Time Intervention (ITI) ( Li et al., 2023 ) , and CCPS ( Zadrozny and Elkan, 2002 ; Guo et al., 2017 ; Khanmohammadi et al., 2025 ) . 
+ MMLU Test Subset
+ Mistral-7B-Instruct-v0.3 
+ Method 
+ Acc ↑ \uparrow 
+ ECE ↓ \downarrow 
+ cwECE ↓ \downarrow 
+ NLL ↓ \downarrow 
+ Brier ↓ \downarrow 
+ SteerConf 
+ 60.53 
+ 15.47 
+ 7.16 
+ 146.54 
+ 20.66 
+ Fewshot 
+ 61.34 
+ 18.46 
+ 9.79 
+ 72.44 
+ 22.62 
+ ITI 
+ 59.02 
+ 17.74 
+ 10.09 
+ 69.61 
+ 22.63 
+ CCPS 
+ 61.20 
+ 8.36 
+ 10.07 
+ 55.49 
+ 18.95 
+ CORAL 
+ 64.22 
+ 3.27 
+ 2.83 
+ 54.30 
+ 17.92 
+ Qwen2.5-7B-Instruct 
+ Method 
+ Acc ↑ \uparrow 
+ ECE ↓ \downarrow 
+ cwECE ↓ \downarrow 
+ NLL ↓ \downarrow 
+ Brier ↓ \downarrow 
+ SteerConf 
+ 63.94 
+ 15.67 
+ 8.75 
+ 113.96 
+ 20.57 
+ Fewshot 
+ 73.19 
+ 16.36 
+ 8.83 
+ 73.98 
+ 19.67 
+ ITI 
+ 70.42 
+ 15.72 
+ 9.10 
+ 71.09 
+ 19.68 
+ CCPS 
+ 73.02 
+ 7.41 
+ 9.09 
+ 56.67 
+ 16.48 
+ CORAL 
+ 74.23 
+ 4.23 
+ 2.77 
+ 46.61 
+ 15.51 
+ Deepseek-7B-Chat 
+ Method 
+ Acc ↑ \uparrow 
+ ECE ↓ \downarrow 
+ cwECE ↓ \downarrow 
+ NLL ↓ \downarrow 
+ Brier ↓ \downarrow 
+ SteerConf 
+ 37.48 
+ 23.39 
+ 13.89 
+ 91.15 
+ 30.46 
+ Fewshot 
+ 50.84 
+ 22.12 
+ 11.44 
+ 81.86 
+ 26.27 
+ ITI 
+ 48.91 
+ 21.26 
+ 11.78 
+ 78.66 
+ 26.28 
+ CCPS 
+ 51.10 
+ 8.38 
+ 12.05 
+ 65.86 
+ 22.60 
+ CORAL 
+ 53.97 
+ 6.21 
+ 4.36 
+ 61.95 
+ 21.33 
+ RACE
+ Mistral-7B-Instruct-v0.3 
+ Method 
+ Acc ↑ \uparrow 
+ ECE ↓ \downarrow 
+ cwECE ↓ \downarrow 
+ NLL ↓ \downarrow 
+ Brier ↓ \downarrow 
+ SteerConf 
+ 40.83 
+ 4.67 
+ 4.78 
+ 122.27 
+ 26.52 
+ Fewshot 
+ 61.43 
+ 3.18 
+ 3.72 
+ 57.59 
+ 19.72 
+ ITI 
+ 61.45 
+ 11.97 
+ 7.54 
+ 68.43 
+ 17.77 
+ CCPS 
+ 60.56 
+ 2.45 
+ 3.29 
+ 57.80 
+ 19.77 
+ CORAL 
+ 74.93 
+ 3.08 
+ 3.18 
+ 55.06 
+ 15.63 
+ Qwen2.5-7B-Instruct 
+ Method 
+ Acc ↑ \uparrow 
+ ECE ↓ \downarrow 
+ cwECE ↓ \downarrow 
+ NLL ↓ \downarrow 
+ Brier ↓ \downarrow 
+ SteerConf 
+ 45.69 
+ 21.45 
+ 10.87 
+ 104.68 
+ 27.11 
+ Fewshot 
+ 58.37 
+ 10.60 
+ 6.44 
+ 64.84 
+ 21.48 
+ ITI 
+ 58.34 
+ 15.60 
+ 13.06 
+ 70.45 
+ 19.36 
+ CCPS 
+ 58.38 
+ 5.11 
+ 6.44 
+ 55.22 
+ 15.55 
+ CORAL 
+ 71.04 
+ 3.46 
+ 3.35 
+ 54.40 
+ 16.88 
+ Deepseek-7B-Chat 
+ Method 
+ Acc ↑ \uparrow 
+ ECE ↓ \downarrow 
+ cwECE ↓ \downarrow 
+ NLL ↓ \downarrow 
+ Brier ↓ \downarrow 
+ SteerConf 
+ 50.83 
+ 10.66 
+ 8.52 
+ 70.15 
+ 25.10 
+ Fewshot 
+ 55.67 
+ 4.40 
+ 4.16 
+ 61.59 
+ 21.18 
+ ITI 
+ 55.63 
+ 16.56 
+ 8.44 
+ 73.18 
+ 19.09 
+ CCPS 
+ 54.90 
+ 3.00 
+ 4.25 
+ 60.36 
+ 20.84 
+ CORAL 
+ 73.06 
+ 2.62 
+ 3.08 
+ 57.69 
+ 16.06 
+ CommonsenseQA
+ Mistral-7B-Instruct-v0.3 
+ Method 
+ Acc ↑ \uparrow 
+ ECE ↓ \downarrow 
+ cwECE ↓ \downarrow 
+ NLL ↓ \downarrow 
+ Brier ↓ \downarrow 
+ SteerConf 
+ 29.24 
+ 33.71 
+ 14.09 
+ 142.01 
+ 34.56 
+ Fewshot 
+ 73.71 
+ 15.00 
+ 6.74 
+ 63.47 
+ 18.44 
+ ITI 
+ 66.69 
+ 16.29 
+ 7.67 
+ 68.36 
+ 21.74 
+ CCPS 
+ 72.98 
+ 8.88 
+ 7.41 
+ 63.70 
+ 18.32 
+ CORAL 
+ 74.38 
+ 8.78 
+ 4.43 
+ 60.59 
+ 18.31 
+ Qwen2.5-7B-Instruct 
+ Method 
+ Acc ↑ \uparrow 
+ ECE ↓ \downarrow 
+ cwECE ↓ \downarrow 
+ NLL ↓ \downarrow 
+ Brier ↓ \downarrow 
+ SteerConf 
+ 39.81 
+ 18.54 
+ 7.77 
+ 134.80 
+ 20.16 
+ Fewshot 
+ 84.68 
+ 12.16 
+ 5.25 
+ 83.59 
+ 12.94 
+ ITI 
+ 78.61 
+ 13.21 
+ 5.97 
+ 90.03 
+ 15.26 
+ CCPS 
+ 84.89 
+ 7.11 
+ 5.25 
+ 64.07 
+ 6.45 
+ CORAL 
+ 85.01 
+ 10.27 
+ 5.02 
+ 53.96 
+ 9.75 
+ Deepseek-7B-Chat 
+ Method 
+ Acc ↑ \uparrow 
+ ECE ↓ \downarrow 
+ cwECE ↓ \downarrow 
+ NLL ↓ \downarrow 
+ Brier ↓ \downarrow 
+ SteerConf 
+ 38.57 
+ 13.12 
+ 6.64 
+ 69.41 
+ 24.72 
+ Fewshot 
+ 70.52 
+ 15.71 
+ 7.27 
+ 67.63 
+ 19.61 
+ ITI 
+ 63.80 
+ 17.06 
+ 8.27 
+ 72.84 
+ 23.12 
+ CCPS 
+ 70.53 
+ 9.02 
+ 7.26 
+ 61.07 
+ 19.43 
+ CORAL 
+ 72.17 
+ 8.54 
+ 4.62 
+ 65.23 
+ 19.43 
+ Table 2 : Transfer performance of Probe 1 on four downstream benchmarks: HellaSwag, OpenBookQA, ARC-Challenge, and Math-MC. All three models show accuracy gains and calibration improvements across multiple independent benchmark tests. Blue rows are CORAL-steered results. Bold numbers indicate best performance and underlined numbers indicate second best. Relevant other methods shown as comparison are SteerConf ( Zhou et al., 2025 ) , Few-Shot Prompting (Eval Harness) ( Sutawika et al., 2023 ) , ITI ( Li et al., 2023 ) , and CCPS (trained on CommonsenseQA) ( Zadrozny and Elkan, 2002 ; Guo et al., 2017 ; Khanmohammadi et al., 2025 ) . 
+ Mistral-7B-Instruct-v0.3 (Transfer Experiments )
+ ARC-Challenge 
+ Method 
+ Acc ↑ \uparrow 
+ ECE ↓ \downarrow 
+ cwECE ↓ \downarrow 
+ NLL ↓ \downarrow 
+ Brier ↓ \downarrow 
+ SteerConf 
+ 41.21 
+ 34.09 
+ 11.09 
+ 79.37 
+ 28.41 
+ Fewshot 
+ 61.86 
+ 8.58 
+ 7.73 
+ 62.52 
+ 21.83 
+ ITI 
+ 61.86 
+ 26.01 
+ 6.34 
+ 72.34 
+ 22.34 
+ CCPS 
+ 63.14 
+ 24.60 
+ 7.40 
+ 85.34 
+ 28.83 
+ CORAL 
+ 73.46 
+ 3.65 
+ 3.68 
+ 60.13 
+ 16.28 
+ HellaSwag 
+ Method 
+ Acc ↑ \uparrow 
+ ECE ↓ \downarrow 
+ cwECE ↓ \downarrow 
+ NLL ↓ \downarrow 
+ Brier ↓ \downarrow 
+ SteerConf 
+ 54.77 
+ 71.61 
+ 21.48 
+ 75.38 
+ 30.73 
+ Fewshot 
+ 81.23 
+ 32.88 
+ 15.89 
+ 67.88 
+ 24.34 
+ ITI 
+ 74.43 
+ 12.18 
+ 8.62 
+ 63.43 
+ 21.81 
+ CCPS 
+ 80.79 
+ 14.64 
+ 15.73 
+ 59.44 
+ 20.07 
+ CORAL 
+ 82.35 
+ 3.10 
+ 2.23 
+ 45.95 
+ 14.60 
+ OpenBookQA 
+ Method 
+ Acc ↑ \uparrow 
+ ECE ↓ \downarrow 
+ cwECE ↓ \downarrow 
+ NLL ↓ \downarrow 
+ Brier ↓ \downarrow 
+ SteerConf 
+ 34.44 
+ 17.41 
+ 11.25 
+ 69.03 
+ 30.03 
+ Fewshot 
+ 50.40 
+ 11.40 
+ 8.80 
+ 70.18 
+ 24.50 
+ ITI 
+ 50.23 
+ 11.40 
+ 7.91 
+ 60.50 
+ 22.48 
+ CCPS 
+ 52.00 
+ 28.92 
+ 8.10 
+ 92.09 
+ 32.97 
+ CORAL 
+ 63.20 
+ 10.66 
+ 6.65 
+ 69.57 
+ 20.70 
+ Math-MC 
+ Method 
+ Acc ↑ \uparrow 
+ ECE ↓ \downarrow 
+ cwECE ↓ \downarrow 
+ NLL ↓ \downarrow 
+ Brier ↓ \downarrow 
+ SteerConf 
+ 30.27 
+ 43.90 
+ 11.72 
+ 101.67 
+ 37.09 
+ Fewshot 
+ 44.89 
+ 20.16 
+ 8.67 
+ 91.55 
+ 29.38 
+ ITI 
+ 27.55 
+ 75.94 
+ 36.83 
+ 156.77 
+ 51.56 
+ CCPS 
+ 44.40 
+ 34.57 
+ 2.45 
+ 105.13 
+ 37.51 
+ CORAL 
+ 45.65 
+ 3.20 
+ 2.78 
+ 65.42 
+ 23.12 
+ Qwen2.5-7B-Instruct - Transfer Experiments
+ ARC-Challenge 
+ Method 
+ Acc ↑ \uparrow 
+ ECE ↓ \downarrow 
+ cwECE ↓ \downarrow 
+ NLL ↓ \downarrow 
+ Brier ↓ \downarrow 
+ SteerConf 
+ 42.80 
+ 19.12 
+ 8.93 
+ 77.89 
+ 26.92 
+ Fewshot 
+ 64.25 
+ 4.84 
+ 6.22 
+ 61.35 
+ 20.69 
+ ITI 
+ 63.93 
+ 14.67 
+ 5.10 
+ 70.99 
+ 21.17 
+ CCPS 
+ 62.37 
+ 8.55 
+ 6.49 
+ 65.21 
+ 22.98 
+ CORAL 
+ 74.40 
+ 4.09 
+ 3.21 
+ 56.34 
+ 16.40 
+ HellaSwag 
+ Method 
+ Acc ↑ \uparrow 
+ ECE ↓ \downarrow 
+ cwECE ↓ \downarrow 
+ NLL ↓ \downarrow 
+ Brier ↓ \downarrow 
+ SteerConf 
+ 52.29 
+ 62.09 
+ 18.55 
+ 73.84 
+ 29.90 
+ Fewshot 
+ 77.56 
+ 28.51 
+ 13.72 
+ 66.49 
+ 23.68 
+ ITI 
+ 71.07 
+ 10.56 
+ 11.45 
+ 12.94 
+ 55.97 
+ CCPS 
+ 76.61 
+ 11.45 
+ 12.94 
+ 55.97 
+ 18.59 
+ CORAL 
+ 81.41 
+ 10.43 
+ 9.59 
+ 49.80 
+ 16.06 
+ OpenBookQA 
+ Method 
+ Acc ↑ \uparrow 
+ ECE ↓ \downarrow 
+ cwECE ↓ \downarrow 
+ NLL ↓ \downarrow 
+ Brier ↓ \downarrow 
+ SteerConf 
+ 34.03 
+ 26.95 
+ 13.26 
+ 73.32 
+ 31.13 
+ Fewshot 
+ 49.80 
+ 17.64 
+ 10.37 
+ 74.54 
+ 25.40 
+ ITI 
+ 49.80 
+ 17.64 
+ 9.32 
+ 64.26 
+ 23.31 
+ CCPS 
+ 47.60 
+ 15.13 
+ 10.46 
+ 72.60 
+ 26.53 
+ CORAL 
+ 65.40 
+ 7.21 
+ 7.44 
+ 66.11 
+ 20.92 
+ Math-MC 
+ Method 
+ Acc ↑ \uparrow 
+ ECE ↓ \downarrow 
+ cwECE ↓ \downarrow 
+ NLL ↓ \downarrow 
+ Brier ↓ \downarrow 
+ SteerConf 
+ 38.28 
+ 11.15 
+ 4.31 
+ 71.62 
+ 27.89 
+ Fewshot 
+ 56.78 
+ 5.12 
+ 3.19 
+ 64.49 
+ 22.09 
+ ITI 
+ 34.85 
+ 19.29 
+ 13.55 
+ 110.44 
+ 38.76 
+ CCPS 
+ 55.74 
+ 22.58 
+ 3.71 
+ 80.57 
+ 29.32 
+ CORAL 
+ 58.04 
+ 3.22 
+ 3.06 
+ 63.31 
+ 21.89 
+ Deepseek-7B-Chat - Transfer Experiments
+ ARC-Challenge 
+ Method 
+ Acc ↑ \uparrow 
+ ECE ↓ \downarrow 
+ cwECE ↓ \downarrow 
+ NLL ↓ \downarrow 
+ Brier ↓ \downarrow 
+ SteerConf 
+ 46.09 
+ 24.64 
+ 14.72 
+ 86.28 
+ 30.81 
+ Fewshot 
+ 54.18 
+ 6.20 
+ 10.26 
+ 67.96 
+ 23.68 
+ ITI 
+ 52.68 
+ 18.80 
+ 8.41 
+ 78.64 
+ 24.23 
+ CCPS 
+ 54.35 
+ 15.13 
+ 10.41 
+ 74.82 
+ 27.08 
+ CORAL 
+ 63.82 
+ 5.45 
+ 6.90 
+ 66.76 
+ 19.83 
+ HellaSwag 
+ Method 
+ Acc ↑ \uparrow 
+ ECE ↓ \downarrow 
+ cwECE ↓ \downarrow 
+ NLL ↓ \downarrow 
+ Brier ↓ \downarrow 
+ SteerConf 
+ 51.53 
+ 64.20 
+ 19.31 
+ 76.62 
+ 31.40 
+ Fewshot 
+ 76.43 
+ 29.48 
+ 14.28 
+ 68.99 
+ 24.87 
+ ITI 
+ 70.03 
+ 10.92 
+ 7.75 
+ 64.47 
+ 22.28 
+ CCPS 
+ 74.11 
+ 59.35 
+ 13.36 
+ 148.06 
+ 54.10 
+ CORAL 
+ 81.98 
+ 11.37 
+ 5.74 
+ 42.15 
+ 13.29 
+ OpenBookQA 
+ Method 
+ Acc ↑ \uparrow 
+ ECE ↓ \downarrow 
+ cwECE ↓ \downarrow 
+ NLL ↓ \downarrow 
+ Brier ↓ \downarrow 
+ SteerConf 
+ 32.80 
+ 26.15 
+ 14.76 
+ 83.71 
+ 30.48 
+ Fewshot 
+ 48.00 
+ 17.12 
+ 11.55 
+ 85.11 
+ 24.87 
+ ITI 
+ 46.48 
+ 17.12 
+ 10.38 
+ 73.37 
+ 22.82 
+ CCPS 
+ 47.60 
+ 19.57 
+ 11.43 
+ 80.47 
+ 28.73 
+ CORAL 
+ 62.80 
+ 11.47 
+ 8.19 
+ 81.25 
+ 23.19 
+ Math-MC 
+ Method 
+ Acc ↑ \uparrow 
+ ECE ↓ \downarrow 
+ cwECE ↓ \downarrow 
+ NLL ↓ \downarrow 
+ Brier ↓ \downarrow 
+ SteerConf 
+ 26.94 
+ 28.55 
+ 8.14 
+ 81.78 
+ 32.46 
+ Fewshot 
+ 39.95 
+ 13.11 
+ 6.02 
+ 73.64 
+ 25.71 
+ ITI 
+ 24.52 
+ 49.39 
+ 25.57 
+ 126.10 
+ 45.12 
+ CCPS 
+ 39.93 
+ 40.93 
+ 3.58 
+ 111.61 
+ 41.08 
+ CORAL 
+ 43.73 
+ 6.46 
+ 3.37 
+ 66.21 
+ 23.47 
+ In this section, we present CORAL’s impact on in-distribution test questions, a layer analysis, and CORAL’s success on out-of-distribution transfer benchmarks. 
+ 4.1 CORAL Steering Results 
+ CORAL steering produces consistent gains in both accuracy and calibration across all three models. Table  1 reports single-layer results for each model, with optimal layers selected via validation only. 
+ We sweep steering strength γ ∈ { 0.25 , 0.5 , … , 2.75 , 3.0 } \gamma\in\{0.25,0.5,\ldots,2.75,3.0\} on the validation set. The parameter γ \gamma controls the magnitude of activation shifts along the learned correctness direction. We find that γ = 1 \gamma=1 produces the strongest and most consistent results, suggesting that unit-magnitude shifts align well with the natural scale of residual stream activations. 
+ CORAL yields leading performance across accuracy and most calibration metrics. On RACE, CORAL outperforms the second-best method by 17.39 percentage points in accuracy and achieves a 64% relative improvement in ECE using Deepseek-LLM-7B-Chat. On CommonsenseQA and MMLU, CORAL also consistently achieves the lowest Brier scores across all three model families while maintaining meaningfully competitive accuracy. 
+ Probe architecture has minimal impact on performance. MLPs with one to three hidden layer underperform linear probes by 0.5%–0.75%, while deeper architectures yield no further gains. This pattern indicates that extracting residual correctness signals requires only modest nonlinearity. 
+ We also investigated multi-layer CORAL, where probes are trained on concatenated activations from the top 3-5 layers. The motivation was to capture correctness signals that might be distributed across the model’s later processing stages. However, this approach produced no meaningful improvement over single-layer steering. This suggests that correctness-relevant information is sufficiently concentrated at individual layers, and aggregating across layers does not providing additional meaningful signals. 
+ 4.2 Layer Analysis 
+ Figure 2 : Layer-wise steering performance for DeepSeek-7B-Chat. Left: accuracy across layers 0–30 for lm-eval harness baseline (dotted red lines) and CORAL performance (green bars). Right: corresponding ECE values. 
+ Figure  2 examines which layers contain the most useful correctness signals for steering. We train separate probes at each layer of DeepSeek-7B-Chat and evaluate steering performance independently. 
+ Middle layers contain the most useful correctness signals for steering. Layers 17–21 yield the strongest improvements in both accuracy and calibration, while early and late layers provide noisy results. At early layers (0–6), steering produces accuracy below the unsteered baseline. Performance improves steadily through layers 9–15, peaks in the middle layers, then marginally declines in the final layers. Calibration follows a similar trajectory. ECE drops sharply from early layers and remains consistently low through layers 19–24 before rising slightly at the final layers. 
+ This pattern aligns with prior work on representation formation in transformers ( Sun et al., 2025 ) . Early layers primarily handle syntactic processing and token-level features, while later layers commit to specific output tokens. The middle layers, where CORAL performs best, correspond to the stage where abstract semantic representations are most developed but output distributions are still somewhat malleable. 
+ 4.3 CORAL’s Transferability 
+ A central claim of this work is that CORAL captures generalizable correctness directions rather than task-specific artifacts. Table  2 evaluates this claim through transfer experiments on the complete published test sets of HellaSwag, OpenBookQA, ARC-Challenge, and Math-MC. 
+ CORAL demonstrates strong transferability across all four benchmark test sets and three model families, consistently exceeding baseline methods. On Mistral-7B-Instruct, CORAL achieves the highest accuracy on all transfer tasks while simultaneously improving calibration. The pattern holds for other models, where CORAL consistently achieves competitive or best performance across metrics. 
+ Analyzing transfer patterns reveals that performance gains are strongest when source and target tasks share reasoning structure. Transfer to ARC-Challenge, which requires reasoning similar to CommonsenseQA, shows robust improvements: CORAL achieves 73.46% accuracy on Mistral compared to 61.86% for ITI and 63.14% for CCPS. Transfer to Math-MC also performs well, suggesting that correctness signals generalize across domains requiring multi-step reasoning. 
+ Transfer to HellaSwag presents a more nuanced picture. While CORAL achieves the best accuracy (81.98% on Deepseek), the ECE improvements is only second best. This likely reflects a distributional shift: HellaSwag’s answer options are substantially longer than those in probe training, making the probe’s learned correctness direction less directly applicable. 
+ Notably, CCPS shows limited transfer performance despite strong in-distribution results, underperforming few-shot and CORAL baselines on most transfer tasks. This contrast highlights that CORAL’s regularized training objective successfully encourages learning of transferable representations rather than task-specific patterns. 
+ 5 Sparse Autoencoders Analysis 
+ Having demonstrated CORAL’s improvements, we investigate why a regularized probe captures correctness information effectively. We use Sparse Autoencoders (SAEs) to decompose activations into mono-semantic features and test whether isolated features can causally influence accuracy and calibration. 
+ 5.1 SAE Methodology 
+ We train SAEs to decompose model activations into approximately mono-semantic features. The SAE encoder maps a z-score normalized activation 𝐳 ∈ ℝ d \mathbf{z}\in\mathbb{R}^{d} to a sparse code 𝐟 ∈ ℝ D \mathbf{f}\in\mathbb{R}^{D} where D > d D>d : 
+ 𝐟 = ReLU ​ ( 𝐖 enc ​ 𝐳 + 𝐛 enc ) \mathbf{f}=\text{ReLU}\left(\mathbf{W}_{\text{enc}}\mathbf{z}+\mathbf{b}_{\text{enc}}\right) 
+ (11) 
+ The decoder reconstructs the activation from the sparse code: 
+ 𝐳 ^ = 𝐖 dec ​ 𝐟 + 𝐛 dec \hat{\mathbf{z}}=\mathbf{W}_{\text{dec}}\mathbf{f}+\mathbf{b}_{\text{dec}} 
+ (12) 
+ We train the SAE to minimize reconstruction error while encouraging sparsity through an L1 penalty weighted by decoder column norms: 
+ ℒ SAE = ‖ 𝐳 − 𝐳 ^ ‖ 2 2 + λ ​ ∑ j = 1 D | f j | ⋅ ‖ 𝐝 j ‖ 2 \mathcal{L}_{\text{SAE}}=\|\mathbf{z}-\hat{\mathbf{z}}\|_{2}^{2}+\lambda\sum_{j=1}^{D}|f_{j}|\cdot\|\mathbf{d}_{j}\|_{2} 
+ (13) 
+ where 𝐝 j \mathbf{d}_{j} denotes the j j -th column of 𝐖 dec \mathbf{W}_{\text{dec}} . We train SAEs at expansion ratios of 4 × 4\times , 8 × 8\times , and 16 × 16\times for a base dimension of d = 4,096 d=4{,}096 . We provide detailed baseline implementation descriptions in Appendix  A.1 . 
+ We evaluate selected features through causal ablation experiments. For each feature j j , we remove its contribution from the reconstructed activation: 
+ 𝐳 ablated = 𝐳 ^ − f j ​ 𝐝 j \mathbf{z}_{\text{ablated}}=\hat{\mathbf{z}}-f_{j}\mathbf{d}_{j} 
+ (14) 
+ We use activation patching via forward hooks to replace the target layer’s output with the ablated activation and measure the resulting change in accuracy and calibration. Features where ablation increases ECE are beneficial for calibration, while features where ablation decreases ECE are harmful. 
+ 5.2 SAE Ablation Results 
+ Figure 3 : Distribution of single-neuron ablation impacts on ECE (left) and accuracy (right) for 300 SAE features selected by activation frequency and correlation with residual correctness. Shaded boxes show interquartile ranges and horizontal lines mark medians. Individual features produce negligible causal effects. 
+ Individual SAE features produce negligible causal effects on model calibration. Figure  3 displays the distribution of ablation impacts across 300 neurons selected by correlation and activation-magnitude filtering. The mean ECE change from single-neuron ablation equals 1.25 × 10 − 4 1.25\times 10^{-4} , equivalent to 0.0125 percentage points, negligible compared to CORAL’s 15+ percentage point improvements. The interquartile range spans − 4.80 × 10 − 5 -4.80\times 10^{-5} to 2.83 × 10 − 4 2.83\times 10^{-4} . Although we identify neurons that individually improve calibration when ablated (harmful features) and neurons that worsen calibration when ablated (beneficial features), their individual causal impacts remain negligible. 
+ Aggregating beneficial features for steering also fails to recover meaningful gains. Steering with the top 50 to 300 features ranked by ablation impact does not improve accuracy or calibration and often degrades both metrics. For example, steering with the top 128 neurons yields a 0.12 percentage point decrease in accuracy and 0.14 percentage point increase in ECE. This pattern holds across feature counts and selection criteria. 
+ Existing sparse steering methods show similarly limited effectiveness. Applying CorrSteer  ( Cho et al., 2025 ) to Deepseek-LLM-7B-Chat yields 51.0% accuracy (matching baseline) and 22.01% ECE (versus 22.12% baseline) for MMLU test subset, a statistically insignificant improvement. The contrast with CORAL’s substantial gains suggests that individual SAE features capture narrow semantic concepts correlated with correctness but do not encode a coherent correctness direction amenable to steering. 
+ 6 Discussion 
+ Regularization Captures What Sparse Methods Miss. 
+ CORAL’s performance stems from weight-decay regularization aggregating weak, distributed signals into coherent steering vectors. Our SAE ablations show that individual neurons produce negligible causal effects on MCQA correctness and aggregating top features by ablation impact fails to recover meaningful gains. This aligns with findings that correctness information exists as a collective property of the activation space ( Lindsey et al., 2025 ) , requiring supervised aggregation rather than sparse feature selection. 
+ Transfer Results Suggest General Correctness Signals. 
+ Strong transfer across four complete independent benchmark test sets suggests that CORAL captures task-general correctness representations rather than dataset-specific patterns. Probes trained on CommonsenseQA and RACE transfer to the complete published test sets of ARC-Challenge, HellaSwag, OpenBookQA, and Math-MC without adaptation, spanning commonsense, science, abstraction, and mathematical reasoning. CCPS shows limited transfer despite strong in-distribution results, possibly because its contrastive training captures dataset-specific distinctions. CORAL’s residual prediction objective may encourage learning features that generalize across reasoning types. 
+ Practical Efficiency for MCQA Deployment. 
+ CORAL trains in under 5 hours on a single GPU with 8.4k–10k labeled questions and adds minimal inference overhead. This efficiency contrasts with methods requiring model fine-tuning, multiple forward passes, or Jacobian computation. The concentration of correctness signals in middle layers (17–21) in our experiments suggests practitioners may reduce computation by targeting a single layer rather than scanning all layers. 
+ 7 Conclusion 
+ We present three key findings in this paper where we introduce CORAL: Correctness-Optimized Residual Activation Lens. First, regularized probes recover correctness signals from mid-layer activations reliably. MLP probes achieve accuracy gains of up to 20 points and ECE reductions of up to 14 points, with improvements generalizing across all three tested models. Second, learned steering directions transfer across tasks without retraining. On complete published benchmark test sets, the CORAL probe trained on CommonsenseQA and RACE activations averages 14% accuracy improvements and 49% ECE improvements. These improvements suggest CORAL identifies a general-purpose correctness subspace rather than task-specific decision boundaries. Third, correctness signals require supervised aggregation. Individual SAE features produce negligible causal effects and SAE-based steering degrades performance, while ridge and MLP probes successfully combine distributed signals into coherent steering vectors. CORAL requires only 5 hours of probe training on a single GPU and applies at inference time without modifying model weights. 
+ 8 Limitations 
+ CORAL’s evaluation is limited to multiple-choice question answering, leaving open whether correctness signals generalize to free-form generation where correctness is harder to define. Additionally, CORAL requires labeled data to train probes, which may not be available for all domains or languages. Probe training is lightweight (minutes on a single GPU), but obtaining high-quality correctness labels at scale remains a practical constraint. At inference time, extracting activations and computing probe predictions adds latency. Finally, transfer performance depends on similarity between source and target tasks: transfer to tasks with substantially different reasoning patterns yields smaller improvements, suggesting the learned correctness direction is not fully task-agnostic. 
+ 9 Impact Statement 
+ CORAL contributes to making large language model outputs more reliable. Improved calibration could benefit high-stakes domains such as medical diagnosis, legal analysis, and scientific research, where calibrated confidence enables systems to flag uncertain outputs for human review. 
+ However, the same methodology could be adapted for harmful purposes. Malicious actors could train probes to steer models toward misinformation or suppress particular viewpoints, and the transferability we demonstrate means harmful steering vectors could generalize across tasks. We release our code and probe weights to enable reproducibility and encourage research into detection mechanisms for adversarial steering. 
+ References 
+ Alain and Bengio (2017) 
+ G. Alain and Y. Bengio 
+ Understanding intermediate layers using linear classifier probes .
+ External Links: Link 
+ Cited by: §2 .
+ Ameisen et al. (2025) 
+ E. Ameisen, J. Lindsey, A. Pearce, W. Gurnee, N. L. Turner, B. Chen, C. Citro, D. Abrahams, S. Carter, B. Hosmer, J. Marcus, M. Sklar, A. Templeton, T. Bricken, C. McDougall, H. Cunningham, T. Henighan, A. Jermyn, A. Jones, A. Persic, Z. Qi, T. Ben Thompson, S. Zimmerman, K. Rivoire, T. Conerly, C. Olah, and J. Batson 
+ Circuit tracing: revealing computational graphs in language models .
+ Transformer Circuits Thread .
+ External Links: Link 
+ Cited by: §2 .
+ Amini et al. (2019) 
+ A. Amini, S. Gabriel, S. Lin, R. Koncel-Kedziorski, Y. Choi, and H. Hajishirzi 
+ MathQA: towards interpretable math word problem solving with operation-based formalisms .
+ In Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long and Short Papers) , J. Burstein, C. Doran, and T. Solorio (Eds.) ,
+ Minneapolis, Minnesota , pp. 2357–2367 .
+ External Links: Link ,
+ Document 
+ Cited by: §3.3.2 .
+ Banerjee et al. (2019) 
+ P. Banerjee, K. K. Pal, A. Mitra, and C. Baral 
+ Careful selection of knowledge to solve open book question answering .
+ In Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics , A. Korhonen, D. Traum, and L. Màrquez (Eds.) ,
+ Florence, Italy , pp. 6120–6129 .
+ External Links: Link ,
+ Document 
+ Cited by: §3.3.2 .
+ Bricken et al. (2023) 
+ T. Bricken, A. Templeton, J. Batson, B. Chen, A. Jermyn, T. Conerly, N. Turner, C. Anil, C. Denison, A. Askell, R. Lasenby, Y. Wu, S. Kravec, N. Schiefer, T. Maxwell, N. Joseph, Z. Hatfield-Dodds, A. Tamkin, K. Nguyen, B. McLean, J. E. Burke, T. Hume, S. Carter, T. Henighan, and C. Olah 
+ Towards monosemanticity: decomposing language models with dictionary learning .
+ Transformer Circuits Thread .
+ Note: https://transformer-circuits.pub/2023/monosemantic-features/index.html 
+ Cited by: §1 ,
+ §2 .
+ Cencerrado et al. (2025) 
+ I. V. M. Cencerrado, A. P. Masdemont, A. G. Hawthorne, D. D. Africa, and L. Pacchiardi 
+ No answer needed: predicting llm answer accuracy from question-only linear probes .
+ External Links: 2509.10625 ,
+ Link 
+ Cited by: §2 .
+ Cho et al. (2025) 
+ S. Cho, Z. Wu, and A. Koshiyama 
+ CorrSteer: generation-time llm steering via correlated sparse autoencoder features .
+ External Links: 2508.12535 ,
+ Link 
+ Cited by: §A.1 ,
+ §5.2 .
+ Clark et al. (2018) 
+ P. Clark, I. Cowhey, O. Etzioni, T. Khot, A. Sabharwal, C. Schoenick, and O. Tafjord 
+ Think you have solved question answering? try arc, the ai2 reasoning challenge .
+ External Links: 1803.05457 ,
+ Link 
+ Cited by: §3.3.2 .
+ Conmy et al. (2023) 
+ A. Conmy, A. Mavor-Parker, A. Lynch, S. Heimersheim, and A. Garriga-Alonso 
+ Towards automated circuit discovery for mechanistic interpretability .
+ In Advances in Neural Information Processing Systems , A. Oh, T. Naumann, A. Globerson, K. Saenko, M. Hardt, and S. Levine (Eds.) ,
+ Vol. 36 , pp. 16318–16352 .
+ External Links: Link 
+ Cited by: §2 .
+ Gao et al. (2024) 
+ L. Gao, T. D. la Tour, H. Tillman, G. Goh, R. Troll, A. Radford, I. Sutskever, J. Leike, and J. Wu 
+ Scaling and evaluating sparse autoencoders .
+ External Links: 2406.04093 ,
+ Link 
+ Cited by: §2 .
+ Geva et al. (2022) 
+ M. Geva, A. Caciularu, K. Wang, and Y. Goldberg 
+ Transformer feed-forward layers build predictions by promoting concepts in the vocabulary space .
+ In Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing , Y. Goldberg, Z. Kozareva, and Y. Zhang (Eds.) ,
+ Abu Dhabi, United Arab Emirates , pp. 30–45 .
+ External Links: Link ,
+ Document 
+ Cited by: §2 .
+ Geva et al. (2021) 
+ M. Geva, R. Schuster, J. Berant, and O. Levy 
+ Transformer feed-forward layers are key-value memories .
+ In Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing , M. Moens, X. Huang, L. Specia, and S. W. Yih (Eds.) ,
+ Online and Punta Cana, Dominican Republic , pp. 5484–5495 .
+ External Links: Link ,
+ Document 
+ Cited by: §2 .
+ Guo et al. (2017) 
+ C. Guo, G. Pleiss, Y. Sun, and K. Q. Weinberger 
+ On calibration of modern neural networks .
+ In International Conference on Machine Learning ,
+ pp. 1321–1330 .
+ Cited by: §2 ,
+ Table 1 ,
+ Table 1 ,
+ Table 2 ,
+ Table 2 .
+ Hendrycks et al. (2021) 
+ D. Hendrycks, C. Burns, S. Basart, A. Zou, M. Mazeika, D. Song, and J. Steinhardt 
+ Measuring massive multitask language understanding .
+ External Links: 2009.03300 ,
+ Link 
+ Cited by: §3.3.1 .
+ Huben et al. (2024) 
+ R. Huben, H. Cunningham, L. Smith, A. Ewart, and L. Sharkey 
+ Sparse autoencoders find highly interpretable features in language models .
+ In International Conference on Representation Learning , B. Kim, Y. Yue, S. Chaudhuri, K. Fragkiadaki, M. Khan, and Y. Sun (Eds.) ,
+ Vol. 2024 , pp. 7827–7845 .
+ External Links: Link 
+ Cited by: §2 .
+ Jiang et al. (2021) 
+ Z. Jiang, J. Araki, H. Ding, and G. Neubig 
+ How can we know when language models know? on the calibration of language models for question answering .
+ Transactions of the Association for Computational Linguistics 9 , pp. 962–977 .
+ External Links: Link ,
+ Document 
+ Cited by: §1 ,
+ §2 .
+ Joshi et al. (2025) 
+ A. Joshi, A. Ahmad, and A. Modi 
+ Calibration across layers: understanding calibration evolution in LLMs .
+ In Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing , C. Christodoulopoulos, T. Chakraborty, C. Rose, and V. Peng (Eds.) ,
+ Suzhou, China , pp. 14697–14725 .
+ External Links: Link ,
+ Document ,
+ ISBN 979-8-89176-332-6 
+ Cited by: §2 .
+ Khanmohammadi et al. (2025) 
+ R. Khanmohammadi, E. Miahi, M. Mardikoraem, S. Kaur, I. Brugere, C. Smiley, K. S. Thind, and M. M. Ghassemi 
+ Calibrating LLM confidence by probing perturbed representation stability .
+ In Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing , C. Christodoulopoulos, T. Chakraborty, C. Rose, and V. Peng (Eds.) ,
+ Suzhou, China , pp. 10459–10525 .
+ External Links: Link ,
+ Document ,
+ ISBN 979-8-89176-332-6 
+ Cited by: §B.2 ,
+ §1 ,
+ §3.3.4 ,
+ Table 1 ,
+ Table 1 ,
+ Table 2 ,
+ Table 2 .
+ Lai et al. (2017) 
+ G. Lai, Q. Xie, H. Liu, Y. Yang, and E. Hovy 
+ RACE: large-scale ReAding comprehension dataset from examinations .
+ In Proceedings of the 2017 Conference on Empirical Methods in Natural Language Processing , M. Palmer, R. Hwa, and S. Riedel (Eds.) ,
+ Copenhagen, Denmark , pp. 785–794 .
+ External Links: Link ,
+ Document 
+ Cited by: §3.3.1 .
+ Leng et al. (2025) 
+ J. Leng, C. Huang, B. Zhu, and J. Huang 
+ Taming overconfidence in llms: reward calibration in rlhf .
+ External Links: 2410.09724 ,
+ Link 
+ Cited by: §1 .
+ Li et al. (2023) 
+ K. Li, O. Patel, F. Viégas, H. Pfister, and M. Wattenberg 
+ Inference-time intervention: eliciting truthful answers from a language model .
+ In Advances in Neural Information Processing Systems , A. Oh, T. Naumann, A. Globerson, K. Saenko, M. Hardt, and S. Levine (Eds.) ,
+ Vol. 36 , pp. 41451–41530 .
+ External Links: Link 
+ Cited by: §B.1 ,
+ §1 ,
+ §2 ,
+ §3.3.4 ,
+ Table 1 ,
+ Table 1 ,
+ Table 2 ,
+ Table 2 .
+ Li et al. (2025) 
+ X. Li, M. Li, R. Men, Y. Zhang, K. Bao, W. Wang, F. Feng, D. Liu, and J. Lin 
+ HellaSwag-pro: a large-scale bilingual benchmark for evaluating the robustness of LLMs in commonsense reasoning .
+ In Findings of the Association for Computational Linguistics: ACL 2025 , W. Che, J. Nabende, E. Shutova, and M. T. Pilehvar (Eds.) ,
+ Vienna, Austria , pp. 9038–9072 .
+ External Links: Link ,
+ Document ,
+ ISBN 979-8-89176-256-5 
+ Cited by: §3.3.2 .
+ Lindsey et al. (2025) 
+ J. Lindsey, W. Gurnee, E. Ameisen, B. Chen, A. Pearce, N. L. Turner, C. Citro, D. Abrahams, S. Carter, B. Hosmer, J. Marcus, M. Sklar, A. Templeton, T. Bricken, C. McDougall, H. Cunningham, T. Henighan, A. Jermyn, A. Jones, A. Persic, Z. Qi, T. B. Thompson, S. Zimmerman, K. Rivoire, T. Conerly, C. Olah, and J. Batson 
+ On the biology of a large language model .
+ Transformer Circuits Thread .
+ External Links: Link 
+ Cited by: §1 ,
+ §2 ,
+ §6 .
+ Olah et al. (2024) 
+ C. Olah, A. Jermyn, N. L. Turner, A. Pearce, and T. Bricken 
+ Circuits updates - july 2024 .
+ Note: Transformer Circuits ThreadA collection of small updates from the Anthropic Interpretability Team, including: The Next Five Hurdles, What is a Linear Representation?, The Dark Matter of Neural Networks?, Attention Pivot Tables, and Measuring feature sensitivity using dataset filtering 
+ External Links: Link 
+ Cited by: §1 .
+ Ouyang et al. (2022) 
+ L. Ouyang, J. Wu, X. Jiang, D. Almeida, C. Wainwright, P. Mishkin, C. Zhang, S. Agarwal, K. Slama, A. Ray, J. Schulman, J. Hilton, F. Kelton, L. Miller, M. Simens, A. Askell, P. Welinder, P. F. Christiano, J. Leike, and R. Lowe 
+ Training language models to follow instructions with human feedback .
+ In Advances in Neural Information Processing Systems , S. Koyejo, S. Mohamed, A. Agarwal, D. Belgrave, K. Cho, and A. Oh (Eds.) ,
+ Vol. 35 , pp. 27730–27744 .
+ External Links: Link 
+ Cited by: §1 .
+ Rafailov et al. (2023) 
+ R. Rafailov, A. Sharma, E. Mitchell, C. D. Manning, S. Ermon, and C. Finn 
+ Direct preference optimization: your language model is secretly a reward model .
+ In Advances in Neural Information Processing Systems , A. Oh, T. Naumann, A. Globerson, K. Saenko, M. Hardt, and S. Levine (Eds.) ,
+ Vol. 36 , pp. 53728–53741 .
+ External Links: Link 
+ Cited by: §1 .
+ Rimsky et al. (2024) 
+ N. Rimsky, N. Gabrieli, J. Schulz, M. Tong, E. Hubinger, and A. Turner 
+ Steering llama 2 via contrastive activation addition .
+ In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , L. Ku, A. Martins, and V. Srikumar (Eds.) ,
+ Bangkok, Thailand , pp. 15504–15522 .
+ External Links: Link ,
+ Document 
+ Cited by: §1 ,
+ §2 .
+ Stolfo et al. (2024) 
+ A. Stolfo, W. Gurnee, B. Wu, Y. Belinkov, X. Song, M. Sachan, and N. Nanda 
+ Confidence regulation neurons in language models .
+ In Proceedings of the 38th International Conference on Neural Information Processing Systems ,
+ NIPS ’24 , Red Hook, NY, USA .
+ External Links: ISBN 9798331314385 
+ Cited by: §2 .
+ Sun et al. (2025) 
+ Q. Sun, M. Pickett, A. K. Nain, and L. Jones 
+ Transformer layers as painters .
+ External Links: 2407.09298 ,
+ Link 
+ Cited by: §4.2 .
+ Sutawika et al. (2023) 
+ EleutherAI/lm-evaluation-harness: major refactor 
+ External Links: Document ,
+ Link 
+ Cited by: §3.3.1 ,
+ §3.3.4 ,
+ Table 1 ,
+ Table 1 ,
+ Table 2 ,
+ Table 2 .
+ Talmor et al. (2019) 
+ A. Talmor, J. Herzig, N. Lourie, and J. Berant 
+ CommonsenseQA: a question answering challenge targeting commonsense knowledge .
+ In Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long and Short Papers) , J. Burstein, C. Doran, and T. Solorio (Eds.) ,
+ Minneapolis, Minnesota , pp. 4149–4158 .
+ External Links: Link ,
+ Document 
+ Cited by: §3.3.1 .
+ Templeton et al. (2024) 
+ A. Templeton, T. Conerly, J. Marcus, J. Lindsey, T. Bricken, B. Chen, A. Pearce, C. Citro, E. Ameisen, A. Jones, H. Cunningham, N. L. Turner, C. McDougall, M. MacDiarmid, C. D. Freeman, T. R. Sumers, E. Rees, J. Batson, A. Jermyn, S. Carter, C. Olah, and T. Henighan 
+ Scaling monosemanticity: extracting interpretable features from claude 3 sonnet .
+ Transformer Circuits Thread .
+ External Links: Link 
+ Cited by: §1 ,
+ §2 .
+ Wu et al. (2024) 
+ Z. Wu, A. Geiger, A. Arora, J. Huang, Z. Wang, N. Goodman, C. Manning, and C. Potts 
+ Pyvene: a library for understanding and improving PyTorch models via interventions .
+ In Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 3: System Demonstrations) , K. Chang, A. Lee, and N. Rajani (Eds.) ,
+ Mexico City, Mexico , pp. 158–165 .
+ External Links: Link ,
+ Document 
+ Cited by: §B.1 .
+ Zadrozny and Elkan (2002) 
+ B. Zadrozny and C. Elkan 
+ Transforming classifier scores into accurate multiclass probability estimates .
+ In Proceedings of the Eighth ACM SIGKDD International Conference on Knowledge Discovery and Data Mining ,
+ KDD ’02 , New York, NY, USA , pp. 694–699 .
+ External Links: ISBN 158113567X ,
+ Link ,
+ Document 
+ Cited by: §2 ,
+ Table 1 ,
+ Table 1 ,
+ Table 2 ,
+ Table 2 .
+ Zhou et al. (2025) 
+ Z. Zhou, T. Jin, J. Shi, and L. Qing 
+ SteerConf: steering LLMs for confidence elicitation .
+ In The Thirty-ninth Annual Conference on Neural Information Processing Systems ,
+ External Links: Link 
+ Cited by: §B.3 ,
+ §1 ,
+ §3.3.4 ,
+ Table 1 ,
+ Table 1 ,
+ Table 2 ,
+ Table 2 .
+ Zou et al. (2025) 
+ A. Zou, L. Phan, S. Chen, J. Campbell, P. Guo, R. Ren, A. Pan, X. Yin, M. Mazeika, A. Dombrowski, S. Goel, N. Li, M. J. Byun, Z. Wang, A. Mallen, S. Basart, S. Koyejo, D. Song, M. Fredrikson, J. Z. Kolter, and D. Hendrycks 
+ Representation engineering: a top-down approach to ai transparency .
+ External Links: 2310.01405 ,
+ Link 
+ Cited by: §1 .
+ Appendix A Appendix 
+ A.1 Sparse Autoencoder Implementation Details 
+ Feature Selection via Correlation Filtering. 
+ Inspired by CorrSteer ( Cho et al., 2025 ) , we identify calibration-relevant features by computing Pearson correlation between each SAE feature’s activation and the residual correctness label. We first filter features by activation frequency, requiring a minimum of 10 active samples and activation frequency above 0.01%. We define a feature as active when its magnitude exceeds 10 − 4 10^{-4} . From the filtered set, we select the top- k k features with the highest positive correlation with the target variable. This correlation-based selection identifies features that linearly associate with calibration behavior. 
+ Feature Selection via Activation Magnitude. 
+ We implement an alternative selection method based on the feature’s expected impact on downstream predictions. For each feature j j , we compute its directional sensitivity as the alignment between its decoder column and the ridge probe weight vector: 
+ s j = ( 𝐝 j ⊙ 𝝈 ) ⊤ ​ 𝐰 s_{j}=\left(\mathbf{d}_{j}\odot\boldsymbol{\sigma}\right)^{\top}\mathbf{w} 
+ (15) 
+ where ⊙ \odot denotes elementwise multiplication and 𝝈 \boldsymbol{\sigma} is the activation standard deviation. We multiply this sensitivity by the mean feature activation to obtain an approximate impact score. We select features with the largest absolute impact scores, capturing directions that most influence the probe’s residual prediction. 
+ SAE Feature Steering. 
+ We implement SAE-based steering using forward hooks to modify hidden states during inference. We first identify beneficial features from the SAE ablation analysis results, where a feature is considered beneficial if ablating it decreases accuracy (negative accuracy impact) or increases ECE (positive ECE impact). For each beneficial feature j j , we compute a steering weight: 
+ w j = α acc ⋅ max ⁡ ( − Δ acc , j , 0 ) + α cal ⋅ max ⁡ ( Δ ECE , j , 0 ) w_{j}=\alpha_{\text{acc}}\cdot\max(-\Delta_{\text{acc},j},0)+\alpha_{\text{cal}}\cdot\max(\Delta_{\text{ECE},j},0) 
+ (16) 
+ where Δ acc , j = Acc ablated , j − Acc baseline \Delta_{\text{acc},j}=\text{Acc}_{\text{ablated},j}-\text{Acc}_{\text{baseline}} is the change in accuracy when ablating feature j j , and Δ ECE , j = ECE ablated , j − ECE baseline \Delta_{\text{ECE},j}=\text{ECE}_{\text{ablated},j}-\text{ECE}_{\text{baseline}} is the corresponding change in calibration error. The hyperparameters α acc \alpha_{\text{acc}} and α cal \alpha_{\text{cal}} control the relative importance of accuracy and calibration contributions. We normalize these weights to sum to one across all selected features. 
+ During inference, we register a forward hook at the target layer that applies additive steering. For each hidden state 𝐡 \mathbf{h} , we normalize using SAE training statistics, encode to obtain feature activations f j f_{j} , and compute the steering perturbation: 
+ 𝐡 ′ = 𝐡 + γ ⋅ ( ∑ j ∈ 𝒮 f j ⋅ w j ⋅ 𝐝 j ) ⊙ 𝝈 \mathbf{h}^{\prime}=\mathbf{h}+\gamma\cdot\left(\sum_{j\in\mathcal{S}}f_{j}\cdot w_{j}\cdot\mathbf{d}_{j}\right)\odot\boldsymbol{\sigma} 
+ (17) 
+ where 𝒮 \mathcal{S} is the set of beneficial features, 𝐝 j \mathbf{d}_{j} is the decoder column for feature j j , 𝝈 \boldsymbol{\sigma} is the activation standard deviation, and γ \gamma controls the global steering strength. This intervention amplifies features that causally improve calibration while preserving accuracy. 
+ A.2 Attention-Head Activations Analysis 
+ To investigate whether calibration-relevant information is localized to specific attention heads—as would be required for Inference-Time Intervention (ITI) style surgical steering —we conducted a systematic probe analysis across all attention heads in the model. 
+ Methodology. 
+ We extracted activations from the output of each attention head (before the output projection) at the last token position of each answer option. For DeepSeek-7B-Chat, this yields 960 total head representations (30 layers × \times 32 heads), each with dimension d head = 128 d_{\text{head}}=128 . Following the ITI approach, we trained separate 4-layer MLP probes on each (layer, head) pair to predict the residual correctness signal r i = y i − p ^ i r_{i}=y_{i}-\hat{p}_{i} . Each probe uses hidden dimensions ( 256,128 , 64 , 32 ) (256,128,64,32) with ReLU activations and dropout regularization. We evaluated generalization performance using 5-fold GroupKFold cross-validation (grouped by question to prevent leakage) and report R 2 R^{2} scores on a held-out validation set. 
+ Results. 
+ Figure 4 : Distribution of calibration signal across attention heads. Left: Histogram of R 2 R^{2} scores from 4-layer MLP probes trained on individual attention head activations to predict residual correctness. The mean R 2 = 0.022 R^{2}=0.022 and maximum R 2 = 0.085 R^{2}=0.085 , with no head exceeding R 2 > 0.10 R^{2}>0.10 . Right: Cumulative signal analysis showing that 526 heads (55% of all 960 heads) are required to capture 80% of the total predictive signal, indicating that calibration information is distributed across the attention mechanism rather than localized to specific heads. 
+ Figure 5 : Signal dimensionality analysis across layers. Left: Cross-validated R 2 R^{2} for predicting residual correctness as a function of the number of PCA components, averaged over 5-layer groups. Later layers (L20–29) achieve higher predictive power, but all layer groups show gradual R 2 R^{2} growth without saturation, indicating that the calibration signal is distributed across many dimensions rather than concentrated in a low-rank subspace. Right: Cumulative explained variance of PCA components. Early layers exhibit highly concentrated activation variance (3 components capture > > 90%), while later layers have more distributed representations. The mismatch between variance concentration and predictive power suggests calibration information resides in subtle activation patterns rather than dominant principal directions. 
+ Figure  4 shows the distribution of R 2 R^{2} scores across all 960 attention heads. The left panel displays a histogram revealing that most heads have low predictive power, with a mean R 2 = 0.022 R^{2}=0.022 and maximum R 2 = 0.085 R^{2}=0.085 . Notably, no individual head achieves R 2 > 0.10 R^{2}>0.10 , and only 82 heads (8.5%) exceed R 2 > 0.05 R^{2}>0.05 . 
+ The right panel presents a signal localization analysis: when heads are sorted by R 2 R^{2} and their contributions are accumulated, we find that 526 heads (55% of all heads) are required to capture 80% of the total predictive signal. Equivalently, the top-48 heads—a reasonable target for surgical intervention—contain only 15.8% of the total positive R 2 R^{2} . This indicates a highly distributed representation where calibration information is spread diffusely across the attention mechanism rather than concentrated in a small subset of “calibration heads.” 
+ A.3 Signal Dimensionality Analysis 
+ To characterize the geometric structure of the calibration signal in activation space, we analyze how predictive power grows with the dimensionality of the representation. Specifically, we apply PCA to reduce the d model = 4096 d_{\text{model}}=4096 dimensional residual stream activations to k k principal components, then train Ridge regression probes to predict the residual correctness signal r i = y i − p ^ i r_{i}=y_{i}-\hat{p}_{i} . 
+ Methodology. 
+ For each layer, we fit PCA on the training activations and evaluate cross-validated R 2 R^{2} as a function of the number of retained components k ∈ { 1 , 2 , … , 100 } k\in\{1,2,\ldots,100\} . If the calibration signal were low-dimensional (e.g., rank-1 or rank-10), we would expect R 2 R^{2} to saturate quickly with few components. Conversely, a gradual increase in R 2 R^{2} with k k indicates that the signal is distributed across many directions in activation space. 
+ Results. 
+ Figure  5 shows the results averaged across groups of 5 consecutive layers. The left panel reveals that R 2 R^{2} grows gradually with the number of PCA components across all layer groups, without saturating even at 100 components. Later layers (L20–24, L25–29) achieve higher maximum R 2 R^{2} values (0.06–0.07), consistent with calibration information accumulating in deeper layers. The right panel shows cumulative explained variance: early layers (L0–4) have highly concentrated variance where 3 components capture over 90% of activation variance, while later layers exhibit more distributed representations. 
+ Importantly, despite the high concentration of activation variance in few directions for early layers, the calibration signal remains distributed—high explained variance does not imply high predictive power in those directions. This suggests that calibration-relevant information is encoded in subtle, distributed patterns rather than dominant principal components, motivating the use of full-dimensional MLP probes rather than low-rank approximations. 
+ Appendix B Baseline Implementation Details 
+ B.1 Inference-Time Intervention (ITI) for Attention Head Steering 
+ ITI  ( Li et al., 2023 ) is an activation steering method that identifies and modifies specific attention head outputs during inference to improve model truthfulness. 
+ Stage 1: Activation Collection. 
+ For each prompt x x in a binary-labeled dataset (e.g., TruthfulQA with correct/incorrect answer labels), we extract attention head activations at the last token position. Let 𝐡 ℓ , k ∈ ℝ d head \mathbf{h}_{\ell,k}\in\mathbb{R}^{d_{\text{head}}} denote the output of attention head k k at layer ℓ \ell . We collect activations across all layers and heads using the output projection input: 
+ 𝐇 = { 𝐡 ℓ , k ( i ) } ℓ = 1 , k = 1 , i = 1 L , K , N \mathbf{H}=\{\mathbf{h}_{\ell,k}^{(i)}\}_{\ell=1,k=1,i=1}^{L,K,N} 
+ (18) 
+ where L L is the number of layers, K K is the number of heads per layer, and N N is the number of samples. 
+ Stage 2: Probe Training and Head Selection. 
+ For each attention head ( ℓ , k ) (\ell,k) , we train a logistic regression probe to classify truthful vs. untruthful responses: 
+ p ⁡ ( y = 1 ∣ 𝐡 ℓ , k ) = σ ⁡ ( 𝐰 ℓ , k ⊤ ​ 𝐡 ℓ , k + b ℓ , k ) p(y=1\mid\mathbf{h}_{\ell,k})=\sigma(\mathbf{w}_{\ell,k}^{\top}\mathbf{h}_{\ell,k}+b_{\ell,k}) 
+ (19) 
+ where 𝐰 ℓ , k ∈ ℝ d head \mathbf{w}_{\ell,k}\in\mathbb{R}^{d_{\text{head}}} is the learned weight vector. The top- M M heads are selected based on validation accuracy, yielding 𝒯 = { ( ℓ 1 , k 1 ) , … , ( ℓ M , k M ) } \mathcal{T}=\{(\ell_{1},k_{1}),\ldots,(\ell_{M},k_{M})\} . 
+ Stage 3: Intervention Direction Computation. 
+ For each selected head, we compute the mass mean shift direction as the difference between class centroids: 
+ 𝜽 ℓ , k = 1 | 𝒟 + | ​ ∑ i ∈ 𝒟 + 𝐡 ℓ , k ( i ) − 1 | 𝒟 − | ​ ∑ i ∈ 𝒟 − 𝐡 ℓ , k ( i ) \boldsymbol{\theta}_{\ell,k}=\frac{1}{|\mathcal{D}_{+}|}\sum_{i\in\mathcal{D}_{+}}\mathbf{h}_{\ell,k}^{(i)}-\frac{1}{|\mathcal{D}_{-}|}\sum_{i\in\mathcal{D}_{-}}\mathbf{h}_{\ell,k}^{(i)} 
+ (20) 
+ where 𝒟 + \mathcal{D}_{+} and 𝒟 − \mathcal{D}_{-} denote the sets of truthful and untruthful samples, respectively. The direction is normalized: 𝜽 ^ ℓ , k = 𝜽 ℓ , k / ‖ 𝜽 ℓ , k ‖ 2 \hat{\boldsymbol{\theta}}_{\ell,k}=\boldsymbol{\theta}_{\ell,k}/\|\boldsymbol{\theta}_{\ell,k}\|_{2} . 
+ Stage 4: Inference-Time Steering. 
+ During inference, we modify the attention head outputs at the last token position for all selected heads: 
+ 𝐡 ~ ℓ , k = 𝐡 ℓ , k + α ⋅ 𝜽 ^ ℓ , k \tilde{\mathbf{h}}_{\ell,k}=\mathbf{h}_{\ell,k}+\alpha\cdot\hat{\boldsymbol{\theta}}_{\ell,k} 
+ (21) 
+ where α \alpha is a scalar hyperparameter controlling intervention strength. The intervention is applied using PyVene  ( Wu et al., 2024 ) by hooking into model.layers[ ℓ \ell ].self_attn.o_proj.input . 
+ B.2 Confidence-Conditioned Prediction with Shifting (CCPS) 
+ CCPS  ( Khanmohammadi et al., 2025 ) is a two-stage framework that learns to estimate response correctness by analyzing perturbation-based features extracted from model internals. 
+ Stage 1: Perturbation-Based Feature Extraction. 
+ For each generated token t t at position i i , we extract the hidden state 𝐡 i ∈ ℝ d \mathbf{h}_{i}\in\mathbb{R}^{d} and logits 𝐥 i ∈ ℝ V \mathbf{l}_{i}\in\mathbb{R}^{V} from the final layer before the language model head. We compute the Jacobian vector: 
+ 𝐉 t = ∇ 𝐡 i ​ log ​ p ​ ( t ∣ 𝐡 i ) \mathbf{J}_{t}=\nabla_{\mathbf{h}_{i}}\log p(t\mid\mathbf{h}_{i}) 
+ (22) 
+ We generate a sequence of perturbed hidden states along the Jacobian direction: 
+ 𝐡 ~ i ( ϵ ) = 𝐡 i + ϵ ⋅ 𝐉 t ‖ 𝐉 t ‖ 2 , ϵ ∈ { ϵ 1 , … , ϵ K } \tilde{\mathbf{h}}_{i}^{(\epsilon)}=\mathbf{h}_{i}+\epsilon\cdot\frac{\mathbf{J}_{t}}{\|\mathbf{J}_{t}\|_{2}},\quad\epsilon\in\{\epsilon_{1},\ldots,\epsilon_{K}\} 
+ (23) 
+ and compute corresponding perturbed logits 𝐥 ~ i ( ϵ ) = LMHead ​ ( 𝐡 ~ i ( ϵ ) ) \tilde{\mathbf{l}}_{i}^{(\epsilon)}=\text{LMHead}(\tilde{\mathbf{h}}_{i}^{(\epsilon)}) . 
+ From these, we extract comprehensive features including: 
+ • 
+ Original state features : log-probability, entropy, top-1/top-2 margin, hidden state norm 
+ • 
+ Perturbation sensitivity : ϵ \epsilon -to-flip (minimum perturbation to change argmax), Jacobian norm 
+ • 
+ PEI (Perturbation Expected Information) : 
+ PEI = 1 K ​ ∑ k = 1 K max ⁡ ( 0 , log ⁡ p ⁡ ( t ∣ 𝐡 i ) − log ⁡ p ⁡ ( t ∣ 𝐡 ~ i ( ϵ k ) ) ) \text{PEI}=\frac{1}{K}\sum_{k=1}^{K}\max\left(0,\log p(t\mid\mathbf{h}_{i})-\log p(t\mid\tilde{\mathbf{h}}_{i}^{(\epsilon_{k})})\right) 
+ (24) 
+ • 
+ Divergence metrics : KL divergence, JS divergence, cosine similarity between original and perturbed distributions 
+ Stage 2: Contrastive Embedding Learning. 
+ Let 𝐟 ∈ ℝ d f \mathbf{f}\in\mathbb{R}^{d_{f}} denote the concatenated feature vector. We train an embedding network g ϕ : ℝ d f → ℝ d e g_{\phi}:\mathbb{R}^{d_{f}}\rightarrow\mathbb{R}^{d_{e}} using max-margin contrastive loss: 
+ ℒ cont = 1 | ℬ | ​ ∑ ( i , j ) ∈ ℬ ( 1 − y i ​ j ) ⋅ d i ​ j 2 + y i ​ j ⋅ max ⁡ ( 0 , m − d i ​ j ) 2 \mathcal{L}_{\text{cont}}=\frac{1}{|\mathcal{B}|}\sum_{(i,j)\in\mathcal{B}}(1-y_{ij})\cdot d_{ij}^{2}+y_{ij}\cdot\max(0,m-d_{ij})^{2} 
+ (25) 
+ where d i ​ j = ‖ g ϕ ​ ( 𝐟 i ) − g ϕ ​ ( 𝐟 j ) ‖ 2 d_{ij}=\|g_{\phi}(\mathbf{f}_{i})-g_{\phi}(\mathbf{f}_{j})\|_{2} , y i ​ j = 𝟙 [ y i ≠ y j ] y_{ij}=\mathbbm{1}[y_{i}\neq y_{j}] indicates whether samples have different correctness labels, and m m is the margin hyperparameter. 
+ The embedding network architecture is: 
+ g ϕ ​ ( 𝐟 ) = Linear d e ​ ( ReLU ​ ( Linear 64 ​ ( ReLU ​ ( Linear 64 ​ ( 𝐟 ) ) ) ) ) g_{\phi}(\mathbf{f})=\text{Linear}_{d_{e}}(\text{ReLU}(\text{Linear}_{64}(\text{ReLU}(\text{Linear}_{64}(\mathbf{f}))))) 
+ (26) 
+ with dropout ( p = 0.1 p=0.1 ) after each activation. 
+ Stage 3: Correctness Classification. 
+ A classifier head is trained on top of the frozen or fine-tuned embeddings: 
+ p ⁡ ( y = 1 ∣ 𝐟 ) = softmax ​ ( h ψ ​ ( g ϕ ​ ( 𝐟 ) ) ) p(y=1\mid\mathbf{f})=\text{softmax}(h_{\psi}(g_{\phi}(\mathbf{f}))) 
+ (27) 
+ where h ψ h_{\psi} is an MLP with hidden dimensions [48, 24, 12]. Training uses cross-entropy loss with AdamW optimizer ( lr = 10 − 4 \text{lr}=10^{-4} , weight decay = 0.01 =0.01 ). 
+ Inference. 
+ For a new response, features are extracted from all generated tokens, standardized using the training scaler, and passed through the trained model. The probability p ⁡ ( y = 1 ∣ 𝐟 ) p(y=1\mid\mathbf{f}) serves as the confidence estimate. 
+ B.3 Confidence Steering via Prompt Shifting (SteerConf) 
+ SteerConf  ( Zhou et al., 2025 ) modulates LLM verbalized confidence through carefully designed prompt instructions that shift the model’s risk tolerance. 
+ Prompt Design. 
+ The base prompt template requests both an answer and a numerical confidence score: 
+ Read the question, analyze step by step, provide your answer and your confidence in this answer. Note: The confidence indicates how likely you think your answer is true.
+ Use the following format to answer:
+ ‘‘‘Explanation: [insert step-by-step analysis here]
+ Answer and Confidence (0-100): [ONLY the {answer_type}], [confidence]%‘‘‘ 
+ Confidence Shifting Instructions. 
+ We inject steering instructions that modulate the model’s confidence calibration: 
+ • 
+ Very Cautious : “You are making important decisions, thus you should avoid giving a wrong answer with high confidence. You should be very cautious, and tend to give low confidence on almost all of the answers.” 
+ • 
+ Cautious : “You are making important decisions, thus you should avoid giving a wrong answer with high confidence.” 
+ • 
+ Confident : “You are making important decisions, thus you should avoid giving a right answer with low confidence.” 
+ • 
+ Very Confident : “You are making important decisions, thus you should avoid giving a right answer with low confidence. You should be very confident, and tend to give high confidence on almost all of the answers.” 
+ Multi-Query Aggregation. 
+ For each question, we query the model N N times with temperature τ > 0 \tau>0 to obtain answer-confidence pairs { ( a i , c i ) } i = 1 N \{(a_{i},c_{i})\}_{i=1}^{N} . We compute aggregated metrics: 
+ Consistency Score : The frequency of the most common answer: 
+ S cons = | { i : a i = a ^ } | N , where  a ^ = arg max a | { i : a i = a } | S_{\text{cons}}=\frac{|\{i:a_{i}=\hat{a}\}|}{N},\quad\text{where }\hat{a}=\arg\max_{a}|\{i:a_{i}=a\}| 
+ (28) 
+ Weighted Confidence : Combining mean confidence with consistency: 
+ S weighted = c ¯ ⋅ ( 1 − V ans ) ⋅ ( 1 − V conf ) S_{\text{weighted}}=\bar{c}\cdot(1-V_{\text{ans}})\cdot(1-V_{\text{conf}}) 
+ (29) 
+ where c ¯ = 1 N ​ ∑ i c i \bar{c}=\frac{1}{N}\sum_{i}c_{i} is the mean confidence, V ans = 1 − S cons V_{\text{ans}}=1-S_{\text{cons}} is answer variability, and V conf = σ c / c ¯ 1 + σ c / c ¯ V_{\text{conf}}=\frac{\sigma_{c}/\bar{c}}{1+\sigma_{c}/\bar{c}} is the normalized coefficient of variation of confidence scores. 
+ Final Answer Selection. 
+ With majority voting, the final answer is selected as a ^ \hat{a} . If there are ties, we select the answer with the highest mean confidence among tied candidates. 
+ B.4 Hyperparameters and Training Details 
+ ITI. 
+ We select the top M = 48 M=48 attention heads based on probe validation accuracy. The intervention strength α \alpha is tuned on a held-out validation set, typically in the range [ 1.0 , 3.0 ] [1.0,3.0] . Probes are trained with scikit-learn’s LogisticRegression with max_iter=1000 . 
+ CCPS. 
+ Contrastive model: hidden dimensions [64, 64], embedding dimension 8, ELU activation, dropout 0.05, margin m = 1.0 m=1.0 , trained for 5000 steps with batch size 64, learning rate 10 − 4 10^{-4} . Classifier: hidden dimensions [48, 24, 12], trained for 5000 steps with learning rate 10 − 4 10^{-4} . Feature extraction uses perturbation radii ϵ ∈ { 0.01 , 0.1 , 0.5 , 1.0 , 2.0 , 5.0 , 10.0 , 20.0 } \epsilon\in\{0.01,0.1,0.5,1.0,2.0,5.0,10.0,20.0\} . 
+ SteerConf. 
+ Ensemble size N = 5 N=5 with temperature τ = 0.7 \tau=0.7 . We use chain-of-thought prompting for reasoning tasks. Confidence scores are normalized to [ 0 , 1 ] [0,1] by dividing by 100. 
+ B.5 Baseline Tuning and Validation Protocols 
+ To ensure a fair comparison, all baseline methods were granted equivalent tuning flexibility to CORAL’s per-model and per-dataset layer/ γ \gamma selection. We describe the tuning protocols for each method below. 
+ ITI (Inference-Time Intervention). 
+ For each model and target dataset combination, we performed the following tuning: 
+ • 
+ Head selection : Logistic regression probes were trained on a held-out validation split (20% of training data) to select the top- M M attention heads. We tuned M ∈ { 24 , 48 , 96 } M\in\{24,48,96\} per model. 
+ • 
+ Intervention strength : The multiplier α \alpha was selected via grid search over { 0.5 , 1.0 , 1.5 , 2.0 , 2.5 , 3.0 } \{0.5,1.0,1.5,2.0,2.5,3.0\} using validation ECE as the selection criterion. 
+ • 
+ Direction computation : Both probe-weight directions and mass-mean-shift directions were evaluated; the better-performing variant was selected per model. 
+ This mirrors the per-model tuning afforded to CORAL for layer selection and steering magnitude γ \gamma . 
+ CCPS (Confidence-Conditioned Prediction with Shifting). 
+ CCPS was tuned with the following protocol: 
+ • 
+ Training data : The contrastive embedding model and classifier were trained on a source dataset (e.g., CT-CHOICE) with an 80/20 train/validation split. 
+ • 
+ Architecture search : Hidden dimensions for both the embedding network and classifier head were tuned per model using validation AUROC. We searched over embedding dimensions { 8 , 16 , 32 } \{8,16,32\} and classifier hidden layers from { [ 48 , 24 ] , [ 48 , 24 , 12 ] , [ 64 , 32 , 16 ] } \{[48,24],[48,24,12],[64,32,16]\} . 
+ • 
+ Per-dataset adaptation : When transferring to a new target dataset, we allowed optional fine-tuning of the classifier head on a small validation subset (up to 500 samples) while keeping the contrastive encoder frozen. 
+ • 
+ Feature selection : The perturbation radii { ϵ k } \{\epsilon_{k}\} and included feature types were validated per model to ensure stable feature extraction across different model architectures. 
+ SteerConf (Confidence Steering via Prompt Shifting). 
+ SteerConf hyperparameters were tuned per model and dataset: 
+ • 
+ Prompt variant selection : The steering prompt type (vanilla, cautious, very_cautious, confident, very_confident) was selected based on validation ECE for each model-dataset pair. 
+ • 
+ Sampling parameters : Temperature τ ∈ { 0.5 , 0.7 , 1.0 } \tau\in\{0.5,0.7,1.0\} and ensemble size N ∈ { 1 , 3 , 5 , 10 } N\in\{1,3,5,10\} were tuned on a validation split. 
+ • 
+ Aggregation method : The confidence aggregation strategy (mean, weighted, consistency-adjusted) was selected per dataset based on validation calibration metrics. 
+ • 
+ Chain-of-thought : Whether to use CoT prompting was determined per dataset based on task complexity and validation performance. 
+ Summary. 
+ All baseline methods were allowed comparable tuning flexibility to CORAL. Specifically, each method could select its key hyperparameters (ITI: heads and α \alpha ; CCPS: architecture and features; SteerConf: prompt type and sampling) independently for each model and dataset combination using held-out validation data. This ensures that performance differences reflect fundamental methodological advantages rather than tuning disparities. 
+ Experimental support, please
+ view the build logs 
+ for errors. Generated by
+ L
+ A 
+ T
+ E 
+ xml 
+ .
+ Instructions for reporting errors 
+ We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+ support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+ methods listed below: 
+ Click the "Report Issue" ( 
+ ) button, located in the page header. 
+ Tip: You can select the relevant text first, to include it in your report. 
+ Our team has already identified the following issues . We appreciate your time reviewing and reporting rendering errors we
+ may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+ should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+ all. 
+ Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a list of packages that need conversion , and welcome developer contributions . 
+ We gratefully acknowledge support from our major funders ,
+ member institutions , ,
+ and all contributors.
+ About · 
+ Help · 
+ Contact · 
+ Subscribe · 
+ Copyright · 
+ Privacy · 
+ Accessibility · 
+ Operational Status (opens in new tab) 

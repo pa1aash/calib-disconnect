@@ -1,0 +1,1631 @@
+When Accuracy Gaps Fail to Certify:
+Auditing Cross-Domain Recalibration of LLM Judges
+Fariya Afrin1* and Ibne Farabi Shihab2* †
+1Department of Computer Science, Kalinga Institute of Industrial Technology
+2Department of Computer Science, Iowa State University
+ishihab@iastate.edu
+Abstract
+A scalar recalibration map fitted for an LLM
+judge on one task can fail when the task dis-
+tribution changes, but the source–target accu-
+racy gap is often treated as a proxy for that
+failure. We test what this gap can predict and
+what it can certify across thirteen judges, two
+generators, eight domains, and 1,176 prede-
+clared transfers. After accounting for mean
+score shift, the gap yields a population lower
+bound on target calibration error, yet identical
+gaps can induce opposite transfer outcomes.
+Exact importance weighting recovers target
+proper loss under covariate shift, so failure
+of an estimated weighting pipeline does not
+by itself establish conditional shift. A finite-
+sample simultaneous lower certificate converts
+the population bound into a one-sided rejec-
+tion rule using audit labels disjoint from evalu-
+ation outcomes. The leak-free gap correlation
+is 0.25 (95% CI [−0.09, 0.55]), falls to 0.09 on
+the second generator, and does not support a
+generator-invariant association. The certificate
+retains nominal coverage but has power 0.13
+even at m=1024, whereas target-domain tem-
+perature scaling with 16 labels reaches harm
+rate 0.09, compared with 0.34 for source-fitted
+Platt scaling. Accuracy gaps are therefore weak
+warning signals for scalar probability transfer,
+not deployment certificates.
+1
+Introduction
+A judge can preserve the ordering of answers while
+its reported probabilities become unusable after a
+task change. This failure matters whenever a score
+such as 0.8 controls acceptance, review, or defer-
+ral rather than serving only as a ranking statistic.
+In that setting, calibration requires approximately
+80% of the cases assigned probability 0.8 to be cor-
+rect. The requirement is local to a distribution, not
+an intrinsic property of the judge.
+*Equal contribution.
+†Corresponding author: ishihab@iastate.edu.
+Post-hoc maps such as temperature and Platt
+scaling can repair probability quality on held-out
+source labels (Platt, 1999; Guo et al., 2017). Un-
+der explicit covariate- or label-shift assumptions,
+importance weighting can also identify target risk
+(Park et al., 2020; Podkopaev and Ramdas, 2021;
+Popordanoska et al., 2024). LLM judges, however,
+exhibit overconfidence and unstable uncertainty
+across tasks (Tian et al., 2025; Sheng et al., 2025).
+A deployment team then faces a narrower question:
+which observable signals diagnose scalar recalibra-
+tion failure, and when can those signals support a
+formal rejection?
+The absolute source–target accuracy gap is a
+tempting diagnostic, but it is a marginal quantity.
+Calibration depends on the conditional relationship
+E[Y | S] between correctness Y and judge score
+S. Equal accuracy gaps can therefore hide different
+conditional reliability functions. The gap is also not
+label-free because estimating target accuracy con-
+sumes target labels. Any gap-based rule must con-
+sequently be compared with fitting a target-domain
+calibrator using the same label budget.
+This paper develops that comparison for scalar
+probability transfer. The population analysis sepa-
+rates the accuracy gap from the shift in the recal-
+ibrated mean score (Corollary 3), proves that the
+gap is insufficient (Proposition 4), and states ex-
+actly when importance weighting recovers target
+proper loss (Theorem 6). The same lower bound
+yields a simultaneous finite-sample certificate that
+rejects a transferred map only when its target cali-
+bration error must exceed a tolerance (Theorem 7).
+Non-rejection is not approval.
+The empirical audit contains 448 primary trans-
+fers across eight judges and eight domains, 224
+transfers from four additional 7–9B judges, 56 from
+one frontier API judge, and a 448-transfer second-
+generator replication. The leak-free gap associa-
+tion does not survive the cross-generator standard,
+while probe-estimated raw target error does (Ta-
+arXiv:2609.27954v1  [cs.LG]  23 Aug 2026
+
+ble 3). Controlled shift constructions verify the
+importance-weighting implementation and locate
+its natural-domain failure in the observed text repre-
+sentation (Table 4). The rejection certificate is valid
+but too weak at the available audit sizes; sixteen
+target labels are more useful for direct temperature
+scaling (Table 5).
+These results delimit one scientific object: a
+scalar map g(S) evaluated by proper loss and cali-
+bration error. Concurrent work by overlapping au-
+thors studies set-valued conformal coverage under
+finite traffic-mixture shift (Anonymous, 2027). It
+neither evaluates the scalar transfer question an-
+swered here nor shares the stated contributions of
+this paper.
+2
+Related Work
+2.1
+LLM judges and their uncertainty
+LLM-as-a-judge research has primarily studied
+agreement with humans, ranking quality, position
+effects, verbosity bias, and self-preference (Zheng
+et al., 2023; Liu et al., 2023; Dubois et al., 2024;
+Panickssery et al., 2024). Confidence adds a dis-
+tinct measurement problem. Tian et al. (2025)
+document overconfidence in LLM judges, while
+Sheng et al. (2025) construct conformal intervals
+for rating-based evaluation. ConfidenceBench eval-
+uates verbalized probabilities with proper scores
+across frontier models (ffrench-Constant et al.,
+2026), while SAJA uses labeled target data to
+align multidimensional rubric features to human
+judgments (Kola et al., 2026). These studies es-
+tablish that confidence quality matters, but they
+do not test whether a one-dimensional map fit-
+ted on one task transfers to another under disjoint
+target evaluation. Evaluator failure has also been
+framed as an adversarial-robustness problem: Akter
+et al. (2026) detect proxy gaming of reward mod-
+els and LLM judges with invariance-based stress
+tests. Our question is complementary: we hold the
+judge and response set fixed and study transfer of a
+scalar post-hoc calibration map across domains, a
+probability-level failure mode arising without op-
+timization pressure against the judge. We report
+ranking, proper scores, calibration metrics, and
+downstream risk separately.
+2.2
+Post-hoc calibration and distribution shift
+Temperature and Platt scaling fit low-dimensional
+maps on held-out labels (Platt, 1999; Guo et al.,
+2017); beta calibration and isotonic regression pro-
+vide more flexible alternatives (Kull et al., 2017;
+Zadrozny and Elkan, 2002). Calibration commonly
+degrades under distribution shift (Ovadia et al.,
+2019). Under covariate shift, importance weight-
+ing can identify target risk if conditional labels are
+invariant and target support is covered by source
+support (Shimodaira, 2000; Park et al., 2020). Un-
+der label shift, separate reweighting and calibration
+procedures are available (Podkopaev and Ramdas,
+2021; Popordanoska et al., 2024). We therefore
+evaluate these assumptions as distinct hypotheses;
+we do not infer conditional shift merely because
+one estimated weighting pipeline fails.
+2.3
+Measuring calibration
+Fixed-bin ECE is familiar but can be substantially
+biased and depends on binning choices (Roelofs
+et al., 2022). We use population L1 calibration
+error for theory, Brier score and log loss as pri-
+mary empirical outcomes, and equal-mass ECE
+as a secondary diagnostic; debiased and smoothed
+ECE variants were not computed and are listed in
+Appendix K as not run. This ordering prevents a
+constant, uninformative predictor from appearing
+strong solely because its mean matches the label
+prevalence.
+2.4
+Boundary with concurrent work
+Concurrent work by overlapping authors introduces
+a conformal prediction-set construction for traffic-
+mixture shift (Anonymous, 2027). Its output is a
+set of admissible labels and its guarantee concerns
+marginal coverage under a finite partition with un-
+certain group masses. This paper instead studies
+one-dimensional post-hoc maps, proper-loss trans-
+fer, the information carried by an accuracy gap,
+and a lower certificate for scalar calibration error. It
+does not propose a conformal set, claim label-free
+target calibration, or reuse the companion paper’s
+CS-WCP experiments as evidence.
+3
+Problem Setup
+Let D ∈{s, t} denote source or target domain, and
+let (X, S, Y ) ∼PD. Here X is the complete judge
+input, including the prompt, candidate answer, and
+reference; S ∈[0, 1] is the judge-assigned prob-
+ability that the candidate answer is correct (our
+protocol elicits this scalar directly; no intermedi-
+ate binary verdict is produced); and Y ∈{0, 1} is
+the reference correctness of that candidate answer.
+A post-hoc calibrator g : [0, 1] →[0, 1] outputs
+Q = g(S).
+
+The domain accuracy and recalibrated mean
+score are
+πD = ED[Y ],
+µD(g) = ED[g(S)].
+(1)
+The source–target accuracy gap is A = |πt −πs|.
+Let ηD,g(q) = ED[Y | g(S) = q]. We define
+population L1 calibration error as
+CE(1)
+D (g) = ED[|ηD,g(g(S)) −g(S)|] .
+(2)
+We additionally report
+BrierD(g) = ED[(g(S) −Y )2],
+(3)
+LogLossD(g) = ED[−Y log g(S)
+−(1 −Y ) log(1 −g(S))],
+(4)
+with predictions clipped only for numerical evalua-
+tion at a predeclared ϵ = 10−6.
+Temperature
+scaling
+uses
+gT (s)
+=
+σ(logit(s)/T), T
+>
+0. Platt scaling uses
+ga,b(s) = σ(a logit(s) + b), with the orientation
+constraint a ≥0 throughout (an unconstrained
+variant was not run; Appendix K). All parameters
+are fit by source log loss, never by target test ECE.
+Proposition 1 (Rank invariance). If g is strictly in-
+creasing, then AUROCD(g(S)) = AUROCD(S)
+for every domain D.
+Thus preserved ranking is compatible with either
+excellent or poor calibration and cannot validate
+probability transfer.
+4
+What an Accuracy Gap Can and
+Cannot Show
+4.1
+A population lower bound
+Lemma 2 (Mean-residual lower bound). For every
+domain D and measurable calibrator g,
+CE(1)
+D (g) ≥|πD −µD(g)|.
+(5)
+Corollary 3 (Gap-and-score-drift bound). For ev-
+ery g,
+CE(1)
+t (g) ≥
+
+|πt −πs| −|µt(g) −µs(g)|
+−|πs −µs(g)|
+
++,
+(6)
+where [z]+ = max{z, 0}. If g is mean-calibrated
+on the source, πs = µs(g), this reduces to
+CE(1)
+t (g) ≥
+
+|πt −πs| −|µt(g) −µs(g)|
+
++. (7)
+The accuracy gap is therefore a warning only
+when it is not absorbed by a corresponding shift
+in the calibrator’s mean output. It is not itself a
+measure of conditional reliability drift.
+4.2
+The accuracy gap is not sufficient
+Proposition 4 (Same gap, different transfer). There
+exist a source domain and two target domains with
+identical score distributions and identical source–
+target accuracy gap, but for which the same source-
+calibrated mapping has target calibration errors 0
+and 1/2.
+Proposition 5 (No assumption-free unlabeled re-
+pair). Without restrictions on Pt(Y | X, S), no pro-
+cedure using labeled source data and unlabeled tar-
+get (X, S) can guarantee target calibration. Specif-
+ically, for some observationally indistinguishable
+target pair, every procedure incurs calibration er-
+ror at least 1/4 on one member of the pair.
+This impossibility is why we do not describe an
+accuracy-gap gate as label-free.
+4.3
+What exact importance weighting
+guarantees
+Let Pt ≪Ps on X and w(x) = dPt(X)/dPs(X).
+The usual covariate-shift condition is Pt(Y | X) =
+Ps(Y | X). The score S must be a fixed measur-
+able function of the complete X, including any
+judge random seed if relevant.
+Theorem 6 (Target-risk identity under covariate
+shift). Under the conditions above, for any mea-
+surable g and any integrable loss ℓ,
+Et[ℓ(g(S), Y )] = Es[w(X)ℓ(g(S), Y )].
+(8)
+In particular, minimizing the exactly weighted
+source Brier or log loss is equivalent to minimiz-
+ing the corresponding target risk over the same
+function class.
+Consequently, failure of an estimated, clipped
+IW-Platt pipeline is compatible with at least
+four explanations: conditional shift, support
+failure, density-ratio misspecification, or finite-
+sample/regularization error. The experiments sepa-
+rately diagnose all four.
+4.4
+A finite-sample certificate of transfer
+failure
+Let G be a finite family of K calibrators fixed inde-
+pendently of audit samples. For each domain D, an
+audit sample of size nD provides labels and scores.
+Denote empirical means by bπD and bµD(g). Define
+ϵD(δ, K) =
+s
+log(4(K + 1)/δ)
+2nD
+.
+(9)
+
+Theorem 7 (Simultaneous transfer-failure certifi-
+cate). With probability at least 1 −δ, simultane-
+ously for every g ∈G,
+CE(1)
+t (g) ≥L(g) :=
+h
+|bπt −bπs|
+−|bµt(g) −bµs(g)|
+−|bπs −bµs(g)|
+−4ϵs −2ϵt
+i
++.
+(10)
+If the population condition πs = µs(g) is addition-
+ally known for every candidate, the third empirical
+term may be omitted, yielding the sharper bound
+CE(1)
+t (g) ≥
+h
+|bπt −bπs| −|bµt(g) −bµs(g)|
+−2(ϵs + ϵt)
+i
++.
+(11)
+All proofs are deferred to Appendix A. For a tol-
+erance γ, L(g) > γ certifies that g fails the target
+calibration requirement. The converse is intention-
+ally absent: L(g) ≤γ does not certify good calibra-
+tion. If calibrators or thresholds are selected using
+the audit observations, they must be learned on a
+separate split or included in a predeclared finite
+family covered by the union bound.
+5
+Experimental Design
+5.1
+Tasks, responses, and labels
+The study covers eight English NLP domains cho-
+sen to vary answer format and evaluation mech-
+anism (Table 1), with 40 items per domain (320
+judged items per judge). Two candidate genera-
+tors from different model families each produce
+one response per item under identical decoding
+(bf16, greedy): the primary generator Qwen2.5-
+1.5B-Instruct, and a replication generator Llama-
+3.2-1B-Instruct whose responses were relabeled
+with the byte-identical rule pipeline and rescored
+by all eight primary judges. Items, generator out-
+puts, and judge prompts were frozen before any
+calibrator was fit.
+5.2
+Judges and confidence extraction
+The primary judge set contains eight open
+instruction-tuned
+models
+spanning
+1.1B–7B
+parameters: Phi-3-mini, TinyLlama-1.1B-Chat,
+Zephyr-7B-β, MiniCPM-2B, StableLM-Zephyr-
+3B, Qwen2.5-3B, Gemma-2-2b-it, and OLMo-2-
+7B. A replication set of four modern 7–9B judges
+(Llama-3.1-8B, Qwen2.5-7B, Mistral-7B-v0.3,
+Gemma-2-9b-it) and one frontier API judge
+(Claude Sonnet 4.5 via Amazon Bedrock; raw calls
+cached and released, 320/320 items, zero parse
+failures) were scored later under a byte-identical
+protocol on the same frozen items. Identifiers and
+revisions appear in Table 6.
+Confidence is elicited verbally: the judge is in-
+structed to emit a single float in [0, 1] scoring cor-
+rectness (prompt verbatim in Appendix C). Decod-
+ing is greedy with at most eight new tokens; the
+first numeric literal is parsed, clipped to [0, 1], and
+clamped to [10−6, 1−10−6]; malformed responses
+receive the predeclared neutral score 0.5 and are
+retained. A flag-logging rescore (bit-identical to the
+committed scores) measures the failure rates and
+shows every conclusion is insensitive to imputa-
+tion versus exclusion (Appendix H); two meaning-
+preserving paraphrases and an order control repli-
+cate the method conclusions (Appendix I).
+5.3
+Splits and transfer units
+Within every domain, question groups are parti-
+tioned once (seeded, shared across judges) into a fit
+part (≈60%, 24 items) and an audit part (≈40%,
+16 items). When a domain acts as source, calibra-
+tors are fit on its fit part and the certificate’s source
+means are estimated on its audit part. When a do-
+main acts as target, the audit part serves as the la-
+beled target probe (m = 16) and the fit part serves
+as the untouched target test (n = 24). Within any
+ordered transfer the four roles are disjoint by con-
+struction because source and target are different
+domains; reuse of the same items across different
+transfer units is disclosed and is exactly what the
+clustered inference accounts for.
+All gap predictors are computed from held-out
+labels only. Writing bπaud
+s
+for source accuracy esti-
+mated on the source-audit part and bπprobe
+t
+for target
+accuracy estimated on the m = 16 target probe, the
+accuracy gap used in every correlation, regression,
+and gating analysis is
+bA =
+bπaud
+s
+−bπprobe
+t
+,
+(12)
+and the raw-error covariate is the raw Brier score on
+the same probe. Neither predictor shares any label
+with the target-test outcomes; this disjointness is
+asserted programmatically in the released analysis
+script.
+With J = 8 judges and D = 8 domains, the
+primary protocol produces JD(D −1) = 448 or-
+dered transfers; the modern judges add 224, the
+
+Domain
+Task type
+Correctness rule (fixed a priori)
+n
+GSM8K
+Mathematical reasoning
+last-number match as floats (tolerance 10−6)
+40
+MMLU
+Multiple-choice knowledge
+option-letter exact match
+40
+SQuAD
+Extractive QA
+span containment or token-F1 ≥0.60
+40
+BoolQ
+Binary QA
+normalized yes/no match
+40
+SAMSum†
+Summarization
+ROUGE-L F ≥0.30; margin [0.15, 0.30) referred
+to a small verifier
+40
+HumanEval
+Code generation
+sandboxed execution of official unit tests
+40
+TruthfulQA†
+Adversarial factuality
+token-F1 vs. best answer ≥
+0.40; margin
+[0.20, 0.40) referred to verifier
+40
+StrategyQA
+Multi-hop binary QA
+normalized boolean label match
+40
+Table 1: Domains and correctness labels as implemented. HumanEval is evaluated by unit-test execution, not by an
+LLM. †Proxy-label domains: overlap thresholds are deterministic but imperfect proxies for correctness, with a single
+small LLM verifier (Qwen2.5-1.5B) deciding only borderline-overlap items. No human annotation is used. These
+two domains therefore support robustness analyses rather than deterministic-contract calibration claims; threshold
+sensitivity is reported in Section 6.5.
+frontier judge 56, and the second-generator replica-
+tion (all eight primary judges on the Llama-3.2-1B
+responses) another 448, for 1,176 in total. Boot-
+strap resamples are never counted as new configu-
+rations.
+5.4
+Calibration methods
+We compare raw scores, temperature scaling,
+orientation-constrained Platt scaling (a ≥0), beta
+calibration (Kull et al., 2017), isotonic regres-
+sion, multi-domain temperature scaling (pooled
+over all domains except the target), importance-
+weighted Platt, and an EM label-shift prior correc-
+tion (Saerens et al., 2002) applied to the source-
+fitted Platt map using only unlabeled target-probe
+scores; LaSCal (Popordanoska et al., 2024) was
+not re-implemented and receives no number. We
+also include two target-label baselines: target-only
+temperature and target-only Platt fit on exactly the
+certificate’s m = 16 target-probe labels.
+For discriminative density-ratio estimation, let
+Z = 1 identify target and let ρ = P(Z = 1) be
+the source/target sampling prior used to train the
+domain classifier. If c(x) = P(Z = 1 | X = x),
+then
+bw(x) = 1 −ρ
+ρ
+c(x)
+1 −c(x).
+(13)
+As implemented, the representation is TF-IDF
+over question text (word 1–2-grams), the classi-
+fier is ℓ2-regularized logistic regression (C = 1),
+weights are clipped at their 0.95 quantile and mean-
+normalized, and the ratio is trained on source-
+fit versus unlabeled target-probe texts. We report
+domain-classifier AUROC and effective sample
+size (P
+i wi)2/ P
+i w2
+i as weight diagnostics. No
+cross-fitting was used at this sample size; this is
+disclosed rather than idealized.
+5.5
+Synthetic identification controls
+Natural-domain results cannot identify why IW
+fails. We therefore construct four controls from real
+judge records, per judge, with ground truth known
+by construction. Three use an isotonic estimate bη(s)
+of E[Y | S = s] fitted on all of that judge’s records:
+mild covariate shift (target tilt w ∝e−2s, labels
+from the unchanged bη), conditional shift (score
+marginal fixed, labels from 1 −bη(s); no reweight-
+ing can help), and label shift (P(X | Y ) fixed, pos-
+itive rate reduced by 0.25; class-ratio oracle and
+EM prior correction are the mechanism-matched
+arms). Because a flexible calibrator can absorb a
+mild shift, we add a designed positive control in
+which weighting must matter: a piecewise condi-
+tional η∗(s) = 0.75 below the score median, 0.25
+above (outside the Platt class), with opposing tilts
+e+3s (source) and e−3s (target); a valid implemen-
+tation must show plain Platt > estimated IW ≈
+oracle IW. Each control uses 30 replications per
+judge, 200-item source samples, 2,000-item target
+evaluations.
+5.6
+Metrics and inference
+Brier score and log loss (clipped at the predeclared
+ϵ = 10−6) are primary. Equal-mass ECE (4 bins at
+the n = 24 test size) and AUROC are secondary;
+with 24-item test splits, binned calibration metrics
+are noisy at the transfer level and are interpreted
+only in aggregate. Selective prediction is summa-
+rized by risk–coverage behavior, which Proposi-
+tion 1 fixes exactly for strictly increasing maps,
+and by a fixed-threshold decision cost declared be-
+fore target evaluation (accept iff confidence ≥0.5,
+
+abstention cost 0.5).
+All method contrasts are paired at the transfer
+level. Confidence intervals use a two-way cluster
+bootstrap resampling judges and domains with re-
+placement (multiplicity-weighted, B=2000). The
+adjusted gap analysis avoids mechanical outcome
+coupling by modeling the calibrated target-test
+Brier in ANCOVA form, with fixed effects for
+calibrator, probe-gap bA by calibrator, probe-split
+raw Brier, score-marginal Wasserstein distance (un-
+labeled scores only), and log density-ratio effec-
+tive sample size. Primary coefficient inference re-
+fits this model in every cluster-bootstrap replicate
+(percentile intervals, bootstrap p); a mixed-effects
+fit with judge, source, target, judge×target, and
+transfer variance components is a secondary check.
+The effective dependence structure is disclosed: 8
+judges, 8 domains, 64 judge–target cells, so nom-
+inal row counts overstate information. Predictive
+value is assessed leave-one-judge-out and leave-
+one-target-domain-out, and a permutation test shuf-
+fles domain identities within judge to test whether
+the probe-gap signal exceeds reuse-induced correla-
+tion. A ten-seed split-sensitivity study (Appendix J)
+verifies that no headline conclusion depends on
+the committed seed. A complete reproducibility
+manifest of all judge models, candidate generators,
+model revisions, and inference configurations is
+provided in Appendix B.
+6
+Results
+6.1
+Calibration drifts independently of
+ranking
+Across the 448 primary transfer units, raw target-
+test Brier score ranges from 0.125 to 0.875 (mean
+0.414), while the paired source-to-target AUROC
+change has mean magnitude 0.117 (90th percentile
+0.254). Table 2 enforces Proposition 1 exactly for
+strictly increasing fits; the only genuine AUROC
+departures come from isotonic ties and constrained
+Platt fits collapsing to slope a < 0.01 (20.3% of
+source fits, a symptom of extreme source accu-
+racies at this sample size; AUROC equals raw in
+81.2% of Platt cells). Figure 1 separates probability
+drift from ranking drift.
+Details of the calibration protocol and the asso-
+ciated reliability and shift analyses are presented in
+Appendices D and E.
+6.2
+Does the accuracy gap predict
+recalibration benefit?
+Table 2 reports held-out target performance. A neg-
+ative ∆denotes improvement relative to raw scores.
+The primary conclusion is based on proper losses;
+ECE variants are corroborating metrics.
+Our inferential standard is conservative: a claim
+must clear the two-way cluster interval and repli-
+cate across generators; the permutation test is a
+secondary diagnostic. By that standard the data
+do not establish a generator-invariant accuracy-
+gap association. Using the probe gap bA of Equa-
+tion (12), the unadjusted association with Platt
+∆Brier is r = 0.25, cluster 95% CI [−0.09, 0.55]
+(secondary permutation p ≈5 × 10−4); a full-
+information gap, sharing labels with the outcome,
+would have read 0.44, so shared-label leakage ac-
+counts for roughly 40% of the apparent associa-
+tion. In the adjusted ANCOVA model (Table 3),
+the Platt gap slope does not clear zero (+0.244, CI
+[−0.06, 0.62], pboot = 0.10); probe-estimated raw
+target error is the only covariate meeting the stan-
+dard (+0.270, pboot = 0.007, replicating on the
+second generator). Out-of-group prediction agrees:
+leave-one-judge-out rank correlation is 0.39 for
+the full covariate model and 0.20 for a gap-only
+rule (leave-one-target-domain-out: 0.37 vs. 0.10).
+The 7–9B replication shows the same shape with a
+slope that does clear zero (+0.283, CI [0.02, 0.60],
+pboot = 0.037), plus one instructive difference:
+these stronger judges start from better raw prob-
+abilities (raw Brier 0.299 vs. 0.414), so source-
+fitted Platt transfer is on average harmful (+0.018,
+harm rate 0.55) while target Platt keeps working
+(−0.118). The frontier probe (Claude Sonnet 4.5,
+one judge, descriptive) is directionally consistent:
+best raw probabilities (Brier 0.232), probe-gap cor-
+relation 0.36 with CI crossing zero, Platt harmful
+(+0.052), sixteen-label target Platt cleanly positive
+(−0.052, zero harm); the stronger-judge trend is
+suggestive, not established.
+The second-generator replication is the sharpest
+check: it changes the response distribution rather
+than the judge, and it splits the findings. On
+the Llama-3.2-1B responses (448 transfers, eight
+primary judges, byte-identical labeling and scor-
+ing), the probe-gap association nearly vanishes
+(r = 0.09, cluster CI [−0.11, 0.34]; adjusted slope
++0.11, pboot = 0.19), and a gap-only rule has nega-
+tive out-of-group rank correlation. What replicates
+is exactly the robust pair: the probe-split raw-error
+
+Missing figure asset: fig_drift_panels.png
+Figure 1: Judge-by-domain heat maps of raw Brier score, equal-mass ECE (5 bins), and AUROC over identical
+records (40 items per cell; eight primary judges). Proxy-label domains (SAMSum, TruthfulQA) carry a different
+label mechanism and are analyzed separately in Section 6.5.
+Method
+∆Brier ↓[95% CI]
+∆log loss ↓[95% CI] ECE ↓harm rate ↓[95% CI] AUROC
+Raw
+—
+—
+0.393
+—
+0.611
+Temperature
+−0.147 [−0.231, −0.081] −3.87 [−5.30, −2.61]
+0.281
+0.13 [0.02, 0.26]
+0.611
+Platt, a ≥0
+−0.052 [−0.149, +0.005] −2.56 [−3.75, −1.51]
+0.371
+0.34 [0.18, 0.48]
+0.588
+Beta calibration
+−0.046 [−0.143, +0.011] −2.18 [−3.42, −1.21]
+0.375
+0.34 [0.19, 0.49]
+0.602
+Isotonic
+−0.078 [−0.198, −0.009] −3.11 [−4.68, −1.74]
+0.349
+0.33 [0.18, 0.46]
+0.589
+Multi-domain temp.
+−0.163 [−0.245, −0.090] −3.92 [−5.35, −2.63]
+0.271
+0.17 [0.03, 0.37]
+0.611
+IW-Platt
+−0.052 [−0.153, +0.007] −2.60 [−3.76, −1.59]
+0.371
+0.34 [0.18, 0.49]
+0.588
+Label-shift EM
++0.023 [−0.050, +0.088] −0.90 [−2.03, +0.20]
+0.439
+0.49 [0.33, 0.64]
+0.588
+Target temp., equal labels −0.171 [−0.254, −0.097] −3.90 [−5.35, −2.61]
+0.254
+0.09 [0.00, 0.24]
+0.611
+Target Platt, equal labels
+−0.136 [−0.227, −0.056] −2.32 [−3.61, −1.24]
+0.257
+0.12 [0.00, 0.31]
+0.599
+Table 2: Cross-domain calibration transfer on untouched target-test records: 448 primary transfer units, paired means
+with two-way judge/domain cluster-bootstrap 95% intervals (B=2000) for both primary proper losses and harm rate.
+Negative ∆improves on raw. Harm rate is the fraction of transfer units with worse target Brier than raw. Equal-label
+target baselines use exactly the certificate’s m=16 target-probe budget. AUROC is inherited from raw wherever the
+fitted map is strictly increasing (Proposition 1 holds exactly; float-level sigmoid saturation would otherwise create
+spurious ties) and computed directly for isotonic and slope-collapsed fits, which are the only genuine departures.
+covariate (+0.242, pboot = 0.006) and the label-
+budget verdict (target temperature −0.155, harm
+rate 0.05; Platt −0.058, harm 0.24). The gap–harm
+association is generator-dependent; direct target re-
+calibration survives the strongest test we ran. The
+complete method-by-method results for the second-
+generator (Llama-3.2-1B) replication are reported
+in Appendix G.
+6.3
+Importance weighting: assumption or
+implementation?
+Table 4 reports the identification controls. The
+designed positive control behaves exactly as a
+valid IW implementation must: with a misspecified-
+class conditional and strong opposing tilts, plain
+Platt incurs 0.324 mean target Brier while esti-
+mated IW recovers nearly all of the oracle’s im-
+provement (0.256 vs. 0.257). Under the mild real-
+conditional shift the arms are indistinguishable
+(0.232/0.231/0.234): a flexible calibrator absorbs
+the shift, consistent with Theorem 6. Under pure
+label shift the mechanism-matched arms behave
+as predicted (class-ratio oracle 0.233 →0.173;
+unlabeled EM correction 0.214); under pure condi-
+tional shift nothing helps (≈0.31 everywhere). On
+natural NLP transfers the diagnosis is then clear:
+the domain classifier separates source from target
+text with median AUROC 1.0, the clipped weights
+are nearly uniform (median effective sample size
+23.9 of 24), and IW-Platt coincides with plain Platt
+(0.362 vs. 0.362). With the implementation vali-
+dated by the positive control, this supports support
+failure in the observed representation: source and
+target text are (near-)disjoint as measured, so the
+identity has no usable overlap; we claim nothing
+about other representations. The EM correction,
+which succeeds under true label shift, is the only
+method harmful on natural transfers (+0.023, harm
+rate 0.49): natural domain shift is not label shift
+either. None of this falsifies Theorem 6; it locates
+the failing assumption.
+6.4
+Can the certificate detect harmful
+transfer?
+We evaluate Theorem 7 without using target-test
+labels to construct L(g). Simultaneous coverage
+is the fraction of audit repetitions in which ev-
+ery candidate’s lower bound sits below its true tar-
+
+Predictor
+Coefficient (95% CI)
+pboot
+Platt × probe gap
++0.244 (−0.062, +0.618)
+0.10
+Temperature × probe gap
++0.056 (−0.031, +0.244)
+0.17
+Score Wasserstein distance
+−0.099 (−0.344, +0.280)
+0.51
+Probe-split raw Brier
++0.270 (+0.078, +0.429)
+0.007
+Log effective sample size
++0.224 (−4.78, +9.55)
+0.69
+Table 3: Adjusted analysis of calibrated target-test Brier
+(ANCOVA; outcome shares no labels with any predic-
+tor), stacking the Platt and temperature contrasts over
+the 448 primary transfers with method fixed effects. In-
+ference: coefficients refit in each of B=2000 two-way
+judge/domain cluster-bootstrap replicates; percentile
+CIs and bootstrap p-values. Effective dependence: 8
+judges, 8 domains, 64 judge–target cells. A mixed-
+effects check with judge, source, target, judge×target,
+and transfer variance components gives the same point
+estimates with narrower (likelihood-based) intervals; we
+report the more conservative cluster-bootstrap intervals
+as primary.
+Shift control
+Plain Platt
+Estimated IW
+Oracle IW
+Covariate, misspecified (pos.)
+0.324
+0.256
+0.257
+Covariate, mild
+0.232
+0.231
+0.234
+Label only
+0.233
+0.214
+0.173
+Conditional only
+0.314
+0.313
+0.314
+Natural NLP transfers
+0.362
+0.362
+n/a
+Table 4: Mean target Brier under identification con-
+trols (30 replications × 12 local judges; truth known by
+construction). Row 1 is the designed positive control:
+weighting must and does help. “Estimated IW” in the
+label-only row is the EM prior correction. Natural row:
+means over the 448 primary transfers; no oracle weights
+exist there.
+get calibration error; power is the fraction of truly
+tolerance-violating mappings with L(g) > γ. Both
+are checked on synthetic populations built from the
+real records, where the truth is known.
+At the benchmark’s actual budgets the verdict is
+blunt: with source audit n = 16 and target probe
+m ∈{4, 8, 16}, the Hoeffding radii (ϵ ≥0.44
+at n = 16, K=6, δ = 0.05) exceed any plausi-
+ble gap signal, L(g) is zero in all 2,688 real audit
+cells, and the certificate rejects nothing; ϵ ≤0.05
+per split needs n ≥1,266 labeled target items per
+domain. The synthetic scaling study (Table 5) con-
+firms both sides: simultaneous coverage is 1.0 at
+every budget, but power at γ = 0.10 is zero through
+m = 256 and only 0.128 at m = 1024. Meanwhile,
+the same m = 16 probe labels spent on direct target
+temperature scaling yield the best outcome in Ta-
+ble 2 (−0.171, harm rate 0.09), matching the best
+source-transfer policy (multi-domain temperature,
+−0.163) with half the harm rate. The certificate is
+sound but label-hungry; unless labels are plentiful
+Target labels
+Simult. coverage
+Harm detected
+False accept
+m = 32
+1.000
+0.000
+1.000
+m = 128
+1.000
+0.000
+1.000
+m = 512
+1.000
+0.023
+0.977
+m = 1024
+1.000
+0.128
+0.872
+Table 5: Certificate at 1 −δ = 0.95, γ = 0.10, K=6,
+on synthetic populations with known truth (448 trans-
+fers, 60 audit repetitions, equal audit sizes m). “Harm
+detected” is power over cells with true target CE > γ
+(nearly all cells). “False accept” is descriptive: Theo-
+rem 7 certifies only rejection.
+and a no-harm guarantee is required, spend them
+on the target calibrator. Additional visual analyses
+are provided in Appendix L.
+6.5
+Proxy-label sensitivity and downstream
+decisions
+Restricting to the 240 primary transfers among the
+six deterministic-label domains, the probe-gap as-
+sociation persists at similar strength (r = 0.29),
+and relabeling SAMSum and TruthfulQA with
+hard overlap thresholds at {0.75, 1.0, 1.25}× the
+declared cut keeps it in the r = 0.30–0.38 band
+(Appendix F): the modest gap signal is not an arti-
+fact of the proxy-label mechanism.
+Downstream, better proper loss does not pur-
+chase better decisions here. Strictly increasing
+recalibration leaves risk–coverage behavior un-
+changed exactly (Proposition 1), and at the pre-
+declared fixed-threshold operating point (accept iff
+confidence ≥0.5, abstention cost 0.5, leave-one-
+domain-out over 64 judge–domain cells) always-
+on Platt fit on the pooled non-deployment domains
+raises expected decision cost from 0.507 to 0.728
+by pushing scores below the threshold (coverage
+0.74 →0.37): a dissociation, not an assumption, is
+what we report.
+7
+Discussion and Conclusion
+The accuracy gap is neither a direct measure of
+P(Y | S) shift nor a sufficient statistic for scalar
+recalibration transfer. Across thirteen judges, two
+generators, and eight domains, cluster-adjusted in-
+ference does not establish a generator-invariant as-
+sociation between the leak-free gap and transferred
+proper loss. Corollary 3 preserves the gap’s nar-
+rower role as one term in a calibration-error lower
+bound, while Theorem 7 turns that bound into a
+valid rejection rule. The rule is too conservative at
+the available label budgets. At m = 16, fitting
+target temperature scaling uses the labels more
+
+effectively and with less harm. The importance-
+weighting controls likewise show why method fail-
+ure must be traced to overlap, representation, esti-
+mation, or conditional shift instead of being as-
+signed to conditional shift by default. Reliable
+scalar confidence transfer therefore requires tar-
+get evidence or a defended transport assumption; a
+marginal accuracy gap supplies only a warning.
+Limitations
+The theory concerns binary correctness and scalar
+confidence; ordinal judge scores and pairwise pref-
+erences require separate calibration targets. The
+finite-sample bound is conservative and certifies
+failure but not success; at this benchmark’s bud-
+gets it is uninformative, and its practical value at
+the budgets where it binds (n ≳103 labels per
+domain) is untested here. The empirical study is
+English-only, covers two small candidate genera-
+tors (1–1.5B), and has only 40 items per domain,
+so per-transfer estimates are individually noisy and
+only aggregate, cluster-adjusted claims are sup-
+ported; the ten-seed split sensitivity (Appendix J)
+mitigates but does not replace larger domain sam-
+ples. The effective evidence is far smaller than the
+row counts suggest: 8–13 judges, 8 domains, and
+64 judge–target cells per arm drive all cluster in-
+ference, and we report intervals at that resolution.
+Confidence is verbalized rather than logit-derived,
+and coarse verbalized scores are part of what recal-
+ibration must repair: parse-failure rates reach 21%
+for one judge and vary from 2% to 11% across
+meaning-preserving prompt paraphrases, though
+the paper’s conclusions are insensitive to failure
+handling and prompt choice (Appendices H–I). Im-
+mutable revision hashes were not recorded for the
+primary judges in the initial Qwen-generator scor-
+ing; they were recorded in every subsequent run,
+and the flag-logging rescore reproduces the com-
+mitted scores bit-identically. The frontier arm is a
+single API judge whose behavior is pinned only by
+a dated model identifier; its raw cached responses
+are released, and its results are descriptive (one
+judge, 56 transfers). SAMSum and TruthfulQA la-
+bels are overlap proxies with a small-verifier fall-
+back and no independent contract-validity audit, so
+those domains support only the robustness analyses
+in Section 6.5. Finally, no calibration metric alone
+establishes downstream utility; every operational
+threshold requires a task-specific loss and separate
+validation, and our fixed-threshold analysis shows
+the dissociation concretely.
+Ethics Statement
+Automated judges can amplify systematic verifier,
+language, and domain biases. The proposed cer-
+tificate is one-sided and must not be presented as
+approval of a non-rejected judge. Dataset terms,
+model licenses, and API policies will be followed.
+Released artifacts will exclude private prompts and
+personal data. No human annotation is used; de-
+terministic, constructed, and verifier-derived labels
+will remain separately identified.
+References
+Sanjeda Akter, Ibne Farabi Shihab, and Anuj Sharma.
+2026. Detecting proxy gaming in RL and LLM align-
+ment via evaluator stress tests. In Findings of the As-
+sociation for Computational Linguistics: ACL 2026,
+pages 10554–10583.
+Anonymous. 2027. CS-WCP: Robust conformal sets for
+LLM-judge traffic shifts with uncertain group propor-
+tions. Concurrent work under review; anonymized
+manuscript supplied with the submission.
+Yann Dubois, Balázs Galambosi, Percy Liang, and Tat-
+sunori B. Hashimoto. 2024. Length-controlled Al-
+pacaEval: A simple way to debias automatic evalu-
+ators. In Findings of the Association for Computa-
+tional Linguistics: EMNLP 2024.
+Matthew ffrench-Constant, Daniel Yang, Xinmeng
+Huang, and Sanyam Kapoor. 2026.
+Confi-
+denceBench: Evaluating confidence calibration
+in
+large
+language
+models.
+arXiv
+preprint
+arXiv:2607.20526.
+Chuan Guo, Geoff Pleiss, Yu Sun, and Kilian Q. Wein-
+berger. 2017. On calibration of modern neural net-
+works. In Proceedings of the 34th International Con-
+ference on Machine Learning (ICML).
+Sneha Kola, Pankaj Kumar Sharma, Soumyadeep Dey,
+Bamdev Mishra, and Mayur Datar. 2026. SAJA: A
+simple approach to judge alignment for LLM-as-a-
+judge. In Proceedings of the 64th Annual Meeting
+of the Association for Computational Linguistics: In-
+dustry Track, pages 646–664.
+Meelis Kull, Telmo M. Silva Filho, and Peter Flach.
+2017. Beta calibration: A well-founded and easily
+implemented improvement on logistic calibration for
+binary classifiers. In Proceedings of the 20th Inter-
+national Conference on Artificial Intelligence and
+Statistics, pages 623–631.
+Yang Liu, Dan Iter, Yichong Xu, Shuohang Wang,
+Ruochen Xu, and Chenguang Zhu. 2023. G-eval:
+Nlg evaluation using gpt-4 with better human align-
+ment. In Proceedings of the 2023 Conference on
+
+Empirical Methods in Natural Language Processing,
+pages 2511–2522, Singapore. Association for Com-
+putational Linguistics.
+Yaniv Ovadia, Emily Fertig, Jie Ren, Zachary Nado,
+D. Sculley, Sebastian Nowozin, Joshua V. Dillon, Bal-
+aji Lakshminarayanan, and Jasper Snoek. 2019. Can
+you trust your model’s uncertainty? evaluating pre-
+dictive uncertainty under dataset shift. In Advances
+in Neural Information Processing Systems.
+Arjun Panickssery, Samuel R. Bowman, and Shi Feng.
+2024.
+LLM evaluators recognize and favor their
+own generations. In Advances in Neural Information
+Processing Systems.
+Sangdon Park, Osbert Bastani, James Weimer, and Insup
+Lee. 2020. Calibrated prediction with covariate shift
+via unsupervised domain adaptation. In Proceedings
+of the 23rd International Conference on Artificial
+Intelligence and Statistics, pages 3219–3229.
+John C. Platt. 1999.
+Probabilistic outputs for sup-
+port vector machines and comparisons to regularized
+likelihood methods. In Alexander J. Smola, Peter
+Bartlett, Bernhard Schölkopf, and Dale Schuurmans,
+editors, Advances in Large Margin Classifiers, pages
+61–74. MIT Press, Cambridge, MA.
+Aleksandr Podkopaev and Aaditya Ramdas. 2021.
+Distribution-free uncertainty quantification for classi-
+fication under label shift. In Proceedings of the 37th
+Conference on Uncertainty in Artificial Intelligence,
+pages 844–853.
+Teodora Popordanoska, Gorjan Radevski, Tinne Tuyte-
+laars, and Matthew B. Blaschko. 2024.
+LaSCal:
+Label-shift calibration without target labels. In Ad-
+vances in Neural Information Processing Systems.
+Rebecca Roelofs, Nicholas Cain, Jonathon Shlens, and
+Michael C. Mozer. 2022. Mitigating bias in calibra-
+tion error estimation. In Proceedings of the 25th
+International Conference on Artificial Intelligence
+and Statistics, pages 4036–4054.
+Marco Saerens, Patrice Latinne, and Christine De-
+caestecker. 2002. Adjusting the outputs of a classi-
+fier to new a priori probabilities: A simple procedure.
+Neural Computation, 14(1):21–41.
+Huanxin Sheng, Xinyi Liu, Hangfeng He, Jieyu Zhao,
+and Jian Kang. 2025. Analyzing uncertainty of LLM-
+as-a-judge: Interval evaluations with conformal pre-
+diction. In Proceedings of the 2025 Conference on
+Empirical Methods in Natural Language Processing,
+pages 11286–11328.
+Hidetoshi Shimodaira. 2000. Improving predictive in-
+ference under covariate shift by weighting the log-
+likelihood function. Journal of Statistical Planning
+and Inference.
+Zailong Tian, Zhuoheng Han, Yanzhe Chen, Haozhe
+Xu, Xi Yang, Richeng Xuan, Hongfeng Wang, and
+Lizi Liao. 2025. Overconfidence in LLM-as-a-judge:
+Diagnosis and confidence-driven solution.
+arXiv
+preprint arXiv:2508.06225.
+Bianca Zadrozny and Charles Elkan. 2002. Transform-
+ing classifier scores into accurate multiclass proba-
+bility estimates. In Proceedings of the Eighth ACM
+SIGKDD International Conference on Knowledge
+Discovery and Data Mining, pages 694–699.
+Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Shengyi
+Zhuang, Zhiqiang Wu, Yongwei Zhuang, Zilong Lin,
+Zhuohan Li, Dongze Li, Eric P. Xing, and Hao Zhang.
+2023. Judging LLM-as-a-judge with MT-bench and
+chatbot arena. In Advances in Neural Information
+Processing Systems, volume 36, pages 46595–46623.
+A
+Deferred Proofs
+Proof of Proposition 1 (rank invariance). Let S+
+and S−be independent scores drawn condition-
+ally on Y = 1 and Y = 0. Strict monotonicity
+gives 1{g(S+) > g(S−)} = 1{S+ > S−} and
+preserves equality as well. Taking expectations in
+the standard pairwise definition of AUROC, with
+half credit for ties, proves the result.
+Proof of Lemma 2 (mean-residual lower bound).
+Let
+Q
+=
+g(S). By the tower property,
+ED[ηD,g(Q) −Q] = ED[Y −Q] = πD −µD(g).
+Jensen’s inequality for the absolute value therefore
+yields
+CE(1)
+D (g) = ED|ηD,g(Q) −Q|
+≥|ED[ηD,g(Q) −Q]| = |πD −µD(g)|.
+Proof of Corollary 3 (gap-and-score-drift bound).
+Lemma 2 gives CE(1)
+t (g) ≥|πt −µt(g)|. In-
+sert and subtract πs and µs(g), then apply
+|a + b + c| ≥|a| −|b| −|c| with a = πt −πs,
+b = πs −µs(g), and c = µs(g) −µt(g). Non-
+negativity permits the positive part. The second
+statement sets the source residual to zero.
+Proof of Proposition 4 (same gap, different transfer).
+Let S equal 1/4 or 3/4, each with probability
+1/2, and let g(S)
+=
+S. On the source, set
+Y | S = s ∼Bernoulli(s). Then g is calibrated
+and πs = 1/2. Target A has the same conditional
+law, so its accuracy gap is 0 and CE(1)
+t,A(g) = 0.
+Target B preserves the marginal law of S but
+uses Y | S = s ∼Bernoulli(1 −s). It also has
+πt,B = 1/2, hence the same zero accuracy gap,
+while
+CE(1)
+t,B(g) = 1
+2|3/4 −1/4| + 1
+2|1/4 −3/4| = 1
+2.
+
+Thus the gap cannot determine calibration transfer.
+Proof of Proposition 5 . Let the unlabeled target
+distribution put all mass on a single (X, S) value.
+In Target A let Y ∼Bernoulli(1/4), and in Tar-
+get B let Y ∼Bernoulli(3/4). The procedure ob-
+serves the same source data and the same unlabeled
+target data in both worlds, so it returns the same
+number q. Its calibration errors are |q −1/4| and
+|q −3/4|. Their maximum is at least half the dis-
+tance between 1/4 and 3/4, namely 1/4.
+Proof of Theorem 6 (target-risk identity). Write
+the target expectation as an iterated integral:
+Et[ℓ(g(S), Y )] =
+Z X
+y
+ℓ(g(S(x)), y)
+dPt(y | x) dPt(x)
+=
+Z X
+y
+ℓ(g(S(x)), y)
+dPs(y | x) w(x)dPs(x)
+= Es[w(X)ℓ(g(S), Y )].
+The second line uses conditional invariance and
+absolute continuity. Equality holds pointwise for
+every g, so the minimizers over any common class
+coincide whenever they exist.
+Proof of Theorem 7 (simultaneous certificate).
+Hoeffding’s inequality and a union bound over
+the two accuracy means and the 2K score means
+imply that, with probability at least 1 −δ, all of
+|bπD −πD| ≤ϵD,
+|bµD(g) −µD(g)| ≤ϵD
+hold for D ∈{s, t} and g ∈G. On this event,
+|πt −πs| ≥|bπt −bπs| −ϵt −ϵs,
+|µt(g) −µs(g)| ≤|bµt(g) −bµs(g)| + ϵt + ϵs,
+|πs −µs(g)| ≤|bπs −bµs(g)| + 2ϵs.
+Substitution into Corollary 3 gives Equation (10).
+If the population identity πs = µs(g) is known to
+hold, substitute directly into Equation (7); the first
+two displays then yield Equation (11). Simultaneity
+follows from the same union event.
+B
+Model and Inference Manifest
+Table 6 summarizes the complete reproducibility
+manifest, including all judge models, candidate
+generators, repository identifiers, recorded revi-
+sions, parameter counts, and inference settings used
+throughout the experiments.
+C
+Judge Prompt and Parsing Contract
+All twelve judges receive the single template be-
+low verbatim, with the question truncated to 400
+characters, the reference to 200, and the candidate
+answer to 300:
+You are a strict accuracy judge.
+Given a question, a reference
+answer, and a model answer,
+output ONLY a single
+floating-point number between
+0.0 and 1.0 representing
+how correct the model answer
+is. 1.0 = fully correct,
+0.0 = completely wrong. No
+explanation, no other text.
+Question: {question}
+Reference: {reference}
+Model Answer: {answer}
+Score:
+Parsing extracts the first numeric literal match-
+ing [-+]?\d*\.?\d+ from the completion and
+clips it to [0, 1]; a completion with no numeric lit-
+eral, or any inference exception, receives the pre-
+declared neutral score 0.5 and is retained. Scores
+are then clamped to [10−6, 1 −10−6]. The original
+primary runs did not log per-judge failure counts;
+a later bit-identical rescore measured them (Ap-
+pendix H). The paraphrase templates and the order-
+swapped variant used in Appendix I ship verbatim
+in code/run_p34_promptvars.py.
+D
+Full Calibration Protocol
+Source calibrators minimize average source-fit
+log loss by direct maximum likelihood; there
+are no tuned hyperparameters and hence no se-
+lection grids. Temperature uses bounded scalar
+minimization of log T ∈[−4, 4]; Platt and beta
+calibration use L-BFGS-B with box constraints
+(a ∈[0, 50], b ∈[−20, 20] for Platt; a, b ∈
+[0, 50], c ∈[−20, 20] for beta); isotonic regres-
+sion uses the standard pool-adjacent-violators fit
+with outputs clipped to [10−6, 1 −10−6]; the
+IW clipping quantile is fixed a priori at 0.95.
+All maps are fit separately for every judge and
+source domain (the multi-domain variant pools
+the fit splits of all domains except the target).
+Raw scores are clamped to [10−6, 1 −10−6] iden-
+tically across domains before any logit trans-
+form. All analysis code, the fixed seed (0), and
+the exact split assignments ship with the artifact
+(code/p34_full_analysis.py).
+
+Short name
+Repository ID
+Params.
+Primary judges (1–7B)
+Phi-3-mini
+microsoft/Phi-3-mini-4k-instruct
+3.8B
+TinyLlama
+TinyLlama/TinyLlama-1.1B-Chat-v1.0
+1.1B
+Zephyr
+HuggingFaceH4/zephyr-7b-beta
+7B
+MiniCPM
+openbmb/MiniCPM-2B-dpo-bf16
+2.4B
+StableLM
+stabilityai/stablelm-zephyr-3b
+3B
+Qwen2.5
+Qwen/Qwen2.5-3B-Instruct
+3B
+Gemma-2
+google/gemma-2-2b-it
+2.6B
+OLMo-2
+allenai/OLMo-2-1124-7B-Instruct
+7B
+Replication judges (7–9B)
+Llama-3.1
+meta-llama/Llama-3.1-8B-Instruct
+8B
+Qwen2.5-7B
+Qwen/Qwen2.5-7B-Instruct
+7.6B
+Mistral
+mistralai/Mistral-7B-Instruct-v0.3
+7.2B
+Gemma-2-9B
+9.2B
+Frontier API judge (Amazon Bedrock; version pinned by model ID)
+Sonnet 4.5
+us.anthropic.claude-sonnet-4-5-20250929-v1:0
+in ID
+n/a
+Table 6: Reproducibility manifest. All judges are loaded in 4-bit NF4 double quantization (bitsandbytes) with
+bf16 compute, eager attention, greedy decoding, at most 8 new tokens, and 512-token input truncation. Candidate
+generators: Qwen/Qwen2.5-1.5B-Instruct (primary) and meta-llama/Llama-3.2-1B-Instruct
+(revision 92131767, replication), both bf16. Revision hashes were not captured for the primary judges in the
+original Qwen-generator scoring (disclosed gap); the second-generator rescore recorded revisions and per-judge
+parse-failure counts for all eight (phi3 44, gemma2 46, minicpm 4, stablelm 2, others 0, of 320; failures score the
+predeclared 0.5), and the four replication judges have recorded revisions with zero failures.
+E
+Reliability and Shift Diagnostics
+Figure 2 shows pooled per-judge reliability dia-
+grams. Although several judges appear reasonably
+calibrated when domains are aggregated, this pool-
+ing can mask substantial domain-specific calibra-
+tion drift, motivating the domain-level analysis pre-
+sented next.
+Figure 3 plots the accuracy gap against the held-
+out target ∆Brier for all predeclared transfer units.
+The weak relationship between these quantities il-
+lustrates that the accuracy gap provides only lim-
+ited predictive value for cross-domain recalibration
+benefit.
+F
+Proxy-Label Audit
+No human annotation is used for SAMSum or
+TruthfulQA, so we characterize the automatic label
+mechanism itself. For SAMSum, 65% of items fall
+in the verifier-fallback overlap zone [0.15, 0.30), so
+most committed SAMSum labels were decided by
+the small verifier rather than by ROUGE-L; replac-
+ing them with the hard ROUGE-L rule agrees with
+the committed labels on only 32.5% of items and
+is therefore a severe stress relabeling, not a small
+perturbation. For TruthfulQA, 25% of items fall in
+the fallback zone and the hard token-F1 rule agrees
+with committed labels on 80% of items. Both facts
+support treating these domains as secondary. Un-
+der the three threshold variants {0.75, 1.0, 1.25}×
+(no verifier fallback), the all-domain probe-gap as-
+sociation stays in the r = 0.30–0.38 band with
+mean Platt ∆Brier between −0.095 and −0.098,
+versus r = 0.29 on the deterministic-only subset:
+the association is stable under label-mechanism
+perturbation.
+G
+Complete Second-Generator Results
+Table 7 reports the full method suite on the Llama-
+3.2-1B replication, parallel to Table 2, so that the
+selection of replication results in the main text can
+be audited.
+H
+Parse-Failure Sensitivity
+Verbalized scoring occasionally fails to parse and
+the committed protocol imputes the predeclared 0.5
+without logging which items failed. We re-scored
+both generators with a per-item failure flag under
+the verbatim protocol; the rescores are bit-identical
+to the committed scores (correlation 1.0, identical
+fraction 1.0 on both generators), which simultane-
+ously establishes reproducibility and supplies the
+flags. The previously unlogged primary-run fail-
+ure rates are 20.6% (Gemma-2), 14.1% (Phi-3),
+0.3% (TinyLlama), and 0 for the other five judges;
+the second-generator rates are 14.4% (Gemma-2),
+13.8% (Phi-3), and ≤1.3% elsewhere.
+Table 8 shows every conclusion is insensitive to
+the treatment: exclusion moves means by at most
+
+Missing figure asset: fig_reliability_perjudge.png
+Figure 2: Per-judge reliability diagrams (raw scores, five equal-mass bins, pooled over domains). Pooled curves can
+hide opposite domain-level calibration errors; the domain-stratified drift underlying them is shown in Figure 1.
+Missing figure asset: fig_gap_scatter.png
+Figure 3: Accuracy gap versus held-out target ∆Brier for Platt scaling, one point per predeclared transfer unit (448
+primary transfers), with binned means. Bootstrap replicates are never plotted as independent configurations.
+0.008 Brier, the target- temperature harm rate is un-
+changed (0.094 primary, 0.047 second generator,
+under every treatment), and adding the per-cell fail-
+ure fraction as a regression covariate leaves the gap
+and raw-error coefficients essentially untouched
+(failure-fraction coefficients +0.025 and −0.003).
+Constrained numeric decoding is not a free repair:
+it eliminates Phi-3 and Gemma-2 failures (44 →1,
+46 →0 of 320) but creates failures for TinyLlama
+(0 →92) and Zephyr (0 →112), whose natural
+numeric emissions do not tokenize inside the con-
+strained set, and it perturbs the score distribution
+enough to move the raw-error coefficient. There
+is no uniformly better elicitation; the committed
+imputation is not driving any claim.
+I
+Prompt and Order Robustness
+Three meaning-preserving confidence prompts (A:
+committed; B, C: paraphrases) and a presentation-
+order control (Aswap: candidate answer before ref-
+erence) were scored for all eight primary judges on
+the primary generator under the verbatim pipeline,
+with prompt-paired per-transfer inference.
+The method conclusions are prompt-stable: tem-
+perature and target temperature improve under
+every variant, target temperature is the best or
+tied-best row throughout, and prompt-paired per-
+transfer deltas against variant A are small (mean
+|∆| ≤0.03 Brier for temperature, Platt, and target
+temperature; sign agreement 0.67–0.94). The gap
+association stays in the same weak band (r = 0.25–
+0.32), so prompt choice neither rescues nor de-
+stroys it. The clearest prompt effect is on elicita-
+tion itself: failure rates range from 1.8% to 10.7%
+across meaning-preserving paraphrases, reinforc-
+ing that verbalized confidence is a fragile measure-
+ment channel. Table 9 summarizes prompt and or-
+dering robustness results across the primary gener-
+ator.
+J
+Split-Seed Sensitivity
+With 40 items per domain, individual split as-
+signments matter, so we reran the complete trans-
+fer analysis under ten different question-level
+split seeds (point estimates per seed; the commit-
+ted seed-0 run provides the intervals). The con-
+clusions the paper relies on are seed-stable: on
+the primary generator, mean ∆Brier ranges are
+[−0.060, −0.019] (Platt), [−0.168, −0.125] (tem-
+perature), [−0.184, −0.141] (multi-domain), and
+[−0.186, −0.152] (target temperature, always the
+best or tied-best row, harm rate ≤0.16 at ev-
+ery seed), and the probe raw-error coefficient
+stays positive on both generators ([0.16, 0.27] pri-
+mary, [0.12, 0.27] second generator). The gap as-
+sociation is exactly as fragile as the main text
+states: primary r ∈[0.21, 0.45] across seeds (al-
+ways positive, never stable), while the second-
+generator r ∈[−0.08, 0.20] and its adjusted slope
+∈[−0.25, 0.12] span zero. Seed 0 is not a favor-
+
+Method
+∆Brier ↓[95% CI]
+∆log loss ↓[95% CI] ECE ↓harm rate ↓[95% CI] AUROC
+Raw
+—
+—
+0.369
+—
+0.610
+Temperature
+−0.143 [−0.214, −0.087] −3.76 [−5.05, −2.61]
+0.203
+0.08 [0.01, 0.16]
+0.610
+Platt, a ≥0
+−0.058 [−0.120, −0.015] −1.94 [−2.89, −1.12]
+0.305
+0.24 [0.10, 0.40]
+0.590
+Beta calibration
+−0.051 [−0.112, −0.007] −1.65 [−2.63, −0.80]
+0.320
+0.25 [0.10, 0.41]
+0.605
+Isotonic
+−0.113 [−0.203, −0.046] −3.25 [−4.67, −1.95]
+0.240
+0.22 [0.08, 0.36]
+0.592
+Multi-domain temp.
+−0.152 [−0.222, −0.092] −3.78 [−5.07, −2.64]
+0.192
+0.09 [0.00, 0.22]
+0.610
+IW-Platt
+−0.067 [−0.128, −0.022] −2.14 [−2.98, −1.38]
+0.294
+0.23 [0.09, 0.39]
+0.591
+Label-shift EM
++0.043 [−0.026, +0.098] −0.06 [−1.20, +0.99]
+0.424
+0.59 [0.39, 0.78]
+0.590
+Target temp., equal labels −0.155 [−0.226, −0.095] −3.78 [−5.08, −2.63]
+0.183
+0.05 [0.00, 0.15]
+0.610
+Target Platt, equal labels
+−0.102 [−0.170, −0.051] −2.47 [−3.46, −1.56]
+0.245
+0.11 [0.00, 0.25]
+0.608
+Table 7: Second-generator (Llama-3.2-1B) calibration transfer on untouched target-test records: 448 transfer units,
+all eight primary judges, paired means with two-way judge/domain cluster-bootstrap 95% intervals (B=2000), same
+protocol and columns as Table 2. Source-fitted transfer is milder here than on the primary generator (lower harm
+rates), the EM label-shift correction is again the only harmful method, and equal-budget target temperature remains
+the best row.
+Gen. Treatment
+rgap
+∆B temp ∆B tgt-t OLS raw
+Pri.
+Impute 0.5
+0.253
+−0.147
+−0.171
++0.270
+Pri.
+Exclude flagged
+0.271
+−0.152
+−0.177
++0.283
+G2
+Impute 0.5
+0.085
+−0.143
+−0.155
++0.242
+G2
+Exclude flagged
+0.093
+−0.149
+−0.163
++0.238
+G2
+Constrained dec.
+0.067
+−0.136
+−0.141
++0.094
+Table 8: Parse-failure sensitivity: headline quantities
+under the committed 0.5 imputation, exclusion of
+flagged item–judge pairs, and (second generator) digit-
+constrained decoding. Point estimates; the seed-0 cluster
+intervals in the main text apply to the committed rows.
+Variant
+rgap
+∆B temp
+∆B tgt-t
+harm tgt-t
+fail
+A (committed)
+0.253
+−0.147
+−0.171
+0.09
+0.044
+B (paraphrase)
+0.317
+−0.128
+−0.141
+0.11
+0.107
+C (paraphrase)
+0.287
+−0.134
+−0.152
+0.13
+0.018
+Aswap (order)
+0.246
+−0.165
+−0.191
+0.09
+0.041
+Table 9: Prompt/order robustness on the primary gen-
+erator (448 transfers per variant; point estimates). “fail”
+is the overall parse-failure rate, which is itself prompt-
+sensitive (prompt B drives Gemma-2 to 59%).
+able draw for the gap claim; if anything it sits near
+the middle of these ranges.
+K
+Analyses Run and Not Run
+Completed prespecified analyses: (1) deterministic-
+label-only subset of the primary transfers (Sec-
+tion 6.5); (2) leave-one-judge-out and leave-one-
+target-domain-out prediction of recalibration harm
+(Table 3 discussion); (3) proxy-label threshold sen-
+sitivity at {0.75, 1.0, 1.25}× the declared thresh-
+olds; (4) the certificate at target-probe budgets m ∈
+{4, 8, 16} on real audits and m ∈{32, . . . , 1024}
+on synthetic populations; (5) the modern 7–9B
+judge replication of the full transfer analysis; (6)
+a single-judge frontier API probe (Claude Son-
+net 4.5) under the verbatim protocol, reported
+descriptively; (7) a full second-generator replica-
+tion (Llama-3.2-1B responses, byte-identical la-
+beling, all eight primary judges rescored with
+recorded revisions); (8) parse-failure sensitivity
+with per-item flags, exclusion, indicator, and
+constrained-decoding arms (Appendix H); (9)
+prompt-paraphrase and presentation-order robust-
+ness with prompt-paired inference (Appendix I);
+(10) the ten-seed split sensitivity (Appendix J).
+Not run, and therefore claimed nowhere:
+stochastic-decoding repeats, alternative gap defini-
+tions beyond the absolute gap, debiased/smoothed
+ECE variants, unconstrained Platt slope, weight-
+clipping sweeps, and Holm-adjusted contrasts
+across the full method grid. Each omission is either
+inherited from the frozen data-collection design or
+a disclosed scope limit of this study.
+L
+Supplementary Figures
+The adjusted regression analysis in Table 3 is visu-
+alized as a coefficient forest plot in Figure 4. The
+bootstrap confidence intervals show that probe-split
+raw Brier is the only predictor with a confidence in-
+terval excluding zero, while the remaining transfer-
+gap and distribution-shift predictors exhibit sub-
+stantial uncertainty.
+Figure 5(a,b) highlights the improvement–risk
+trade-off, showing that target-aware temperature
+methods achieve the strongest gains with the low-
+est harm rates. Figure 6 shows that larger audits
+improve detection only modestly, with high false
+acceptance persisting even at m = 1024.
+
+Missing figure asset: fig_regression_forest_color.png
+Figure 4: Adjusted predictors of calibrated target-test Brier. Coefficient estimates and 95% cluster-bootstrap
+confidence intervals from the ANCOVA reported in Table 3. The vertical dashed line denotes zero. The probe-split
+raw Brier predictor shows a statistically reliable association, whereas other predictors have confidence intervals
+overlapping the null.
+Missing figure asset: fig_recalibration_performance.png
+Figure 5: Recalibration performance across methods. (a) Mean change in target Brier score and (b) harm rate across
+recalibration methods reported in Table 2. Values are computed directly from the 448 primary-transfer results.
+Negative ∆Brier indicates improvement over raw confidence scores, whereas harm rate measures the fraction of
+transfers where recalibration degrades target-test Brier.
+Missing figure asset: fig_certificate_behavior.png
+Figure 6: Certificate behavior as a function of audit size. Harm-detection power and descriptive false-acceptance
+rate for the certificate at the audit sizes reported in Table 5. Values are taken directly from the synthetic-population
+experiments. Increasing audit size improves detection power only modestly, while false acceptance remains high
+even at m = 1024.

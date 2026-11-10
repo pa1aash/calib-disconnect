@@ -1,0 +1,1426 @@
+ 
+ Cross-lingual Calibration of Pre-Generation Success Probes for Multilingual LLM Routing 
+ Skip to main content 
+ Report GitHub Issue 
+ × 
+ Title: 
+ Content selection saved. Describe the issue below: 
+ Description: 
+ Submit without GitHub 
+ Submit in GitHub 
+ Why HTML? 
+ Report Issue 
+ Back to Abstract 
+ Download PDF 
+ Contents 
+ Reading mode 
+ Colour theme 
+ Abstract 
+ 1 Introduction 
+ 2 Related Work 
+ Pre-generation prediction from activations. 
+ Cross-lingual transfer of internal signals. 
+ Calibration under distributional shifts. 
+ Cost-aware LLM routing. 
+ 3 Methodology 
+ 3.1 Formulation 
+ 3.2 Data 
+ 3.3 Models and Generation 
+ 3.4 Layer-wise Representation Extraction 
+ 3.5 Success-Probes Training and Selection 
+ Probes training. 
+ Validation-based probe selection. 
+ 3.6 Cross-lingual Probe Reliability 
+ Discrimination. 
+ Calibration. 
+ Probabilistic quality. 
+ ‣ 3.6 Cross-lingual Probe Reliability 
+ 3.7 Multilingual Routing Utility 
+ 4 Results 
+ 4.1 Cross-Lingual Discrimination 
+ 4.2 Ranking Transfers More Reliably Than Probability Scales 
+ 4.3 ETD Success-Prediction Performance 
+ 4.4 Pooled Supervision Produces Stronger Routing Trade-offs 
+ 5 Conclusion 
+ References 
+ A Translation Quality Assessment 
+ B Layer-wise Ridge Regularization Selection 
+ C Why Discrimination, Calibration, and Probabilistic Quality Differ 
+ D Routing Cost Estimation 
+ E Shared Encoder Selection 
+ Search procedure. 
+ Interpretation. 
+ F Additional Results 
+ F.1 Empirical Success Rates 
+ F.2 Same-model Probe Discrimination and Calibration 
+ F.3 Encoder–Target Decoupled Prediction Quality 
+ F.4 Reliability Diagrams 
+ G Monotonic Recalibration 
+ License: CC BY 4.0
+arXiv:2610.06216v1 [cs.CL] 05 Oct 2026 
+ Cross-lingual Calibration of Pre-Generation Success Probes for Multilingual LLM Routing 
+ Andrea Paganelli
+ Affiliation:  The University of Queensland
+ Affiliation:  Polytechnic University of Milan
+ Correspondence: s.civelli@uq.edu.au 
+ Stefano Civelli
+ Affiliation:  The University of Queensland
+ Pietro Bernardelle
+ Affiliation:  The University of Queensland
+ Gianluca Demartini
+ Affiliation:  The University of Queensland
+ Abstract 
+ Pre-generation success probes estimate response correctness from a language model’s hidden activations before decoding, enabling cost-aware routing. While prior work has demonstrated their utility primarily on English inputs, we study their reliability across languages along three dimensions: (1) whether they preserve the ranking of likely successes and failures ( discrimination ); (2) whether they retain probabilities that match observed success frequencies ( calibration ); and (3) whether they produce scores comparable enough across candidate models for cost-aware multilingual routing ( utility ). Using 3,000 MATH problems in 10 languages and 8 open-weight model configurations, we compare cross-lingual transfer from English-trained probes and equal-budget pooled multilingual probes. English-trained probes retain useful cross-lingual discrimination but become less well calibrated after transfer. Pooled multilingual supervision improves both properties and yields more reliable estimates of success. In routing experiments, the pooled router achieves a 0.7% higher test success rate while reducing modeled cost by 13.0% relative to always selecting the model with the highest average success. These results show that multilingual routing requires success estimates that remain well calibrated and comparable across languages and models. 
+ 1 Introduction 
+ Figure 1: 
+Multilingual routing with pre-generation success probes. Test rollout success versus modeled cost saving relative to always selecting gpt-oss-high , on the balanced ten-language test set. Each point corresponds to a different value of the routing trade-off coefficient λ \lambda .
+Curves compare English-trained, recalibrated English-trained, and equal-budget pooled multilingual probes used for routing.
+ Large language models (LLMs) do not perform consistently across languages. A model may solve a mathematical problem in English and fail on a semantically equivalent formulation in another language ( Shi et al., 2022 ; Ahuja et al., 2023 ; Ko et al., 2025 ; Son et al., 2025 ) . At the same time, always using the strongest available model is costly and often unnecessary, since a cheaper model may be equally capable of solving the same problem ( Chen et al., 2023 ; Aggarwal et al., 2024 ; Chen et al., 2024 ; Ong et al., 2024 ) . Cost-aware model routing aims to address this trade-off by selecting, for each input, the least expensive model likely to produce a correct response. Such a decision requires estimating, before decoding, how likely each candidate model is to answer correctly. 
+ Recent work has shown that a model’s hidden activations contain information about the correctness of its future response ( Azaria and Mitchell, 2023 ; Lugoloobi et al., 2026 ) . Linear probes can extract this information after the prompt has been processed but before the first output token is generated. These pre-generation success probes can therefore support routing without first generating and evaluating a candidate response ( Di Cicco, 2026 ; Lugoloobi et al., 2026 ; Varshney et al., 2026 ) . However, existing evidence is largely limited to English inputs, leaving unclear whether these probes remain reliable across languages and whether their estimates are sufficiently comparable for multilingual routing. We therefore ask: (RQ1) How reliably do pre-generation success probes transfer from English to non-English target languages? (RQ2) How effectively do the resulting success estimates support cost-aware routing? 
+ We investigate these questions using 3,000 problems from the MATH dataset ( Hendrycks et al., 2021 ) , translated from English into 9 additional languages, and 8 open-weight model configurations. For each problem, language, and model configuration, we collect n = 5 n=5 sampled generations to estimate empirical success and extract residual-stream activations at every model depth before decoding. We train layer-wise ridge-regression probes under monolingual training and equal-budget pooled multilingual training. We then compare English-to-target cross-lingual transfer with pooled multilingual supervision, using a probe trained directly on labelled data in the target language as an oracle reference.
+We assess probes’ reliability through three increasingly demanding requirements: (1) probes should preserve the ordering of likely successes and failures ( discrimination ); (2) their predicted probabilities should remain aligned with observed success frequencies ( calibration ); and (3) their scores should be sufficiently comparable across candidate models to support effective cost-aware choices ( utility ). 
+ Our results show that English-trained probes retain substantial cross-lingual discrimination, particularly at intermediate layers ( Civelli et al., 2026 ) . Their scores, however, do not retain a consistent probabilistic meaning across languages. Pooled multilingual supervision reduces expected calibration error by 38–69% across models and produces a stronger success–cost frontier in routing (see Figure 1 ). Overall, our findings show that preserving cross-lingual rankings is only one requirement for reliable multilingual routing. Effective routing also requires success probabilities whose scale remains meaningful across languages and sufficiently comparable across candidate models. 
+ 2 Related Work 
+ Pre-generation prediction from activations. 
+ Prior work has investigated whether a model’s internal state contains information about properties of its eventual response before generation begins. Early studies identify activation patterns associated with truthfulness and correctness ( Azaria and Mitchell, 2023 ) . Related work shows that human-annotated problem difficulty is linearly decodable from pre-generation representations ( Lugoloobi and Russell, 2025 ; Civelli et al., 2026 ) . Moving from these general response and problem-level properties to model-specific success, Cencerrado et al. (2025) estimate forthcoming answer correctness from question-only activations by constructing correctness directions from the difference between the mean activations of successful and unsuccessful examples. These directions transfer well across factual knowledge tasks, but their predictive performance is weaker on mathematical reasoning. Lugoloobi et al. (2026) extend this line of work by training supervised linear probes directly on labelled successes and failures. They show that these probes can predict model success on mathematical and coding tasks and, crucially, use the resulting estimates for cost-aware model routing. Subsequent approaches similarly exploit prefilling-time signals for self-evaluation ( Kasnavieh et al., 2026 ) or use an open-weight model’s activations to predict the correctness of separate target models for routing ( Varshney et al., 2026 ) . Together, these studies establish that pre-generation representations encode signals correlated with correctness and that these signals can support routing decisions. 
+ Cross-lingual transfer of internal signals. 
+ Multilingual models have been shown to map semantically equivalent inputs in different languages to partially aligned representation spaces Bernardelle et al. (2026) ; Kim and Lee (2025) ; Li et al. (2025) ; Schut et al. (2025) ; Wendler et al. (2024) , enabling zero-shot cross-lingual transfer ( Pires et al., 2019 ; Conneau et al., 2020 ; Libovický et al., 2020 ) . Nevertheless, multilingual representation differences in tokenisation, pretraining data, and language-specific model competence can produce substantial variation across languages ( Rust et al., 2021 ) . Moreover, representational alignment alone does not guarantee that task-relevant information will transfer. In a controlled multilingual setting, Hua et al. (2024) show that strongly aligned representations can coexist with poor cross-lingual transfer, demonstrating that shared geometry is not sufficient for transferring a learned predictor. This distinction is particularly important for meta-cognitive signals. Concurrent work finds that problem difficulty has a partly shared cross-lingual geometry, especially in intermediate model layers ( Civelli et al., 2026 ) . Similarly, Datta et al. (2026) report that activation-based hallucination detectors trained in English deteriorate under zero-shot cross-lingual transfer and benefit from multilingual supervision. 
+ Calibration under distributional shifts. 
+ Discrimination and calibration describe complementary properties of a predictor. A predictor may rank successful examples above unsuccessful ones while assigning scores that do not correspond to empirical outcome frequencies ( Guo et al., 2017 ; Zadrozny and Elkan, 2002 ; Naeini et al., 2015 ; Platt, 1999 ) .
+Prior work has shown that cross-lingual transfer can substantially degrade the calibration of output-level predictions ( Jiang et al., 2022 ) . More recently, Zhou et al. (2025) study multilingual confidence signals in internal representations and find that intermediate layers can provide better-calibrated confidence estimates than final-layer representations, particularly outside English. This result connects multilingual calibration to representational depth, but does not establish whether supervised pre-generation success probes preserve calibration when transferred between languages or whether multilingual supervision improves their downstream routing utility. 
+ Cost-aware LLM routing. 
+ LLM routing and cascading seek to reduce inference cost by assigning each query to the least expensive model expected to answer it correctly ( Chen et al., 2023 ; Ong et al., 2024 ; Ding et al., 2024 ; Dekoninck et al., 2025 ; Jitkrittum et al., 2025 ) . Most routing methods estimate model suitability from external signals such as query embeddings, preference data, previously observed outputs, or uncertainty measures. Activation-based routers instead use internal representations computed during prompt prefilling to estimate model-specific success before generation begins ( Lugoloobi et al., 2026 ; Varshney et al., 2026 ) . For routing, however, predictive ranking alone may be insufficient. Model scores must be comparable across candidate models and operating conditions if they are used to set thresholds or optimise expected success under a cost constraint. 
+ Existing activation-based routing work has not examined whether success estimates or routing thresholds remain valid under language shift. 
+ 3 Methodology 
+ 3.1 Formulation 
+ Let x i x_{i} denote a mathematical problem, ℓ \ell the language in which it is presented, and m m an evaluated language model. We write x i ( ℓ ) x_{i}^{(\ell)} for the corresponding language-specific prompt. Let π m ​ ( r ∣ x i ( ℓ ) ) \pi_{m}(r\mid x_{i}^{(\ell)}) denote the probability that model m m , under the fixed decoding policy, produces response r r when given x i ( ℓ ) x_{i}^{(\ell)} . Accordingly, π m ( ⋅ ∣ x i ( ℓ ) ) \pi_{m}(\cdot\mid x_{i}^{(\ell)}) denotes the full distribution over possible responses.
+We write R m , ℓ , i ∼ π m ( ⋅ ∣ x i ( ℓ ) ) R_{m,\ell,i}\sim\pi_{m}(\cdot\mid x_{i}^{(\ell)}) to denote one response sampled from this distribution. The corresponding single-generation success probability is 
+ p m , ℓ , i = Pr [ Correct ( R m , ℓ , i ) = 1 ] . p_{m,\ell,i}=\Pr\left[\operatorname{Correct}(R_{m,\ell,i})=1\right]. 
+ (1) 
+ Following Lugoloobi et al. (2026) , for every model–problem–language tuple, we sample n = 5 n=5 independent responses and define 
+ k m , ℓ , i = ∑ r = 1 n 𝕀 [ Correct ( R m , ℓ , i ( r ) ) = 1 ] k_{m,\ell,i}=\sum_{r=1}^{n}\mathbb{I}\left[\operatorname{Correct}\left(R^{(r)}_{m,\ell,i}\right)=1\right] 
+ as the number of correct responses. The empirical success score is therefore defined as 
+ y m , ℓ , i = k m , ℓ , i n ∈ { 0 , 0.2 , 0.4 , 0.6 , 0.8 , 1 } . y_{m,\ell,i}=\frac{k_{m,\ell,i}}{n}\in\{0,0.2,0.4,0.6,0.8,1\}. 
+ (2) 
+ This score estimates the probability in Equation  1 , since 𝔼 ⁡ [ y m , ℓ , i ] = p m , ℓ , i \mathbb{E}[y_{m,\ell,i}]=p_{m,\ell,i} . 
+ Since p m , ℓ , i p_{m,\ell,i} is conditional on both the model and the language of the prompt, the same underlying problem can have different success probabilities across models and translations. 
+ 3.2 Data 
+ We sample 3,000 English-language problems from the MATH dataset ( Hendrycks et al., 2021 ) and translate each into Arabic, Chinese, French, Italian, Russian, Swahili, Telugu, Thai, and Turkish using DeepL ( DeepL SE, 2026 ) .
+To preserve the mathematical content and structure of the source problems, we protect mathematical notation and structured blocks during translation. We apply regular-expression checks to detect malformed notation, and use COMET-Kiwi ( Rei et al., 2022 ) as a reference-free estimate of translation adequacy. For further details on translation quality see Appendix  A . 
+ We partition the 3,000 underlying MATH problems into training, validation, and test sets using a 70/15/15 split. We split by underlying problem rather than by translated prompt, so all ten language-specific versions of a problem remain in the same partition, with the resulting assignment shared across all models. The training split is used to fit probe parameters, the validation split is used for regularisation, reporting-layer, recalibration, and routing-policy selection, and the test split is reserved for final evaluation. 
+ 3.3 Models and Generation 
+ Our experiments include 8 configurations of instruction-tuned Ouyang et al. (2022) , open-weight models: Qwen3 at 0.6B , 1.7B , 4B , and 8B parameters ( Yang et al., 2025 ) ; Qwen3.5 at 4B and 9B parameters ( Qwen Team, 2026 ) ; and gpt-oss-20b ( OpenAI, 2025 ) , evaluated under low- and high-reasoning settings, denoted gpt-oss-low and gpt-oss-high , respectively. 
+ To simulate a realistic usage setting, each model receives only the mathematical problem, formatted using its native chat template, with no additional instructions. For each model–problem–language tuple, we sample n = 5 n=5 responses at a temperature of 0.7, extract the final answer, and aggregate the resulting binary correctness labels according to Equation  2 . 
+ 3.4 Layer-wise Representation Extraction 
+ For each model–problem–language tuple, we perform a single forward pass using the Hugging Face Transformers library ( Wolf et al., 2020 ) and extract residual-stream activations at every model depth. For a model with L L transformer blocks, we consider L + 1 L+1 representation depths. Depth 0 0 denotes the initial residual-stream state obtained by mapping the input tokens through the model’s embedding matrix, before any transformer block is applied. Depths j = 1 , … , L j=1,\ldots,L denote the residual-stream states after the corresponding transformer blocks. 
+ At each depth, we record the activation 𝐡 m , ℓ , i ( j ) ∈ ℝ d m \mathbf{h}^{(j)}_{m,\ell,i}\in\mathbb{R}^{d_{m}} at the final prompt token, before the generation of the first output token, where d m d_{m} is the hidden dimension of model m m . 1 1 
+ 1 
+ We select the final prompt token because it can attend to the entire input, making its activation a representation of the model state from which generation begins. 
+ 3.5 Success-Probes Training and Selection 
+ Probes training. 
+ Using the layer-wise representations defined above, we train a separate linear ridge-regression probe for each model, layer, and supervision regime.
+Under (1) monolingual supervision , the probe is trained on the complete training set in a single language, whereas under (2) pooled multilingual supervision , the same overall training budget is distributed evenly across the ten languages. 
+ Before probe training, each activation dimension is standardised by removing its mean and scaling it to unit variance. Both statistics are estimated exclusively from the corresponding training split.
+The probe produces the raw prediction p ^ m , ℓ , i ( j ) , raw = 𝐰 ⊤ ​ 𝐡 ~ m , ℓ , i ( j ) + b , \widehat{p}^{(j),\mathrm{raw}}_{m,\ell,i}=\mathbf{w}^{\top}\widetilde{\mathbf{h}}^{(j)}_{m,\ell,i}+b, where 𝐡 ~ m , ℓ , i ( j ) \widetilde{\mathbf{h}}^{(j)}_{m,\ell,i} is the standardised activation.
+For each candidate ridge coefficient α ∈ { 10 , 10 2 , 10 3 , 10 4 , 10 5 } \alpha\in\{10,10^{2},10^{3},10^{4},10^{5}\} we fit a separate set of probe parameters 𝐰 \mathbf{w} and b b on the training split by minimizing 
+ ∑ i ( y m , ℓ , i − p ^ m , ℓ , i ( j ) , raw ) 2 + α ​ ∥ 𝐰 ∥ 2 2 . \sum_{i}\left(y_{m,\ell,i}-\widehat{p}^{(j),\mathrm{raw}}_{m,\ell,i}\right)^{2}+\alpha\lVert\mathbf{w}\rVert_{2}^{2}. 
+ Thus, 𝐰 \mathbf{w} and b b are optimized for a fixed value of α \alpha ; the value of α \alpha itself is subsequently selected using the validation procedure described in the next paragraph.
+To constrain the regression output, we project its predictions onto [ 0 , 1 ] [0,1] :
+ p ^ m , ℓ , i ( j ) = min ⁡ { 1 , max ⁡ { 0 , p ^ m , ℓ , i ( j ) , raw } } . \widehat{p}^{(j)}_{m,\ell,i}=\min\left\{1,\max\left\{0,\widehat{p}^{(j),\mathrm{raw}}_{m,\ell,i}\right\}\right\}. 
+This projection is applied when computing validation and test metrics and when using predictions for recalibration or routing. 
+ Validation-based probe selection. 
+ We use validation Brier score to select the ridge coefficient and reporting layer because the probes are intended to estimate single-generation success probabilities. For an evaluation set 𝒟 \mathcal{D} , let p ^ i \widehat{p}_{i} denote the projected predicted probability, k i k_{i} the number of successful rollouts, and n i n_{i} the total number of retained rollouts for problem i i . We compute the rollout-level Brier score as 
+ BS ⁡ ( 𝒟 ) = ∑ i ∈ 𝒟 [ k i ​ ( 1 − p ^ i ) 2 + ( n i − k i ) ​ p ^ i 2 ] ∑ i ∈ 𝒟 n i . \operatorname{BS}(\mathcal{D})=\frac{\sum_{i\in\mathcal{D}}\left[k_{i}(1-\widehat{p}_{i})^{2}+(n_{i}-k_{i})\widehat{p}_{i}^{2}\right]}{\sum_{i\in\mathcal{D}}n_{i}}. 
+ (3) 
+ In our experiments, n i = 5 n_{i}=5 for every problem. This score is the mean squared error between the predicted probability and the individual binary rollout outcomes, and therefore evaluates the same single-generation success probability defined in Equation  1 . It summarizes overall probabilistic quality and may improve through better discrimination, better calibration, or both. 
+ Selection proceeds in two stages. First, as stated in the previous paragraph, we fit one probe for each candidate
+ α ∈ { 10 , 10 2 , 10 3 , 10 4 , 10 5 } \alpha\in\{10,10^{2},10^{3},10^{4},10^{5}\} 
+on the training split for every model, layer, and supervision regime, and select the coefficient that minimizes validation Brier score: 
+ α m , j , s ⋆ = arg ⁡ min α ​ BS m , j , s val ⁡ ( α ) , \alpha^{\star}_{m,j,s}=\arg\min_{\alpha}\operatorname{BS}^{\mathrm{val}}_{m,j,s}(\alpha), 
+ where s s denotes the supervision regime. For a monolingual probe, including the English probe and each same-language reference probe, the candidate coefficients are evaluated on validation examples in the probe’s training language. For the pooled multilingual probe, they are evaluated on the union of the validation sets from all ten languages.
+The resulting layer-wise ridge-coefficient selections are reported in Appendix  B . 
+ Second, after selecting α m , j , s ⋆ \alpha^{\star}_{m,j,s} at every layer, we select one shared reporting layer for each model. Using a different layer for each supervision regime or evaluation metric could selectively favour individual conditions. For
+ s ∈ English , Pooled , s\in{\mathrm{English},\mathrm{Pooled}}, 
+we therefore define 
+ macroBS s , m , j val = 1 | ℒ target | ​ ∑ ℓ ∈ ℒ target BS s , m , j , ℓ val , \operatorname{macroBS}^{\mathrm{val}}_{s,m,j}=\frac{1}{|\mathcal{L}_{\mathrm{target}}|}\sum_{\ell\in\mathcal{L}_{\mathrm{target}}}\operatorname{BS}^{\mathrm{val}}_{s,m,j,\ell}, 
+ where each score is computed using the corresponding validation-selected coefficient α m , j , s ⋆ \alpha^{\star}_{m,j,s} , and ℒ ∗ target \mathcal{L}*{\mathrm{target}} contains the nine non-English target languages. We select 
+ j m ⋆ \displaystyle j_{m}^{\star} 
+ = arg min j [ 1 2 macroBS val English , m , j \displaystyle=\arg\min_{j}\left[\frac{1}{2}\operatorname{macroBS}^{\mathrm{val}}_{\mathrm{English},m,j}\right. 
+ (4) 
+ + 1 2 macroBS val Pooled , m , j ] . \displaystyle\left.{}+\frac{1}{2}\operatorname{macroBS}^{\mathrm{val}}_{\mathrm{Pooled},m,j}\right]. 
+ Same-language probes do not influence the layer choice. Once selected, j m ⋆ j_{m}^{\star} is frozen across all evaluation regimes (Section  3.6 ) and used for all scalar test metrics and downstream analyses. 
+ 3.6 Cross-lingual Probe Reliability 
+ To answer RQ1 , we evaluate probe quality on the same held-out examples from each of the nine non-English target languages. Excluding English ensures that all reported comparisons measure performance under language transfer. 
+ We compare three regimes: (a) English transfer ( Eng. ) , where a probe trained under monolingual supervision on English is applied to the target language; (b) pooled multilingual supervision ( Pool ) , where a probe trained under pooled multilingual supervision is evaluated separately on each target language; and (c) same-language reference ( Oracle ) , where a probe trained under monolingual supervision in the target language is evaluated on that language. The oracle therefore uses labelled target-language training data and serves as a reference for the other two conditions. 
+ Discrimination. 
+ We evaluate discrimination using rollout-weighted AUROC. A problem with k i k_{i} successful and n i − k i n_{i}-k_{i} failed generations contributes its score p ^ i \widehat{p}_{i} with weight k i k_{i} to the positive class and weight n i − k i n_{i}-k_{i} to the negative class. AUROC therefore measures the probability that a randomly selected successful rollout receives a higher score than a randomly selected failed rollout. 
+ AUROC depends only on the ordering of predictions and is invariant to strictly monotonic transformations of their values. A probe can therefore achieve high AUROC while being systematically overconfident or underconfident. 
+ Calibration. 
+ Calibration measures whether predicted probabilities agree with observed success frequencies.
+We diagnose this using sample-weighted Expected Calibration Error (ECE) with ten equal-width bins and reliability diagrams. ECE summarizes the average absolute difference between predicted and observed success rates across bins, while reliability diagrams show where these differences occur. 
+ Calibration does not measure whether a probe meaningfully separates easy and difficult problems. For example, a probe that always predicts the overall success rate may be perfectly calibrated while having no discriminative ability. 
+ Probabilistic quality. 
+ We evaluate the overall quality of the predicted success probabilities using the rollout-level Brier score in Equation  3 and aggregated binomial negative log-likelihood (NLL). Both are strictly proper scoring rules: in expectation, they are minimized by reporting the true success probability. They jointly reward predictions that are correctly scaled and informative.
+Brier score applies a quadratic penalty to probability errors and is bounded, whereas NLL applies a logarithmic penalty and therefore penalizes confidently incorrect predictions more strongly. 
+ Neither metric isolates calibration from discrimination: an improvement may result from a better probability scale, a better ordering of examples, or both. We consequently use AUROC to measure discrimination, calibration diagnostics to evaluate probability scale, and Brier score and NLL to summarize their combined effect on probability quality (more details can be found in Appendix  C ). 
+ 3.7 Multilingual Routing Utility 
+ To answer RQ2 , we evaluate routing over a language-balanced mixture of all ten languages. This scope differs deliberately from the nine-language probe-quality evaluation since in a real routing setting prompts may come from any of the supported languages, including English.
+We use the predicted success probabilities to select a target model before generation. Given a set of candidate models ℳ \mathcal{M} , the router chooses 
+ m ⋆ ​ ( x ) = arg ⁡ max m ∈ ℳ ​ [ p ^ m ​ ( x ) − λ ​ c m ] , m^{\star}(x)=\arg\max_{m\in\mathcal{M}}\left[\widehat{p}_{m}(x)-\lambda c_{m}\right], 
+ (5) 
+ where c m c_{m} is the estimated inference cost (refer to Appendix  D ) and λ \lambda controls the success–cost trade-off.
+We evaluate the fixed grid
+ λ ∈ { 0 , .01 , .02 , .05 , .10 , .20 , .35 , .50 , .75 , 1 } , \lambda\in\{0,\ .01,\ .02,\ .05,\ .10,\ .20,\ .35,\ .50,\ .75,\ 1\}, 
+with each value defining one operating point on the success–cost frontier. 
+ Our main analysis uses encoder–target decoupled routing (ETD)  Varshney et al. (2026) , in which a fixed encoder supplies the representation used to predict the success of every candidate target model. We use Qwen3-4B as the shared encoder (refer to Appendix E ) and train a separate target-specific ridge head for each candidate model at every encoder layer.
+We select one ETD reporting layer using the joint validation-Brier rule in Equation  4 , additionally macro-averaged over the 8 target models. Predictions from this frozen layer are used in all subsequent recalibration and routing conditions. 
+ 4 Results 
+ Before evaluating probe discrimination , calibration , and routing utility , we first examine the extent to which model success varies across prompt languages. For Qwen3-4B , the empirical success rate ranges from 0.145 in Swahili to 0.716 in English (refer to Table  1 ), showing that success depends jointly on the mathematical problem, the evaluated model, and the language in which the problem is presented.
+Similar cross-lingual variation is observed across the other evaluated models, with complete model-by-language success rates reported in Table  9 . A useful multilingual probe must therefore recover a model- and language-conditional success signal. 
+ We subsequently evaluate whether English-trained probes preserve this ordering across languages, whether their predictions remain probabilistically calibrated, and whether they support effective cost-aware routing. Probe-quality results are macro-averaged over the nine non-English target languages, whereas routing is evaluated over all ten languages, including English. Throughout this section, we report Qwen3-4B as the representative model; the corresponding results for all other tested models exhibit consistent trends and are reported in Appendix  F . 
+ Language 
+ Qwen3-4B 
+ English 
+ 0.716 
+ Chinese 
+ 0.630 
+ Italian 
+ 0.621 
+ French 
+ 0.613 
+ Russian 
+ 0.611 
+ Arabic 
+ 0.537 
+ Thai 
+ 0.526 
+ Turkish 
+ 0.526 
+ Telugu 
+ 0.322 
+ Swahili 
+ 0.145 
+ Mean 
+ 0.525 
+ Table 1: Empirical success rates of Qwen3-4B across languages. Each value is the average empirical success score over the test split, where each problem-level score is computed from five sampled generations. 
+ 4.1 Cross-Lingual Discrimination 
+ Qwen3-4B 
+ Figure 2: 
+Per-language reliability diagrams for Qwen3-4B at its
+shared reporting layer. The English-trained probe is transferred unchanged
+to each target language, whereas the pooled probe uses the same total
+training budget distributed equally across the ten languages. The diagonal
+denotes perfect calibration.
+ (a) English-trained transfer 
+ (b) Pooled multilingual 
+ Evaluation 
+ regime 
+ Rollout 
+ AUROC ↑ \uparrow 
+ Rollout 
+ Brier ↓ \downarrow 
+ ECE ↓ \downarrow 
+ English 
+ 0.729 
+ 0.213 
+ 0.125 
+ Pooled 
+ 0.741 
+ 0.190 
+ 0.043 
+ Oracle 
+ 0.758 
+ 0.183 
+ 0.031 
+ Table 2: Self-probe quality for Qwen3-4B at the shared reporting layer (L23). Values are macro-averages over the nine non-English test languages. AUROC treats the five rollouts as weighted binary outcomes. 
+ Table  2 shows that the English-trained Qwen3-4B probe retains substantial discrimination when transferred unchanged to the nine non-English languages. It achieves a macro-average rollout AUROC of 0.729, only 2.9 percentage points below the 0.758 obtained by probes trained directly in each evaluation language ( oracle ). Thus, English supervision retains enough success-relevant information to preserve much of the ordering between more and less likely successes after language shift. 
+ Equal-budget pooled multilingual supervision further increases AUROC to 0.741, reducing the gap to the same-language reference from 2.9 to 1.7 percentage points. Because the English and pooled conditions both use 2,100 training prompts, this improvement results from the linguistic composition of the supervision rather than a larger annotation budget. The pattern is consistent across all 8 model configurations (refer to Table  10 ). Pooled supervision improves AUROC for every configuration and raises the cross-model mean from 0.697 to 0.724, thereby reducing the average gap to the same-language reference from 4.9 to 2.2 percentage points. Cross-lingual ranking information is therefore broadly transferable from English, although multilingual supervision recovers a substantial portion of the remaining discrimination loss. 
+ 4.2 Ranking Transfers More Reliably Than Probability Scales 
+ As introduced in Section  3.6 , AUROC measures whether a probe orders examples correctly, but not whether its scores match the underlying success probabilities. Table  2 shows that English-trained probes retain useful discrimination after transfer, while their Brier scores and ECE deteriorate substantially relative to the labelled same-language oracles. Equal-budget pooled supervision recovers a considerable portion of this loss: it reduces mean Brier score from 0.171 to 0.154 and lowers ECE for all 8 models (refer to Table 10 ), bringing both metrics closer to the oracle reference. Because Brier score measures overall probabilistic quality, this recovery may reflect improvements in discrimination and calibration; ECE more directly identifies improved alignment between predicted and observed probabilities. These aggregate metrics do not show whether the calibration loss is uniform across languages or driven by particular language shifts. The per-language reliability diagrams in Figure  2 therefore examine how the relationship between predicted and observed success changes for each target language in the Qwen3-4B model. 
+ The English-trained probe remains capable of ranking many target-language problems, but the mapping from its scores to observed success rates varies across languages. In particular, the same numerical prediction can correspond to different empirical success frequencies after language shift. Distributing the same supervision budget across languages produces scores that lie closer to the reliability diagonal and are more comparable across the covered language distribution. For reliability diagrams for the other models see Appendix  F . 
+ 4.3 ETD Success-Prediction Performance 
+ Same-model probe performance is not sufficient to characterize routing because the ETD router Varshney et al. (2026) does not use each target model’s own representations. Instead, to save cost, Qwen3-4B supplies a shared representation, and a separate linear head predicts the success of each candidate target model. We therefore evaluate the ETD heads whose predictions are actually passed to the router. The shared ETD layer is layer 23, selected using the joint English–pooled validation-Brier criterion and then frozen for calibration, testing, and routing. 
+ Predictor 
+ AUROC ↑ \uparrow 
+ Brier ↓ \downarrow 
+ NLL ↓ \downarrow 
+ ECE ↓ \downarrow 
+ English raw 
+ 0.729 
+ 0.213 
+ 0.624 
+ 0.125 
+ English + cal. 
+ 0.729 
+ 0.208 
+ 0.614 
+ 0.099 
+ Pooled raw 
+ 0.741 
+ 0.190 
+ 0.573 
+ 0.043 
+ Table 3: Prediction quality of the Qwen3-4B ETD routing head at the shared encoder’s reporting layer (L23), macro-averaged over the nine non-English test languages. Bold marks the best value for each metric. 
+ Table  3 shows that English-trained ETD heads retain some useful ranking information, with mean rollout AUROC 0.684. Nevertheless, pooled supervision improves mean AUROC to 0.734 and reduces mean Brier score from 0.181 to 0.152. The routing advantage of pooled supervision therefore cannot be attributed to calibration alone: pooling improves the overall probabilistic predictions, including their discrimination. 
+ To isolate the contribution of probability scaling, we apply a positive-slope variant of Platt scaling ( Platt, 1999 ) to each English-trained target-model head using pooled multilingual validation counts (Appendix  G ). This transformation preserves within-model rankings, and hence AUROC, while allowing the probability scale to change. Recalibration reduces mean Brier score from 0.181 to 0.169, but pooled raw predictions remain better at 0.152. Calibration metrics generally improve after recalibration, although not uniformly for every target model. This ablation therefore shows that correcting score scales helps, but does not reproduce the full effect of multilingual supervision. 
+ 4.4 Pooled Supervision Produces Stronger Routing Trade-offs 
+ We finally apply the ETD predictions to the cost-aware policy in Equation  5 . We compare the English-trained probe, its monotonically recalibrated variant, the pooled multilingual probe, and the baseline that always selects gpt-oss-high . Each reported operating point is selected on validation and frozen before test evaluation. 
+ Router 
+ Val. choice 
+ λ \lambda 
+ Test success [95% CI] 
+ Saving [95% CI] 
+ English raw 
+ Max. success 
+ 0.00 
+ 80.8 [78.8,82.8] 
+ 33.7 [31.8,35.5] 
+ Anchor match 
+ – 
+ Not attained on validation 
+ English + cal. 
+ Max. success 
+ 0.00 
+ 85.0 [83.1,86.8] 
+ 10.8 [9.0,12.6] 
+ Anchor match 
+ – 
+ Not attained on validation 
+ Pooled raw 
+ Max. success 
+ 0.00 
+ 86.6 [84.8,88.3] 
+ 13.0 [10.2,15.9] 
+ Anchor match 
+ 0.10 
+ 85.5 [83.6,87.2] 
+ 22.9 [19.8,26.3] 
+ Always oss-high 
+ Baseline 
+ – 
+ 85.9 
+ 0.0 
+ Table 4: Validation-selected routing operating points. Anchor matching allows at most
+0.1 percentage point validation success loss, then minimizes cost; unattained
+rows mean no fixed-grid point met that constraint. Brackets are paired bootstrap
+intervals over base problem IDs; choices are frozen before test. 
+ Figure  1 shows the test-set success–cost frontiers obtained by sweeping the fixed λ \lambda grid. The figure displays all test outcomes, whereas Table  4 reports two deployment points whose λ \lambda values are selected exclusively on validation: maximum success and anchor matching. The selected values are then frozen and evaluated on test. 
+ At its validation-selected maximum-success point, the pooled router obtains 86.6% test success while saving 13% of the anchor cost. Its anchor-matching selection saves 22.9% on test and obtains 85.5% success. This test success is slightly below the anchor because the matching constraint is enforced on validation; it does not guarantee an exact match after transfer to the test set. 
+ Neither the English probe nor its recalibrated variant meets the anchor-matching criterion on validation. Nevertheless, recalibration increases their validation-selected maximum test success from 80.8% to 85.0%. Correcting the probability scales therefore improves routing substantially, but does not fully recover the pooled router’s performance. 
+ Across the routing grid, recalibration closes 26% of the English-to-pooled utility-regret gap (95% CI: 10.4–38.9%). Calibration thus explains part, but less than half, of the pooled advantage. Because pooling also improves ETD AUROC, its routing benefit comes from both better rankings and more reliable probability estimates. 
+ 5 Conclusion 
+ This work investigated whether pre-generation success probes can support cost-aware model routing across languages. Using 3,000 mathematical problems in ten languages and 8 open-weight model configurations, we found that English-trained probes retain useful cross-lingual discrimination, meaning they can continue to rank likely successes above failures after language transfer. Their numerical predictions, however, do not preserve the same probabilistic meaning across languages. Equal-budget pooled multilingual supervision improves both discrimination and calibration, producing success estimates that are more reliable across languages and candidate models.
+These improvements translate into stronger routing decisions. The pooled multilingual router reaches 86.6% test success while saving 13.0% relative to always using the highest-average-success model, and saves 22.9% at its validation-selected anchor-matching operating point. Monotonic recalibration substantially improves English-trained predictions but recovers only about one quarter of the routing-utility gap, indicating that the benefit of multilingual supervision cannot be explained by calibration alone. Overall, our results demonstrate that transferable rankings are necessary but insufficient for multilingual routing. 
+ Limitations 
+ Our study is limited to mathematical reasoning, these findings might not extend to other domains. Nine of our ten languages are machine-translated rather than natively authored, so results reflect transfer across translated prompts. We restrict our analysis to linear probes at a single post-prompt position and do not probe during generation, which may have an impact, especially under extended reasoning traces. We evaluate only open-weight models up to 20B parameters, and larger or closed-weight models may behave differently. Finally, our routing costs are estimated under a simplified model rather than measured from a live deployment. 
+ References 
+ Aggarwal et al. (2024) 
+Pranjal Aggarwal, Aman Madaan, Ankit Anand, Srividya Pranavi Potharaju, Swaroop Mishra, Pei Zhou, Aditya Gupta, Dheeraj Rajagopal, Karthik Kappaganthu, Yiming Yang, et al. 2024.
+ Automix: Automatically mixing language models.
+ Advances in Neural Information Processing Systems , 37:131000–131034.
+ Ahuja et al. (2023) 
+Kabir Ahuja, Harshita Diddee, Rishav Hada, Millicent Ochieng, Krithika Ramesh, Prachi Jain, Akshay Nambi, Tanuja Ganu, Sameer Segal, Mohamed Ahmed, Kalika Bali, and Sunayana Sitaram. 2023.
+ MEGA: Multilingual evaluation of generative AI .
+ In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing , pages 4232–4267, Singapore. Association for Computational Linguistics.
+ Azaria and Mitchell (2023) 
+Amos Azaria and Tom Mitchell. 2023.
+ The internal state of an LLM knows when it’s lying.
+ In Findings of the Association for Computational Linguistics: EMNLP 2023 , pages 967–976.
+ Bernardelle et al. (2026) 
+Pietro Bernardelle, Samaneh Mohtadi, Stefano Civelli, Joel Mackenzie, and Gianluca Demartini. 2026.
+ Llms encode relevance as a layer-wise cross-lingual signal.
+ arXiv preprint arXiv:2607.15555 .
+ Cencerrado et al. (2025) 
+Iván Vicente Moreno Cencerrado, Arnau Padrés Masdemont, Anton Gonzalvez Hawthorne, David Demitri Africa, and Lorenzo Pacchiardi. 2025.
+ No answer needed: Predicting llm answer accuracy from question-only linear probes.
+ arXiv preprint arXiv:2509.10625 .
+ Chen et al. (2023) 
+Lingjiao Chen, Matei Zaharia, and James Zou. 2023.
+ FrugalGPT: How to use large language models while reducing cost and improving performance .
+ Preprint , arXiv:2305.05176.
+ Chen et al. (2024) 
+Shuhao Chen, Weisen Jiang, Baijiong Lin, James Kwok, and Yu Zhang. 2024.
+ Routerdc: Query-based router by dual contrastive learning for assembling large language models.
+ Advances in Neural Information Processing Systems , 37:66305–66328.
+ Civelli et al. (2026) 
+Stefano Civelli, Pietro Bernardelle, Nicolò Brunello, and Gianluca Demartini. 2026.
+ A shared geometry of difficulty in multilingual language models.
+ In Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 2: Short Papers) , pages 796–807.
+ Conneau et al. (2020) 
+Alexis Conneau, Kartikay Khandelwal, Naman Goyal, Vishrav Chaudhary, Guillaume Wenzek, Francisco Guzmán, Edouard Grave, Myle Ott, Luke Zettlemoyer, and Veselin Stoyanov. 2020.
+ Unsupervised cross-lingual representation learning at scale.
+ In Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics , pages 8440–8451.
+ Datta et al. (2026) 
+Debtanu Datta, Mohan Kishore Chilukuri, Yash Kumar, Saptarshi Ghosh, and Muhammad Bilal Zafar. 2026.
+ Do LLM hallucination detectors suffer from low-resource effect? 
+ Preprint , arXiv:2601.16766.
+ Accepted at EACL 2026.
+ DeepL SE (2026) 
+DeepL SE. 2026.
+ DeepL Translator.
+ https://www.deepl.com/translator .
+ Accessed: 2026-07-09.
+ Dekoninck et al. (2025) 
+Jasper Dekoninck, Maximilian Baader, and Martin Vechev. 2025.
+ A unified approach to routing and cascading for LLMs.
+ In Proceedings of the 42nd International Conference on Machine Learning .
+ Di Cicco (2026) 
+Carlo Di Cicco. 2026.
+ Code correctness signals in llm hidden states: Pre-generation probing and repair geometry.
+ arXiv preprint arXiv:2606.14530 .
+ Ding et al. (2024) 
+Dujian Ding, Ankur Mallick, Chi Wang, Robert Sim, Subhabrata Mukherjee, Victor Rühle, Laks Lakshmanan, and Ahmed H Awadallah. 2024.
+ Hybrid llm: Cost-efficient and quality-aware query routing.
+ In International Conference on Learning Representations , volume 2024, pages 41348–41366.
+ Guo et al. (2017) 
+Chuan Guo, Geoff Pleiss, Yu Sun, and Kilian Q. Weinberger. 2017.
+ On calibration of modern neural networks.
+ In Proceedings of the 34th International Conference on Machine Learning , pages 1321–1330.
+ Hendrycks et al. (2021) 
+Dan Hendrycks, Collin Burns, Saurav Kadavath, Akul Arora, Steven Basart, Eric Tang, Dawn Song, and Jacob Steinhardt. 2021.
+ Measuring mathematical problem solving with the MATH dataset.
+ In Proceedings of the Neural Information Processing Systems Track on Datasets and Benchmarks .
+ Hua et al. (2024) 
+Tianze Hua, Tian Yun, and Ellie Pavlick. 2024.
+ mothello: When do cross-lingual representation alignment and cross-lingual transfer emerge in multilingual models?
+ In Findings of the Association for Computational Linguistics: NAACL 2024 , pages 1585–1598.
+ Jiang et al. (2022) 
+Zhengping Jiang, Anqi Liu, and Benjamin Van Durme. 2022.
+ Calibrating zero-shot cross-lingual (un-)structured predictions.
+ In Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing , pages 2648–2674.
+ Jitkrittum et al. (2025) 
+Wittawat Jitkrittum, Harikrishna Narasimhan, Ankit Singh Rawat, Jeevesh Juneja, Congchao Wang, Zifeng Wang, Alec Go, Chen-Yu Lee, Pradeep Shenoy, Rina Panigrahy, Aditya Krishna Menon, and Sanjiv Kumar. 2025.
+ Universal model routing for efficient LLM inference .
+ Preprint , arXiv:2502.08773.
+ Kasnavieh et al. (2026) 
+Hossein Hosseini Kasnavieh, Gholamreza Haffari, Christopher Leckie, and Adel N Toosi. 2026.
+ Introlm: Introspective language models via prefilling-time self-evaluation.
+ In Findings of the Association for Computational Linguistics: ACL 2026 , pages 12313–12326.
+ Kim and Lee (2025) 
+JaeSeong Kim and Suan Lee. 2025.
+ How language directions align with token geometry in multilingual llms.
+ arXiv preprint arXiv:2511.16693 .
+ Ko et al. (2025) 
+Hyunwoo Ko, Guijin Son, and Dasol Choi. 2025.
+ Understand, solve and translate: Bridging the multilingual mathematical reasoning gap .
+ In Proceedings of the 5th Workshop on Multilingual Representation Learning (MRL 2025) , pages 78–95, Suzhuo, China. Association for Computational Linguistics.
+ Li et al. (2025) 
+Daoyang Li, Haiyan Zhao, Qingcheng Zeng, and Mengnan Du. 2025.
+ Exploring multilingual probing in large language models: A cross-language analysis.
+ In Proceedings of the 1st Joint Workshop on Large Language Models and Structure Modeling (XLLM 2025) , pages 61–70.
+ Libovický et al. (2020) 
+Jindřich Libovický, Rudolf Rosa, and Alexander Fraser. 2020.
+ On the language neutrality of pre-trained multilingual representations.
+ In Findings of the Association for Computational Linguistics: EMNLP 2020 , pages 1663–1674.
+ Lugoloobi et al. (2026) 
+William Lugoloobi, Thomas Foster, William Bankes, and Chris Russell. 2026.
+ LLMs encode their failures: Predicting success from pre-generation activations .
+ Preprint , arXiv:2602.09924.
+ Lugoloobi and Russell (2025) 
+William Lugoloobi and Chris Russell. 2025.
+ LLMs encode how difficult problems are .
+ Preprint , arXiv:2510.18147.
+ Naeini et al. (2015) 
+Mahdi Pakdaman Naeini, Gregory F. Cooper, and Milos Hauskrecht. 2015.
+ Obtaining well calibrated probabilities using Bayesian binning.
+ In AAAI Conference on Artificial Intelligence (AAAI) .
+ Ong et al. (2024) 
+Isaac Ong, Amjad Almahairi, Vincent Wu, Wei-Lin Chiang, Tianhao Wu, Joseph E. Gonzalez, M. Waleed Kadous, and Ion Stoica. 2024.
+ RouteLLM: Learning to route LLMs with preference data .
+ Preprint , arXiv:2406.18665.
+ OpenAI (2025) 
+OpenAI. 2025.
+ gpt-oss-120b & gpt-oss-20b model card .
+ Preprint , arXiv:2508.10925.
+ Ouyang et al. (2022) 
+Long Ouyang, Jeffrey Wu, Xu Jiang, Diogo Almeida, Carroll Wainwright, Pamela Mishkin, Chong Zhang, Sandhini Agarwal, Katarina Slama, Alex Ray, et al. 2022.
+ Training language models to follow instructions with human feedback.
+ Advances in neural information processing systems , 35:27730–27744.
+ Pires et al. (2019) 
+Telmo Pires, Eva Schlinger, and Dan Garrette. 2019.
+ How multilingual is multilingual BERT?
+ In Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics , pages 4996–5001.
+ Platt (1999) 
+John C. Platt. 1999.
+ Probabilistic outputs for support vector machines and comparisons to regularized likelihood methods.
+ Advances in Large Margin Classifiers , 10(3):61–74.
+ Qwen Team (2026) 
+Qwen Team. 2026.
+ Qwen3.5: Towards native multimodal agents .
+ Rei et al. (2022) 
+Ricardo Rei, Marcos Treviso, Nuno M. Guerreiro, Chrysoula Zerva, Ana C. Farinha, Christine Maroti, José G. C. de Souza, Taisiya Glushkova, Duarte M. Alves, Alon Lavie, Luisa Coheur, and André F. T. Martins. 2022.
+ CometKiwi: IST-Unbabel 2022 submission for the quality estimation shared task.
+ In Proceedings of the Seventh Conference on Machine Translation .
+ Rust et al. (2021) 
+Phillip Rust, Jonas Pfeiffer, Ivan Vulić, Sebastian Ruder, and Iryna Gurevych. 2021.
+ How good is your tokenizer? On the monolingual performance of multilingual language models.
+ In Proceedings of the 59th Annual Meeting of the Association for Computational Linguistics and the 11th International Joint Conference on Natural Language Processing (Volume 1: Long Papers) , pages 3118–3135.
+ Schut et al. (2025) 
+Lisa Schut, Yarin Gal, and Sebastian Farquhar. 2025.
+ Do multilingual llms think in english?
+ In ICLR 2025 Workshop on Building Trust in Language Models and Applications .
+ Shi et al. (2022) 
+Freda Shi, Mirac Suzgun, Markus Freitag, Xuezhi Wang, Suraj Srivats, Soroush Vosoughi, Hyung Won Chung, Yi Tay, Sebastian Ruder, Denny Zhou, Dipanjan Das, and Jason Wei. 2022.
+ Language models are multilingual chain-of-thought reasoners .
+ Preprint , arXiv:2210.03057.
+ Son et al. (2025) 
+Guijin Son, Jiwoo Hong, Hyunwoo Ko, and James Thorne. 2025.
+ Linguistic generalizability of test-time scaling in mathematical reasoning .
+ In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pages 14333–14368, Vienna, Austria. Association for Computational Linguistics.
+ Varshney et al. (2026) 
+Tanay Varshney, Annie Surla, Michelle Xu, Gomathy Venkata Krishnan, Maximilian Jeblick, David Austin, Neal Vaidya, and Davide Onofrio. 2026.
+ Llm router: Rethinking routing with prefill activations.
+ arXiv preprint arXiv:2603.20895 .
+ Wendler et al. (2024) 
+Chris Wendler, Veniamin Veselovsky, Giovanni Monea, and Robert West. 2024.
+ Do llamas work in english? on the latent language of multilingual transformers.
+ In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pages 15366–15394.
+ Wolf et al. (2020) 
+Thomas Wolf, Lysandre Debut, Victor Sanh, Julien Chaumond, Clement Delangue, Anthony Moi, Pierric Cistac, Tim Rault, Remi Louf, Morgan Funtowicz, Joe Davison, Sam Shleifer, Patrick von Platen, Clara Ma, Yacine Jernite, Julien Plu, Canwen Xu, Teven Le Scao, Sylvain Gugger, and 3 others. 2020.
+ Transformers: State-of-the-art natural language processing .
+ In Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing: System Demonstrations , pages 38–45, Online. Association for Computational Linguistics.
+ Yang et al. (2025) 
+An Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chang Gao, Chengen Huang, Chenxu Lv, et al. 2025.
+ Qwen3 technical report .
+ arXiv preprint arXiv:2505.09388 .
+ Zadrozny and Elkan (2002) 
+Bianca Zadrozny and Charles Elkan. 2002.
+ Transforming classifier scores into accurate multiclass probability estimates.
+ In ACM SIGKDD International Conference on Knowledge Discovery and Data Mining (KDD) .
+ Zhou et al. (2025) 
+Ej Zhou, Caiqi Zhang, Tiancheng Hu, Chengzu Li, Nigel Collier, Ivan Vulić, and Anna Korhonen. 2025.
+ Beyond the final layer: Intermediate representations for better multilingual calibration in large language models.
+ In Mechanistic Interpretability Workshop at NeurIPS 2025 .
+ Appendix A Translation Quality Assessment 
+ We compare translation quality using the reference-free Unbabel/wmt22-cometkiwi-da model ( Rei et al., 2022 ) . COMET-Kiwi assigns a relative quality score based on the semantic adequacy of a translation with respect to its English source. The scores are useful for comparing and ranking the two translation systems, but their absolute values do not correspond to an independently interpretable level of translation quality. We score all 3,000 problems in each target language for both DeepL ( DeepL SE, 2026 ) and Qwen3.5-27B Qwen Team (2026) . The latter was prompted using the below provided prompt. DeepL obtains a slightly higher mean COMET-Kiwi score than Qwen3.5-27B (see Table 5 ), and its translation were therefore selected for our experiments. 
+ <System Prompt> 
+ You are a professional technical translator specializing in mathematics
+competition problems. 
+ You will be given a math problem written in English, from the MATH benchmark.
+Translate ONLY the natural-language prose into
+ [TARGET LANGUAGE] . Do not translate, rename, reformat, or
+otherwise modify: 
+ • 
+ Asymptote code blocks, delimited by [asy] ... [/asy] ; 
+ • 
+ L a T e X math, delimited by $...$ ,
+ $$...$$ ,
+ \[...\] , or
+ \(...\) ; 
+ • 
+ L a T e X commands (e.g.,
+ \boxed{} ,
+ \frac{}{} ,
+ \sqrt{} ,
+ \left ,
+ \right , and
+ \text{} ); 
+ • 
+ variable names, numbers, units, and mathematical symbols that
+appear inside formulas. 
+ Preserve the original paragraph structure and line breaks. Do not solve the
+problem. Do not add commentary, notes, or explanations of any kind—translate
+what is given, nothing more. 
+ Respond with a single JSON object of the form
+ {"translation": "<translated text>"} and nothing else. 
+ <User Prompt> 
+ Translate the following math problem into
+ [TARGET LANGUAGE] . 
+ <<PROBLEM>> 
+ [SOURCE PROBLEM] 
+ <<END>> 
+ Language 
+ DeepL 
+ Qwen3.5-27B 
+ Arabic 
+ 0.7758 
+ 0.7677 
+ Chinese 
+ 0.8050 
+ 0.8058 
+ French 
+ 0.8293 
+ 0.8286 
+ Italian 
+ 0.8295 
+ 0.8278 
+ Russian 
+ 0.8139 
+ 0.8121 
+ Swahili 
+ 0.7913 
+ 0.7834 
+ Telugu 
+ 0.7934 
+ 0.7826 
+ Thai 
+ 0.7921 
+ 0.7942 
+ Turkish 
+ 0.8284 
+ 0.7940 
+ Overall 
+ 0.8065 
+ 0.7996 
+ Table 5: Mean COMET-Kiwi scores over 3,000 MATH problems per target language
+and translation system. Higher is better; bold indicates the stronger system
+within each row. 
+ Appendix B Layer-wise Ridge Regularization Selection 
+ For every model, representation layer, and supervision regime, we fit one
+ridge probe for each
+ α ∈ { 10 , 10 2 , 10 3 , 10 4 , 10 5 } \alpha\in\{10,10^{2},10^{3},10^{4},10^{5}\} . Predictions are projected onto
+ [ 0 , 1 ] [0,1] , and the coefficient with the lowest rollout-level Brier score on the
+corresponding validation set is selected. English probes use English
+validation examples, whereas pooled probes use the combined, equally sized
+validation sets from all ten languages. ETD heads apply the same rule
+separately to each target model at every layer of the shared
+ Qwen3-4B encoder. Exact validation-Brier ties are resolved in favour
+of the smaller value of α \alpha . Figure  3 focuses on
+the English and pooled regimes used for shared-layer selection and routing;
+the same-language probes use the identical selection rule. 
+ Figure 3: Ridge coefficient selected at every relative representation depth.
+The top row shows the same-model probe and the bottom row shows ETD target-specific
+heads; columns separate English and pooled supervision. In each cell, the
+selected α \alpha minimizes rollout-level validation Brier score over
+ { 10 , 10 2 , 10 3 , 10 4 , 10 5 } \{10,10^{2},10^{3},10^{4},10^{5}\} . Each row denotes the model supplying the
+representation for the same-model probe and the predicted target model for ETD; each
+cell denotes one layer. ETD heads use the shared Qwen3-4B 
+representation. 
+ Appendix C Why Discrimination, Calibration, and Probabilistic Quality Differ 
+ Consider a balanced dataset containing two equally large groups of problems.
+Generations for the “easy” group succeed with probability 0.75 0.75 , while
+generations for the “hard” group succeed with probability 0.25 0.25 . The
+overall success rate is therefore 0.5 0.5 . Table  6 
+compares three hypothetical probes. 
+ Probe 
+ p ^ easy \widehat{p}_{\mathrm{easy}} 
+ p ^ hard \widehat{p}_{\mathrm{hard}} 
+ AUROC 
+ ECE 
+ Brier 
+ NLL 
+ Constant 
+ 0.50 0.50 
+ 0.50 0.50 
+ 0.50 0.50 
+ 0.00 0.00 
+ 0.250 0.250 
+ 0.693 0.693 
+ Overconfident 
+ 1.00 1.00 
+ 0.00 0.00 
+ 0.75 0.75 
+ 0.25 0.25 
+ 0.250 0.250 
+ ∞ \infty 
+ Well specified 
+ 0.75 0.75 
+ 0.25 0.25 
+ 0.75 0.75 
+ 0.00 0.00 
+ 0.188 0.188 
+ 0.562 0.562 
+ Table 6: 
+Expected metrics for three hypothetical probes. The dataset contains
+equally many easy and hard problems with true success probabilities
+ 0.75 0.75 and 0.25 0.25 , respectively. The infinite NLL for the
+overconfident probe is the theoretical value before numerical clipping.
+ The overconfident and well-specified probes have identical AUROC because they produce the same ordering: both assign larger scores to easy problems than to hard problems. AUROC cannot reveal that the first probe’s probabilities are too extreme. ECE distinguishes them by comparing their numerical predictions with the observed group frequencies. 
+ Conversely, the constant and well-specified probes both have zero ECE. The constant probe predicts the correct overall prevalence and is therefore calibrated in aggregate, but it cannot distinguish easy from hard problems and has AUROC 0.5 0.5 . Thus, calibration alone does not establish that a predictor is informative. 
+ Finally, the constant and overconfident probes have the same expected Brier score despite failing for different reasons. The constant probe is calibrated but uninformative, whereas the overconfident probe is discriminative but miscalibrated. AUROC and ECE reveal this distinction. NLL additionally exposes the severity of the overconfident errors: assigning probability zero to an event that occurs produces an infinite logarithmic penalty. In practice, we clip probabilities only for numerical evaluation, resulting in a finite but still large penalty. 
+ Appendix D Routing Cost Estimation 
+ Model 
+ Input price 
+ Output price 
+ Avg. input 
+ Avg. output 
+ Exp. cost 
+ Relative 
+ ($/M tok.) 
+ ($/M tok.) 
+ tokens 
+ tokens 
+ ($/k gen.) 
+ Exp. cost 
+ Qwen3-0.6B 
+ 0.010 
+ 0.060 
+ 205.12 
+ 593.45 
+ 0.0377 
+ 0.0111 
+ Qwen3-1.7B 
+ 0.028 
+ 0.170 
+ 205.12 
+ 2361.62 
+ 0.4073 
+ 0.1196 
+ Qwen3-4B 
+ 0.067 
+ 0.400 
+ 205.12 
+ 2056.09 
+ 0.8361 
+ 0.2456 
+ gpt-oss-low 
+ 0.204 
+ 1.224 
+ 226.57 
+ 946.03 
+ 1.2042 
+ 0.3537 
+ Qwen3.5-4B 
+ 0.067 
+ 0.400 
+ 186.49 
+ 3042.49 
+ 1.2294 
+ 0.3611 
+ Qwen3-8B 
+ 0.133 
+ 0.800 
+ 205.12 
+ 1545.65 
+ 1.2639 
+ 0.3712 
+ Qwen3.5-9B 
+ 0.150 
+ 0.900 
+ 184.49 
+ 2538.44 
+ 2.3123 
+ 0.6791 
+ gpt-oss-high 
+ 0.204 
+ 1.224 
+ 226.57 
+ 2743.93 
+ 3.4048 
+ 1.0000 
+ Table 7: Proxy prices used in the routing simulation. Average input lengths are computed over the balanced pooled training sample used for routing-cost estimation (210 prompts per language and 2,100 prompts per model), using each model’s native tokenizer and chat template. Average output lengths are computed over the same sample. Relative expected costs are normalized by the average standalone input-plus-output cost of gpt-oss-high . 
+ Because the evaluated open-weight models do not have directly comparable first-party API prices, we construct a deployment-aware proxy for their inference costs. The proxy prices reflect each model’s memory footprint under the precision used for inference, rather than its nominal parameter count alone. 
+ Let M m M_{m} denote the deployed memory footprint of model m m , in GB. We assign the output-token price according to 
+ P m out = α ​ M m , α = 0.10 , P_{m}^{\mathrm{out}}=\alpha M_{m},\qquad\alpha=0.10, 
+ where P m out P_{m}^{\mathrm{out}} is expressed in US dollars per million output tokens. This proxy is intended to preserve relative deployment costs across models rather than reproduce the prices of a particular inference provider. The deployed memory footprint is particularly relevant for gpt-oss-20b , whose weights are natively distributed in a quantized
+format. 2 2 
+ 2 
+ https://openai.com/index/introducing-gpt-oss/ Its price is therefore based on its quantized inference footprint rather than its nominal parameter count, resulting in a lower estimated cost than would be assigned to an unquantized 20-billion-parameter model. For every model, the input-token price is set to one sixth of its output-token price: 
+ P m in = 1 6 ​ P m out . P_{m}^{\mathrm{in}}=\frac{1}{6}P_{m}^{\mathrm{out}}. 
+ This ratio is similar to the input-to-output pricing ratio used by several
+hosted closed-source models. 3 3 
+ 3 
+ https://developers.openai.com/api/docs/pricing 
+ The gpt-oss-low and gpt-oss-high configurations are assigned
+the same input and output prices because they use the same model weights and
+have the same memory footprint. Their only difference is the configured
+reasoning effort. The resulting difference in computational cost is therefore
+captured through their observed input and output token counts: the
+high-reasoning configuration processes and generates more tokens on average,
+despite having the same per-token price. 
+ For each model, let P m in P_{m}^{\mathrm{in}} and P m out P_{m}^{\mathrm{out}} denote the
+input and output prices reported in Table  7 . Let
+ T m , i in T_{m,i}^{\mathrm{in}} and T m , i out T_{m,i}^{\mathrm{out}} denote the corresponding
+input and output token counts when model m m processes example i i . The
+estimated generation cost is 
+ c m , i = P m in ​ T m , i in + P m out ​ T m , i out 10 6 . c_{m,i}=\frac{P_{m}^{\mathrm{in}}T_{m,i}^{\mathrm{in}}+P_{m}^{\mathrm{out}}T_{m,i}^{\mathrm{out}}}{10^{6}}. 
+ Thus, the cost difference between gpt-oss-low and gpt-oss-high arises from their different observed token counts rather than from different per-token prices. 
+ For ETD routing, each query is first processed by the shared Qwen3-4B encoder before a target model is selected. The total cost of routing example i i to model m m therefore additionally includes the input-prefilling cost of this encoder: 
+ c m , i ETD = { c m , i , m = Qwen3-4B , c i encoder + c m , i , m ≠ Qwen3-4B . c^{\mathrm{ETD}}_{m,i}=\begin{cases}c_{m,i},&m=\texttt{Qwen3-4B},\\[3.0pt]
+c_{i}^{\mathrm{encoder}}+c_{m,i},&m\neq\texttt{Qwen3-4B}.\end{cases} 
+ where 
+ c i encoder = P Qwen3 ​ - ​ 4 ​ B in ​ T Qwen3 ​ - ​ 4 ​ B , i in 10 6 . c_{i}^{\mathrm{encoder}}=\frac{P_{\mathrm{Qwen3\text{-}4B}}^{\mathrm{in}}T_{\mathrm{Qwen3\text{-}4B},i}^{\mathrm{in}}}{10^{6}}. 
+ Because the shared encoder is used only to extract the internal representation required by the routing policy, it does not generate output tokens and therefore incurs no output-token cost. When the selected target is Qwen3-4B , its encoder prefill is reused for generation rather than charged a second time. 
+ Expected costs are obtained by averaging the per-example costs after applying the routing policy. For a policy π \pi that selects model π ⁡ ( i ) \pi(i) for example i i , the expected ETD routing cost over an evaluation set containing N N examples is 
+ C ETD ​ ( π ) = 1 N ​ ∑ i = 1 N c π ⁡ ( i ) , i ETD . C^{\mathrm{ETD}}(\pi)=\frac{1}{N}\sum_{i=1}^{N}c^{\mathrm{ETD}}_{\pi(i),i}. 
+ Relative costs are reported with respect to always selecting
+ gpt-oss-high : 
+ C rel ​ ( π ) = C ETD ​ ( π ) 1 N ​ ∑ i = 1 N c gpt ​ - ​ oss ​ - ​ high , i . C^{\mathrm{rel}}(\pi)=\frac{C^{\mathrm{ETD}}(\pi)}{\frac{1}{N}\sum_{i=1}^{N}c_{\mathrm{gpt\text{-}oss\text{-}high},i}}. 
+ The reference-system denominator excludes the shared encoder cost because the always- gpt-oss-high policy invokes the target model directly and does not perform an ETD routing step. 
+ Appendix E Shared Encoder Selection 
+ Search procedure. 
+ We selected the shared encoder using a validation-only diagnostic conducted
+before the final probe-selection pipeline was fixed. Starting from the
+same 8 model configurations considered as routing targets, we treat each
+configuration in turn as the ETD encoder. For every encoder, we train pooled
+multilingual target-specific ridge heads at each available representation
+layer. We then evaluate the resulting router on the common validation split,
+using the same candidate set, cost model, routing policies, λ \lambda values,
+and anchor-margin grid for every encoder. 
+ This diagnostic differs from the final probe-training protocol in one respect
+that matters for reproducibility. Its ridge grid is
+ α ∈ { 10 , 10 2 , 10 3 , 10 4 , 10 5 } \alpha\in\{10,10^{2},10^{3},10^{4},10^{5}\} , and it selects α \alpha 
+separately for every encoder layer and target head by maximum validation AUROC,
+breaking ties by validation RMSE and then smaller α \alpha . The main pipeline,
+by contrast, selects ridge coefficients by validation Brier score as described
+in Section  3.5 . We therefore use the all-encoder scan only
+to motivate the encoder architecture; all reported Qwen3-4B probe,
+calibration, and routing results are retrained under the final protocol. 
+ Because the architectures have different numbers of layers, comparing all
+encoders at one absolute layer would be arbitrary. We therefore first select,
+separately for each encoder, the nonzero layer whose pooled validation routing
+frontier attains the highest success; layer 0 is evaluated but excluded from
+this maximum-success selection. Table  8 reports that layer
+and the maximum validation success attained on its frontier. This criterion is
+used only for the encoder comparison. After fixing Qwen3-4B , the main
+pipeline selects the reporting layer using the joint validation-Brier rule in
+Equation  4 ; that separate rule also selects layer 23. The
+encoder and reporting layer are frozen before any test evaluation. 
+ Shared encoder 
+ Layer 
+ Max. validation 
+ success 
+ Prefill / 
+ anchor 
+ Qwen3-0.6B 
+ 21 
+ 88.1% 
+ 0.06% 
+ Qwen3-1.7B 
+ 19 
+ 87.9% 
+ 0.17% 
+ Qwen3-4B 
+ 23 
+ 88.3% 
+ 0.40% 
+ Qwen3-8B 
+ 26 
+ 88.1% 
+ 0.80% 
+ Qwen3.5-4B 
+ 10 
+ 88.2% 
+ 0.37% 
+ Qwen3.5-9B 
+ 13 
+ 88.2% 
+ 0.81% 
+ gpt-oss-high 
+ 6 
+ 88.1% 
+ 1.36% 
+ gpt-oss-low 
+ 6 
+ 87.9% 
+ 1.36% 
+ Table 8: Validation-only shared-encoder comparison under pooled ETD
+supervision. For each encoder, the table reports its validation-selected layer
+and the maximum success attained over the fixed validation routing grid. No
+test outcomes enter the comparison. Prefill cost is the encoder’s standalone
+input-only cost as a percentage of the standalone gpt-oss-high anchor
+cost, using the prices and training-mean input lengths in
+Appendix  D . 
+ Interpretation. 
+ Qwen3-4B obtains the highest observed maximum validation success,
+88.3%, with a nominal prefill cost equal to 0.40% of the anchor cost. The
+comparison is close: Qwen3.5-4B obtains 88.2% at a slightly lower
+prefill cost of 0.37%, while Qwen3.5-9B also obtains 88.2% but has
+roughly twice the prefill cost of Qwen3-4B . Smaller Qwen3 encoders are
+cheaper, but have lower maximum validation success in this experiment. We
+therefore choose Qwen3-4B as the observed validation leader with a
+moderate prefill requirement. Since the differences among the leading
+encoders are small and the comparison has no uncertainty intervals, it should
+not be interpreted as showing that Qwen3-4B is intrinsically better
+than the alternatives. 
+ The prefill column provides a common cost reference rather than the realized
+overhead of every route. When the router selects Qwen3-4B itself as
+the target model, its encoder prefill is reused for generation and is not
+charged a second time. 
+ Language 
+ Qwen3-0.6B 
+ Qwen3-1.7B 
+ Qwen3-4B 
+ Qwen3-8B 
+ Qwen3.5-4B 
+ Qwen3.5-9B 
+ gpt-oss-low 
+ gpt-oss-high 
+ Mean 
+ English 
+ 0.279 
+ 0.508 
+ 0.716 
+ 0.728 
+ 0.916 
+ 0.935 
+ 0.895 
+ 0.925 
+ 0.738 
+ Chinese 
+ 0.220 
+ 0.408 
+ 0.630 
+ 0.638 
+ 0.851 
+ 0.898 
+ 0.754 
+ 0.886 
+ 0.661 
+ French 
+ 0.179 
+ 0.388 
+ 0.613 
+ 0.663 
+ 0.848 
+ 0.895 
+ 0.789 
+ 0.911 
+ 0.661 
+ Russian 
+ 0.170 
+ 0.384 
+ 0.611 
+ 0.661 
+ 0.837 
+ 0.889 
+ 0.761 
+ 0.884 
+ 0.650 
+ Italian 
+ 0.160 
+ 0.378 
+ 0.621 
+ 0.654 
+ 0.835 
+ 0.880 
+ 0.755 
+ 0.897 
+ 0.648 
+ Arabic 
+ 0.134 
+ 0.312 
+ 0.537 
+ 0.600 
+ 0.785 
+ 0.841 
+ 0.749 
+ 0.885 
+ 0.605 
+ Turkish 
+ 0.107 
+ 0.282 
+ 0.526 
+ 0.574 
+ 0.760 
+ 0.821 
+ 0.754 
+ 0.882 
+ 0.588 
+ Thai 
+ 0.138 
+ 0.324 
+ 0.526 
+ 0.578 
+ 0.590 
+ 0.715 
+ 0.695 
+ 0.826 
+ 0.549 
+ Telugu 
+ 0.056 
+ 0.153 
+ 0.322 
+ 0.435 
+ 0.497 
+ 0.580 
+ 0.716 
+ 0.849 
+ 0.451 
+ Swahili 
+ 0.034 
+ 0.124 
+ 0.145 
+ 0.418 
+ 0.536 
+ 0.683 
+ 0.587 
+ 0.647 
+ 0.397 
+ Mean 
+ 0.148 
+ 0.326 
+ 0.525 
+ 0.595 
+ 0.746 
+ 0.814 
+ 0.746 
+ 0.859 
+ 0.595 
+ Table 9: Empirical success rates of the evaluated models across languages. Each value is the average empirical success score over the test split, where each problem-level score is computed from five sampled generations. Languages are ordered by decreasing average success rate across models. The final row reports the average success rate for each model across languages, and the final column reports the average success rate for each language across models. 
+ Rollout AUROC ↑ \uparrow 
+ Rollout Brier ↓ \downarrow 
+ ECE ↓ \downarrow 
+ Model 
+ Layer 
+ Eng. 
+ ( Δ pp ) (\Delta_{\mathrm{pp}}) 
+ Pool 
+ ( Δ pp ) (\Delta_{\mathrm{pp}}) 
+ Oracle 
+ Eng. 
+ ( Δ rel ) (\Delta_{\mathrm{rel}}) 
+ Pool 
+ ( Δ rel ) (\Delta_{\mathrm{rel}}) 
+ Oracle 
+ Eng. 
+ ( Δ rel ) (\Delta_{\mathrm{rel}}) 
+ Pool 
+ ( Δ rel ) (\Delta_{\mathrm{rel}}) 
+ Oracle 
+ Qwen3-0.6B 
+ 14 
+ 0.710 ( − 5.9 -5.9 ) 
+ 0.718 ( − 5.1 -5.1 ) 
+ 0.769 
+ 0.120 ( + 26 % +26\% ) 
+ 0.099 ( + 4 % +4\% ) 
+ 0.095 
+ 0.116 ( + 274 % +274\% ) 
+ 0.038 ( + 23 % +23\% ) 
+ 0.031 
+ Qwen3-1.7B 
+ 20 
+ 0.741 ( − 3.7 -3.7 ) 
+ 0.766 ( − 1.2 -1.2 ) 
+ 0.778 
+ 0.190 ( + 21 % +21\% ) 
+ 0.161 ( + 3 % +3\% ) 
+ 0.157 
+ 0.129 ( + 249 % +249\% ) 
+ 0.042 ( + 14 % +14\% ) 
+ 0.037 
+ Qwen3-4B 
+ 23 
+ 0.729 ( − 2.9 -2.9 ) 
+ 0.741 ( − 1.7 -1.7 ) 
+ 0.758 
+ 0.213 ( + 16 % +16\% ) 
+ 0.190 ( + 4 % +4\% ) 
+ 0.183 
+ 0.125 ( + 303 % +303\% ) 
+ 0.043 ( + 39 % +39\% ) 
+ 0.031 
+ Qwen3-8B 
+ 21 
+ 0.739 ( − 1.6 -1.6 ) 
+ 0.743 ( − 1.2 -1.2 ) 
+ 0.755 
+ 0.212 ( + 10 % +10\% ) 
+ 0.196 ( + 2 % +2\% ) 
+ 0.192 
+ 0.118 ( + 237 % +237\% ) 
+ 0.037 ( + 6 % +6\% ) 
+ 0.035 
+ Qwen3.5-4B 
+ 19 
+ 0.684 ( − 7.2 -7.2 ) 
+ 0.737 ( − 1.9 -1.9 ) 
+ 0.756 
+ 0.178 ( + 19 % +19\% ) 
+ 0.155 ( + 3 % +3\% ) 
+ 0.150 
+ 0.083 ( + 186 % +186\% ) 
+ 0.042 ( + 45 % +45\% ) 
+ 0.029 
+ Qwen3.5-9B 
+ 14 
+ 0.690 ( − 4.9 -4.9 ) 
+ 0.723 ( − 1.6 -1.6 ) 
+ 0.739 
+ 0.148 ( + 15 % +15\% ) 
+ 0.133 ( + 3 % +3\% ) 
+ 0.129 
+ 0.060 ( + 107 % +107\% ) 
+ 0.036 ( + 24 % +24\% ) 
+ 0.029 
+ gpt-oss-low 
+ 17 
+ 0.681 ( − 4.0 -4.0 ) 
+ 0.695 ( − 2.6 -2.6 ) 
+ 0.721 
+ 0.183 ( + 6 % +6\% ) 
+ 0.178 ( + 3 % +3\% ) 
+ 0.172 
+ 0.053 ( + 83 % +83\% ) 
+ 0.033 ( + 14 % +14\% ) 
+ 0.029 
+ gpt-oss-high 
+ 7 
+ 0.603 ( − 8.7 -8.7 ) 
+ 0.669 ( − 2.1 -2.1 ) 
+ 0.690 
+ 0.125 ( + 12 % +12\% ) 
+ 0.116 ( + 4 % +4\% ) 
+ 0.112 
+ 0.078 ( + 136 % +136\% ) 
+ 0.030 ( − 9 % -9\% ) 
+ 0.033 
+ Mean 
+ – 
+ 0.697 ( − 4.9 -4.9 ) 
+ 0.724 ( − 2.2 -2.2 ) 
+ 0.746 
+ 0.171 ( + 15 % +15\% ) 
+ 0.154 ( + 3 % +3\% ) 
+ 0.149 
+ 0.095 ( + 197 % +197\% ) 
+ 0.038 ( + 19 % +19\% ) 
+ 0.032 
+ Table 10: 
+Self-probe quality at the shared reporting layer. Values are macro-averages
+over the nine non-English test languages. Eng. uses 2,100 English prompts,
+Pool uses 210 prompts per language (2,100 total), and Oracle uses 2,100
+prompts in each target language. Parentheses report deltas relative to
+Oracle. For AUROC,
+ Δ pp = 100 ​ ( X − Oracle ) \Delta_{\mathrm{pp}}=100(X-\mathrm{Oracle}) is the absolute difference in
+percentage points. For Brier and ECE,
+ Δ rel = 100 ​ ( X − Oracle ) / Oracle \Delta_{\mathrm{rel}}=100(X-\mathrm{Oracle})/\mathrm{Oracle} is the relative
+percentage difference. Red indicates worse performance than Oracle and blue
+indicates better performance. AUROC treats the five rollouts as weighted
+binary outcomes.
+ Appendix F Additional Results 
+ F.1 Empirical Success Rates 
+ Table  9 reports the empirical success rates of the
+evaluated models across all ten languages. Each value is obtained by averaging
+the empirical success scores over the test split. Since each problem-level score
+is estimated from five sampled generations, these values estimate the
+probability that a model solves a problem under the decoding procedure used in
+this work, rather than the outcome of a single deterministic generation. 
+ Success varies substantially across both models and languages. English has the
+highest average success rate across models, followed by Chinese and French,
+whereas Swahili and Telugu have the lowest averages. Increasing model capacity
+or reasoning effort generally improves success: performance rises across the
+ Qwen3 model sizes, from Qwen3.5-4B to
+ Qwen3.5-9B , and from gpt-oss-low to
+ gpt-oss-high . Nevertheless, the language gaps remain visible even for
+the strongest configurations. For example, gpt-oss-high decreases
+from 0.925 in English to 0.647 in Swahili. These results reinforce that success
+is conditional not only on the underlying problem and target model, but also on
+the language in which the problem is presented. 
+ F.2 Same-model Probe Discrimination and Calibration 
+ The complete same-model probe results (Table 10 ) show that the main findings are consistent
+across model configurations. English-trained probes retain useful
+discrimination after transfer to the nine non-English languages, obtaining a
+mean rollout AUROC of 0.697. Thus, the representations learned
+from English supervision preserve a substantial amount of information about
+which target-language generations are likely to succeed. 
+ Equal-budget pooled multilingual supervision improves mean AUROC to
+0.724, bringing discrimination closer to the labelled
+same-language reference. The improvement indicates that the pooled probe does
+not merely adjust the numerical scale of the predictions: multilingual
+supervision also improves the ordering of successful and unsuccessful
+generations. 
+ The difference between supervision regimes is clearer for probabilistic
+quality. English transfer obtains a mean Brier score of
+0.171, whereas pooled supervision reduces it to
+0.154. Pooled supervision also lowers ECE for all 8
+models, moving the predictions toward the same-language reference. English
+supervision therefore transfers more reliably as a ranking function than as a
+probability estimator. A score learned in English may still identify relatively
+easy and difficult target-language problems, while no longer corresponding to
+the same empirical success frequency after language shift. 
+ The same-language probes generally remain the strongest reference because they
+are trained with the full labelled training set from the evaluation language.
+Importantly, however, pooled supervision uses the same total number of training
+examples as the English-only condition. Its advantage therefore results from
+the linguistic composition of the supervision rather than from a larger
+annotation budget. 
+ F.3 Encoder–Target Decoupled Prediction Quality 
+ Target 
+ Predictor 
+ AUROC ↑ \uparrow 
+ Brier ↓ \downarrow 
+ NLL ↓ \downarrow 
+ ECE ↓ \downarrow 
+ Qwen3-0.6B 
+ English raw 
+ 0.769 
+ 0.109 
+ 0.465 
+ 0.112 
+ English + cal. 
+ 0.769 
+ 0.106 
+ 0.385 
+ 0.093 
+ Pooled raw 
+ 0.773 
+ 0.088 
+ 0.400 
+ 0.035 
+ Qwen3-1.7B 
+ English raw 
+ 0.759 
+ 0.176 
+ 0.547 
+ 0.103 
+ English + cal. 
+ 0.759 
+ 0.172 
+ 0.539 
+ 0.085 
+ Pooled raw 
+ 0.777 
+ 0.158 
+ 0.520 
+ 0.051 
+ Qwen3-4B 
+ English raw 
+ 0.729 
+ 0.213 
+ 0.624 
+ 0.125 
+ English + cal. 
+ 0.729 
+ 0.208 
+ 0.614 
+ 0.099 
+ Pooled raw 
+ 0.741 
+ 0.190 
+ 0.573 
+ 0.043 
+ Qwen3-8B 
+ English raw 
+ 0.723 
+ 0.226 
+ 0.648 
+ 0.138 
+ English + cal. 
+ 0.723 
+ 0.208 
+ 0.609 
+ 0.074 
+ Pooled raw 
+ 0.733 
+ 0.200 
+ 0.606 
+ 0.038 
+ Qwen3.5-4B 
+ English raw 
+ 0.692 
+ 0.193 
+ 0.571 
+ 0.133 
+ English + cal. 
+ 0.692 
+ 0.190 
+ 0.566 
+ 0.141 
+ Pooled raw 
+ 0.727 
+ 0.158 
+ 0.492 
+ 0.040 
+ Qwen3.5-9B 
+ English raw 
+ 0.668 
+ 0.161 
+ 0.503 
+ 0.098 
+ English + cal. 
+ 0.668 
+ 0.146 
+ 0.455 
+ 0.061 
+ Pooled raw 
+ 0.715 
+ 0.134 
+ 0.426 
+ 0.032 
+ gpt-oss-low 
+ English raw 
+ 0.584 
+ 0.232 
+ 2.110 
+ 0.189 
+ English + cal. 
+ 0.584 
+ 0.196 
+ 0.581 
+ 0.061 
+ Pooled raw 
+ 0.712 
+ 0.174 
+ 0.522 
+ 0.032 
+ gpt-oss-high 
+ English raw 
+ 0.545 
+ 0.140 
+ 1.350 
+ 0.123 
+ English + cal. 
+ 0.545 
+ 0.126 
+ 0.419 
+ 0.057 
+ Pooled raw 
+ 0.693 
+ 0.114 
+ 0.427 
+ 0.048 
+ Shared encoder for all rows: Qwen3-4B , layer 23. 
+ A separate ridge head predicts each target model’s success. 
+ Table 11: Prediction quality of the ETD routing heads, macro-averaged over the nine non-English test languages. English calibration is fit on multilingual validation data with a positive slope. Bold marks the best value per metric within each target model’s three predictor settings. 
+ The ETD results evaluate the predictions that are directly consumed by the
+router. Unlike same-model probes, these heads predict the success of every target
+model using a shared representation extracted from Qwen3-4B . This is a
+more demanding setting because the encoder representation must contain
+information not only about its own expected success, but also about the
+behaviour of several distinct target models. 
+ English-trained ETD heads retain some discriminative information, with mean
+rollout AUROC 0.684. Pooled multilingual supervision improves
+this value to 0.734 and reduces mean Brier score from
+0.181 to 0.152. The improvement in AUROC shows
+that the pooled routing advantage cannot be explained solely by better
+calibration: pooled supervision also produces more informative target-model
+rankings. 
+ Monotonic recalibration reduces the English heads’ mean Brier score to
+0.169. Because this transformation is strictly increasing
+within each target-model head, it preserves the corresponding AUROC while
+correcting systematic shifts in probability scale. Its improvement therefore
+isolates the contribution of calibration. Nevertheless, the raw pooled heads
+retain the lowest mean Brier score, and recalibration does not improve every
+calibration diagnostic for every target model. Multilingual supervision
+therefore contributes information that cannot be recovered by applying a
+single post-hoc monotonic correction to English-trained predictions. 
+ This distinction is important for routing. The policy compares predicted
+success values across candidate models rather than ranking examples for one
+model in isolation. Consequently, even an English-trained head with useful
+within-model AUROC can produce poor decisions when its score scale is not
+comparable with those of the other target-model heads. 
+ F.4 Reliability Diagrams 
+ The main text presents the reliability diagrams for Qwen3-4B . The
+figures below report the corresponding per-language diagrams for the remaining
+seven model configurations. Each pair compares the unchanged English-trained
+probe with the equal-budget pooled multilingual probe at the model’s frozen
+shared reporting layer. 
+ Across models, the English-trained diagrams show that calibration errors are
+language dependent: predicted values that are appropriate for one language can
+correspond to different observed success frequencies in another. This explains
+why English transfer can preserve useful AUROC while obtaining worse ECE and
+Brier scores. Pooled supervision generally moves the curves closer to the
+diagonal and reduces their variation across languages, although it does not
+eliminate all model- and language-specific calibration error. 
+ The diagrams also show why a single macro-averaged calibration statistic is
+insufficient on its own. Similar aggregate ECE values can arise from different
+patterns, including systematic overprediction, systematic underprediction, or
+opposing errors across languages that partially cancel when averaged. We
+therefore interpret these figures together with AUROC, Brier score, NLL, and the
+calibration coefficients reported in the complete tables. 
+ Qwen3-0.6B 
+ Figure 4: 
+Per-language reliability diagrams for Qwen3-0.6B at its
+shared reporting layer. The English-trained probe is transferred unchanged
+to each target language, whereas the pooled probe uses the same total
+training budget distributed equally across the ten languages. The diagonal
+denotes perfect calibration.
+ (a) English-trained transfer 
+ (b) Pooled multilingual 
+ Qwen3-1.7B 
+ Figure 5: 
+Per-language reliability diagrams for Qwen3-1.7B at its
+shared reporting layer. The English-trained probe is transferred unchanged
+to each target language, whereas the pooled probe uses the same total
+training budget distributed equally across the ten languages. The diagonal
+denotes perfect calibration.
+ (a) English-trained transfer 
+ (b) Pooled multilingual 
+ Qwen3-8B 
+ Figure 6: 
+Per-language reliability diagrams for Qwen3-8B at its
+shared reporting layer. The English-trained probe is transferred unchanged
+to each target language, whereas the pooled probe uses the same total
+training budget distributed equally across the ten languages. The diagonal
+denotes perfect calibration.
+ (a) English-trained transfer 
+ (b) Pooled multilingual 
+ Qwen3.5-4B 
+ Figure 7: 
+Per-language reliability diagrams for Qwen3.5-4B at its
+shared reporting layer. The English-trained probe is transferred unchanged
+to each target language, whereas the pooled probe uses the same total
+training budget distributed equally across the ten languages. The diagonal
+denotes perfect calibration.
+ (a) English-trained transfer 
+ (b) Pooled multilingual 
+ Qwen3.5-9B 
+ Figure 8: 
+Per-language reliability diagrams for Qwen3.5-9B at its
+shared reporting layer. The English-trained probe is transferred unchanged
+to each target language, whereas the pooled probe uses the same total
+training budget distributed equally across the ten languages. The diagonal
+denotes perfect calibration.
+ (a) English-trained transfer 
+ (b) Pooled multilingual 
+ gpt-oss-20b-low 
+ Figure 9: 
+Per-language reliability diagrams for gpt-oss-20b-low at its
+shared reporting layer. The English-trained probe is transferred unchanged
+to each target language, whereas the pooled probe uses the same total
+training budget distributed equally across the ten languages. The diagonal
+denotes perfect calibration.
+ (a) English-trained transfer 
+ (b) Pooled multilingual 
+ gpt-oss-20b-high 
+ Figure 10: 
+Per-language reliability diagrams for gpt-oss-20b-high at its
+shared reporting layer. The English-trained probe is transferred unchanged
+to each target language, whereas the pooled probe uses the same total
+training budget distributed equally across the ten languages. The diagonal
+denotes perfect calibration.
+ (a) English-trained transfer 
+ (b) Pooled multilingual 
+ Appendix G Monotonic Recalibration 
+ To isolate the effect of probability scaling, we recalibrate the predictions
+of each English-trained ETD target-model head using the pooled multilingual
+validation set. We fit a positive-slope Platt-scaling transformation
+ ( Platt, 1999 ) : 
+ p ^ cal = σ ⁡ ( a m + softplus ⁡ ( b m ) ​ logit ⁡ ( p ^ raw ) ) , \widehat{p}^{\,\mathrm{cal}}=\sigma\left(a_{m}+\operatorname{softplus}(b_{m})\operatorname{logit}\left(\widehat{p}^{\,\mathrm{raw}}\right)\right), 
+ where a m a_{m} and b m b_{m} are fitted separately for each target model m m .
+Predictions are clipped to
+ [ 10 − 7 , 1 − 10 − 7 ] [10^{-7},1-10^{-7}] before applying the logit. 
+ The calibration parameters are estimated by minimizing binomial negative
+log-likelihood on the nine non-English validation languages, using the observed
+numbers of successful and unsuccessful rollouts. They are then frozen and
+applied unchanged to the test predictions and routing simulation. 
+ Because softplus ⁡ ( b m ) > 0 \operatorname{softplus}(b_{m})>0 , the transformation is strictly
+increasing. It therefore preserves the ordering of predictions within each
+target-model head and cannot change its AUROC, apart from numerical ties.
+However, since a different transformation is fitted for each target model,
+recalibration can change the relative probability scales across models and
+therefore affect routing decisions. 
+ Experimental support, please
+ view the build logs 
+ for errors. Generated by
+ L
+ A 
+ T
+ E 
+ xml 
+ .
+ Instructions for reporting errors 
+ We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+ support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+ methods listed below: 
+ Click the "Report Issue" ( 
+ ) button, located in the page header. 
+ Tip: You can select the relevant text first, to include it in your report. 
+ Our team has already identified the following issues . We appreciate your time reviewing and reporting rendering errors we
+ may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+ should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+ all. 
+ Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a list of packages that need conversion , and welcome developer contributions . 
+ We gratefully acknowledge support from our major funders ,
+ member institutions , ,
+ and all contributors.
+ About · 
+ Help · 
+ Contact · 
+ Subscribe · 
+ Copyright · 
+ Privacy · 
+ Accessibility · 
+ Operational Status (opens in new tab) 

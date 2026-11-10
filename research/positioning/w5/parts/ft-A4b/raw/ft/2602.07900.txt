@@ -1,0 +1,1422 @@
+ 
+ Rethinking the Value of Agent-Generated Tests for LLM-Based Software Engineering Agents 
+ Skip to main content 
+ Report GitHub Issue 
+ × 
+ Title: 
+ Content selection saved. Describe the issue below: 
+ Description: 
+ Submit without GitHub 
+ Submit in GitHub 
+ Why HTML? 
+ Report Issue 
+ Back to Abstract 
+ Download PDF 
+ Contents 
+ Reading mode 
+ Colour theme 
+ Abstract 
+ I Introduction 
+ Research questions and overview 
+ II Methodology 
+ II-A Benchmark 
+ II-B Agent Scaffold and Models 
+ II-C Data Extraction of Agent-Written Tests 
+ II-D Implementation Details 
+ III RQ1: What Testing Behaviors Emerge Under a Lightweight Agent Scaffold? 
+ Motivation 
+ Experiment Design 
+ III-A RQ1.1 Frequency: How Often Do Agents Write Test Files? 
+ Goal and measurements 
+ Results 
+ III-B RQ1.2 Timing: When Are Tests Written During the Run? 
+ Goal and measurements 
+ Results 
+ III-C RQ1.3 Execution: How Intensively Are Agent-Written Tests Executed, and With What Action Outcomes? 
+ Goal and measurements 
+ Results 
+ IV RQ2: What Assertion and Value-Revealing Print Patterns Appear in Agent-Written Tests? 
+ Motivation 
+ Experiment Design 
+ IV-A RQ2.1 Task-level statement counts: What statements do agent-written tests contain? 
+ Goal and measurements 
+ Results 
+ IV-B RQ2.2 Assertion categorization: What kinds of verification do assertions encode? 
+ Goal and measurements 
+ Results 
+ IV-C RQ2.3 Print categorization: What information do value-revealing prints expose? 
+ Goal and measurements 
+ Results 
+ V RQ3: How Do Outcomes and Resource Use Differ Across Test-Writing Prompt Conditions? 
+ Motivation 
+ Experiment Design 
+ Model selection 
+ V-A RQ3.1 How do task outcomes differ across test-writing prompt conditions? 
+ Goal and measurements 
+ Results 
+ V-B RQ3.2 How do API calls and token usage differ across prompt conditions? 
+ Goal and measurements 
+ Results 
+ VI Discussion and Future Work 
+ VI-A Implications 
+ VI-B Future work 
+ VI-C Threats to Validity 
+ VII Related Work 
+ LLM-Generated Tests 
+ Testing During Repository-Level Issue Resolution 
+ Software-Agent Trajectories 
+ VIII Conclusion 
+ IX Data Availability 
+ References 
+ License: CC BY 4.0
+arXiv:2602.07900v3 [cs.SE] 09 Nov 2026 
+ Rethinking the Value of Agent-Generated Tests for LLM-Based Software Engineering Agents 
+ Zhi Chen 
+ Affiliation:  Singapore Management University
+ Singapore, Singapore
+ zhi.chen.2023@smu.edu.sg
+ Zhensu Sun * 
+ † † thanks: * Corresponding author. 
+ Affiliation:  Singapore Management University
+ Singapore, Singapore
+ zssun@smu.edu.sg
+ Yuling Shi 
+ Affiliation:  Shanghai Jiao Tong University
+ Shanghai, China
+ yuling.shi@sjtu.edu.cn
+ Affiliation:  [ ]
+ Chao Peng 
+ Affiliation:  The University of Edinburgh
+ Edinburgh, United Kingdom
+ chao.peng@acm.org
+ Xiaodong Gu 
+ Affiliation:  Shanghai Jiao Tong University
+ Shanghai, China
+ xiaodong.gu@sjtu.edu.cn
+ David Lo 
+ Affiliation:  Singapore Management University
+ Singapore, Singapore
+ davidlo@smu.edu.sg
+ Affiliation:  [ ]
+ Lingxiao Jiang 
+ Affiliation:  Singapore Management University
+ Singapore, Singapore
+ lxjiang@smu.edu.sg
+ Abstract 
+ Large Language Model (LLM) code agents increasingly resolve repository-level issues by iteratively editing code, invoking tools, and validating candidate patches. In these workflows, agents often write tests on the fly, but the value of this behavior remains unclear. This raises a central question: how does agent-written testing relate to task outcomes and resource use during repository-level issue resolution? 
+ To better understand the role of agent-written tests, we analyze 5,000 recorded agent runs produced by six strong LLMs on SWE-bench Verified using the lightweight mini-SWE-agent scaffold.
+Our results show that test writing is common for most models. GPT-5.2 is an exception: it rarely writes new test files while achieving a resolution rate close to the top-ranked model. Test-writing frequency varies widely across models. Within a given model, it differs less between resolved and unresolved tasks. When tests are written, their files contain substantially more statements that print runtime values than assertions that check conditions. We then compare baseline prompts with revised prompts that encourage or discourage writing new test files for four models. Agents start or stop writing test files as requested on 36.8%–93.2% of tasks. Resolved-task totals differ by 0–13 out of 500 per model, with no statistically significant difference, while API calls or token use differ substantially for three models. Similar resolution totals can therefore hide substantial differences in how agents test and how many resources they use. 
+ Index Terms:  
+Large Language Models, Code Agents, Software Testing, Repository-Level Issue Resolution, SWE-bench
+ I Introduction 
+ Code agents combine Large Language Models (LLMs)  [ 1 , 2 ] with tools to inspect repositories, edit code, and resolve software issues  [ 3 , 4 , 5 , 6 , 7 ] . We use code agent to denote an LLM operating in an iterative action–observation loop, and scaffold to denote the interface and protocol that govern its tools and feedback. Testing supports this workflow by exposing regressions and checking hypotheses during patch development  [ 8 , 7 , 9 , 10 ] . 
+ Repository-level agents can validate patches with existing human-written tests, which reflect project conventions and developer intent  [ 11 , 12 ] , or with agent-written tests created during issue resolution. Agent-written tests can surface edge cases and support fault localization, but incorrect expectations about program behavior can redirect the repair process. Writing and running them also consumes API calls, tokens, and context  [ 13 ] .
+These temporary tests give agents a way to inspect program behavior through execution and printed values, connecting testing with program comprehension. Resolution rate alone does not capture this activity or its resource use. 
+ To better understand agent-written tests, we conduct a quantitative analysis of agent trajectories on SWE-bench Verified  [ 14 ] using mini-SWE-agent   [ 15 ] . Its default prompt recommends testing edge cases and leaves whether, when, and how to test to the model. Agent-written testing is prevalent for several strong models in this setup.
+For example, Claude Opus 4.5 (ranked #1 in this setting, 74.4% resolution) writes a detected test file in 83.6% of tasks.
+By contrast, GPT-5.2 achieves a comparable resolution rate (71.8%), only 2.6 percentage points below Claude Opus 4.5 , while writing detected test files in only 2.4% of tasks.
+This observation motivates a core question: how does agent-written testing relate to task outcomes and resource use during repository-level issue resolution? 
+Answering this question requires a systematic empirical study of testing behavior, test-file content, and differences across test-writing prompt conditions. 
+ Prior work mostly evaluates LLM-generated unit tests, assertions, or issue-reproducing tests against a fixed target program or code snapshot  [ 16 , 17 , 18 , 19 , 20 , 21 , 22 ] . However, in complex real-world GitHub issue resolution  [ 11 , 23 ] , the codebase and candidate patches evolve over time, and testing occurs within the broader repair process rather than as a standalone evaluation objective. Existing studies commonly focus on either generated test artifacts or agent trajectories. We connect these perspectives by examining how strong models write and execute tests within repository-level repair under a lightweight scaffold and how outcomes and resource use differ across test-writing prompts. 
+ Research questions and overview 
+ We organize the study around three research questions.
+ RQ1 characterizes the agents’ testing behaviors under a lightweight scaffold where test writing is optional: whether agents write tests, when they introduce them, and how intensively they execute them.
+ RQ2 shifts from behaviors to test content , investigating how many assertions and value-revealing prints appear in agent-written test files, what forms the assertions take, and what kinds of runtime information the prints expose.
+ RQ3 compares paired prompt conditions that encourage or discourage writing new test files, measuring differences in test-writing behavior, task resolution, API calls, and tokens. 
+ The contributions of this work can be summarized as follows: 
+ • 
+ A cross-model analysis of agent-written testing behavior. 
+Across 3,000 baseline trajectories, we characterize whether, when, and how six LLMs create and execute test files, finding wide behavioral variation that does not follow the ranking of resolution rates. 
+ • 
+ An analysis of assertions and value-revealing prints in agent-written test files. 
+Rule-based analyses of Python abstract syntax trees (ASTs) characterize the conditions that assertions check and the runtime information that prints expose. Across the five analyzed models, statements that display runtime values outnumber assertions. 
+ • 
+ A comparison of task outcomes and resource use across test-writing prompts. 
+Across 2,000 task-level pairs, agents start or stop writing test files as requested on 36.8%–93.2% of tasks; none of the four model-level outcome differences is statistically significant, while resource use differs substantially for three models. 
+ II Methodology 
+ Figure  1 summarizes the study design. We analyze 3,000 baseline trajectories from six models on the same 500 tasks for RQ1. RQ2 examines test-file content from the five models that produce enough test files for comparison. For RQ3, we run four models with revised prompts and pair each run with the same model’s baseline on the same task. These 2,000 additional runs give 2,000 baseline–revised pairs and bring the study total to 5,000 agent trajectories. 
+ RQ1 Testing behavior 
+ Agent trajectories 
+ Test writing and execution 
+ Frequency  ⋅ \cdot  Timing  ⋅ \cdot  Execution 
+ RQ2 Test-file content 
+ Agent-written test files 
+ AST classification 
+ Assertions  ⋅ \cdot  Value-revealing prints 
+ RQ3 Test-writing prompts 
+ Baseline vs. revised prompts 
+ Encourage or discourage 
+ new test writing 
+ Test status  ⋅ \cdot  Resolution 
+ API calls + tokens 
+ Fig. 1: Across 5,000 mini-SWE-agent trajectories on 500 SWE-bench Verified tasks, RQ1 characterizes testing behavior, RQ2 examines test-file content, and RQ3 compares baseline runs with prompts that encourage or discourage new test writing. The analyses use 3,000 baselines for RQ1, a five-model content subset for RQ2, and 2,000 baseline–revised task pairs for RQ3. 
+ II-A Benchmark 
+ We use SWE-bench Verified as our benchmark. The original SWE-bench benchmark is built from resolved GitHub issues drawn from 12 open-source Python repositories  [ 11 ] . SWE-bench Verified is a 500-instance subset released after a human-screening effort led by OpenAI in collaboration with the SWE-bench authors  [ 14 ] . Each instance provides a GitHub issue, a fixed repository snapshot, and an evaluation harness that checks whether a patch passes the issue-specific and regression tests. We use this official harness outcome to label each task as resolved or unresolved. 
+ II-B Agent Scaffold and Models 
+ Many recent LLM-based agents incorporate dedicated testing components, such as specialized validation modules, test-planning stages, or multi-agent coordination  [ 9 , 8 , 24 ] .
+We adopt mini-SWE-agent   [ 15 ] as a lightweight scaffold in which testing choices remain model-controlled.
+The agent interacts with the repository through a single bash tool, using shell commands to inspect and modify files and run programs such as Python.
+The model can create executable Python test files on the fly and run them via bash as part of its workflow.
+The default mini-SWE-agent prompt includes a brief natural-language recommendation: “Test edge cases to ensure your fix is robust.”
+Beyond this brief cue, the model controls whether, when, and how to test through the standard bash interface.
+Our measurements characterize how each model tests in this prompt-and-scaffold setup. 
+ We download the publicly released baseline trajectories from the SWE-bench Bash Only leaderboard 1 1 
+ 1 
+ https://www.swebench.com/ .
+For model selection, we use the SWE-bench Bash Only leaderboard with a cutoff date of 2025-12-11 and identify the top-six model families (rather than top entries, since a family may appear with multiple variants on the leaderboard).
+For each family, we use its highest-ranked model as the representative:
+ claude-opus-4.5   [ 25 ] (74.4%),
+ gemini-3-pro-preview 2 2 
+ 2 
+ Google’s Gemini 3 announcement: https://blog.google/products/gemini/gemini-3/ (74.2%),
+ gpt-5.2   [ 1 ] (71.8%),
+ kimi-k2-thinking   [ 26 ] (63.4%),
+ minimax-m2   [ 27 ] (61.0%),
+and deepseek-v3.2-reasoner   [ 28 ] (60.0%).
+In the remainder of the paper, including tables and figures, we refer to these models as Claude Opus 4.5, Gemini 3 Pro, GPT-5.2, Kimi K2 Thinking, MiniMax M2, and DeepSeek v3.2 Reasoner. 
+ II-C Data Extraction of Agent-Written Tests 
+ We extract agent-written test files from trajectories: time-ordered logs of the agent’s reasoning, bash actions, and environment observations. We call each detected Python test file a test artifact . We retain actions with logged environment return codes, excluding rejected action formats. A shared deterministic pipeline detects commands that write complete files through heredocs, echo / printf redirection, and Python writes whose paths and contents can be recovered without executing the command. It keeps Python filenames starting with test or ending with _test.py or tests.py , extending common test-discovery conventions  [ 29 ] . Paths are normalized relative to /testbed and counted once per task. Later whole-file writes update the stored content; RQ2 analyzes the last detected version of each file. Files in temporary directories are distinguished by the action and source line that create the directory. 
+ An execution event is a logged bash action that invokes a recognized Python or test runner with a detected file as an argument. Each action counts once, including actions containing multiple commands, and receives its logged return code. This definition measures execution actions rather than individual test cases. 
+ II-D Implementation Details 
+ We run the 2,000 revised-prompt trajectories with mini-SWE-agent 1.17.2 on Ubuntu 22.04.5 and evaluate their patches with the official SWE-bench sb-cli . The corresponding public baselines use release 1.15.0 for Gemini, 1.17.1 for Kimi and DeepSeek, and 1.17.2 for GPT-5.2. Revised GPT and Gemini runs use OpenRouter; Kimi and DeepSeek use their provider APIs. The released trajectory metadata records the exact model identifiers, decoding settings, prompts, and run limits for both conditions. The revised runs cost approximately USD 1,600 in total. 
+ III RQ1: What Testing Behaviors Emerge Under a Lightweight Agent Scaffold? 
+ Motivation 
+ RQ1 establishes a descriptive baseline of whether agents write tests, when they introduce them, and how intensively they run them when testing is optional. 
+ Experiment Design 
+ We compare resolved and unresolved trajectories descriptively across test-writing frequency, timing, and execution; these comparisons do not estimate a causal effect of testing on success.
+We use two-sided Mann–Whitney U tests for comparisons within each model. For comparisons combining all models (pooled), task-clustered permutation tests keep the six models’ outcomes for the same task together. Holm correction is applied within each table.
+Pooled means give each eligible task–model run equal weight. 
+ III-A RQ1.1 Frequency: How Often Do Agents Write Test Files? 
+ Goal and measurements 
+ We examine whether models write test artifacts under a lightweight scaffold.
+For each task, we record (i) whether the agent writes at least one test artifact, and (ii) if so, how many distinct test artifacts it writes.
+We report results separately for resolved and unresolved tasks.
+For a given model and outcome (resolved or unresolved), let 𝒯 \mathcal{T} be the set of tasks and A t A_{t} the number of distinct test files written in task t t . The subset 𝒯 + = { t ∈ 𝒯 : A t > 0 } \mathcal{T}^{+}=\{t\in\mathcal{T}:A_{t}>0\} contains tasks with at least one test file.
+We average the file count over this subset: 
+ Mean #test files = 1 | 𝒯 + | ​ ∑ t ∈ 𝒯 + A t . \text{Mean \#test files}=\frac{1}{|\mathcal{T}^{+}|}\sum_{t\in\mathcal{T}^{+}}A_{t}. 
+ TABLE I: Per-model test writing rate by task-resolution outcome 
+ Resolved 
+ Unresolved 
+ All 
+ Model 
+ #Tasks 
+ Tasks w/ 
+ test files 
+ Mean 
+ #test files 
+ #Tasks 
+ Tasks w/ 
+ test files 
+ Mean 
+ #test files 
+ #Tasks 
+ Tasks w/ 
+ test files 
+ Mean 
+ #test files 
+ Claude Opus 4.5 
+ 372 
+ 316 (84.9%) 
+ 3.32 
+ 128 
+ 102 (79.7%) 
+ 4.15 
+ 500 
+ 418 (83.6%) 
+ 3.52 
+ Gemini 3 Pro 
+ 371 
+ 236 (63.6%) 
+ 2.00 
+ 129 
+ 74 (57.4%) 
+ 2.12 
+ 500 
+ 310 (62.0%) 
+ 2.03 
+ GPT-5.2 
+ 359 
+ 9 (2.5%) 
+ 1.56 
+ 141 
+ 3 (2.1%) 
+ 1.67 
+ 500 
+ 12 (2.4%) 
+ 1.58 
+ Kimi K2 Thinking 
+ 317 
+ 309 (97.5%) 
+ 3.47 
+ 183 
+ 179 (97.8%) 
+ 3.83 
+ 500 
+ 488 (97.6%) 
+ 3.60 
+ MiniMax M2 
+ 305 
+ 302 (99.0%) 
+ 4.83 
+ 195 
+ 191 (97.9%) 
+ 5.77 
+ 500 
+ 493 (98.6%) 
+ 5.20 
+ DeepSeek v3.2 Reasoner 
+ 300 
+ 277 (92.3%) 
+ 3.47 
+ 200 
+ 165 (82.5%) 
+ 4.00 
+ 500 
+ 442 (88.4%) 
+ 3.67 
+ Notes. 
+“Tasks w/ test files” reports count and percentage within each outcome split.
+“Mean #test files” averages file counts over tasks with test files; each distinct file path is counted once per task. 
+ Results 
+ Table  I reports test-writing frequency by model and outcome.
+ GPT-5.2 writes detected test files in only 12/500 tasks.
+Within-model differences between resolved and unresolved tasks are smaller than the cross-model variation.
+When tests are written, agents on unresolved tasks often write as many or more distinct test artifacts than agents on resolved tasks. 
+ RQ1.1 Test Writing: Key Finding 
+ Writing new test files more often does not necessarily mean solving more issues. On the same 500 issues, GPT-5.2 creates new test files in 2.4% of its attempts and solves 71.8% of the issues. Kimi K2 Thinking creates new test files in 97.6% of its attempts but solves 63.4% of the issues. 
+ III-B RQ1.2 Timing: When Are Tests Written During the Run? 
+ Goal and measurements 
+ We measure the normalized position of the first and last test-writing steps and their span among tasks that write tests. Because GPT-5.2 writes tests in only 12 tasks, we omit it from per-model analyses that require test writing. 
+ t first \displaystyle t_{\text{first}} 
+ = min ⁡ ( S write ) N steps , t last = max ⁡ ( S write ) N steps \displaystyle=\frac{\min(S_{\text{write}})}{N_{\text{steps}}},\quad t_{\text{last}}=\frac{\max(S_{\text{write}})}{N_{\text{steps}}} 
+ s write \displaystyle s_{\text{write}} 
+ = t last − t first = max ⁡ ( S write ) − min ⁡ ( S write ) N steps \displaystyle=t_{\text{last}}-t_{\text{first}}=\frac{\max(S_{\text{write}})-\min(S_{\text{write}})}{N_{\text{steps}}} 
+ Here, S write S_{\text{write}} contains zero-based assistant-step indices of detected file writes, including rewrites, and N steps N_{\text{steps}} counts all assistant messages in the trajectory. The measures lie in [ 0 , 1 ] [0,1] ; larger positions indicate later writing. A run with only one detected writing step has zero span. The span measures the separation between writing events, rather than time spent testing. 
+ TABLE II: Per-model timing of test writing events 
+ Resolved 
+ Unresolved 
+ Model 
+ #Tasks 
+ First 
+ pos. 
+ Last 
+ pos. 
+ Span 
+ #Tasks 
+ First 
+ pos. 
+ Last 
+ pos. 
+ Span 
+ Claude Opus 4.5 
+ 316 
+ 0.34 
+ 0.75 
+ 0.41 
+ 102 
+ 0.30 
+ 0.78 
+ 0.48 
+ Gemini 3 Pro 
+ 236 
+ 0.54 
+ 0.67 
+ 0.13 
+ 74 
+ 0.55 
+ 0.69 
+ 0.14 
+ Kimi K2 Thinking 
+ 309 
+ 0.40 
+ 0.82 
+ 0.42 
+ 179 
+ 0.40 
+ 0.82 
+ 0.42 
+ MiniMax M2 
+ 302 
+ 0.35 
+ 0.86 
+ 0.51 
+ 191 
+ 0.28 ∗∗ 
+ 0.85 ∗ 
+ 0.57 
+ DeepSeek v3.2 Reasoner 
+ 277 
+ 0.43 
+ 0.80 
+ 0.37 
+ 165 
+ 0.40 
+ 0.80 
+ 0.40 
+ All models 
+ 1449 
+ 0.41 
+ 0.78 
+ 0.38 
+ 714 
+ 0.37 ∗ 
+ 0.80 ∗ 
+ 0.43 ∗ 
+ Notes. 
+Means over runs with test files; positions and spans are fractions of each run’s total interaction steps. GPT-5.2 is included only in the pooled row.
+Pooled tests jointly permute six-model outcome vectors across tasks. Asterisks use Holm-adjusted p p values across 15 per-model and three pooled tests: ∗ p < 0.05 {}^{*}p<0.05 , p ∗ ⁣ ∗ < 0.01 {}^{**}p<0.01 , ∗ ∗ ∗ p < 0.001 {}^{***}p<0.001 . 
+ Results 
+ Table  II shows that the mean last writing position lies late in the trajectory (0.67–0.86). Gemini 3 Pro starts later and has the shortest span (0.13–0.14), while MiniMax M2 has the widest span (0.51–0.57). 
+ RQ1.2 Writing Timing: Key Finding 
+ On unsolved issues, test-file writing extends over a larger portion of the repair process. For attempts with test files, we measure the steps from the first test-file write to the last as a share of all interaction steps. Combining the six models, this share averages 43% for unsolved issues and 38% for solved issues. 
+ III-C RQ1.3 Execution: How Intensively Are Agent-Written Tests Executed, and With What Action Outcomes? 
+ Goal and measurements 
+ RQ1.3 describes how agents execute tests after they have written them.
+We measure (i) the number of test-execution actions, (ii) execution actions per written artifact, and (iii) the fraction of these actions with a non-zero exit code.
+An action can fail because of a test, an environment error, or another command in the same action; its return code does not isolate assertion failures. 
+ For each task t t , let E t E_{t} be the number of test-execution actions, A t A_{t} the number of agent-written test artifacts, and Z t Z_{t} the number of these actions with non-zero return codes.
+We report three task-level metrics:
+ execution actions per task ( E t E_{t} );
+ execution actions per test file ( E t / A t E_{t}/A_{t} );
+and nonzero-exit rate ( Z t / E t Z_{t}/E_{t} ), the fraction of executions with a non-zero return code.
+We compute each metric per task and then average the resulting values. The first two metrics use all tasks with test artifacts; the nonzero-exit rate uses tasks with E t > 0 E_{t}>0 , because the ratio is undefined when no test execution is detected. 
+ TABLE III: Task-level execution effort and action-level outcomes of agent-written tests 
+ Resolved 
+ Unresolved 
+ Model 
+ #Tasks w/ 
+ test files 
+ Exec. actions 
+ per task 
+ Exec. actions 
+ per test file 
+ Nonzero-exit 
+ rate (%) 
+ #Tasks w/ 
+ test files 
+ Exec. actions 
+ per task 
+ Exec. actions 
+ per test file 
+ Nonzero-exit 
+ rate (%) 
+ Claude Opus 4.5 
+ 316 
+ 4.82 
+ 1.48 
+ 12.11 
+ 102 
+ 6.07 ∗ 
+ 1.58 
+ 10.59 
+ Gemini 3 Pro 
+ 236 
+ 2.67 
+ 1.50 
+ 8.06 
+ 74 
+ 2.77 
+ 1.48 
+ 7.52 
+ Kimi K2 Thinking 
+ 309 
+ 5.37 
+ 1.62 
+ 24.92 
+ 179 
+ 6.49 
+ 1.75 
+ 21.07 
+ MiniMax M2 
+ 302 
+ 7.14 
+ 1.54 
+ 24.03 
+ 191 
+ 9.67 ∗∗∗ 
+ 2.08 
+ 24.33 
+ DeepSeek v3.2 Reasoner 
+ 277 
+ 3.64 
+ 1.10 
+ 28.38 
+ 165 
+ 4.64 
+ 1.36 
+ 31.37 
+ All models 
+ 1449 
+ 4.82 
+ 1.44 
+ 19.75 
+ 714 
+ 6.45 ∗∗∗ 
+ 1.69 
+ 21.32 
+ Notes. 
+#Tasks: tasks with test writing; all other values are averages of the per-task metrics.
+Nonzero-exit rates exclude tasks with no detected execution action. The pooled row includes GPT-5.2.
+Pooled tests jointly permute six-model outcome vectors across tasks. Asterisks use Holm-adjusted p p values across 15 per-model and three pooled tests: ∗ p < 0.05 {}^{*}p<0.05 , p ∗ ⁣ ∗ < 0.01 {}^{**}p<0.01 , ∗ ∗ ∗ p < 0.001 {}^{***}p<0.001 . 
+ Results 
+ Table  III summarizes execution effort and action-level outcomes for tasks that write tests.
+In the pooled data, unresolved tasks have more execution actions per test file than resolved tasks (1.69 vs. 1.44), although this difference is not significant after Holm correction.
+At the model level, the difference in execution actions per task remains significant for Claude Opus 4.5 and MiniMax M2 ; no model-level difference in actions per test file or nonzero-exit rate remains significant. 
+ The nonzero-exit rate is slightly higher for unresolved tasks (21.32% vs. 19.75%), but this pooled difference is not statistically significant. Gemini 3 Pro has the fewest execution actions (about 2.7–2.8 per task), while MiniMax M2 has the most, especially for unresolved tasks (9.67 per task; 2.08 per test file). Nonzero-exit rates are lower for Claude Opus 4.5 and Gemini 3 Pro (about 8–12%) than for the other three models (about 21–31%). 
+ RQ1.3 Test Execution: Key Finding 
+ Agents run newly written tests more often on issues they fail to solve. Among attempts that create test files, we count tool calls that run these files. Combining the six models, the average is 6.45 such calls per unsolved issue and 4.82 per solved issue. 
+ IV RQ2: What Assertion and Value-Revealing Print Patterns Appear in Agent-Written Tests? 
+ Motivation 
+ Agent-written test files can encode both explicit checks and statements that expose runtime information.
+RQ1 treats tests as events in the trajectory, measuring whether agents write them, when they appear, and how often they are run.
+RQ2 shifts to the content of those files and characterizes two common statement types:
+ assertions , which specify conditions to check, and value-revealing prints , which expose runtime values or execution information. 
+ Experiment Design 
+ RQ2 examines tasks in which the agent writes at least one test file and summarizes three aspects of file content: 
+ • 
+ Statement counts (RQ2.1): assertion vs. value-revealing print counts in agent-written tests. 
+ • 
+ Assertion types (RQ2.2): what types of assertions appear in agent-written tests, using a four-type categorization. 
+ • 
+ Print types (RQ2.3): what runtime information value-revealing prints expose, using a three-type categorization. 
+ RQ2.1 stays at the task level and measures aggregate assertion and print counts. RQ2.2 and RQ2.3 then move to the statement level , categorizing assertion and value-revealing print statements separately. 
+ IV-A RQ2.1 Task-level statement counts: What statements do agent-written tests contain? 
+ Goal and measurements 
+ For tasks with at least one agent-written test file, we count the assertions and value-revealing prints in those files.
+We distinguish two statement types: (i) assertions ( A A ), i.e., native assert statements and recognized framework assertion calls that specify explicit checks, and
+(ii) value-revealing prints ( P P ), i.e., print statements with at least one argument that depends on a variable, attribute, indexed value, runtime expression, or function call. We exclude prints composed only of literals, including fixed messages and expected-value text (e.g., print("Expected: 3") and print("=" * 60) ), while retaining statements such as print(obj.attr) .
+Because GPT-5.2 produces test artifacts in only 12 of 500 baseline tasks, we exclude it from the cross-model content summaries in RQ2. The same AST rule is used for the task-level counts in RQ2.1 and the print categories in RQ2.3. Of the 8,041 artifacts from the five models analyzed in RQ2, 8,028 parse successfully; the remaining 13 contribute no assertion or print statements to these analyses.
+For each task t t with test artifacts 𝒜 t \mathcal{A}_{t} , and for statement type S ∈ { A , P } S\in\{A,P\} , let n t , a S n^{S}_{t,a} be the number of statements of type S S 
+in artifact a ∈ 𝒜 t a\in\mathcal{A}_{t} . We define the task-level statement totals : 
+ N t S = ∑ a ∈ 𝒜 t n t , a S , N t total = N t A + N t P . N^{S}_{t}=\sum_{a\in\mathcal{A}_{t}}n^{S}_{t,a},\hskip 18.49988ptN^{\mathrm{total}}_{t}=N^{A}_{t}+N^{P}_{t}. 
+ For each model, we average N t A N^{A}_{t} (assertion count), N t P N^{P}_{t} (value-revealing print count), and N t total N^{\mathrm{total}}_{t} (overall statement count) across tasks, giving each task equal weight and reporting resolved and unresolved tasks separately. 
+ TABLE IV: Task-level assertion and value-revealing print counts in agent-written tests 
+ Resolved 
+ Unresolved 
+ Model 
+ #Tasks 
+ w/ tests 
+ Assertions 
+ per task 
+ ( N ¯ A \bar{N}^{A} ) 
+ Prints 
+ per task 
+ ( N ¯ P \bar{N}^{P} ) 
+ Assertions + prints 
+ per task 
+ ( N ¯ total \bar{N}^{\mathrm{total}} ) 
+ #Tasks 
+ w/ tests 
+ Assertions 
+ per task 
+ ( N ¯ A \bar{N}^{A} ) 
+ Prints 
+ per task 
+ ( N ¯ P \bar{N}^{P} ) 
+ Assertions + prints 
+ per task 
+ ( N ¯ total \bar{N}^{\mathrm{total}} ) 
+ Claude Opus 4.5 
+ 316 
+ 5.12 
+ 19.96 
+ 25.08 
+ 102 
+ 5.30 
+ 21.14 
+ 26.44 
+ Gemini 3 Pro 
+ 236 
+ 1.47 
+ 4.30 
+ 5.77 
+ 74 
+ 1.59 
+ 4.97 
+ 6.57 
+ Kimi K2 Thinking 
+ 309 
+ 2.87 
+ 18.96 
+ 21.83 
+ 179 
+ 3.58 
+ 21.78 
+ 25.36 
+ MiniMax M2 
+ 302 
+ 7.36 
+ 30.73 
+ 38.10 
+ 191 
+ 4.66 
+ 39.81 
+ 44.48 
+ DeepSeek v3.2 Reasoner 
+ 277 
+ 3.57 
+ 15.86 
+ 19.43 
+ 165 
+ 3.27 
+ 20.10 
+ 23.37 
+ Note. 
+Means over tasks with test files, giving each task equal weight.
+Assertions count native assert statements and recognized framework assertion calls; prints count value-revealing print s.
+ N ¯ total = N ¯ A + N ¯ P \bar{N}^{\mathrm{total}}=\bar{N}^{A}+\bar{N}^{P} . 
+ Results 
+ Table  IV shows marked variation in statement volume, from the lower totals of Gemini 3 Pro to the higher totals of MiniMax M2 . 
+ RQ2.1 Statement Counts: Key Finding 
+ Agent-written test files contain more statements that show runtime information than statements that check conditions automatically. For example, print(result) shows a value; assert result == expected checks it. After totaling these statements across the test files for each issue, the average print count exceeds the average assertion count for all five models, on both solved and unsolved issues. 
+ IV-B RQ2.2 Assertion categorization: What kinds of verification do assertions encode? 
+ Goal and measurements 
+ RQ2.1 counts assertion statements in agent-written tests, but counts alone do not tell us what those assertions check.
+Assertions can enforce basic preconditions (e.g., non- None or type checks) or compare results with expected values or structures.
+Models may therefore differ not only in how often they assert, but also in what forms of checks they write. RQ2.2 provides a descriptive breakdown of assert statements into four assertion categories: 
+ • 
+ C1 Sanity checks. 
+The assertion checks truthiness, identity, existence, or type.
+ Example: assert x is not None . 
+ • 
+ C2 Property checks. 
+The assertion checks a property of a value or object (e.g., membership or validity) without fixing an exact output.
+ Example: assert key in mapping . 
+ • 
+ C3 Relational checks. 
+The assertion enforces a range, bound, inequality, or approximate relationship between values. Example: assert 0 <= score <= 1 .
+This category also includes checks that expect a specific exception, because they constrain the allowed behavior to “must fail with an exception of type E E ” rather than matching a single concrete output. 
+ • 
+ C4 Exact checks. 
+The assertion checks equality with an expected value or structure, whether represented by a literal or a variable.
+ Example: assert output == expected_output . 
+ To identify and categorize assertions, we implement a rule-based classifier over Python ASTs and map each assertion to exactly one category.
+The classifier covers both native assert statements (e.g., assert a == b ) and framework-provided assertion calls (e.g., self.assertEqual(a, b) in unittest ). Concretely, for each test artifact, we parse the code into an AST and extract:
+(i) native assert <expr> statements, and
+(ii) calls to framework assertion APIs. Some assert statements contain multiple checks joined by Boolean operators (e.g., assert a > 0 and b == 1 ). For these compound statements, we recursively split the expression into atomic checks and assign the highest-numbered category present. This keeps one observation per source statement; the category numbers define the tie-breaking rule, not an empirical ranking of assertion quality. Thus, the example receives C4 because a > 0 is C3 and b == 1 is C4. 
+ We check three alternative ways to classify compound assertions: choosing the lowest-numbered category, using the first check’s category, or counting each check separately. Compound Boolean expressions occur in 161 of 8,139 native assert statements (2.0%; 1.8% of all 8,796 assertions). Across the three alternatives, C4 remains the largest category (56.96–57.09%) and C3 the smallest (5.09–5.17%). 
+ TABLE V: Assertion category distribution by model.
+Counts and percentages are computed over all detected assertion statements and calls written by each model. 
+ Model 
+ #Assertions 
+ C1 Sanity 
+ C2 Property 
+ C3 Relational 
+ C4 Exact 
+ # 
+ % 
+ # 
+ % 
+ # 
+ % 
+ # 
+ % 
+ Claude Opus 4.5 
+ 2159 
+ 353 
+ 16.35% 
+ 430 
+ 19.92% 
+ 115 
+ 5.33% 
+ 1261 
+ 58.41% 
+ Gemini 3 Pro 
+ 466 
+ 78 
+ 16.74% 
+ 105 
+ 22.53% 
+ 43 
+ 9.23% 
+ 240 
+ 51.50% 
+ Kimi K2 Thinking 
+ 1527 
+ 227 
+ 14.87% 
+ 338 
+ 22.13% 
+ 54 
+ 3.54% 
+ 908 
+ 59.46% 
+ MiniMax M2 
+ 3115 
+ 618 
+ 19.84% 
+ 595 
+ 19.10% 
+ 176 
+ 5.65% 
+ 1726 
+ 55.41% 
+ DeepSeek v3.2 Reasoner 
+ 1529 
+ 289 
+ 18.90% 
+ 261 
+ 17.07% 
+ 66 
+ 4.32% 
+ 913 
+ 59.71% 
+ Note. 
+C1–C4 denote four assertion categories defined by the form of the check (sanity, property, relational/approximate, and exact-output).
+Percentages are computed within each model, relative to the model’s total assertion count. 
+ Results 
+ Table  V reports assertion categories by model. C2 Property and C1 Sanity account for 17.07–22.53% and 14.87–19.84% of assertions, respectively. 
+ RQ2.2 Assertion Types: Key Finding 
+ In agent-written test files, most assertions require an exact expected value, as in assert output == expected (51.5–59.7% in each of the five models). Assertions that accept a range of values, accept a value close to the expected one, or check for an expected exception are much less common (3.5–9.2% combined). 
+ IV-C RQ2.3 Print categorization: What information do value-revealing prints expose? 
+ Goal and measurements 
+ Since value-revealing prints substantially outnumber assertions, RQ2.3 categorizes the information exposed by these statements as concrete values or content, structural summaries, or exception and execution-status information: 
+ • 
+ P1 Value / content inspection. 
+The print exposes a concrete runtime value or content, such as a returned output, an intermediate result, an object field, or part of a generated string. This category captures what the program produced , rather than a structural summary or an error/status signal;
+ e.g., print(add(1, 2)) . 
+ • 
+ P2 Structural summary inspection. 
+The print reports an aggregate structural summary, such as length, size, shape, number of items, or emptiness. This category is reserved for prints that summarize how much data is present or what structure it has, rather than showing the content itself;
+ e.g., print(len(items)) . 
+ • 
+ P3 Exception / execution-status signals. 
+The print surfaces an exception, an error message, or a coarse execution-status indicator, such as a success/failure flag. This category is used when the print primarily indicates what happened during execution , rather than the program’s computed content;
+ e.g., except Exception as exc: print(exc) . 
+ We implement a rule-based classifier over Python ASTs. Using the same inclusion rule as RQ2.1, we extract value-revealing print(...) calls and apply the categories in a fixed order: P3 for prints in exception handlers or with exception/status cues, P2 for size-, shape-, or count-oriented expressions, and P1 for the remaining included prints. Table  VI reports the resulting category distribution. 
+ TABLE VI: Value-revealing print category distribution by model. 
+ Model 
+ #Prints 
+ P1 Value/Content 
+ P2 Structural 
+ P3 Exception/Status 
+ # 
+ % 
+ # 
+ % 
+ # 
+ % 
+ Claude Opus 4.5 
+ 8462 
+ 6595 
+ 77.94% 
+ 285 
+ 3.37% 
+ 1582 
+ 18.70% 
+ Gemini 3 Pro 
+ 1382 
+ 969 
+ 70.12% 
+ 72 
+ 5.21% 
+ 341 
+ 24.67% 
+ Kimi K2 Thinking 
+ 9758 
+ 7271 
+ 74.51% 
+ 644 
+ 6.60% 
+ 1843 
+ 18.89% 
+ MiniMax M2 
+ 16885 
+ 12065 
+ 71.45% 
+ 958 
+ 5.67% 
+ 3862 
+ 22.87% 
+ DeepSeek v3.2 Reasoner 
+ 7709 
+ 5906 
+ 76.61% 
+ 288 
+ 3.74% 
+ 1515 
+ 19.65% 
+ Results 
+ Table  VI categorizes all 44,196 value-revealing prints counted in RQ2.1. P3 Exception / execution-status signals accounts for 18.70–24.67%, while P2 Structural summary inspection accounts for 3.37–6.60%. 
+ RQ2.3 Print Types: Key Finding 
+ When agents print runtime information in test files, they mainly show function results, intermediate values, or object fields. These account for 70.1–77.9% of such prints in each of the five models. Printing an error or reporting whether an operation succeeded is less common; printing summaries such as length or shape is least common. 
+ V RQ3: How Do Outcomes and Resource Use Differ Across Test-Writing Prompt Conditions? 
+ Motivation 
+ RQ1 shows that models with similar issue-resolution rates can differ sharply in how often they write test files. RQ2 shows that these files contain more value-revealing prints than assertions. RQ3 examines outcomes and resource use under prompts that encourage or discourage new test files. 
+ Experiment Design 
+ RQ3 compares task-resolution outcomes (RQ3.1) and resource use (RQ3.2) between baseline and revised prompt conditions. 
+ Model selection 
+ We select models by their baseline test-writing rates (Table  I ). The encourage-test comparison uses GPT-5.2 (2.4%) and Gemini 3 Pro (62.0%), whose baselines leave room for more test creation. For the discourage-test comparison, the experiment budget supported two models; we selected Kimi K2 Thinking (97.6%) and DeepSeek v3.2 Reasoner (88.4%) from the high test-writing group. 
+ We use the mini-SWE-agent prompt to create two variants: 
+ • 
+ Encourage writing tests: for GPT-5.2 and Gemini 3 Pro , we append prompt instructions to write at least one runnable new test file (a file whose name starts with test_ or ends with _test.py ), separate from the repository’s existing tests. 
+ • 
+ Discourage writing tests: for Kimi K2 Thinking and DeepSeek v3.2 Reasoner , we remove the default testing-related prompt cue from mini-SWE-agent and append prompt instructions not to write any new test files or scripts. 
+ Reference prompt templates are included in experiment_prompts ; each trajectory records its exact prompt. Gemini’s encouragement prompt repeats the instruction in action feedback, whereas GPT-5.2’s uses system and instance instructions. We compare each revised condition with its public baseline on the same tasks. 
+ V-A RQ3.1 How do task outcomes differ across test-writing prompt conditions? 
+ Goal and measurements 
+ For each model, we compare the same 500 tasks under the baseline and revised prompts. We record whether each run creates a test artifact ( No test or Has test ) and resolves the issue ( Fail or Success ), then cross-tabulate their baseline-to-revised-prompt transitions. Runs in either test-writing group can also execute existing repository tests or inline checks. We use exact McNemar tests with Holm correction across the four models and 95% paired bootstrap confidence intervals to compare resolution rates. 
+ TABLE VII: Task-level test-status and outcome transitions under the revised prompts 
+ Encourage writing tests 
+ Outcome transition 
+ No test → \rightarrow No test 
+ No test → \rightarrow Has test 
+ Has test → \rightarrow No test 
+ Has test → \rightarrow Has test 
+ Total 
+ Model: GPT-5.2 ( p H = 1.000 p_{\mathrm{H}}=1.000 ) 
+ Δ \Delta 466 (93.2%) 
+ Fail → \rightarrow Success 
+ 1 
+ 24 
+ 0 
+ 2 
+ 27 
+ Success → \rightarrow Fail 
+ 3 
+ 24 
+ 0 
+ 0 
+ 27 
+ Stable Success 
+ 8 
+ 315 
+ 0 
+ 9 
+ 332 
+ Stable Fail 
+ 10 
+ 103 
+ 0 
+ 1 
+ 114 
+ Net change in #Success 
+ − - 2 
+ 0 
+ 0 
+ 2 
+ 0 
+ Model: Gemini 3 Pro ( p H = 1.000 p_{\mathrm{H}}=1.000 ) 
+ Δ \Delta 184 (36.8%) 
+ Fail → \rightarrow Success 
+ 0 
+ 8 
+ 0 
+ 9 
+ 17 
+ Success → \rightarrow Fail 
+ 1 
+ 10 
+ 1 
+ 10 
+ 22 
+ Stable Success 
+ 2 
+ 122 
+ 4 
+ 221 
+ 349 
+ Stable Fail 
+ 3 
+ 44 
+ 0 
+ 65 
+ 112 
+ Net change in #Success 
+ − - 1 
+ − - 2 
+ − - 1 
+ − - 1 
+ − - 5 
+ Discourage writing tests 
+ Outcome transition 
+ No test → \rightarrow No test 
+ No test → \rightarrow Has test 
+ Has test → \rightarrow No test 
+ Has test → \rightarrow Has test 
+ Total 
+ Model: Kimi K2 Thinking ( p H = 0.911 p_{\mathrm{H}}=0.911 ) 
+ Δ \Delta 340 (68.0%) 
+ Fail → \rightarrow Success 
+ 1 
+ 0 
+ 31 
+ 11 
+ 43 
+ Success → \rightarrow Fail 
+ 1 
+ 0 
+ 42 
+ 13 
+ 56 
+ Stable Success 
+ 5 
+ 2 
+ 188 
+ 66 
+ 261 
+ Stable Fail 
+ 2 
+ 1 
+ 79 
+ 58 
+ 140 
+ Net change in #Success 
+ 0 
+ 0 
+ − - 11 
+ − - 2 
+ − - 13 
+ Model: DeepSeek v3.2 Reasoner ( p H = 1.000 p_{\mathrm{H}}=1.000 ) 
+ Δ \Delta 373 (74.6%) 
+ Fail → \rightarrow Success 
+ 11 
+ 2 
+ 28 
+ 7 
+ 48 
+ Success → \rightarrow Fail 
+ 3 
+ 0 
+ 49 
+ 5 
+ 57 
+ Stable Success 
+ 19 
+ 1 
+ 187 
+ 36 
+ 243 
+ Stable Fail 
+ 21 
+ 1 
+ 109 
+ 21 
+ 152 
+ Net change in #Success 
+ 8 
+ 2 
+ − - 21 
+ 2 
+ − - 9 
+ Note. 
+ Test status is defined by whether the run writes at least one test artifact (“Has test”) or writes none (“No test”).
+Columns show the baseline → \rightarrow revised-prompt test-status transition ; rows show the baseline → \rightarrow revised-prompt outcome transition (Fail/Success).
+The highlighted column indicates the intended test-status change (blue: No test → \rightarrow Has test under Encourage ; orange: Has test → \rightarrow No test under Discourage );
+ Δ \Delta reports the number (and percentage) of tasks in that intended-change column. Net change(#Success) is computed per column as (#Fail → \rightarrow Success) − - (#Success → \rightarrow Fail).
+The model-level p H p_{\mathrm{H}} value reports the exact McNemar test after Holm correction across the four model comparisons. 
+ Fig. 2: Most tasks with the intended test-status change retain their resolution outcome (78.5%–90.2%). The first two bars use the encourage-test prompt; the last two use the discourage-test prompt. 
+ Results 
+ As shown in Table  VII , the encourage test writing condition changes test status for GPT-5.2 and Gemini 3 Pro :
+93.2% and 36.8% of tasks transition from No test to Has test , respectively.
+Conversely, the discourage test writing condition reduces new-test creation for Kimi K2 Thinking and DeepSeek v3.2 Reasoner ,
+moving 68.0% and 74.6% of tasks from Has test to No test . 
+ Among the 1,363 task–model pairs with the intended test-status change across the four comparisons, 1,147 (84.2%) retain the same final outcome (Figure  2 ).
+At the model level, resolved-task totals change by 0 for GPT-5.2 , − - 5 for Gemini 3 Pro , − - 13 for Kimi K2 Thinking , and − - 9 for DeepSeek v3.2 Reasoner .
+The corresponding 95% confidence intervals for the resolution-rate differences, in percentage points, are [ − - 2.8, 2.8], [ − - 3.4, 1.4], [ − - 6.4, 1.2], and [ − - 5.8, 2.2].
+The exact McNemar tests find no statistically significant baseline-vs.-revised-prompt outcome difference for any model (all Holm-adjusted p > 0.05 p>0.05 ). 
+ RQ3.1 Resolution Outcomes: Key Finding 
+ The same success rate can hide changes in which issues an agent solves. GPT-5.2 solves 359 of 500 issues with the original prompt and 359 with a prompt asking it to write new test files. With the new prompt, 27 issues that were previously unsolved are now solved, but 27 previously solved issues are no longer solved. 
+ V-B RQ3.2 How do API calls and token usage differ across prompt conditions? 
+ TABLE VIII: Resolution outcomes and resource use under baseline and revised prompt conditions 
+ Model 
+ Condition 
+ Tasks resolved 
+ Avg API Calls 
+ Avg Input Tokens 
+ Avg Output Tokens 
+ GPT-5.2 
+ Baseline 
+ 359 (71.8%) 
+ 19.76 
+ 242,855 
+ 24,550 
+ Encourage tests 
+ 359 (71.8%) 
+ 20.84 
+ 264,762 
+ 29,415 
+ Change 
+ − - +0 (+0.0 pp) 
+ − - +1.08 (+5.5%) ∗∗ 
+ − - +21,907 (+9.0%) ∗∗∗ 
+ − - +4,866 (+19.8%) ∗∗∗ 
+ Gemini 3 Pro 
+ Baseline 
+ 371 (74.2%) 
+ 40.33 
+ 666,096 
+ 11,114 
+ Encourage tests 
+ 366 (73.2%) 
+ 39.21 
+ 641,307 
+ 10,943 
+ Change 
+ − - 5 ( − - 1.0 pp) 
+ − - 1.11 ( − - 2.8%) 
+ − - 24,789 ( − - 3.7%) 
+ − - 171 ( − - 1.5%) 
+ Kimi K2 Thinking 
+ Baseline 
+ 317 (63.4%) 
+ 46.82 
+ 668,449 
+ 14,895 
+ Discourage tests 
+ 304 (60.8%) 
+ 30.25 
+ 340,689 
+ 8,468 
+ Change 
+ − - 13 ( − - 2.6 pp) 
+ − - 16.57 ( − - 35.4%) ∗∗∗ 
+ − - 327,760 ( − - 49.0%) ∗∗∗ 
+ − - 6,427 ( − - 43.1%) ∗∗∗ 
+ DeepSeek v3.2 Reasoner 
+ Baseline 
+ 300 (60.0%) 
+ 46.40 
+ 637,297 
+ 52,120 
+ Discourage tests 
+ 291 (58.2%) 
+ 35.06 
+ 427,780 
+ 44,823 
+ Change 
+ − - 9 ( − - 1.8 pp) 
+ − - 11.35 ( − - 24.5%) ∗∗∗ 
+ − - 209,518 ( − - 32.9%) ∗∗∗ 
+ − - 7,297 ( − - 14.0%) ∗∗∗ 
+ Note. 
+API calls and token counts are per-task means over all 500 tasks for each model and condition. Changes are computed as (Condition − - Baseline) before rounding.
+For Tasks resolved , parenthesized changes are percentage-point differences; resource-use changes are relative percentages.
+ Encourage tests is applied to GPT-5.2 and Gemini 3 Pro ;
+ Discourage tests is applied to Kimi K2 Thinking and DeepSeek v3.2 Reasoner .
+ p ∗ ⁣ ∗ < 0.01 {}^{**}p<0.01 , ∗ ∗ ∗ p < 0.001 {}^{***}p<0.001 using Holm-adjusted paired Wilcoxon signed-rank tests across the 12 model–metric comparisons; paired bootstrap CIs are summarized in the text. 
+ Goal and measurements 
+ We analyze the following three primary metrics based on the trajectories generated in RQ3.1:
+(i) average API calls per task,
+(ii) average input tokens per task, and
+(iii) average output tokens per task.
+To distinguish call frequency from call size, we also compute input and output tokens per API call within each task. We average these task-level ratios with equal weight; dividing the overall token mean by the overall call mean would instead weight tasks by their call counts. All five measures are compared on the same 500 paired tasks using 95% paired bootstrap confidence intervals; the three primary metrics additionally use two-sided Wilcoxon signed-rank tests with Holm correction across the 12 model–metric comparisons. 
+ Results 
+ Table  VIII compares resource use and resolution outcomes across prompt conditions.
+Under encourage test writing , GPT-5.2 records higher resource use (+5.5% API calls; +19.8% output tokens) with an unchanged resolution total. The paired analyses support this increase across all three metrics: API calls rise by +1.08 per task (95% CI [0.40, 1.76], Holm-adjusted Wilcoxon p = 0.002 p=0.002 ), input tokens by +21,907 ([3,812, 39,918], p < 0.001 p<0.001 ), and output tokens by +4,866 ([3,036, 6,701], p < 0.001 p<0.001 ). In contrast, Gemini 3 Pro changes little overall, and none of its paired differences is statistically significant across API calls, input tokens, or output tokens (all 95% CIs cross zero).
+Under discourage test writing , Kimi K2 Thinking and DeepSeek v3.2 Reasoner record lower resource use: input tokens decrease by 49.0% and 32.9%, respectively, and Kimi K2 Thinking also uses 35.4% fewer API calls.
+For both models, all three mean differences are negative, all 95% bootstrap CIs exclude zero, and all Holm-adjusted Wilcoxon tests give p < 0.001 p<0.001 . 
+ We also examine whether token-use differences involve the number of API calls or the tokens used per call. Average input/output tokens per call change by +6.7%/+21.3% for GPT-5.2 , +4.4%/+0.7% for Gemini 3 Pro , − - 27.5%/ − - 8.6% for Kimi K2 Thinking , and − - 14.8%/+11.6% for DeepSeek v3.2 Reasoner ; paired bootstrap CIs exclude zero except for Gemini 3 Pro ’s output-token difference. Thus, Kimi K2 Thinking ’s total-token reductions combine fewer calls with lower per-call token volume, while DeepSeek v3.2 Reasoner ’s total output-token reduction accompanies fewer calls but higher output tokens per call.
+For the two discourage-test comparisons, resource reductions accompany resolution-rate differences of − - 2.6 and − - 1.8 percentage points. The resolution-rate intervals still include potentially meaningful decreases, so these comparisons do not establish equivalent effectiveness. 
+ RQ3.2 Resource Use: Key Finding 
+ Similar resolution totals can come with substantially different token use. Each model is compared with its original prompt on the same 500 issues. Asked to write new test files, GPT-5.2 uses 9.0% more input tokens per issue, but its solved total stays at 359. Asked not to create new test files, Kimi K2 Thinking uses 49.0% fewer input tokens per issue and solves 13 fewer issues; DeepSeek v3.2 Reasoner uses 32.9% fewer input tokens per issue and solves 9 fewer issues. 
+ VI Discussion and Future Work 
+ VI-A Implications 
+ Identical resolution totals can hide changes in which issues an agent solves. GPT-5.2 resolves 359 issues under both prompts, but 27 change from failure to success and another 27 change in the opposite direction (Table  VII ). The encouragement condition also uses more tokens. Comparing individual task outcomes and resource use therefore reveals differences that the overall resolution rate misses. 
+ Test-file creation records a workflow choice; resolution measures whether the final patch passes the benchmark’s tests. Their different rankings across models make both measurements useful when comparing agents. Reporting whether instructions encourage, discourage, or leave new-test creation to the model also helps explain the setting in which these choices occur. 
+ Agent-written test files combine automatic checks with code for inspecting program behavior. Across the five models in RQ2, value-revealing prints outnumber assertions, and most display concrete values such as returned results or object fields. Assertions encode conditions to check; prints expose information that an agent can inspect. Evaluations should distinguish these two forms of test content. 
+ VI-B Future work 
+ A next question is which test outputs lead agents to change their diagnosis or next edit. Trajectory-level analyses can trace these links for new tests, repository tests, and inline commands. Test-quality analyses can also account for transient repository states, where intermediate code and tests may later be overwritten, and examine whether agent-written tests remain useful with the final patch  [ 30 , 31 , 32 , 33 , 34 , 35 , 36 ] . 
+ VI-C Threats to Validity 
+ Internal validity. 
+Each prompt condition is observed once per task. Pairing controls task identity, but scaffold releases and API routes differ between some public baselines and revised runs. Decoding and environment variation may also affect outcomes. We therefore interpret the comparisons as observed differences between conditions, without attributing them solely to the prompt edits. 
+ External validity. 
+Our results cover six LLMs on Python issues from SWE-bench Verified under one lightweight scaffold. Testing conventions, repository languages, and scaffolds with dedicated validation tools may produce different behavior. 
+ Data construction validity. 
+Our measures cover detected whole-file writes and execution actions; inline-only checks, unmodified repository tests, and indirect file operations fall outside this scope. Local edits may change a file after its last recovered snapshot. Execution return codes describe entire bash actions. AST categories characterize syntax, which may not fully capture semantic intent; static counts do not establish that statements execute or guide later edits. The extraction rules and regression checks are released with the data. 
+ VII Related Work 
+ LLM-Generated Tests 
+ Research on LLM-based software testing commonly treats the test artifact as the primary output. Empirical studies evaluate generated unit tests and test suites, while assertion-generation work examines the checks of expected behavior within those tests  [ 22 , 19 , 17 ] . Broader evaluations and surveys organize this literature across software-testing tasks and requirements-based test generation  [ 37 , 38 ] . Benchmarks make these targets explicit: TestEval benchmarks test-case generation, and SWT-bench evaluates tests for validating real-world bug fixes  [ 20 , 18 ] . These settings provide controlled tasks for assessing generated artifacts. We examine a different unit of analysis: the test-writing process within a multi-step repair trajectory. This process view captures whether an agent creates a new test, when it does so, whether it executes the file, and what assertion and printed-value patterns the file contains. 
+ Testing During Repository-Level Issue Resolution 
+ SWE-bench established real-world GitHub issue resolution as an evaluation setting for language models  [ 11 ] . Systems such as SWE-agent and AutoCodeRover study how models interact with repository environments and tools to carry out software-engineering tasks  [ 3 , 8 ] . Recent systems span repository repair tools, autonomous coding agents, test-time-scaled repair, and role-based multi-agent development workflows  [ 39 , 40 , 41 , 42 ] . Within these end-to-end workflows, testing is one activity among repository exploration, code editing, command execution, and patch validation. A final resolution score therefore does not show whether an agent wrote new tests or what resources accompanied that behavior. We study six LLMs under one lightweight, bash-only scaffold whose default prompt provides an advisory testing cue while leaving concrete testing decisions to the model. We then compare testing behavior, resolution outcomes, and resource use between baseline prompts and prompts that encourage or discourage new-test writing. 
+ Software-Agent Trajectories 
+ Process-oriented studies complement final patch scores by examining the steps agents take during issue resolution. Bouzenia and Pradel analyze thought–action–result trajectories; Majgaonkar et al. compare successful and failed trajectories across code agents; Ceka et al. trace APR-agent workflows and identify test generation and regression-test selection as bottlenecks; and Chen et al. study errors across the software-development process rather than only the final code  [ 43 , 44 , 45 , 46 ] . Systematic failure analysis also identifies diagnostic errors and unproductive loops in automated issue solving  [ 47 ] . Building on these process studies, including their attention to testing bottlenecks, we provide a cross-model account of file creation, timing, and execution under a lightweight scaffold. We further characterize assertion/print composition and compare paired prompt conditions in terms of both task outcomes and resource use. 
+ VIII Conclusion 
+ This paper studies how LLM agents write and execute tests during GitHub issue resolution, using 5,000 recorded runs from six LLMs under a lightweight scaffold. Models differ substantially in whether, when, and how they test. For every model in the content analysis, statements that print runtime values outnumber assertions that check conditions. Under prompts that encourage or discourage new test files, agents often start or stop writing them. None of the resolution differences from the original prompts is statistically significant, while API calls or token use differ substantially for three models. These test files combine automatic checks with code that exposes runtime values for inspection, connecting agent-written testing with program comprehension during repair. Identical resolution totals can also hide changes in which issues are solved, as the GPT-5.2 comparison shows. Evaluations should therefore report testing instructions, assertion and print content, test execution, task-level outcomes, and resource use alongside resolution rates. 
+ IX Data Availability 
+ To support the reproduction of our study and facilitate future research, we provide an anonymized replication package containing the datasets and analysis scripts at https://figshare.com/s/c72f69149860ea293f4f . 
+ References 
+ [1] 
+ OpenAI (2025) 
+ Update to GPT-5 system card: GPT-5.2 .
+ Technical report 
+ OpenAI .
+ Note: Accessed: 2026-11-06 
+ External Links: Link 
+ Cited by: §I ,
+ §II-B .
+ [2] 
+ Z. Chen and L. Jiang (2024) 
+ Promise and peril of collaborative code generation models: balancing effectiveness and memorization .
+ In Proceedings of the 39th IEEE/ACM International Conference on Automated Software Engineering ,
+ pp. 493–505 .
+ External Links: Document ,
+ Link 
+ Cited by: §I .
+ [3] 
+ J. Yang, C. Jimenez, A. Wettig, K. Lieret, S. Yao, K. Narasimhan, and O. Press (2024) 
+ SWE-agent: agent-computer interfaces enable automated software engineering .
+ In Advances in Neural Information Processing Systems ,
+ Vol. 37 , pp. 50528–50652 .
+ External Links: Document ,
+ Link 
+ Cited by: §I ,
+ §VII .
+ [4] 
+ X. Wang, B. Li, Y. Song, F. F. Xu, X. Tang, M. Zhuge, J. Pan, Y. Song, B. Li, J. Singh, H. H. Tran, F. Li, R. Ma, M. Zheng, B. Qian, Y. Shao, N. Muennighoff, Y. Zhang, B. Hui, J. Lin, R. Brennan, H. Peng, H. Ji, and G. Neubig (2025) 
+ OpenHands: an open platform for AI software developers as generalist agents .
+ In The Thirteenth International Conference on Learning Representations ,
+ External Links: Link 
+ Cited by: §I .
+ [5] 
+ S. Hong, M. Zhuge, J. Chen, X. Zheng, Y. Cheng, J. Wang, C. Zhang, Z. Wang, S. K. S. Yau, Z. Lin, L. Zhou, C. Ran, L. Xiao, C. Wu, and J. Schmidhuber (2024) 
+ MetaGPT: Meta programming for a multi-agent collaborative framework .
+ In The Twelfth International Conference on Learning Representations ,
+ External Links: Link 
+ Cited by: §I .
+ [6] 
+ R. Ehrlich, B. Brown, J. Juravsky, R. Clark, C. Ré, and A. Mirhoseini (2025) 
+ CodeMonkeys: scaling test-time compute for software engineering .
+ Note: arXiv preprint arXiv:2501.14723 
+ External Links: 2501.14723 ,
+ Link 
+ Cited by: §I .
+ [7] 
+ C. S. Xia, Y. Deng, S. Dunn, and L. Zhang (2025) 
+ Demystifying LLM-based software engineering agents .
+ Proceedings of the ACM on Software Engineering 2 ( FSE ), pp. 801–824 .
+ External Links: Document ,
+ Link 
+ Cited by: §I .
+ [8] 
+ Y. Zhang, H. Ruan, Z. Fan, and A. Roychoudhury (2024) 
+ AutoCodeRover: autonomous program improvement .
+ In Proceedings of the 33rd ACM SIGSOFT International Symposium on Software Testing and Analysis ,
+ pp. 1592–1604 .
+ External Links: Document ,
+ Link 
+ Cited by: §I ,
+ §II-B ,
+ §VII .
+ [9] 
+ Y. Liu, P. Gao, X. Wang, J. Liu, Y. Shi, Z. Zhang, and C. Peng (2024) 
+ MarsCode agent: AI-native automated bug fixing .
+ Note: arXiv preprint arXiv:2409.00899 
+ External Links: 2409.00899 ,
+ Link 
+ Cited by: §I ,
+ §II-B .
+ [10] 
+ F. Mu, J. Wang, L. Shi, S. Wang, S. Li, and Q. Wang (2026) 
+ ExpeRepair: dual-memory enhanced LLM-based repository-level program repair .
+ Proceedings of the ACM on Software Engineering 3 ( FSE ), pp. 3954–3976 .
+ External Links: Document ,
+ Link 
+ Cited by: §I .
+ [11] 
+ C. E. Jimenez, J. Yang, A. Wettig, S. Yao, K. Pei, O. Press, and K. R. Narasimhan (2024) 
+ SWE-bench: can language models resolve real-world Github issues? .
+ In The Twelfth International Conference on Learning Representations ,
+ External Links: Link 
+ Cited by: §I ,
+ §I ,
+ §II-A ,
+ §VII .
+ [12] 
+ Z. Chen and L. Jiang (2025) 
+ Evaluating software development agents: patch patterns, code quality, and issue complexity in real-world GitHub scenarios .
+ In 2025 IEEE International Conference on Software Analysis, Evolution and Reengineering (SANER) ,
+ pp. 657–668 .
+ External Links: Document ,
+ Link 
+ Cited by: §I .
+ [13] 
+ Y. Kim, K. Gu, C. Park, C. Park, S. Schmidgall, A. A. Heydari, Y. Yan, Z. Zhang, Y. Zhuang, Y. Liu, M. Malhotra, P. P. Liang, H. W. Park, Y. Yang, X. Xu, Y. Du, S. Patel, T. Althoff, D. McDuff, and X. Liu (2026) 
+ Capable language models can outgrow the benefits of collaboration .
+ Nature Machine Intelligence 8 ( 7 ), pp. 1157–1172 .
+ External Links: Document ,
+ Link 
+ Cited by: §I .
+ [14] 
+ OpenAI (2024) 
+ Introducing SWE-bench verified .
+ Note: Accessed: 2026-11-06 
+ External Links: Link 
+ Cited by: §I ,
+ §II-A .
+ [15] 
+ SWE-agent Team (2025) 
+ Mini-SWE-agent .
+ Note: Accessed: 2026-11-06 
+ External Links: Link 
+ Cited by: §I ,
+ §II-B .
+ [16] 
+ A. Lops, F. Narducci, A. Ragone, M. Trizio, and C. Bartolini (2025) 
+ A system for automated unit test generation using large language models and assessment of generated test suites .
+ In 2025 IEEE International Conference on Software Testing, Verification and Validation Workshops (ICSTW) ,
+ pp. 29–36 .
+ External Links: Document ,
+ Link 
+ Cited by: §I .
+ [17] 
+ Q. Zhang, W. Sun, C. Fang, B. Yu, H. Li, M. Yan, J. Zhou, and Z. Chen (2025) 
+ Exploring automated assertion generation via large language models .
+ ACM Transactions on Software Engineering and Methodology 34 ( 3 ), pp. 1–25 .
+ External Links: Document ,
+ Link 
+ Cited by: §I ,
+ §VII .
+ [18] 
+ N. Mündler, M. Müller, J. He, and M. Vechev (2024) 
+ SWT-Bench: testing and validating real-world bug-fixes with code agents .
+ In Advances in Neural Information Processing Systems ,
+ Vol. 37 , pp. 81857–81887 .
+ External Links: Document ,
+ Link 
+ Cited by: §I ,
+ §VII .
+ [19] 
+ Z. Yuan, M. Liu, S. Ding, K. Wang, Y. Chen, X. Peng, and Y. Lou (2024) 
+ Evaluating and improving ChatGPT for unit test generation .
+ Proceedings of the ACM on Software Engineering 1 ( FSE ), pp. 1703–1726 .
+ External Links: Document ,
+ Link 
+ Cited by: §I ,
+ §VII .
+ [20] 
+ W. Wang, C. Yang, Z. Wang, Y. Huang, Z. Chu, D. Song, L. Zhang, A. R. Chen, and L. Ma (2025) 
+ TESTEVAL: benchmarking large language models for test case generation .
+ In Findings of the Association for Computational Linguistics: NAACL 2025 ,
+ pp. 3547–3562 .
+ External Links: Document ,
+ Link 
+ Cited by: §I ,
+ §VII .
+ [21] 
+ J. Wang, Y. Huang, C. Chen, Z. Liu, S. Wang, and Q. Wang (2024) 
+ Software testing with large language models: survey, landscape, and vision .
+ IEEE Transactions on Software Engineering 50 ( 4 ), pp. 911–936 .
+ External Links: Document ,
+ Link 
+ Cited by: §I .
+ [22] 
+ M. Schäfer, S. Nadi, A. Eghbali, and F. Tip (2024) 
+ An empirical evaluation of using large language models for automated unit test generation .
+ IEEE Transactions on Software Engineering 50 ( 1 ), pp. 85–105 .
+ External Links: Document ,
+ Link 
+ Cited by: §I ,
+ §VII .
+ [23] 
+ K. Khandpur, K. Lieret, C. E. Jimenez, O. Press, and J. Yang (2025) 
+ SWE-bench multilingual .
+ Note: Accessed: 2026-11-06 
+ External Links: Link 
+ Cited by: §I .
+ [24] 
+ H. Ruan, Y. Zhang, and A. Roychoudhury (2025) 
+ SpecRover: code intent extraction via LLMs .
+ In 2025 IEEE/ACM 47th International Conference on Software Engineering (ICSE) ,
+ pp. 963–974 .
+ External Links: Document ,
+ Link 
+ Cited by: §II-B .
+ [25] 
+ Anthropic (2025) 
+ Introducing Claude Opus 4.5 .
+ Note: Anthropic NewsroomAccessed: 2026-11-06 
+ External Links: Link 
+ Cited by: §II-B .
+ [26] 
+ Moonshot AI (2025) 
+ Kimi K2 Thinking .
+ Note: Project pageAccessed: 2026-11-06 
+ External Links: Link 
+ Cited by: §II-B .
+ [27] 
+ MiniMax (2025) 
+ MiniMax M2 & agent: ingenious in simplicity .
+ Note: MiniMax NewsAccessed: 2026-11-06 
+ External Links: Link 
+ Cited by: §II-B .
+ [28] 
+ DeepSeek-AI, A. Liu, A. Mei, B. Lin, B. Xue, B. Wang, B. Xu, B. Wu, B. Zhang, C. Lin, C. Dong, C. Lu, C. Zhao, C. Deng, C. Xu, C. Ruan, D. Dai, D. Guo, D. Yang, D. Chen, E. Li, F. Zhou, F. Lin, F. Dai, G. Hao, G. Chen, G. Li, H. Zhang, H. Xu, H. Li, H. Liang, H. Wei, H. Zhang, H. Luo, H. Ji, H. Ding, H. Tang, H. Cao, H. Gao, H. Qu, H. Zeng, J. Huang, J. Li, J. Xu, J. Hu, J. Chen, J. Xiang, J. Yuan, J. Cheng, J. Zhu, J. Ran, J. Jiang, J. Qiu, J. Li, J. Song, K. Dong, K. Gao, K. Guan, K. Huang, K. Zhou, K. Huang, K. Yu, L. Wang, L. Zhang, L. Wang, L. Zhao, L. Yin, L. Guo, L. Luo, L. Ma, L. Wang, L. Zhang, M. S. Di, M. Y. Xu, M. Zhang, M. Zhang, M. Tang, M. Zhou, P. Huang, P. Cong, P. Wang, Q. Wang, Q. Zhu, Q. Li, Q. Chen, Q. Du, R. Xu, R. Ge, R. Zhang, R. Pan, R. Wang, R. Yin, R. Xu, R. Shen, R. Zhang, S. H. Liu, S. Lu, S. Zhou, S. Chen, S. Cai, S. Chen, S. Hu, S. Liu, S. Hu, S. Ma, S. Wang, S. Yu, S. Zhou, S. Pan, S. Zhou, T. Ni, T. Yun, T. Pei, T. Ye, T. Yue, W. Zeng, W. Liu, W. Liang, W. Pang, W. Luo, W. Gao, W. Zhang, X. Gao, X. Wang, X. Bi, X. Liu, X. Wang, X. Chen, X. Zhang, X. Nie, X. Cheng, X. Liu, X. Xie, X. Liu, X. Yu, X. Li, X. Yang, X. Li, X. Chen, X. Su, X. Pan, X. Lin, X. Fu, Y. Q. Wang, Y. Zhang, Y. Xu, Y. Ma, Y. Li, Y. Li, Y. Zhao, Y. Sun, Y. Wang, Y. Qian, Y. Yu, Y. Zhang, Y. Ding, Y. Shi, Y. Xiong, Y. He, Y. Zhou, Y. Zhong, Y. Piao, Y. Wang, Y. Chen, Y. Tan, Y. Wei, Y. Ma, Y. Liu, Y. Yang, Y. Guo, Y. Wu, Y. Wu, Y. Cheng, Y. Ou, Y. Xu, Y. Wang, Y. Gong, Y. Wu, Y. Zou, Y. Li, Y. Xiong, Y. Luo, Y. You, Y. Liu, Y. Zhou, Z. F. Wu, Z. Z. Ren, Z. Zhao, Z. Ren, Z. Sha, Z. Fu, Z. Xu, Z. Xie, Z. Zhang, Z. Hao, Z. Gou, Z. Ma, Z. Yan, Z. Shao, Z. Huang, Z. Wu, Z. Li, Z. Zhang, Z. Xu, Z. Wang, Z. Gu, Z. Zhu, Z. Li, Z. Zhang, Z. Xie, Z. Gao, Z. Pan, Z. Yao, B. Feng, H. Li, J. L. Cai, J. Ni, L. Xu, M. Li, N. Tian, R. J. Chen, R. L. Jin, S. S. Li, S. Zhou, T. Sun, X. Q. Li, X. Jin, X. Shen, X. Chen, X. Song, X. Zhou, Y. X. Zhu, Y. Huang, Y. Li, Y. Zheng, Y. Zhu, Y. Ma, Z. Huang, Z. Xu, Z. Zhang, D. Ji, J. Liang, J. Guo, J. Chen, L. Xia, M. Wang, M. Li, P. Zhang, R. Chen, S. Sun, S. Wu, S. Ye, T. Wang, W. L. Xiao, W. An, X. Wang, X. Sun, X. Wang, Y. Tang, Y. Zha, Z. Zhang, Z. Ju, Z. Zhang, and Z. Qu (2025) 
+ DeepSeek-V3.2: pushing the frontier of open large language models .
+ Note: arXiv preprint arXiv:2512.02556 
+ External Links: 2512.02556 ,
+ Link 
+ Cited by: §II-B .
+ [29] 
+ pytest developers (2026) 
+ Good integration practices: conventions for Python test discovery .
+ Note: pytest documentationAccessed: 2026-11-06 
+ External Links: Link 
+ Cited by: §II-C .
+ [30] 
+ S. Yu, C. Fang, Y. Ling, C. Wu, and Z. Chen (2023) 
+ LLM for test script generation and migration: challenges, capabilities, and opportunities .
+ In 2023 IEEE 23rd International Conference on Software Quality, Reliability, and Security (QRS) ,
+ pp. 206–217 .
+ External Links: Document ,
+ Link 
+ Cited by: §VI-B .
+ [31] 
+ G. Ryan, S. Jain, M. Shang, S. Wang, X. Ma, M. K. Ramanathan, and B. Ray (2024) 
+ Code-aware prompting: a study of coverage-guided test generation in regression setting using LLM .
+ Proceedings of the ACM on Software Engineering 1 ( FSE ), pp. 951–971 .
+ External Links: Document ,
+ Link 
+ Cited by: §VI-B .
+ [32] 
+ J. Shin, S. Hashtroudi, H. Hemmati, and S. Wang (2024) 
+ Domain adaptation for code model-based unit test case generation .
+ In Proceedings of the 33rd ACM SIGSOFT International Symposium on Software Testing and Analysis ,
+ pp. 1211–1222 .
+ External Links: Document ,
+ Link 
+ Cited by: §VI-B .
+ [33] 
+ S. Bhatia, T. Gandhi, D. Kumar, and P. Jalote (2024) 
+ Unit test generation using generative AI : a comparative performance analysis of autogeneration tools .
+ In Proceedings of the 1st International Workshop on Large Language Models for Code ,
+ pp. 54–61 .
+ External Links: Document ,
+ Link 
+ Cited by: §VI-B .
+ [34] 
+ L. Yang, C. Yang, S. Gao, W. Wang, B. Wang, Q. Zhu, X. Chu, J. Zhou, G. Liang, Q. Wang, and J. Chen (2024) 
+ On the evaluation of large language models in unit test generation .
+ In Proceedings of the 39th IEEE/ACM International Conference on Automated Software Engineering ,
+ pp. 1607–1619 .
+ External Links: Document ,
+ Link 
+ Cited by: §VI-B .
+ [35] 
+ D. Molinelli, L. Di Grazia, A. Martin-Lopez, M. D. Ernst, and M. Pezzè (2025) 
+ Do LLMs generate useful test oracles? an empirical study with an unbiased dataset .
+ In 2025 40th IEEE/ACM International Conference on Automated Software Engineering (ASE) ,
+ pp. 278–290 .
+ External Links: Document ,
+ Link 
+ Cited by: §VI-B .
+ [36] 
+ M. Harman, J. Ritchey, I. Harper, S. Sengupta, K. Mao, A. Gulati, C. Foster, and H. Robert (2025) 
+ Mutation-guided LLM-based test generation at Meta .
+ In Proceedings of the 33rd ACM International Conference on the Foundations of Software Engineering ,
+ pp. 180–191 .
+ External Links: Document ,
+ Link 
+ Cited by: §VI-B .
+ [37] 
+ Y. Li, P. Liu, H. Wang, J. Chu, and W. E. Wong (2025) 
+ Evaluating large language models for software testing .
+ Computer Standards & Interfaces 93 , pp. 103942 .
+ External Links: Document ,
+ Link 
+ Cited by: §VII .
+ [38] 
+ Z. Yang, R. Huang, C. Cui, N. Niu, and D. Towey (2026) 
+ Requirements-based test generation: a comprehensive survey .
+ ACM Transactions on Software Engineering and Methodology 35 ( 10 ), pp. 1–61 .
+ External Links: Document ,
+ Link 
+ Cited by: §VII .
+ [39] 
+ A. Örwall (2024) 
+ Moatless tools .
+ Zenodo .
+ Note: Accessed: 2026-11-06 
+ External Links: Document ,
+ Link 
+ Cited by: §VII .
+ [40] 
+ S. Wu (2024) 
+ Introducing Devin, the first AI software engineer .
+ Note: Cognition blogAccessed: 2026-11-06 
+ External Links: Link 
+ Cited by: §VII .
+ [41] 
+ Trae Research Team, P. Gao, Z. Tian, X. Meng, X. Wang, R. Hu, Y. Xiao, Y. Liu, Z. Zhang, J. Chen, C. Gao, Y. Lin, Y. Xiong, C. Peng, and X. Liu (2025) 
+ Trae agent: an LLM-based agent for software engineering with test-time scaling .
+ Note: arXiv preprint arXiv:2507.23370 
+ External Links: 2507.23370 ,
+ Link 
+ Cited by: §VII .
+ [42] 
+ C. Qian, W. Liu, H. Liu, N. Chen, Y. Dang, J. Li, C. Yang, W. Chen, Y. Su, X. Cong, J. Xu, D. Li, Z. Liu, and M. Sun (2024) 
+ ChatDev: communicative agents for software development .
+ In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) ,
+ pp. 15174–15186 .
+ External Links: Document ,
+ Link 
+ Cited by: §VII .
+ [43] 
+ I. Bouzenia and M. Pradel (2025) 
+ Understanding software engineering agents: a study of thought-action-result trajectories .
+ In 2025 40th IEEE/ACM International Conference on Automated Software Engineering (ASE) ,
+ pp. 2846–2857 .
+ External Links: Document ,
+ Link 
+ Cited by: §VII .
+ [44] 
+ O. Majgaonkar, Z. Fei, X. Li, F. Sarro, and H. Ye (2025) 
+ Understanding code agent behaviour: an empirical study of success and failure trajectories .
+ Note: arXiv preprint arXiv:2511.00197 
+ External Links: 2511.00197 ,
+ Link 
+ Cited by: §VII .
+ [45] 
+ I. Ceka, H. Mitchell, S. Pujar, L. Buratti, S. Ramji, J. Yang, G. Kaiser, and B. Ray (2026) 
+ Understanding automated program repair agents through the lens of traceability: an empirical study .
+ Proceedings of the ACM on Software Engineering 3 ( ISSTA ), pp. 4450–4473 .
+ External Links: Document ,
+ Link 
+ Cited by: §VII .
+ [46] 
+ Z. Chen, W. Ma, and L. Jiang (2026) 
+ Beyond final code: a process-oriented error analysis of software development agents in real-world GitHub scenarios .
+ In Proceedings of the 2026 IEEE/ACM 48th International Conference on Software Engineering ,
+ pp. 1532–1544 .
+ External Links: Document ,
+ Link 
+ Cited by: §VII .
+ [47] 
+ S. Liu, F. Liu, L. Li, X. Tan, Y. Zhu, X. Lian, and L. Zhang (2025) 
+ An empirical study on failures in automated issue solving .
+ Note: arXiv preprint arXiv:2509.13941 
+ External Links: 2509.13941 ,
+ Link 
+ Cited by: §VII .
+ Experimental support, please
+ view the build logs 
+ for errors. Generated by
+ L
+ A 
+ T
+ E 
+ xml 
+ .
+ Instructions for reporting errors 
+ We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+ support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+ methods listed below: 
+ Click the "Report Issue" ( 
+ ) button, located in the page header. 
+ Tip: You can select the relevant text first, to include it in your report. 
+ Our team has already identified the following issues . We appreciate your time reviewing and reporting rendering errors we
+ may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+ should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+ all. 
+ Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a list of packages that need conversion , and welcome developer contributions . 
+ We gratefully acknowledge support from our major funders ,
+ member institutions , ,
+ and all contributors.
+ About · 
+ Help · 
+ Contact · 
+ Subscribe · 
+ Copyright · 
+ Privacy · 
+ Accessibility · 
+ Operational Status (opens in new tab) 

@@ -1,0 +1,2938 @@
+ 
+ Free Lunch for LLMs Confidence: The RL Critic Already Knows 
+ Skip to main content 
+ Report GitHub Issue 
+ × 
+ Title: 
+ Content selection saved. Describe the issue below: 
+ Description: 
+ Submit without GitHub 
+ Submit in GitHub 
+ Why HTML? 
+ Report Issue 
+ Back to Abstract 
+ Download PDF 
+ Contents 
+ Reading mode 
+ Colour theme 
+ Abstract 
+ 1 Introduction 
+ 2 Confidence Estimation from Observable Behavior: Do We Need Internal Representations? 
+ Experimental setup. 
+ Confidence estimation with R-Tuning. 
+ Main results. 
+ Conclusion. 
+ 3 Confidence Estimation as Value Function Learning 
+ Setup. 
+ Confidence estimation. 
+ Value function. 
+ Equivalence. 
+ Scope of the equivalence. 
+ Critic-as-Confidence ( CaC ). 
+ 4 Experiments 
+ 4.1 Setup 
+ Datasets. 
+ Baselines. 
+ Evaluation. 
+ 4.2 Results 
+ CaC preserves the policy’s task accuracy. 
+ The critic is the best discriminator in distribution and competitive out of it. 
+ The raw values computed by CaC are calibrated probabilities. 
+ The advantage widens under distribution shift. 
+ 4.3 Inference-Time Scaling with CaC 
+ 4.4 Extension to Critic-Free RL 
+ 4.5 CaC : Confidence along the Trajectory 
+ 5 Related Work 
+ 6 Conclusion 
+ References 
+ A Formal Statements and Proofs for Section  
+ A.1 Setting 
+ A.2 Main Theorem 
+ A.3 Bootstrapped Critics 
+ A.4 Properties of the Shared Target 
+ A.5 Assumptions and Extensions 
+ B Related Work on Training Value Functions for LLMs RL 
+ C Experimental Details 
+ Model. 
+ PPO configuration. 
+ Evaluation. 
+ D Full Results 
+ License: CC BY-NC-SA 4.0
+arXiv:2610.31820v1 [cs.CL] 22 Oct 2026 
+ Free Lunch for LLMs Confidence: The RL Critic Already Knows 
+ Shujin Wu
+ Affiliation:  University of Illinois Urbana-Champaign
+ Heng Ji
+ Affiliation:  {shujinwu, hengji}@illinois.edu 
+ Abstract 
+ Reliable confidence estimation is essential for trustworthy deployment of large language models (LLMs), but dedicated confidence training stage requires additional data and compute. We ask a fundamental question: what prediction problem does confidence training actually solve? Inspired by prior work on external confidence estimation, we compare self- and external estimators of comparable capacity trained on the same (question, response, correctness) triples. We show that an external model trained solely on a policy’s behavioral traces can estimate the policy’s confidence as accurately as the policy itself, without accessing the policy’s internal representations. This points to a deeper connection with value function learning in reinforcement learning (RL): under a correctness-based outcome, we prove that confidence estimation and critic training are equivalent, both predicting the likelihood that a policy’s response will be correct from its trajectory. A simple consequence follows: for LLMs trained with value-based RL, the existing critic can be reused as an off-the-shelf confidence estimator with no additional training or data. The policy remains unchanged, so its task performance is preserved, and the critic provides confidence throughout generation, including intermediate reasoning steps. Across math, code, tool calling, and general reasoning spanning a dozen domains, the reused critic is the best confidence estimator on every in-distribution split and the best-calibrated on 14 of 16, without hurting the task performance. 
+ 1 Introduction 
+ Large language models (LLMs) can produce incorrect answers even when their responses appear fluent and convincing. In many applications, it is therefore important to know not only what an LLM predicts, but also how likely its prediction is to be correct ( Jiang et al., 2021 ; Mielke et al., 2022 ) . This motivates the problem of confidence calibration: a confidence estimate should match the probability that the model’s response is correct ( Guo et al., 2017 ; Jiang et al., 2021 ) . Reliable confidence estimation is, consequently, an important component of trustworthy LLMs deployment. 
+ A growing line of work explicitly trains LLMs to estimate or express their confidence.
+For example, R-Tuning  ( Zhang et al., 2024b ) constructs training data to teach LLMs to recognize the boundaries of their parametric knowledge and respond with “I don’t know.” SaySelf  ( Xu et al., 2024 ) further trains LLMs to produce fine-grained confidence estimates, using automatically constructed supervision for supervised fine-tuning followed by reinforcement learning (RL).
+While these methods demonstrate that confidence estimation can be improved through dedicated training,
+they introduce an extra training stage, requiring extra data and compute beyond the typical LLMs post-training pipeline.
+This motivates us to ask a more fundamental question: what learning problem does confidence training actually solve? 
+ We approach this question by first examining what information is sufficient for learning confidence estimation.
+Inspired by prior work on external confidence estimation ( Ulmer et al., 2024 ; Kapoor et al., 2024 ) , we systematically compare self- and external confidence estimators with comparable model capacity, trained on the same behavioral traces ( i.e., question–response–correctness triples).
+Our empirical experiments demonstrate that without access to the internal representations of the target policy, an external model can learn to estimate the confidence of an LLM policy as accurately as the policy itself, using only the observable behavior of the policy. 
+ This finding leads us to a deeper connection between confidence estimation and value function learning in reinforcement learning (RL).
+In value-based reinforcement learning, a critic learns to predict the expected outcome of a policy’s behavior based on the information available along its trajectory  ( Sutton and Barto, 2018 ) .
+For an LLM solving a math problem, for example, this information consists of the question together with the solution generated so far. When the outcome is binary correctness, the critic’s prediction corresponds to the likelihood that the final response will be correct, which is precisely what a confidence estimator is trained to capture.
+For continuous correctness or quality rewards, the same connection holds with confidence interpreted as the expected outcome under the chosen reward.
+Thus, confidence estimation and critic training can be understood as learning the same prediction problem: predicting the likelihood that a policy’s outcome will be correct, given the information available along its trajectory.
+We formalize and prove this equivalence in Section  3 . 
+ This perspective leads to a striking practical consequence: for LLMs trained with value-based RL, the confidence estimator is already embedded in the RL training pipeline. In particular, for algorithms such as Proximal Policy Optimization (PPO)  ( Schulman et al., 2017 ) , the critic trained during RL can be directly reused as an off-the-shelf confidence estimator. This reuse has several practical advantages. First, it requires no additional confidence-specific training or data collection, avoiding the extra optimization stage that may otherwise alter the original policy. Second, the critic is trained throughout the RL process on the policy’s trajectories, providing supervision across a broad range of states encountered during generation rather than only at the final response. This enables the same critic to estimate confidence not only for complete responses, but also for intermediate reasoning steps. Finally, because the critic learns from the policy’s behavior rather than from task-specific confidence annotations, it can be naturally transferred across downstream tasks.
+Thus, a value function trained for RL can be repurposed as a general-purpose confidence estimator without modifying the original policy. 
+ We evaluate this approach, Critic-as-Confidence ( CaC ), on two LLMs across math, code, agentic tool calling, and general reasoning, spanning a dozen domains. Against both training-free and training-based baselines, CaC is the best discriminator on every in-distribution split and the best-calibrated on 14 of 16, while fine-tuning the policy for confidence costs 3.9 accuracy points on average.
+The critic is also useful beyond confidence estimation. Selecting the highest-confidence sample among eight improves accuracy by 4.1 to 5.6 points, and reading the critic at intermediate prefixes gives confidence before and during generation, enabling early termination.
+We also find that the recipe extends to critic-free RL, where a value model fit post hoc on GRPO rollouts is again the best estimator. 
+ Our contribution goes beyond turning a critic into a confidence estimator.
+We establish a conceptual bridge between confidence estimation and value function learning, revealing that what is often treated as a separate confidence estimation problem can, under a correctness-based outcome, be viewed as the same prediction problem already solved by RL critics.
+This perspective offers a unified way to understand and develop confidence estimation from policy trajectories, and invites a broader rethinking of how existing RL training signals and value functions can be repurposed for confidence estimation. 
+ 2 Confidence Estimation from Observable Behavior: Do We Need Internal Representations? 
+ To understand whether a separate confidence training stage is necessary for teaching LLMs to give reliable confidence estimation, we first examine the prediction problem underlying confidence estimation and the supervision it requires.
+We begin by testing whether confidence can be learned from a policy’s observable behavior alone. 
+ Following the general training-based paradigm of prior confidence estimation methods  ( Zhang et al., 2024b ) , we train an external model with comparable capacity using only question–response–correctness triples collected from the target policy.
+This training relies exclusively on the policy’s observable behavior.
+We then test whether an external model can estimate the target policy’s confidence as accurately as the policy itself.
+Notably, the external model has no access to the target policy’s internal representations or token-level probabilities. 
+ Experimental setup. 
+ We select Llama-3-8B-Instruct  ( Grattafiori et al., 2024 ) as the target policy π θ \pi_{\theta} .
+For each benchmark, we sample responses y ∼ π θ ( ⋅ ∣ x ) y\sim\pi_{\theta}(\cdot\mid x) from the training split and automatically evaluate their correctness c ∈ { 0 , 1 } c\in\{0,1\} using the corresponding benchmark-specific grader.
+This yields a behavioral dataset 
+ 𝒟 = { ( x i , y i , c i ) } i = 1 N . \mathcal{D}=\{(x_{i},y_{i},c_{i})\}_{i=1}^{N}. 
+ We cap the number of training examples at 2,000 per benchmark.
+We evaluate on five benchmarks spanning three task families: GSM8K  ( Cobbe et al., 2021 ) and NuminaMath  ( Li et al., 2024 ) for mathematical reasoning, APPS-intro  ( Hendrycks et al., 2021 ) and TACO  ( Li et al., 2023b ) for code generation, and ARC-Challenge  ( Clark et al., 2018 ) for multiple-choice science reasoning. 
+ Confidence estimation with R-Tuning. 
+ We adopt R-Tuning  ( Zhang et al., 2024b ) as a representative training-based confidence estimator.
+Similar with related methods  ( Lin et al., 2022 ; Kapoor et al., 2024 ; Xu et al., 2024 ) , it supervises a model with correctness labels derived from the target policy’s own responses, so our findings are not specific to its particular output format.
+Following R-Tuning, we convert each behavioral example into a supervised fine-tuning target by appending a confidence statement to the response.
+For a correct response, we append “I am sure” to the response, while for an incorrect response, we append “I am unsure”.
+At inference time, we use the probability assigned to the confidence token as a continuous confidence score.
+We train three models with similar capacities on the same behavioral dataset: the target Llama-3-8B-Instruct model for self-estimation, and Qwen2.5-7B-Instruct  ( Qwen Team, 2024 ) and Mistral-7B-Instruct-v0.3  ( Jiang et al., 2023 ) as external estimators.
+All models are fine-tuned with the same LoRA-based  ( Hu et al., 2022 ) supervised fine-tuning procedure.
+The key difference is that the self-estimation model has access to its own internal representations  ( Kadavath et al., 2022 ; Azaria and Mitchell, 2023 ) , whereas the external estimators receive only the question and the target policy’s response as text. 
+ Main results. 
+ Table  1 reports AUC (AUROC) for correctness discrimination, together with expected calibration error (ECE) ( Naeini et al., 2015 ) and Brier score ( Brier, 1950 ) for evaluating the quality of the predicted probabilities.
+External estimators achieve comparable discrimination overall: Qwen2.5-7B-Instruct stays within 0.05 AUROC of the self-estimator on four of the five benchmarks, and an external estimator achieves the highest AUROC, including ties, on four benchmarks.
+The probability-based metrics provide further evidence that strong confidence estimation can be learned from observable behavior: on every benchmark, at least one external estimator matches or improves upon the self-estimator’s ECE, and the same holds for Brier score on three of the five benchmarks. 
+ Estimator 
+ GSM8K 
+ Numina 
+ ARC-C 
+ APPS 
+ TACO 
+ AUC ↑ \uparrow 
+ Self 
+ 0.71 
+ 0.83 
+ 0.67 
+ 0.84 
+ 0.89 
+ Qwen-7B 
+ 0.75 
+ 0.83 
+ 0.63 
+ 0.82 
+ 0.80 
+ Mistral-7B 
+ 0.71 
+ 0.68 
+ 0.58 
+ 0.86 
+ 0.90 
+ ECE ↓ \downarrow 
+ Self 
+ 0.21 
+ 0.08 
+ 0.07 
+ 0.05 
+ 0.06 
+ Qwen-7B 
+ 0.10 
+ 0.07 
+ 0.04 
+ 0.05 
+ 0.11 
+ Mistral-7B 
+ 0.09 
+ 0.31 
+ 0.26 
+ 0.11 
+ 0.06 
+ Brier ↓ \downarrow 
+ Self 
+ 0.20 
+ 0.13 
+ 0.18 
+ 0.11 
+ 0.02 
+ Qwen-7B 
+ 0.16 
+ 0.14 
+ 0.15 
+ 0.12 
+ 0.03 
+ Mistral-7B 
+ 0.17 
+ 0.27 
+ 0.22 
+ 0.11 
+ 0.04 
+ Table 1: Confidence estimation on the responses from
+Llama-3-8B-Instruct using self and external estimators. 
+ Conclusion. 
+ These results show that privileged access to a target policy’s internal representations is not necessary for learning a strong confidence signal: the information required for confidence estimation is already contained in the policy’s observable input–output behavior.
+This reframes confidence estimation as an external prediction problem: 
+ f ⁡ ( x , y ) → P ⁡ ( c = 1 ∣ x , y ) . f(x,y)\rightarrow P(c=1\mid x,y). 
+ The next section shows that, under a correctness-based reward, this is precisely the prediction problem learned by the value function in reinforcement learning  ( Sutton and Barto, 2018 ) . 
+ 3 Confidence Estimation as Value Function Learning 
+ Section  2 raises a natural question: why can a policy’s confidence be estimated from its observable behavior alone? The key intuition is simple: confidence is the probability that the policy’s response will eventually be correct.
+This probability is determined by how the policy behaves and how its outcomes are evaluated.
+The policy’s internal representations may provide useful features for estimating this probability, but they do not change what we are trying to estimate.
+Under a correctness-based reward, this probability is exactly the value function that a critic learns in value-based RL.
+We formalize this connection below and defer the full proofs to Appendix  A . 
+ Setup. 
+ Let x x be a prompt and y = ( y 1 , … , y T ) y=(y_{1},\dots,y_{T}) a response generated token by token from π θ \pi_{\theta} . The state at step t t is the prefix s t = ( x , y 1 : t ) s_{t}=(x,y_{1:t}) ; s T = ( x , y ) s_{T}=(x,y) is the complete pair. A grader assigns a correctness label c ∈ { 0 , 1 } c\in\{0,1\} to ( x , y ) (x,y) , and RL uses it as the terminal reward, R ⁡ ( x , y ) = c R(x,y)=c , with no intermediate rewards. We write 𝔼 π \mathbb{E}_{\pi} for expectation over ( x , y , c ) (x,y,c) with y ∼ π θ ( ⋅ ∣ x ) y\sim\pi_{\theta}(\cdot\mid x) . 
+ Confidence estimation. 
+ A calibrator f ϕ f_{\phi} is trained on behavioral traces to predict correctness, 
+ min ϕ ⁡ 𝔼 π ​ [ ℒ ⁡ ( f ϕ ​ ( x , y ) , c ) ] , \min_{\phi}\;\mathbb{E}_{\pi}\big[\mathcal{L}\big(f_{\phi}(x,y),\,c\big)\big], 
+ (1) 
+ where ℒ \mathcal{L} is the log loss or the squared loss. Both are strictly proper scoring rules, so the optimal calibrator f ∗ f^{*} is the conditional probability of correctness, f ∗ ​ ( x , y ) = ℙ π ​ ( c = 1 ∣ x , y ) f^{*}(x,y)=\mathbb{P}_{\pi}(c=1\mid x,y) . The same objective applies to a prefix s t s_{t} in place of ( x , y ) (x,y) . 
+ Value function. 
+ A critic V ψ V_{\psi} is trained to predict the expected return from a state. With a terminal correctness reward, the return from every prefix is R ⁡ ( x , y ) R(x,y) itself, so the Monte Carlo objective is 
+ min ψ ⁡ 𝔼 π ​ [ ( V ψ ​ ( s t ) − R ⁡ ( x , y ) ) 2 ] , \min_{\psi}\;\mathbb{E}_{\pi}\Big[\big(V_{\psi}(s_{t})-R(x,y)\big)^{2}\Big], 
+ (2) 
+ whose optimum is the true value function V π ​ ( s t ) = 𝔼 π ​ [ R ∣ s t ] V^{\pi}(s_{t})=\mathbb{E}_{\pi}[R\mid s_{t}] .
+In practice, PPO fits its critic to bootstrapped GAE targets rather than directly to Eq. ( 2 ), but these targets have the same fixed point (Appendix  A.3 ). 
+ Equivalence. 
+ Because R = c R=c is binary, the expected return is simply the probability of a correct final response. Thus, the two problems make the same prediction at every step of the trajectory. 
+ Theorem 1 (informal; see Theorem  A.1 in Appendix  A ) . 
+ Under a terminal correctness reward, for every step t t , 
+ V π ​ ( s t ) = f ∗ ​ ( s t ) = ℙ π ​ ( c = 1 ∣ s t ) . V^{\pi}(s_{t})\;=\;f^{*}(s_{t})\;=\;\mathbb{P}_{\pi}\big(c=1\mid s_{t}\big). 
+ (3) 
+ With the squared loss, Eqs. ( 1 ) and ( 2 ) are the same objective on the same data and so have the same minimizers for any model class; with the log loss, they share the same optimum whenever the model class can represent it. The shared solution is perfectly calibrated, attains the highest calibration performance among all functions of the prefix, and is consistent along the trajectory, 𝔼 π ​ [ V π ​ ( s t + 1 ) ∣ s t ] = V π ​ ( s t ) \mathbb{E}_{\pi}[V^{\pi}(s_{t+1})\mid s_{t}]=V^{\pi}(s_{t}) . 
+ The only difference between a calibrator and a critic is therefore when it is trained.
+The calibrator is trained post hoc, as a dedicated module on freshly collected traces,
+and the critic is trained during RL, as a byproduct of policy optimization, on every state of every rollout. For LLMs post-trained with a value-based method such as PPO  ( Schulman et al., 2017 ) , VC-PPO  ( Yuan et al., 2025 ) or VAPO  ( Yue et al., 2025 ) , the critic is already available. 
+ Three unique advantages are derived from the theory.
+First, by Theorem  1 the critic’s target is the correctness probability at every prefix, and these estimates are consistent along the trajectory (Appendix  A.4 ).
+The critic thus provides confidence before generation starts ( s 0 s_{0} , the prompt alone), at intermediate steps, and at the final response, whereas a calibrator trained on ( x , y , c ) (x,y,c) triples is supervised only at s T s_{T} . Second, the critic’s supervision is drawn from the policy’s own rollouts throughout RL, so it needs no separate data collection and covers every trajectory of training rather than a capped sample. Third, since the estimator is external to the policy (Theorem  1 never refers to its parameters), the policy is left untouched and its task performance cannot be degraded by confidence training, unlike methods that fine-tune the policy itself to express confidence ( Zhang et al., 2024b ; Xu et al., 2024 ) . 
+ Scope of the equivalence. 
+ The connection holds for any fixed policy, allows stochastic graders, and is independent of the estimator’s architecture.
+With the same model class and data, the squared-loss objectives are identical.
+More generally, any strictly proper loss recovers the same correctness probability whenever the model class can represent it. Bootstrapped GAE targets also preserve V π V^{\pi} as their unique population fixed point for every λ ∈ [ 0 , 1 ] \lambda\in[0,1] (Appendix  A.3 ). 
+ Applying this equivalence to a trained critic requires considering three aspects of the RL setup (Appendix  A.5 ).
+First, the critic must estimate the undiscounted terminal correctness return ( R = c R=c , γ = 1 \gamma=1 ). KL regularization may be applied as a separate policy loss, whereas including KL penalties or other shaping terms in the reward changes the value target.
+Second, the critic estimates correctness under a particular policy and its decoding settings, so it should be used with the corresponding policy and training-time decoding settings.
+Third, the learning objectives are defined under the RL prompt distribution,
+and whether the trained critic transfers to other tasks is an empirical question addressed in Section  4 . 
+ Critic-as-Confidence ( CaC ). 
+ Given a policy π θ \pi_{\theta} and the critic V ψ V_{\psi} from the same RL run, CaC uses the critic, unchanged, as the confidence estimator: p ^ ​ ( x , y ) = clip ⁡ ( V ψ ​ ( x , y ) , 0 , 1 ) \hat{p}(x,y)=\mathrm{clip}(V_{\psi}(x,y),0,1) for a complete response and p ^ ( x , y 1 : t ) = clip ( V ψ ( x , y 1 : t ) , 0 , 1 ) \hat{p}(x,y_{1:t})=\mathrm{clip}(V_{\psi}(x,y_{1:t}),0,1) for a partial one, read off at the last generated token.
+The clipping here only guards against regression outputs slightly outside [ 0 , 1 ] [0,1] .
+ CaC needs no confidence-specific data, no additional training, and no modification of the policy, whose task performance is preserved by construction.
+The extra inference-time cost is only one critic forward pass. 
+ 4 Experiments 
+ Math 
+ Code 
+ Tool Calling 
+ General 
+ Method 
+ ID 
+ OOD 
+ ID 
+ OOD 
+ ID 
+ OOD 
+ ID 
+ OOD 
+ Avg. 
+ R-Tuning 
+ 38.5 
+ 70.5 
+ 49.7 
+ 57.5 
+ 47.2 
+ 59.5 
+ 26.1 
+ 54.0 
+ 50.4 
+ Original Policy 
+ 43.6 
+ 73.4 
+ 51.6 
+ 58.2 
+ 52.2 
+ 59.1 
+ 33.8 
+ 62.6 
+ 54.3 
+ Maj@8 
+ 43.9 
+ 78.3 
+ 53.7 
+ 60.1 
+ 52.3 
+ 60.5 
+ 35.5 
+ 67.1 
+ 56.4 
+ CaC Selection (ours) 
+ 44.1 
+ 80.3 
+ 55.2 
+ 63.4 
+ 52.3 
+ 62.1 
+ 38.7 
+ 71.2 
+ 58.4 
+ Qwen3-8B 
+ Best@8 (oracle) 
+ 45.7 
+ 86.7 
+ 60.7 
+ 69.4 
+ 52.5 
+ 64.4 
+ 44.8 
+ 74.5 
+ 62.3 
+ R-Tuning 
+ 49.1 
+ 65.9 
+ 53.2 
+ 59.9 
+ 48.6 
+ 57.3 
+ 23.1 
+ 55.6 
+ 51.6 
+ Original Policy 
+ 54.5 
+ 72.9 
+ 55.9 
+ 60.8 
+ 49.4 
+ 59.0 
+ 30.1 
+ 61.2 
+ 55.5 
+ Maj@8 
+ 55.2 
+ 78.3 
+ 56.6 
+ 63.2 
+ 51.2 
+ 65.2 
+ 37.2 
+ 64.8 
+ 59.0 
+ CaC Selection (ours) 
+ 55.7 
+ 81.2 
+ 60.1 
+ 64.2 
+ 51.1 
+ 68.4 
+ 38.5 
+ 69.7 
+ 61.1 
+ Nemotron- 
+ Cascade-8B 
+ Best@8 (oracle) 
+ 56.5 
+ 85.0 
+ 64.2 
+ 70.5 
+ 58.8 
+ 70.9 
+ 42.8 
+ 76.1 
+ 65.6 
+ Table 2: Task accuracy (%) with and without inference-time scaling.
+Rows above the thin rule use a single response; rows below sample N = 8 N{=}8 responses, where CaC Selection returns the one with the highest critic-estimated confidence and Best@8 is the oracle upper bound. 
+ Math 
+ Code 
+ Tool Calling 
+ ID 
+ OOD 
+ ID 
+ OOD 
+ ID 
+ OOD 
+ Method 
+ AUC 
+ ECE 
+ Brier 
+ AUC 
+ ECE 
+ Brier 
+ AUC 
+ ECE 
+ Brier 
+ AUC 
+ ECE 
+ Brier 
+ AUC 
+ ECE 
+ Brier 
+ AUC 
+ ECE 
+ Brier 
+ Qwen3-8B 
+ Verbalized 
+ 0.66 
+ 0.56 
+ 0.53 
+ 0.73 
+ 0.19 
+ 0.21 
+ 0.60 
+ 0.37 
+ 0.38 
+ 0.61 
+ 0.28 
+ 0.26 
+ 0.47 
+ 0.37 
+ 0.39 
+ 0.57 
+ 0.30 
+ 0.33 
+ Self-consistency 
+ 0.70 
+ 0.44 
+ 0.42 
+ 0.94 
+ 0.16 
+ 0.06 
+ 0.78 
+ 0.22 
+ 0.23 
+ 0.89 
+ 0.10 
+ 0.10 
+ 0.71 
+ 0.38 
+ 0.36 
+ 0.91 
+ 0.30 
+ 0.30 
+ R-Tuning 
+ 0.89 
+ 0.05 
+ 0.13 
+ 0.88 
+ 0.24 
+ 0.18 
+ 0.86 
+ 0.05 
+ 0.15 
+ 0.85 
+ 0.08 
+ 0.11 
+ 0.95 
+ 0.07 
+ 0.08 
+ 0.90 
+ 0.19 
+ 0.16 
+ Probe 
+ 0.88 
+ 0.05 
+ 0.15 
+ 0.89 
+ 0.24 
+ 0.17 
+ 0.88 
+ 0.06 
+ 0.14 
+ 0.84 
+ 0.10 
+ 0.12 
+ 0.93 
+ 0.12 
+ 0.10 
+ 0.85 
+ 0.15 
+ 0.18 
+ CaC (ours) 
+ 0.91 
+ 0.03 
+ 0.14 
+ 0.94 
+ 0.13 
+ 0.15 
+ 0.93 
+ 0.04 
+ 0.11 
+ 0.91 
+ 0.06 
+ 0.08 
+ 0.97 
+ 0.06 
+ 0.05 
+ 0.92 
+ 0.11 
+ 0.15 
+ Nemotron-Cascade-8B 
+ Verbalized 
+ 0.62 
+ 0.47 
+ 0.45 
+ 0.70 
+ 0.26 
+ 0.28 
+ 0.58 
+ 0.33 
+ 0.35 
+ 0.60 
+ 0.32 
+ 0.28 
+ 0.56 
+ 0.32 
+ 0.36 
+ 0.46 
+ 0.28 
+ 0.35 
+ Self-consistency 
+ 0.83 
+ 0.23 
+ 0.22 
+ 0.97 
+ 0.18 
+ 0.19 
+ 0.76 
+ 0.24 
+ 0.25 
+ 0.88 
+ 0.20 
+ 0.16 
+ 0.81 
+ 0.22 
+ 0.22 
+ 0.77 
+ 0.24 
+ 0.28 
+ R-Tuning 
+ 0.85 
+ 0.04 
+ 0.15 
+ 0.88 
+ 0.20 
+ 0.17 
+ 0.89 
+ 0.03 
+ 0.13 
+ 0.79 
+ 0.09 
+ 0.09 
+ 0.86 
+ 0.04 
+ 0.15 
+ 0.72 
+ 0.23 
+ 0.26 
+ Probe 
+ 0.84 
+ 0.04 
+ 0.15 
+ 0.87 
+ 0.19 
+ 0.18 
+ 0.89 
+ 0.03 
+ 0.13 
+ 0.80 
+ 0.09 
+ 0.09 
+ 0.86 
+ 0.04 
+ 0.14 
+ 0.74 
+ 0.30 
+ 0.30 
+ CaC (ours) 
+ 0.87 
+ 0.03 
+ 0.14 
+ 0.99 
+ 0.17 
+ 0.14 
+ 0.91 
+ 0.03 
+ 0.12 
+ 0.84 
+ 0.08 
+ 0.09 
+ 0.88 
+ 0.03 
+ 0.13 
+ 0.77 
+ 0.21 
+ 0.24 
+ Table 3: Confidence estimation performance on math, code and agentic tool calling for two PPO-trained LLMs.
+ AUC is AUROC (higher is better), ECE and Brier are lower-is-better. 
+ID and OOD values are averages over the sub-benchmarks of each split weighted by the number of scored samples (per-benchmark results in Appendix  D ). 
+ In distribution 
+ Out of distribution 
+ Method 
+ Phys. 
+ Math 
+ Bus. 
+ Chem. 
+ Fin. 
+ Econ. 
+ Hist. 
+ Bio. 
+ All 
+ Phys. 
+ Bio. 
+ Med. 
+ Multi 
+ Chem. 
+ All 
+ Qwen3-8B 
+ AUC ↑ \uparrow 
+ Verbalized 
+ 0.59 
+ 0.55 
+ 0.52 
+ 0.52 
+ 0.53 
+ 0.53 
+ 0.36 
+ 0.48 
+ 0.55 
+ 0.69 
+ 0.52 
+ 0.60 
+ 0.56 
+ 0.55 
+ 0.59 
+ Self-consistency 
+ 0.79 
+ 0.80 
+ 0.64 
+ 0.76 
+ 0.75 
+ 0.82 
+ 0.77 
+ 0.73 
+ 0.76 
+ 0.84 
+ 0.71 
+ 0.82 
+ 0.81 
+ 0.76 
+ 0.79 
+ R-Tuning 
+ 0.77 
+ 0.75 
+ 0.63 
+ 0.74 
+ 0.68 
+ 0.67 
+ 0.84 
+ 0.77 
+ 0.73 
+ 0.87 
+ 0.81 
+ 0.70 
+ 0.64 
+ 0.61 
+ 0.73 
+ Probe 
+ 0.81 
+ 0.76 
+ 0.63 
+ 0.76 
+ 0.68 
+ 0.66 
+ 0.87 
+ 0.78 
+ 0.75 
+ 0.82 
+ 0.71 
+ 0.67 
+ 0.62 
+ 0.59 
+ 0.68 
+ CaC (ours) 
+ 0.98 
+ 0.88 
+ 0.69 
+ 0.81 
+ 0.78 
+ 0.75 
+ 0.87 
+ 0.82 
+ 0.86 
+ 0.93 
+ 0.83 
+ 0.74 
+ 0.83 
+ 0.66 
+ 0.80 
+ ECE ↓ \downarrow 
+ Verbalized 
+ 0.77 
+ 0.56 
+ 0.64 
+ 0.71 
+ 0.56 
+ 0.37 
+ 0.65 
+ 0.72 
+ 0.66 
+ 0.77 
+ 0.21 
+ 0.21 
+ 0.28 
+ 0.36 
+ 0.37 
+ Self-consistency 
+ 0.28 
+ 0.18 
+ 0.34 
+ 0.25 
+ 0.13 
+ 0.19 
+ 0.31 
+ 0.36 
+ 0.25 
+ 0.22 
+ 0.16 
+ 0.10 
+ 0.15 
+ 0.14 
+ 0.15 
+ R-Tuning 
+ 0.03 
+ 0.05 
+ 0.14 
+ 0.05 
+ 0.08 
+ 0.18 
+ 0.09 
+ 0.19 
+ 0.07 
+ 0.05 
+ 0.27 
+ 0.19 
+ 0.18 
+ 0.12 
+ 0.16 
+ Probe 
+ 0.03 
+ 0.06 
+ 0.15 
+ 0.07 
+ 0.08 
+ 0.19 
+ 0.10 
+ 0.18 
+ 0.08 
+ 0.03 
+ 0.30 
+ 0.18 
+ 0.15 
+ 0.15 
+ 0.16 
+ CaC (ours) 
+ 0.02 
+ 0.04 
+ 0.12 
+ 0.04 
+ 0.06 
+ 0.15 
+ 0.07 
+ 0.11 
+ 0.06 
+ 0.03 
+ 0.21 
+ 0.17 
+ 0.13 
+ 0.08 
+ 0.12 
+ Brier ↓ \downarrow 
+ Verbalized 
+ 0.72 
+ 0.55 
+ 0.60 
+ 0.67 
+ 0.53 
+ 0.38 
+ 0.63 
+ 0.67 
+ 0.62 
+ 0.71 
+ 0.25 
+ 0.25 
+ 0.31 
+ 0.37 
+ 0.38 
+ Self-consistency 
+ 0.21 
+ 0.21 
+ 0.34 
+ 0.23 
+ 0.19 
+ 0.22 
+ 0.28 
+ 0.30 
+ 0.23 
+ 0.16 
+ 0.21 
+ 0.15 
+ 0.19 
+ 0.22 
+ 0.19 
+ R-Tuning 
+ 0.09 
+ 0.19 
+ 0.21 
+ 0.14 
+ 0.21 
+ 0.23 
+ 0.14 
+ 0.16 
+ 0.16 
+ 0.10 
+ 0.23 
+ 0.22 
+ 0.25 
+ 0.25 
+ 0.21 
+ Probe 
+ 0.08 
+ 0.19 
+ 0.22 
+ 0.14 
+ 0.20 
+ 0.24 
+ 0.13 
+ 0.15 
+ 0.15 
+ 0.10 
+ 0.28 
+ 0.22 
+ 0.25 
+ 0.27 
+ 0.22 
+ CaC (ours) 
+ 0.03 
+ 0.16 
+ 0.20 
+ 0.11 
+ 0.18 
+ 0.20 
+ 0.11 
+ 0.14 
+ 0.12 
+ 0.07 
+ 0.18 
+ 0.20 
+ 0.19 
+ 0.23 
+ 0.17 
+ Nemotron-Cascade-8B 
+ AUC ↑ \uparrow 
+ Verbalized 
+ 0.54 
+ 0.61 
+ 0.55 
+ 0.58 
+ 0.54 
+ 0.57 
+ 0.49 
+ 0.49 
+ 0.56 
+ 0.58 
+ 0.73 
+ 0.57 
+ 0.59 
+ 0.56 
+ 0.61 
+ Self-consistency 
+ 0.83 
+ 0.80 
+ 0.69 
+ 0.75 
+ 0.71 
+ 0.73 
+ 0.70 
+ 0.80 
+ 0.78 
+ 0.87 
+ 0.77 
+ 0.69 
+ 0.74 
+ 0.66 
+ 0.74 
+ R-Tuning 
+ 0.80 
+ 0.76 
+ 0.67 
+ 0.77 
+ 0.69 
+ 0.77 
+ 0.75 
+ 0.77 
+ 0.76 
+ 0.80 
+ 0.77 
+ 0.64 
+ 0.64 
+ 0.61 
+ 0.69 
+ Probe 
+ 0.83 
+ 0.80 
+ 0.69 
+ 0.81 
+ 0.72 
+ 0.78 
+ 0.81 
+ 0.76 
+ 0.79 
+ 0.73 
+ 0.78 
+ 0.62 
+ 0.63 
+ 0.59 
+ 0.67 
+ CaC (ours) 
+ 0.95 
+ 0.91 
+ 0.73 
+ 0.80 
+ 0.74 
+ 0.81 
+ 0.81 
+ 0.77 
+ 0.86 
+ 0.83 
+ 0.78 
+ 0.67 
+ 0.79 
+ 0.68 
+ 0.75 
+ ECE ↓ \downarrow 
+ Verbalized 
+ 0.74 
+ 0.47 
+ 0.56 
+ 0.72 
+ 0.54 
+ 0.41 
+ 0.68 
+ 0.68 
+ 0.62 
+ 0.63 
+ 0.13 
+ 0.21 
+ 0.25 
+ 0.25 
+ 0.29 
+ Self-consistency 
+ 0.21 
+ 0.17 
+ 0.22 
+ 0.31 
+ 0.07 
+ 0.16 
+ 0.37 
+ 0.28 
+ 0.21 
+ 0.15 
+ 0.16 
+ 0.12 
+ 0.17 
+ 0.14 
+ 0.15 
+ R-Tuning 
+ 0.04 
+ 0.05 
+ 0.08 
+ 0.06 
+ 0.08 
+ 0.12 
+ 0.12 
+ 0.15 
+ 0.06 
+ 0.06 
+ 0.10 
+ 0.21 
+ 0.24 
+ 0.23 
+ 0.17 
+ Probe 
+ 0.05 
+ 0.04 
+ 0.10 
+ 0.05 
+ 0.07 
+ 0.08 
+ 0.13 
+ 0.20 
+ 0.06 
+ 0.06 
+ 0.27 
+ 0.17 
+ 0.26 
+ 0.14 
+ 0.18 
+ CaC (ours) 
+ 0.05 
+ 0.04 
+ 0.07 
+ 0.06 
+ 0.05 
+ 0.08 
+ 0.15 
+ 0.22 
+ 0.06 
+ 0.05 
+ 0.11 
+ 0.11 
+ 0.19 
+ 0.12 
+ 0.12 
+ Brier ↓ \downarrow 
+ Verbalized 
+ 0.67 
+ 0.44 
+ 0.52 
+ 0.66 
+ 0.51 
+ 0.41 
+ 0.62 
+ 0.62 
+ 0.57 
+ 0.56 
+ 0.19 
+ 0.25 
+ 0.29 
+ 0.31 
+ 0.32 
+ Self-consistency 
+ 0.14 
+ 0.20 
+ 0.27 
+ 0.26 
+ 0.15 
+ 0.19 
+ 0.35 
+ 0.23 
+ 0.20 
+ 0.13 
+ 0.19 
+ 0.18 
+ 0.23 
+ 0.24 
+ 0.19 
+ R-Tuning 
+ 0.08 
+ 0.18 
+ 0.20 
+ 0.12 
+ 0.19 
+ 0.19 
+ 0.14 
+ 0.18 
+ 0.14 
+ 0.13 
+ 0.17 
+ 0.25 
+ 0.28 
+ 0.29 
+ 0.22 
+ Probe 
+ 0.07 
+ 0.17 
+ 0.20 
+ 0.12 
+ 0.19 
+ 0.19 
+ 0.13 
+ 0.16 
+ 0.14 
+ 0.13 
+ 0.24 
+ 0.25 
+ 0.31 
+ 0.27 
+ 0.24 
+ CaC (ours) 
+ 0.07 
+ 0.14 
+ 0.19 
+ 0.10 
+ 0.18 
+ 0.18 
+ 0.15 
+ 0.16 
+ 0.12 
+ 0.12 
+ 0.16 
+ 0.19 
+ 0.21 
+ 0.24 
+ 0.18 
+ Table 4: Confidence estimation performance on general reasoning benchmarks spanning multiple domains. LLMs are trained with PPO on WebInstruct-verified. 
+ 4.1 Setup 
+ Datasets. 
+ We train Qwen3-8B ( Yang et al., 2025 ) and Nemotron-Cascade-8B ( Wang et al., 2025 ) with PPO ( Schulman et al., 2017 ) , one run per domain:
+math on NuminaMath ( Li et al., 2024 ) , code on TACO, CodeContests and Codeforces ( Li et al., 2023b ; Li et al., 2022 ; Penedo et al., 2025 ) ,
+and agentic tool calling on ToolRL ( Qian et al., 2025 ) .
+We also run mix-RL experiments on a general reasoning dataset WebInstruct-verified ( Ma et al., 2025 ) that spans multiple domains.
+ CaC reads the critic at the last response token and clips it to [ 0 , 1 ] [0,1] . 
+ Baselines. 
+ Verbalized ( Tian et al., 2023 ; Xiong et al., 2024 ) asks the policy for the probability that its answer is correct.
+ Self-consistency ( Wang et al., 2023 ) uses the agreement rate among 8 samples, at 8 × 8\times the inference cost.
+ R-Tuning ( Zhang et al., 2024b ) , the training-based estimator, fine-tunes the policy on held-out labeled responses to append “I am sure” or “I am unsure”.
+ Probe ( Azaria and Mitchell, 2023 ; Kadavath et al., 2022 ) fits a linear classifier on the policy’s last-token activations with the same labeled data.
+The labeled sets are disjoint from all RL training and evaluation data, and each contains the same number of examples as the corresponding RL training set. 
+ Evaluation. 
+ Each domain has an in-distribution (ID) split of held-out problems from the RL training sources and an out-of-distribution (OOD) split from external benchmarks:
+AIME 2024/2025 ( Mathematical Association of America, 2025 ) for math, LiveCodeBench ( Jain et al., 2025 ) for code,
+API-Bank ( Li et al., 2023a ) for tool calling.
+For general reasoning, the OOD split draws 400 questions each from MedMCQA ( Pal et al., 2022 ) , PubMedQA ( Jin et al., 2019 ) , ChemBench ( Zhang et al., 2024a ) , UGPhysics ( Xu et al., 2025 ) , and OpenScienceReasoning-2 ( NVIDIA, 2025 ) .
+Every prompt is answered with several samples at the RL temperature, and every sample is scored with AUROC (AUC), 15-bin ECE and the Brier score. Split-level numbers are averages over sub-benchmarks weighted by sample count,
+and per-benchmark results are in Appendix  D .
+We also describe the additional training and evaluation details in Appendix  C . 
+ 4.2 Results 
+ Table  2 reports task accuracy, Table  3 reports confidence estimation on math, code and agentic tool calling,
+and Table  4 reports general reasoning by domain.
+The lower half of Table  2 (inference-time scaling) is discussed in Section  4.3 . 
+ CaC preserves the policy’s task accuracy. 
+ CaC never updates the policy, so its task accuracy is exactly that of the RL policy (the Original Policy rows in Table  2 ). R-Tuning does not share this property: fine-tuning the policy on the confidence objective lowers accuracy on 15 of the 16 model–domain–split combinations, by 3.9 points on average for both Qwen3-8B and Nemotron-Cascade-8B.
+This drop is the cost of a dedicated confidence-training stage. CaC pays nothing here because it never updates the policy: the critic is trained alongside it during RL and is read out as is. 
+ The critic is the best discriminator in distribution and competitive out of it. 
+ CaC has the highest AUROC on all eight ID model–domain splits, ahead of R-Tuning by 0.02 to 0.13 and of Probe by 0.02 to 0.11, with the largest margins on general reasoning, the most heterogeneous domain (0.86 for both LLMs against 0.76 and 0.79 for the best baselines).
+On out of distribution benchmarks, CaC is best on seven of eight splits.
+The only ties, on AIME for Qwen3-8B and tool calling OOD for Nemotron-Cascade-8B, are with Self-consistency, which needs 8 × 8\times the inference cost. 
+ The raw values computed by CaC are calibrated probabilities. 
+ With no post-processing beyond clipping, CaC has the lowest ECE on 14 of 16 splits and ties for lowest on the other two.
+On in distribution benchmarks, CaC ’s ECE never exceeds 0.06, where R-Tuning reaches 0.07, Probe 0.12 and the training-free methods 0.21 to 0.66.
+ CaC also has the best or tied-best Brier score on 14 of 16 splits. Verbalized confidence is near chance for both LLMs (AUROC 0.46 to 0.73), in line with reports that RL inflates stated confidence ( Leng et al., 2025 ) . 
+ The advantage widens under distribution shift. 
+ Averaged over the eight model–domain pairs, ECE rises from ID to OOD by 0.12 for both R-Tuning and Probe, but by 0.08 for CaC .
+On AIME with Qwen3-8B, R-Tuning goes from 0.05 to 0.24 while CaC goes from 0.03 to 0.13.
+A plausible reason for the critic’s robustness is the breadth of its supervision: every prefix of every rollout over the whole RL run, rather than a few thousand final responses. 
+ 4.3 Inference-Time Scaling with CaC 
+ Since the critic estimates P ⁡ ( c = 1 ∣ x , y ) P(c{=}1\mid x,y) , it can be used to select among samples for inference-time scaling: for each prompt, we draw N = 8 N{=}8 responses at the RL temperature and return the one with the highest critic value ( CaC Selection). We compare against majority voting over the same samples (Maj@8) and the oracle Best@8. The lower half of Table  2 reports these inference-time scaling results.
+ CaC Selection improves the single-sample policy by 4.1 points on Qwen3-8B and 5.6 on Nemotron-Cascade-8B on average, closing about half of the gap to the oracle, where Maj@8 closes 26% and 35%.
+Unlike majority voting, the critic scores each sample independently, so it can select a correct minority answer and needs no task-specific rule for grouping equivalent outputs, indicating CaC Selection is an effective test-time scaling approach. 
+ ID 
+ OOD 
+ Method 
+ AUC 
+ ECE 
+ Brier 
+ AUC 
+ ECE 
+ Brier 
+ Verbalized 
+ 0.53 
+ 0.60 
+ 0.58 
+ 0.55 
+ 0.28 
+ 0.30 
+ Self-consistency 
+ 0.67 
+ 0.41 
+ 0.41 
+ 0.78 
+ 0.18 
+ 0.21 
+ R-Tuning 
+ 0.87 
+ 0.05 
+ 0.14 
+ 0.79 
+ 0.25 
+ 0.24 
+ Probe 
+ 0.86 
+ 0.03 
+ 0.14 
+ 0.74 
+ 0.17 
+ 0.22 
+ CaC (ours) 
+ 0.90 
+ 0.02 
+ 0.12 
+ 0.81 
+ 0.14 
+ 0.20 
+ Table 5: Confidence estimation on general reasoning for a Qwen3-8B policy trained with GRPO. CaC uses a value model fit post hoc on the GRPO rollouts. 
+ 4.4 Extension to Critic-Free RL 
+ Critic-free methods such as GRPO  ( Shao et al., 2024 ) produce no value function to read out, but the equivalence in Section  3 does not depend on how the policy is optimized.
+We train Qwen3-8B with GRPO on WebInstruct-verified and fit a value model post hoc on the rollouts that GRPO already generated, using the same critic objective as in PPO and leaving the policy untouched.
+Table  5 shows that this post-hoc critic is the best estimator on every metric and split (AUROC 0.90 ID and 0.81 OOD, against 0.87 and 0.79 for the strongest baseline), mirroring the PPO results. CaC thus extends to critic-free RL at the cost of one auxiliary training stage on existing data, and the comparison isolates the recipe from the algorithm: given the same policy, learning a value function on its rollouts yields better confidence estimation performance than confidence-specific fine-tuning or hidden-state probing. 
+ ID 
+ OOD 
+ Position 
+ AUC 
+ ECE 
+ Brier 
+ AUC 
+ ECE 
+ Brier 
+ 0% (prompt) 
+ 0.83 
+ 0.09 
+ 0.14 
+ 0.73 
+ 0.18 
+ 0.22 
+ 25% 
+ 0.86 
+ 0.07 
+ 0.13 
+ 0.79 
+ 0.13 
+ 0.18 
+ 50% 
+ 0.87 
+ 0.07 
+ 0.13 
+ 0.80 
+ 0.13 
+ 0.17 
+ 75% 
+ 0.86 
+ 0.05 
+ 0.12 
+ 0.80 
+ 0.13 
+ 0.17 
+ 100% 
+ 0.86 
+ 0.05 
+ 0.12 
+ 0.80 
+ 0.12 
+ 0.17 
+ Table 6: Further analysis of the final general reasoning Qwen3-8B checkpoint. Confidence along the trajectory. V ψ ​ ( s t ) V_{\psi}(s_{t}) is read at the prompt alone (0%) and at 25%, 50%, 75% and 100% of each response’s length. 
+ 4.5 CaC : Confidence along the Trajectory 
+ Theorem  1 demonstrates that the critic estimates P ⁡ ( c = 1 ∣ s t ) P(c{=}1\mid s_{t}) at every prefix, not only at the final response.
+We conduct a further analysis of the final general reasoning checkpoint after mix-RL.
+We read V ψ ​ ( s t ) V_{\psi}(s_{t}) at five positions along each response (Table  6 ).
+Three observations follow.
+First, the critic is informative before a single token is generated: at the prompt alone it reaches AUROC 0.83 in distribution and 0.73 out of distribution, so it has learned which prompts the policy will get right.
+Second, most of the remaining gain arrives in the first quarter of the response (AUROC 0.83 to 0.86 ID, 0.73 to 0.79 OOD), after which discrimination is flat to within 0.01.
+The outcome is largely decided by the approach the policy commits to early.
+Third, calibration keeps improving along the trajectory (ECE 0.09 to 0.05 ID, 0.18 to 0.12 OOD) with no sign of drift, consistent with 𝔼 ⁡ [ V π ​ ( s t + 1 ) ∣ s t ] = V π ​ ( s t ) \mathbb{E}[V^{\pi}(s_{t+1})\mid s_{t}]=V^{\pi}(s_{t}) in Corollary  A.3 . A practical consequence is early termination: a response whose confidence is low at the halfway point can be abandoned at half the generation cost with little loss in ranking quality. 
+ 5 Related Work 
+ Training-free confidence estimation for LLMs mainly includes
+ probability-based methods using token likelihoods or entropy
+ ( Kadavath et al., 2022 ) ,
+ sampling-based methods measuring consistency or semantic entropy
+ ( Manakul et al., 2023 ; Chen and Mueller, 2024 ; Kuhn et al., 2023 ; Farquhar et al., 2024 ) ,
+and verbalized-confidence methods eliciting confidence through
+prompting ( Tian et al., 2023 ) .
+Sampling increases inference cost, while elicited confidence can remain
+poorly calibrated across tasks ( Xiong et al., 2024 ) .
+This has driven a recent shift toward
+ training-based estimators, which learn to predict correctness directly
+from supervision on the policy’s own graded responses and now constitute the
+strongest family of methods. Kapoor et al. (2024) argue that prompting alone is insufficient and show that fine-tuning on as few as a thousand graded
+examples outperforms training-free baselines and generalizes across domains.
+R-Tuning ( Zhang et al., 2024b ) teaches the model to append an “I am
+sure/unsure” judgment.
+SaySelf ( Xu et al., 2024 ) fine-tunes the model to produce fine-grained confidence, followed by RL
+with a calibration-aware reward.
+APRICOT ( Ulmer et al., 2024 ) trains an auxiliary
+model to predict confidence from input/output text alone, and
+ hidden-state probes fit lightweight classifiers on internal activations
+ ( Azaria and Mitchell, 2023 ; Kossen et al., 2024 ; Zhang et al., 2025 ) .
+Because supervised estimators offer the best accuracy and
+calibration, they are the focus of this work. Within this family, a key open
+question is what the supervision signal actually requires. Probe assumes
+white-box access to the target model, yet Kapoor et al. (2024) and
+ Ulmer et al. (2024) find that a separate model can estimate
+ another model’s uncertainty, and surrogate-model approaches show that
+confidence transfers across models ( Shrivastava et al., 2023 ) . We make this
+observation precise: given the same behavioral data, self- and external
+estimation perform nearly identically, reducing the problem to learning
+ f ⁡ ( x , y ) → P ⁡ ( correct ∣ x , y ) f(x,y)\!\rightarrow\!P(\text{correct}\mid x,y) .
+This behavioral formulation suggests a connection to RL critics,
+which learn to predict outcomes from policy trajectories.
+Related empirical explorations use critic values as a baseline for behavioral calibration ( Wu et al., 2025 ) and, concurrently,
+for quantitative prediction with error-based rewards ( Dhaliwal et al., 2026 ) .
+In this work, we establish a unified theoretical foundation for the equivalence between confidence estimation and critic learning under undiscounted terminal correctness rewards, and demonstrate its practical value through large-scale RL experiments spanning a dozen domains in math, code, tool calling, and general reasoning.
+Additional related work on value function learning for LLMs is discussed in Appendix  B . 
+ 6 Conclusion 
+ We show that confidence estimation and value function learning are the same prediction problem under a correctness-based outcome, so the RL critic can be reused as a confidence estimator with no extra training.
+In an extensive evaluation that spans multiple domains, CaC is the best estimator in a dozen domains and extends to intermediate steps, test-time selection, and critic-free RL. 
+ Limitations 
+ CaC requires a critic, and some of the RL recipes for LLMs (GRPO and other critic-free methods) do not train one.
+Our remedy, evaluated in Section  4.4 , is to fit a value model on the rollouts that GRPO already generates during training.
+This reuses existing data and never touches the policy, but it does add a training stage, so the “free lunch” is exact only for value-based RL.
+Besides, the critic adds one forward pass of a value model per response. 
+ References 
+ Ahmadian et al. (2024) 
+ A. Ahmadian, C. Cremer, M. Gallé, M. Fadaee, J. Kreutzer, O. Pietquin, A. Üstün, and S. Hooker 
+ Back to basics: revisiting REINFORCE-style optimization for learning from human feedback in LLMs .
+ In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (ACL) ,
+ pp. 12248–12267 .
+ Note: RLOO; arXiv:2402.14740 
+ External Links: Link 
+ Cited by: Appendix B .
+ Azaria and Mitchell (2023) 
+ A. Azaria and T. Mitchell 
+ The internal state of an LLM knows when it’s lying .
+ In Findings of the Association for Computational Linguistics: EMNLP 2023 ,
+ pp. 967–976 .
+ External Links: Link 
+ Cited by: §2 ,
+ §4.1 ,
+ §5 .
+ Brier (1950) 
+ G. W. Brier 
+ Verification of forecasts expressed in terms of probability .
+ Monthly Weather Review 78 ( 1 ), pp. 1–3 .
+ External Links: Link 
+ Cited by: §2 .
+ Chen and Mueller (2024) 
+ J. Chen and J. Mueller 
+ Quantifying uncertainty in answers from any language model and enhancing their trustworthiness .
+ In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (ACL) ,
+ Note: arXiv:2308.16175; BSDetector 
+ External Links: Link 
+ Cited by: §5 .
+ Clark et al. (2018) 
+ P. Clark, I. Cowhey, O. Etzioni, T. Khot, A. Sabharwal, C. Schoenick, and O. Tafjord 
+ Think you have solved question answering? try ARC, the AI2 reasoning challenge .
+ arXiv preprint arXiv:1803.05457 .
+ External Links: Link 
+ Cited by: §2 .
+ Clémençon et al. (2008) 
+ S. Clémençon, G. Lugosi, and N. Vayatis 
+ Ranking and empirical minimization of U-statistics .
+ The Annals of Statistics 36 ( 2 ), pp. 844–874 .
+ External Links: Link 
+ Cited by: §A.4 .
+ Cobbe et al. (2021) 
+ K. Cobbe, V. Kosaraju, M. Bavarian, M. Chen, H. Jun, L. Kaiser, M. Plappert, J. Tworek, J. Hilton, R. Nakano, C. Hesse, and J. Schulman 
+ Training verifiers to solve math word problems .
+ arXiv preprint arXiv:2110.14168 .
+ Note: GSM8K 
+ External Links: Link 
+ Cited by: §2 .
+ DeepSeek-AI (2025) 
+ DeepSeek-AI 
+ DeepSeek-R1: incentivizing reasoning capability in LLMs via reinforcement learning .
+ arXiv preprint arXiv:2501.12948 .
+ External Links: Link 
+ Cited by: Appendix B .
+ Dhaliwal et al. (2026) 
+ M. Dhaliwal, R. Tadayon, A. Hua, H. Jeong, and Y. Qin 
+ From critic to confidence: PPO for language-based quantitative prediction with confidence estimation .
+ arXiv preprint arXiv:2607.12687 .
+ External Links: Document ,
+ Link 
+ Cited by: §5 .
+ Farebrother et al. (2024) 
+ J. Farebrother, J. Orbay, Q. Vuong, A. Ali Taiga, Y. Chebotar, T. Xiao, A. Irpan, S. Levine, P. S. Castro, A. Faust, A. Kumar, and R. Agarwal 
+ Stop regressing: training value functions via classification for scalable deep RL .
+ In International Conference on Machine Learning (ICML) ,
+ Vol. 235 , pp. 13049–13071 .
+ Note: arXiv:2403.03950 
+ External Links: Link 
+ Cited by: Appendix B .
+ Farquhar et al. (2024) 
+ S. Farquhar, J. Kossen, L. Kuhn, and Y. Gal 
+ Detecting hallucinations in large language models using semantic entropy .
+ Nature 630 ( 8017 ), pp. 625–630 .
+ External Links: Document ,
+ Link 
+ Cited by: §5 .
+ Gneiting and Raftery (2007) 
+ T. Gneiting and A. E. Raftery 
+ Strictly proper scoring rules, prediction, and estimation .
+ Journal of the American Statistical Association 102 ( 477 ), pp. 359–378 .
+ External Links: Link 
+ Cited by: §A.1 .
+ Grattafiori et al. (2024) 
+ A. Grattafiori, A. Dubey, A. Jauhri, A. Pandey, A. Kadian, et al. 
+ The Llama 3 herd of models .
+ arXiv preprint arXiv:2407.21783 .
+ External Links: Link 
+ Cited by: §2 .
+ Guo et al. (2017) 
+ C. Guo, G. Pleiss, Y. Sun, and K. Q. Weinberger 
+ On calibration of modern neural networks .
+ In Proceedings of the 34th International Conference on Machine Learning ,
+ Proceedings of Machine Learning Research , Vol. 70 , pp. 1321–1330 .
+ External Links: Link 
+ Cited by: §1 .
+ Hendrycks et al. (2021) 
+ D. Hendrycks, S. Basart, S. Kadavath, M. Mazeika, A. Arora, E. Guo, C. Burns, S. Puranik, H. He, D. Song, and J. Steinhardt 
+ Measuring coding challenge competence with APPS .
+ In Advances in Neural Information Processing Systems (NeurIPS) Datasets and Benchmarks Track ,
+ Note: arXiv:2105.09938 
+ External Links: Link 
+ Cited by: §2 .
+ Hu et al. (2022) 
+ E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen 
+ LoRA: low-rank adaptation of large language models .
+ In International Conference on Learning Representations (ICLR) ,
+ Note: arXiv:2106.09685 
+ External Links: Link 
+ Cited by: §2 .
+ Hu et al. (2025) 
+ J. Hu, Y. Zhang, Q. Han, D. Jiang, X. Zhang, and H. Shum 
+ Open-reasoner-zero: an open source approach to scaling up reinforcement learning on the base model .
+ In Advances in Neural Information Processing Systems (NeurIPS) ,
+ Note: arXiv:2503.24290 
+ External Links: Link 
+ Cited by: Appendix B .
+ Jain et al. (2025) 
+ N. Jain, K. Han, A. Gu, W. Li, F. Yan, T. Zhang, S. Wang, A. Solar-Lezama, K. Sen, and I. Stoica 
+ LiveCodeBench: holistic and contamination free evaluation of large language models for code .
+ In International Conference on Learning Representations (ICLR) ,
+ Note: arXiv:2403.07974 
+ External Links: Link 
+ Cited by: §4.1 .
+ Jiang et al. (2023) 
+ A. Q. Jiang, A. Sablayrolles, A. Mensch, C. Bamford, D. S. Chaplot, D. de las Casas, F. Bressand, G. Lengyel, G. Lample, L. Saulnier, et al. 
+ Mistral 7B .
+ arXiv preprint arXiv:2310.06825 .
+ External Links: Link 
+ Cited by: §2 .
+ Jiang et al. (2021) 
+ Z. Jiang, J. Araki, H. Ding, and G. Neubig 
+ How can we know when language models know? on the calibration of language models for question answering .
+ Transactions of the Association for Computational Linguistics 9 , pp. 962–977 .
+ External Links: Document ,
+ Link 
+ Cited by: §1 .
+ Jin et al. (2019) 
+ Q. Jin, B. Dhingra, Z. Liu, W. Cohen, and X. Lu 
+ PubMedQA: a dataset for biomedical research question answering .
+ In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP) ,
+ pp. 2567–2577 .
+ External Links: Document ,
+ Link 
+ Cited by: §4.1 .
+ Kadavath et al. (2022) 
+ S. Kadavath, T. Conerly, A. Askell, T. Henighan, D. Drain, E. Perez, N. Schiefer, Z. Hatfield-Dodds, N. DasSarma, E. Tran-Johnson, et al. 
+ Language models (mostly) know what they know .
+ arXiv preprint arXiv:2207.05221 .
+ External Links: Link 
+ Cited by: §2 ,
+ §4.1 ,
+ §5 .
+ Kapoor et al. (2024) 
+ S. Kapoor, N. Gruver, M. Roberts, K. Collins, A. Pal, U. Bhatt, A. Weller, S. Dooley, M. Goldblum, and A. G. Wilson 
+ Large language models must be taught to know what they don’t know .
+ In Advances in Neural Information Processing Systems ,
+ Vol. 37 .
+ External Links: Document ,
+ Link 
+ Cited by: §1 ,
+ §2 ,
+ §5 .
+ Kazemnejad et al. (2025) 
+ A. Kazemnejad, M. Aghajohari, E. Portelance, A. Sordoni, S. Reddy, A. Courville, and N. Le Roux 
+ VinePPO: refining credit assignment in RL training of LLMs .
+ In International Conference on Machine Learning (ICML) ,
+ Note: arXiv:2410.01679 
+ External Links: Link 
+ Cited by: Appendix B .
+ Kossen et al. (2024) 
+ J. Kossen, J. Han, M. Razzak, L. Schut, S. Malik, and Y. Gal 
+ Semantic entropy probes: robust and cheap hallucination detection in LLMs .
+ arXiv preprint arXiv:2406.15927 .
+ External Links: Link 
+ Cited by: §5 .
+ Kuhn et al. (2023) 
+ L. Kuhn, Y. Gal, and S. Farquhar 
+ Semantic uncertainty: linguistic invariances for uncertainty estimation in natural language generation .
+ In International Conference on Learning Representations (ICLR) ,
+ Note: arXiv:2302.09664 
+ External Links: Link 
+ Cited by: §5 .
+ Leng et al. (2025) 
+ J. Leng, C. Huang, B. Zhu, and J. Huang 
+ Taming overconfidence in LLMs: reward calibration in RLHF .
+ In International Conference on Learning Representations (ICLR) ,
+ Note: arXiv:2410.09724 
+ External Links: Link 
+ Cited by: §4.2 .
+ Li et al. (2024) 
+ J. Li, E. Beeching, L. Tunstall, B. Lipkin, R. Soletskyi, S. C. Huang, K. Rasul, L. Yu, A. Jiang, Z. Shen, Z. Qin, B. Dong, L. Zhou, Y. Fleureau, G. Lample, and S. Polu 
+ NuminaMath .
+ Numina .
+ Note: https://huggingface.co/datasets/AI-MO/NuminaMath-CoT 
+ External Links: Link 
+ Cited by: §2 ,
+ §4.1 .
+ Li et al. (2023a) 
+ M. Li, Y. Zhao, B. Yu, F. Song, H. Li, H. Yu, Z. Li, F. Huang, and Y. Li 
+ API-Bank: a comprehensive benchmark for tool-augmented LLMs .
+ In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing (EMNLP) ,
+ pp. 3102–3116 .
+ External Links: Link 
+ Cited by: §4.1 .
+ Li et al. (2023b) 
+ R. Li, J. Fu, B. Zhang, T. Huang, Z. Sun, C. Lyu, G. Liu, Z. Jin, and G. Li 
+ TACO: topics in algorithmic COde generation dataset .
+ arXiv preprint arXiv:2312.14852 .
+ External Links: Link 
+ Cited by: §2 ,
+ §4.1 .
+ Li et al. (2022) 
+ Y. Li, D. Choi, J. Chung, N. Kushman, J. Schrittwieser, R. Leblond, T. Eccles, J. Keeling, F. Gimeno, A. Dal Lago, T. Hubert, P. Choy, C. de Masson d’Autume, I. Babuschkin, X. Chen, P. Huang, J. Welbl, S. Gowal, A. Cherepanov, J. Molloy, D. J. Mankowitz, E. Sutherland Robson, P. Kohli, N. de Freitas, K. Kavukcuoglu, and O. Vinyals 
+ Competition-level code generation with AlphaCode .
+ Science 378 ( 6624 ), pp. 1092–1097 .
+ Note: CodeContests 
+ External Links: Link 
+ Cited by: §4.1 .
+ Lin et al. (2022) 
+ S. Lin, J. Hilton, and O. Evans 
+ Teaching models to express their uncertainty in words .
+ Transactions on Machine Learning Research (TMLR) .
+ Note: arXiv:2205.14334 
+ External Links: Link 
+ Cited by: §2 .
+ Liu et al. (2024) 
+ J. Liu, A. Cohen, R. Pasunuru, Y. Choi, H. Hajishirzi, and A. Celikyilmaz 
+ Don’t throw away your value model! generating more preferable text with value-guided monte-carlo tree search decoding .
+ In Conference on Language Modeling (COLM) ,
+ Note: PPO-MCTS; arXiv:2309.15028 
+ External Links: Link 
+ Cited by: Appendix B .
+ Ma et al. (2025) 
+ X. Ma, Q. Liu, D. Jiang, G. Zhang, Z. Ma, and W. Chen 
+ General-Reasoner: advancing LLM reasoning across all domains .
+ arXiv preprint arXiv:2505.14652 .
+ Note: WebInstruct-verified 
+ External Links: Link 
+ Cited by: §4.1 .
+ Manakul et al. (2023) 
+ P. Manakul, A. Liusie, and M. J. F. Gales 
+ SelfCheckGPT: zero-resource black-box hallucination detection for generative large language models .
+ In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing (EMNLP) ,
+ Note: arXiv:2303.08896 
+ External Links: Link 
+ Cited by: §5 .
+ Mathematical Association of America (2025) 
+ Mathematical Association of America 
+ AIME 2024 and AIME 2025 .
+ Note: American Invitational Mathematics Examination 
+ Cited by: §4.1 .
+ Mielke et al. (2022) 
+ S. J. Mielke, A. Szlam, E. Dinan, and Y. Boureau 
+ Reducing conversational agents’ overconfidence through linguistic calibration .
+ Transactions of the Association for Computational Linguistics 10 , pp. 857–872 .
+ External Links: Document ,
+ Link 
+ Cited by: §1 .
+ Naeini et al. (2015) 
+ M. P. Naeini, G. F. Cooper, and M. Hauskrecht 
+ Obtaining well calibrated probabilities using Bayesian binning .
+ In Proceedings of the AAAI Conference on Artificial Intelligence ,
+ External Links: Link 
+ Cited by: §2 .
+ NVIDIA (2025) 
+ NVIDIA 
+ OpenScienceReasoning-2 .
+ Note: https://huggingface.co/datasets/nvidia/OpenScienceReasoning-2 Hugging Face dataset, CC BY 4.0 
+ External Links: Link 
+ Cited by: §4.1 .
+ Ouyang et al. (2022) 
+ L. Ouyang, J. Wu, X. Jiang, D. Almeida, C. L. Wainwright, P. Mishkin, C. Zhang, S. Agarwal, K. Slama, A. Ray, et al. 
+ Training language models to follow instructions with human feedback .
+ In Advances in Neural Information Processing Systems (NeurIPS) ,
+ Note: InstructGPT; arXiv:2203.02155 
+ External Links: Link 
+ Cited by: Appendix B .
+ Pal et al. (2022) 
+ A. Pal, L. K. Umapathi, and M. Sankarasubbu 
+ MedMCQA: a large-scale multi-subject multi-choice dataset for medical domain question answering .
+ In Proceedings of the Conference on Health, Inference, and Learning (CHIL) ,
+ Proceedings of Machine Learning Research , Vol. 174 , pp. 248–260 .
+ External Links: Link 
+ Cited by: §4.1 .
+ Penedo et al. (2025) 
+ G. Penedo, A. Lozhkov, H. Kydlíček, L. B. Allal, E. Beeching, A. P. Lajarín, Q. Gallouédec, N. Habib, L. Tunstall, and L. von Werra 
+ CodeForces .
+ Hugging Face .
+ Note: https://huggingface.co/datasets/open-r1/codeforces 
+ External Links: Link 
+ Cited by: §4.1 .
+ Qian et al. (2025) 
+ C. Qian, E. C. Acikgoz, Q. He, H. Wang, X. Chen, D. Hakkani-Tür, G. Tur, and H. Ji 
+ ToolRL: reward is all tool learning needs .
+ arXiv preprint arXiv:2504.13958 .
+ External Links: Link 
+ Cited by: §4.1 .
+ Qwen Team (2024) 
+ Qwen Team 
+ Qwen2.5 technical report .
+ arXiv preprint arXiv:2412.15115 .
+ External Links: Link 
+ Cited by: §2 .
+ Schulman et al. (2016) 
+ J. Schulman, P. Moritz, S. Levine, M. Jordan, and P. Abbeel 
+ High-dimensional continuous control using generalized advantage estimation .
+ In International Conference on Learning Representations (ICLR) ,
+ Note: arXiv:1506.02438 
+ External Links: Link 
+ Cited by: §A.3 ,
+ Appendix B .
+ Schulman et al. (2017) 
+ J. Schulman, F. Wolski, P. Dhariwal, A. Radford, and O. Klimov 
+ Proximal policy optimization algorithms .
+ arXiv preprint arXiv:1707.06347 .
+ External Links: Link 
+ Cited by: Appendix B ,
+ §1 ,
+ §3 ,
+ §4.1 .
+ Shao et al. (2024) 
+ Z. Shao, P. Wang, Q. Zhu, R. Xu, J. Song, X. Bi, H. Zhang, M. Zhang, Y. K. Li, Y. Wu, and D. Guo 
+ DeepSeekMath: pushing the limits of mathematical reasoning in open language models .
+ arXiv preprint arXiv:2402.03300 .
+ Note: GRPO 
+ External Links: Link 
+ Cited by: Appendix B ,
+ §4.4 .
+ Shrivastava et al. (2023) 
+ V. Shrivastava, P. Liang, and A. Kumar 
+ Llamas know what GPTs don’t show: surrogate models for confidence estimation .
+ arXiv preprint arXiv:2311.08877 .
+ External Links: Link 
+ Cited by: §5 .
+ Silver et al. (2016) 
+ D. Silver, A. Huang, C. J. Maddison, A. Guez, L. Sifre, G. van den Driessche, J. Schrittwieser, I. Antonoglou, V. Panneershelvam, M. Lanctot, et al. 
+ Mastering the game of Go with deep neural networks and tree search .
+ Nature 529 ( 7587 ), pp. 484–489 .
+ External Links: Document ,
+ Link 
+ Cited by: Appendix B .
+ Sutton and Barto (2018) 
+ R. S. Sutton and A. G. Barto 
+ Reinforcement learning: an introduction .
+ 2 edition , The MIT Press , Cambridge, MA .
+ External Links: ISBN 9780262039246 ,
+ Link 
+ Cited by: §1 ,
+ §2 .
+ Tian et al. (2023) 
+ K. Tian, E. Mitchell, A. Zhou, A. Sharma, R. Rafailov, H. Yao, C. Finn, and C. D. Manning 
+ Just ask for calibration: strategies for eliciting calibrated confidence scores from language models fine-tuned with human feedback .
+ In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing ,
+ Singapore , pp. 5433–5442 .
+ Note: arXiv:2305.14975 
+ External Links: Link ,
+ Document 
+ Cited by: §4.1 ,
+ §5 .
+ Ulmer et al. (2024) 
+ D. Ulmer, M. Gubri, H. Lee, S. Yun, and S. Oh 
+ Calibrating large language models using their generations only .
+ In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) ,
+ Bangkok, Thailand , pp. 15440–15459 .
+ External Links: Document ,
+ Link 
+ Cited by: §1 ,
+ §5 .
+ Wang et al. (2025) 
+ B. Wang, C. Lee, N. Lee, S. Lin, W. Dai, Y. Chen, Y. Chen, Z. Yang, Z. Liu, M. Shoeybi, B. Catanzaro, and W. Ping 
+ Nemotron-Cascade: scaling cascaded reinforcement learning for general-purpose reasoning models .
+ arXiv preprint arXiv:2512.13607 .
+ External Links: Link 
+ Cited by: §4.1 .
+ Wang et al. (2024) 
+ P. Wang, L. Li, Z. Shao, R. X. Xu, D. Dai, Y. Li, D. Chen, Y. Wu, and Z. Sui 
+ Math-Shepherd: verify and reinforce LLMs step-by-step without human annotations .
+ In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (ACL) ,
+ Note: arXiv:2312.08935 
+ External Links: Link 
+ Cited by: Appendix B .
+ Wang et al. (2023) 
+ X. Wang, J. Wei, D. Schuurmans, Q. Le, E. Chi, S. Narang, A. Chowdhery, and D. Zhou 
+ Self-consistency improves chain of thought reasoning in language models .
+ In International Conference on Learning Representations (ICLR) ,
+ Note: arXiv:2203.11171 
+ External Links: Link 
+ Cited by: §4.1 .
+ Wu et al. (2025) 
+ J. Wu, J. Liu, Z. Zeng, T. Zhan, T. Cai, and W. Huang 
+ Mitigating LLM hallucination via behaviorally calibrated reinforcement learning .
+ arXiv preprint arXiv:2512.19920 .
+ External Links: Document ,
+ Link 
+ Cited by: §5 .
+ Wu et al. (2026) 
+ S. Wu, C. Qian, X. Chen, and H. Ji 
+ Teaching llms to self-evolve: cultivating core meta-skills with reinforcement learning .
+ arXiv preprint arXiv:2607.21971 .
+ External Links: Link 
+ Cited by: Appendix B .
+ Xiong et al. (2024) 
+ M. Xiong, Z. Hu, X. Lu, Y. Li, J. Fu, J. He, and B. Hooi 
+ Can LLMs express their uncertainty? an empirical evaluation of confidence elicitation in LLMs .
+ In International Conference on Learning Representations (ICLR) ,
+ Note: arXiv:2306.13063 
+ External Links: Link 
+ Cited by: §4.1 ,
+ §5 .
+ Xu et al. (2024) 
+ T. Xu, S. Wu, S. Diao, X. Liu, X. Wang, Y. Chen, and J. Gao 
+ SaySelf: teaching LLMs to express confidence with self-reflective rationales .
+ In Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing ,
+ Miami, Florida, USA .
+ External Links: Link 
+ Cited by: §1 ,
+ §2 ,
+ §3 ,
+ §5 .
+ Xu et al. (2025) 
+ X. Xu, Q. Xu, T. Xiao, T. Chen, Y. Yan, J. Zhang, S. Diao, C. Yang, and Y. Wang 
+ UGPhysics: a comprehensive benchmark for undergraduate physics reasoning with large language models .
+ In Proceedings of the 42nd International Conference on Machine Learning ,
+ Proceedings of Machine Learning Research , Vol. 267 , pp. 69849–69877 .
+ External Links: Link 
+ Cited by: §4.1 .
+ Yang et al. (2025) 
+ A. Yang, A. Li, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Gao, C. Huang, C. Lv, et al. 
+ Qwen3 technical report .
+ arXiv preprint arXiv:2505.09388 .
+ External Links: Link 
+ Cited by: §4.1 .
+ Yu et al. (2024) 
+ F. Yu, A. Gao, and B. Wang 
+ OVM, outcome-supervised value models for planning in mathematical reasoning .
+ In Findings of the Association for Computational Linguistics: NAACL 2024 ,
+ pp. 858–875 .
+ Note: arXiv:2311.09724 
+ External Links: Document ,
+ Link 
+ Cited by: Appendix B .
+ Yuan et al. (2025) 
+ Y. Yuan, Y. Yue, R. Zhu, T. Fan, and L. Yan 
+ What’s behind PPO’s collapse in long-CoT? value optimization holds the secret .
+ arXiv preprint arXiv:2503.01491 .
+ Note: VC-PPO 
+ External Links: Link 
+ Cited by: Appendix B ,
+ §3 .
+ Yue et al. (2025) 
+ Y. Yue, Y. Yuan, Q. Yu, X. Zuo, R. Zhu, W. Xu, J. Chen, C. Wang, T. Fan, et al. 
+ VAPO: efficient and reliable reinforcement learning for advanced reasoning tasks .
+ arXiv preprint arXiv:2504.05118 .
+ External Links: Link 
+ Cited by: Appendix B ,
+ §3 .
+ Zhang et al. (2025) 
+ A. Zhang, Y. Chen, J. Pan, C. Zhao, A. Panda, J. Li, and H. He 
+ Reasoning models know when they’re right: probing hidden states for self-verification .
+ arXiv preprint arXiv:2504.05419 .
+ External Links: Link 
+ Cited by: §5 .
+ Zhang et al. (2024a) 
+ D. Zhang, W. Liu, Q. Tan, J. Chen, H. Yan, Y. Yan, J. Li, W. Huang, X. Yue, W. Ouyang, D. Zhou, S. Zhang, M. Su, H. Zhong, and Y. Li 
+ ChemLLM: a chemical large language model .
+ arXiv preprint arXiv:2402.06852 .
+ External Links: Link 
+ Cited by: §4.1 .
+ Zhang et al. (2024b) 
+ H. Zhang, S. Diao, Y. Lin, Y. Fung, Q. Lian, X. Wang, Y. Chen, H. Ji, and T. Zhang 
+ R-tuning: instructing large language models to say ‘i don’t know’ .
+ In Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers) ,
+ Mexico City, Mexico , pp. 7113–7139 .
+ External Links: Document ,
+ Link 
+ Cited by: §1 ,
+ §2 ,
+ §2 ,
+ §3 ,
+ §4.1 ,
+ §5 .
+ Zhou et al. (2024) 
+ Y. Zhou, A. Zanette, J. Pan, S. Levine, and A. Kumar 
+ ArCHer: training language model agents via hierarchical multi-turn RL .
+ In Proceedings of the 41st International Conference on Machine Learning (ICML) ,
+ PMLR , Vol. 235 , pp. 62178–62209 .
+ Note: arXiv:2402.19446 
+ External Links: Link 
+ Cited by: Appendix B .
+ Ziegler et al. (2019) 
+ D. M. Ziegler, N. Stiennon, J. Wu, T. B. Brown, A. Radford, D. Amodei, P. Christiano, and G. Irving 
+ Fine-tuning language models from human preferences .
+ arXiv preprint arXiv:1909.08593 .
+ External Links: Link 
+ Cited by: Appendix B .
+ Appendix 
+ Appendix A Formal Statements and Proofs for Section  3 
+ A.1 Setting 
+ A prompt x ∼ 𝒟 X x\sim\mathcal{D}_{X} is answered token by token by π θ \pi_{\theta} , producing y = ( y 1 , … , y T ) y=(y_{1},\dots,y_{T}) with T ≤ T max T\leq T_{\max} . The state at step t t is the prefix s t = ( x , y 1 : t ) s_{t}=(x,y_{1:t}) , so s T = ( x , y ) s_{T}=(x,y) , and s t s_{t} is determined by s u s_{u} for every u ≥ t u\geq t . A grader assigns correctness c ∈ { 0 , 1 } c\in\{0,1\} to ( x , y ) (x,y) ; the grader may be stochastic, with a deterministic grader as a special case.
+The reward is terminal, R ⁡ ( x , y ) = c R(x,y)=c , with no intermediate rewards and γ = 1 \gamma=1 , as in PPO-style training of LLMs.
+Here, ℙ π \mathbb{P}_{\pi} is the distribution of sampled prompts, responses, and grader labels, and 𝔼 π ​ [ ⋅ ] \mathbb{E}_{\pi}[\cdot] means averaging over these samples. For example, 𝔼 π ​ [ c ] \mathbb{E}_{\pi}[c] is the average accuracy.
+We use “a.s.” to mean “with probability one.”
+The value function V π ​ ( s t ) V^{\pi}(s_{t}) is the expected final reward given prefix s t s_{t} , and q ⁡ ( s t ) := ℙ π ​ ( c = 1 ∣ s t ) q(s_{t}):=\mathbb{P}_{\pi}(c=1\mid s_{t}) is the probability of a correct final answer. If a response ends at step T T , we set s t = s T s_{t}=s_{T} for t > T t>T . 
+ For a hypothesis class 𝒢 t \mathcal{G}_{t} of functions of s t s_{t} and a loss ℓ \ell , the two objectives are 
+ ℒ t conf ​ ( g ) \displaystyle\mathcal{L}^{\mathrm{conf}}_{t}(g) 
+ = 𝔼 π ​ [ ℓ ⁡ ( g ⁡ ( s t ) , c ) ] , \displaystyle=\mathbb{E}_{\pi}\big[\ell(g(s_{t}),c)\big], 
+ (4) 
+ ℒ t critic ​ ( V ) \displaystyle\mathcal{L}^{\mathrm{critic}}_{t}(V) 
+ = 𝔼 π ​ [ ( V ⁡ ( s t ) − R ) 2 ] . \displaystyle=\mathbb{E}_{\pi}\big[(V(s_{t})-R)^{2}\big]. 
+ (5) 
+ These are the calibration and critic objectives in Eqs. ( 1 ) and ( 2 ), evaluated at any prefix s t s_{t} .
+In practice, the critic sums Eq. ( 5 ) over token positions t t , using the same final reward c c as the target at every position.
+As shown below, the expected squared error at each position is minimized by predicting q ⁡ ( s t ) q(s_{t}) . Thus, a critic that can represent q q also minimizes the sum over positions.
+We use a standard fact about strictly proper losses: when a binary label c c equals 1 1 with probability q q (and 0 0 otherwise), predicting p = q p=q uniquely minimizes the expected loss 𝔼 ⁡ [ ℓ ⁡ ( p , c ) ] \mathbb{E}[\ell(p,c)] ( Gneiting and Raftery, 2007 ) . 
+ A.2 Main Theorem 
+ Theorem A.1 (Value prediction and confidence calibration) . 
+ Assume the final reward is R = c R=c , and fix t ∈ { 0 , … , T max } t\in\{0,\dots,T_{\max}\} . 
+ (i) 
+ The value at a prefix is its probability of leading to a correct answer:
+ V π ​ ( s t ) = q ⁡ ( s t ) V^{\pi}(s_{t})=q(s_{t}) a.s. For any t ≤ u ≤ T max t\leq u\leq T_{\max} , 
+ 𝔼 π ​ [ V π ​ ( s u ) ∣ s t ] = V π ​ ( s t ) . \mathbb{E}_{\pi}[V^{\pi}(s_{u})\mid s_{t}]=V^{\pi}(s_{t}). 
+ (ii) 
+ With squared loss,
+ ℒ t conf ​ ( h ) = ℒ t critic ​ ( h ) \mathcal{L}_{t}^{\mathrm{conf}}(h)=\mathcal{L}_{t}^{\mathrm{critic}}(h) 
+for every h ∈ 𝒢 t h\in\mathcal{G}_{t} . The two objectives therefore have the
+same minimizers, including when computed on the same sample of responses. 
+ (iii) 
+ With any strictly proper loss, the expected confidence loss
+is uniquely minimized by g ⁡ ( s t ) = q ⁡ ( s t ) = V π ​ ( s t ) g(s_{t})=q(s_{t})=V^{\pi}(s_{t}) a.s. If q q belongs
+to 𝒢 t \mathcal{G}_{t} , the calibrator and the squared-loss critic can both
+achieve this optimum. 
+ Proof. 
+ For (i), the return from every prefix is the final reward c c , so
+ V π ​ ( s t ) = 𝔼 π ​ [ c ∣ s t ] = q ⁡ ( s t ) V^{\pi}(s_{t})=\mathbb{E}_{\pi}[c\mid s_{t}]=q(s_{t}) .
+Fix u ≥ t u\geq t . Given s t s_{t} , the later prefix s u s_{u} is random.
+Let z z denote a possible value of s u s_{u} , and set
+ p z := ℙ π ​ ( s u = z ∣ s t ) p_{z}:=\mathbb{P}_{\pi}(s_{u}=z\mid s_{t}) .
+Because c c is either 0 0 or 1 1 , 
+ 𝔼 π ​ [ c ∣ s u = z ] \displaystyle\mathbb{E}_{\pi}[c\mid s_{u}=z] 
+ = 0 ⋅ ℙ π ​ ( c = 0 ∣ s u = z ) \displaystyle=0\cdot\mathbb{P}_{\pi}(c=0\mid s_{u}=z) 
+ + 1 ⋅ ℙ π ( c = 1 ∣ s u = z ) \displaystyle+1\cdot\mathbb{P}_{\pi}(c=1\mid s_{u}=z) 
+ = q ⁡ ( z ) . \displaystyle=q(z). 
+ Thus the c = 0 c=0 cases contribute zero. Since s u = z s_{u}=z also
+determines s t s_{t} , the probability p z ​ q ​ ( z ) p_{z}q(z) equals
+ ℙ π ​ ( c = 1 , s u = z ∣ s t ) \mathbb{P}_{\pi}(c=1,s_{u}=z\mid s_{t}) . Therefore 
+ 𝔼 π ​ [ V π ​ ( s u ) ∣ s t ] \displaystyle\mathbb{E}_{\pi}[V^{\pi}(s_{u})\mid s_{t}] 
+ = 𝔼 π ​ [ 𝔼 π ​ [ c ∣ s u ] ∣ s t ] \displaystyle=\mathbb{E}_{\pi}[\mathbb{E}_{\pi}[c\mid s_{u}]\mid s_{t}] 
+ = ∑ z p z ​ 𝔼 π ​ [ c ∣ s u = z ] \displaystyle=\sum_{z}p_{z}\,\mathbb{E}_{\pi}[c\mid s_{u}=z] 
+ = ∑ z p z ​ q ​ ( z ) \displaystyle=\sum_{z}p_{z}\,q(z) 
+ = ∑ z ℙ π ​ ( c = 1 , s u = z ∣ s t ) \displaystyle=\sum_{z}\mathbb{P}_{\pi}(c=1,s_{u}=z\mid s_{t}) 
+ = ℙ π ​ ( c = 1 ∣ s t ) \displaystyle=\mathbb{P}_{\pi}(c=1\mid s_{t}) 
+ = V π ​ ( s t ) . \displaystyle=V^{\pi}(s_{t}). 
+ For fixed u u , the cases s u = z s_{u}=z are disjoint and cover all responses. Summing the probabilities of the c = 1 c=1 cases therefore gives ℙ π ​ ( c = 1 ∣ s t ) \mathbb{P}_{\pi}(c=1\mid s_{t}) , which equals V π ​ ( s t ) V^{\pi}(s_{t}) because c c is binary. 
+ For (ii), take the confidence loss to be squared error.
+Since R = c R=c , for every
+ h ∈ 𝒢 t h\in\mathcal{G}_{t} , 
+ ℒ t critic ​ ( h ) \displaystyle\mathcal{L}_{t}^{\mathrm{critic}}(h) 
+ = 𝔼 π ​ [ ( h ⁡ ( s t ) − R ) 2 ] \displaystyle=\mathbb{E}_{\pi}[(h(s_{t})-R)^{2}] 
+ = 𝔼 π ​ [ ( h ⁡ ( s t ) − c ) 2 ] \displaystyle=\mathbb{E}_{\pi}[(h(s_{t})-c)^{2}] 
+ = ℒ t conf ​ ( h ) . \displaystyle=\mathcal{L}_{t}^{\mathrm{conf}}(h). 
+ The equality also holds term by term on any shared sample,
+since R ( i ) = c ( i ) R^{(i)}=c^{(i)} for every response.
+Thus the two losses, and their minimizers, are identical. 
+ For (iii), given s t s_{t} , the label c c equals 1 1 with probability
+ q ⁡ ( s t ) q(s_{t}) . Strict propriety gives 
+ 𝔼 π ​ [ ℓ ⁡ ( g ⁡ ( s t ) , c ) ∣ s t ] \displaystyle\mathbb{E}_{\pi}[\ell(g(s_{t}),c)\mid s_{t}] 
+ ≥ 𝔼 π ​ [ ℓ ⁡ ( q ⁡ ( s t ) , c ) ∣ s t ] , \displaystyle\geq\mathbb{E}_{\pi}[\ell(q(s_{t}),c)\mid s_{t}], 
+ with equality only when g ⁡ ( s t ) = q ⁡ ( s t ) g(s_{t})=q(s_{t}) . Averaging over s t s_{t} gives
+ ℒ t conf ​ ( g ) ≥ ℒ t conf ​ ( q ) \mathcal{L}_{t}^{\mathrm{conf}}(g)\geq\mathcal{L}_{t}^{\mathrm{conf}}(q) , with equality only when g = q g=q 
+a.s. By (i), q = V π q=V^{\pi} . If q ∈ 𝒢 t q\in\mathcal{G}_{t} , it also minimizes
+the squared-loss critic objective by (ii).
+∎ 
+ The theorem concerns the prediction target, regardless of estimator
+architecture. Self-estimators and external estimators can both target
+ q ⁡ ( s t ) q(s_{t}) when they predict from the same prefix. 
+ A.3 Bootstrapped Critics 
+ With a terminal reward, the n n -step target from s t s_{t} for a candidate value function V V is V ⁡ ( s t + n ) V(s_{t+n}) if t + n ≤ T t+n\leq T and R R otherwise, so the λ \lambda -return used by GAE ( Schulman et al., 2016 ) is 
+ G ^ t λ ​ ( V ) = \displaystyle\widehat{G}^{\lambda}_{t}(V)={} 
+ ( 1 − λ ) ​ [ ∑ n = 1 T − t λ n − 1 ​ V ​ ( s t + n ) ] \displaystyle(1-\lambda)\Bigl[\sum_{n=1}^{T-t}\lambda^{n-1}V(s_{t+n})\Bigr] 
+ + λ T − t ​ R . \displaystyle+\lambda^{T-t}R. 
+ (6) 
+ λ = 1 \lambda=1 gives the Monte Carlo target R R , λ = 0 \lambda=0 gives the one-step TD target V ⁡ ( s t + 1 ) V(s_{t+1}) , and a terminal prefix always has target R R .
+The target uses V V ’s own predictions at later prefixes. Let
+ ( 𝒯 λ ​ V ) ​ ( s t ) := 𝔼 π ​ [ G ^ t λ ​ ( V ) ∣ s t ] (\mathcal{T}^{\lambda}V)(s_{t}):=\mathbb{E}_{\pi}[\widehat{G}_{t}^{\lambda}(V)\mid s_{t}] 
+be the average target computed using V V . We seek a value function
+that agrees with this average target: 
+ V ⁡ ( s t ) = ( 𝒯 λ ​ V ) ​ ( s t ) . V(s_{t})=(\mathcal{T}^{\lambda}V)(s_{t}). 
+ Such a value function is called a fixed point. 
+ Responses can end at different steps, so the number of value
+predictions and the weight on R R in Eq. ( 6 )
+vary across rollouts.
+To use the same weights for every rollout, let Z n = V ⁡ ( s t + n ) Z_{n}=V(s_{t+n}) when t + n ≤ T t+n\leq T , and let Z n = R Z_{n}=R afterward.
+For 0 ≤ λ < 1 0\leq\lambda<1 , the weights after termination add up to
+the original weight on R R : 
+ ( 1 − λ ) ​ ∑ n > T − t λ n − 1 = λ T − t . (1-\lambda)\sum_{n>T-t}\lambda^{n-1}=\lambda^{T-t}. 
+ Thus the same target can be written as 
+ G ^ t λ ​ ( V ) = ( 1 − λ ) ​ ∑ n = 1 ∞ λ n − 1 ​ Z n . \widehat{G}^{\lambda}_{t}(V)=(1-\lambda)\sum_{n=1}^{\infty}\lambda^{n-1}Z_{n}. 
+ (7) 
+ Proposition A.2 . 
+ Under the assumptions of Theorem  A.1 , for every
+ λ ∈ [ 0 , 1 ] \lambda\in[0,1] , 𝒯 λ \mathcal{T}^{\lambda} has a unique fixed point
+(up to null sets), namely V π = q V^{\pi}=q .
+Moreover, starting from any bounded V V , exact repeated updates
+reach this fixed point: 
+ ( 𝒯 λ ) k ​ V = V π a.s. for every  ​ k ≥ T max + 1 . (\mathcal{T}^{\lambda})^{k}V=V^{\pi}\quad\text{a.s. for every }k\geq T_{\max}+1. 
+ Proof. 
+ Why V π V^{\pi} is a fixed point. 
+When λ = 1 \lambda=1 , the target is R R regardless of V V .
+Hence, for any V V , 
+ ( 𝒯 1 ​ V ) ​ ( s t ) \displaystyle(\mathcal{T}^{1}V)(s_{t}) 
+ = 𝔼 π ​ [ R ∣ s t ] \displaystyle=\mathbb{E}_{\pi}[R\mid s_{t}] 
+ = V π ​ ( s t ) . \displaystyle=V^{\pi}(s_{t}). 
+ In particular, 𝒯 1 ​ V π = V π \mathcal{T}^{1}V^{\pi}=V^{\pi} . 
+ Now take λ < 1 \lambda<1 and use Eq. ( 7 ) with
+ V = V π V=V^{\pi} . Each Z n Z_{n} uses the true value of a later prefix
+until the response ends, and uses the observed reward R R 
+afterward. With prefixes held at s T s_{T} after termination, 
+ Z n \displaystyle Z_{n} 
+ = V π ​ ( s t + n ) \displaystyle=V^{\pi}(s_{t+n}) 
+ + ( R − V π ( s T ) ) 𝟏 { t + n > T } . \displaystyle+\bigl(R-V^{\pi}(s_{T})\bigr)\mathbf{1}\{t+n>T\}. 
+ Why the fixed point is unique. 
+At a terminal prefix s T s_{T} , the target is R R and does not
+depend on the starting function V V . Thus one exact update
+sets its value to 𝔼 π ​ [ R ∣ s T ] = V π ​ ( s T ) \mathbb{E}_{\pi}[R\mid s_{T}]=V^{\pi}(s_{T}) .
+At any earlier prefix, the target uses V V only at later
+prefixes. Once those later values are correct, the next
+update also sets the current value to V π ​ ( s t ) V^{\pi}(s_{t}) .
+We can therefore work backward from the end of the response.
+After k k updates, all prefixes of length at least
+ T max − k + 1 T_{\max}-k+1 have the correct value.
+After T max + 1 T_{\max}+1 updates, all prefixes do.
+The same backward argument forces any fixed point to equal V π V^{\pi} .
+∎ 
+ A.4 Properties of the Shared Target 
+ Theorem  A.1 shows that confidence estimation and
+critic learning share the population target
+ q ⁡ ( s t ) = V π ​ ( s t ) q(s_{t})=V^{\pi}(s_{t}) . The following properties explain why this
+target is useful for calibration and ranking. 
+ Corollary A.3 . 
+ Let Q = q ⁡ ( s t ) = V π ​ ( s t ) Q=q(s_{t})=V^{\pi}(s_{t}) .
+(a) Q Q is calibrated: 𝔼 π ​ [ c ∣ Q ] = Q \mathbb{E}_{\pi}[c\mid Q]=Q a.s.
+(b) Among scores based on s t s_{t} , q ⁡ ( s t ) q(s_{t}) achieves the highest
+possible population AUROC, provided both correctness labels occur.
+Any strictly increasing transformation of q q has the same AUROC. 
+ Proof. 
+ For (a), q ⁡ ( s t ) q(s_{t}) is the probability of a correct answer given
+the prefix s t s_{t} . If we group together prefixes for which
+ q ⁡ ( s t ) = p q(s_{t})=p , each prefix in that group has correctness probability
+ p p . The group’s average correctness probability is therefore
+also p p . Equivalently, 
+ 𝔼 π ​ [ c ∣ Q ] = 𝔼 π ​ [ q ⁡ ( s t ) ∣ Q ] = Q . \mathbb{E}_{\pi}[c\mid Q]=\mathbb{E}_{\pi}[q(s_{t})\mid Q]=Q. 
+ For (b), consider two independently sampled prefixes s s and
+ s ′ s^{\prime} at the same step. Write a = q ⁡ ( s ) a=q(s) and b = q ⁡ ( s ′ ) b=q(s^{\prime}) .
+Given these prefixes, the probability that the first response
+is correct and the second is incorrect is a ⁡ ( 1 − b ) a(1-b) .
+The probability of the reverse outcome is ( 1 − a ) ​ b (1-a)b .
+Their difference is 
+ a ⁡ ( 1 − b ) − ( 1 − a ) ​ b = a − b . a(1-b)-(1-a)b=a-b. 
+ Thus, when a > b a>b , ranking s s above s ′ s^{\prime} is more likely to put
+a correct response ahead of an incorrect one. Ranking all
+prefixes by q q makes this choice for every pair and therefore
+maximizes AUROC  ( Clémençon et al., 2008 ) . A strictly
+increasing transformation leaves these rankings unchanged.
+∎ 
+ A.5 Assumptions and Extensions 
+ • 
+ Which policy. V π V^{\pi} is the value of a fixed policy, including its decoding settings. The RL critic tracks the evolving policy, so it approximates V π K V^{\pi_{K}} for the final policy π K \pi_{K} only up to the lag of its last updates. CaC pairs the final critic with π K \pi_{K} under training-time decoding and measures the residual gap empirically. 
+ • 
+ Reward. The same grader must define the RL reward and the correctness label being estimated: the critic estimates ℙ π ​ ( c = 1 ∣ s t ) \mathbb{P}_{\pi}(c=1\mid s_{t}) for the c c it was trained on. If R = c + h R=c+h (a KL penalty folded into the reward, or format and length shaping), then V π ​ ( s t ) = q ⁡ ( s t ) + 𝔼 π ​ [ h ∣ s t ] V^{\pi}(s_{t})=q(s_{t})+\mathbb{E}_{\pi}[h\mid s_{t}] ; the identity is exact only when the critic’s reward is correctness, as in verifiable-reward RL where KL enters as a policy loss. For a graded reward R ∈ [ 0 , 1 ] R\in[0,1] , all results hold with q q replaced by 𝔼 π ​ [ R ∣ s t ] \mathbb{E}_{\pi}[R\mid s_{t}] . 
+ • 
+ Discounting and optimization. The identity uses γ = 1 \gamma=1 , the default in LLMs RL. With γ < 1 \gamma<1 the critic targets 𝔼 π ​ [ γ T − t ​ c ∣ s t ] \mathbb{E}_{\pi}[\gamma^{T-t}c\mid s_{t}] , which discounts long continuations and is no longer a probability of correctness. 
+ • 
+ Distribution. All statements are under the RL prompt distribution 𝒟 X \mathcal{D}_{X} ; transfer to other tasks is empirical (Section  4 ). 
+ Appendix B Related Work on Training Value Functions for LLMs RL 
+ Value functions are central to RL, from GAE ( Schulman et al., 2016 ) in PPO
+ ( Schulman et al., 2017 ) to AlphaGo, whose value network predicts the probability of
+winning ( Silver et al., 2016 ) ; classification-trained value functions further
+link value learning to the calibration objective ( Farebrother et al., 2024 ) . The
+PPO critic is standard in RLHF ( Ouyang et al., 2022 ; Ziegler et al., 2019 ) .
+Critic-free methods drop the value network for Monte Carlo baselines to save memory
+and avoid difficult critic training
+ ( Shao et al., 2024 ; DeepSeek-AI, 2025 ; Ahmadian et al., 2024 ; Kazemnejad et al., 2025 ; Wu et al., 2026 ) ,
+but recent work extensively shows well-trained critics give finer credit assignment, lower
+variance, and higher sample efficiency for long-CoT reasoning and agentic settings
+ ( Yuan et al., 2025 ; Yue et al., 2025 ; Hu et al., 2025 ; Zhou et al., 2024 ) . Value models are
+also reused for search ( Liu et al., 2024 ) and used for obtaining correctness probabilities in
+process reward models ( Yu et al., 2024 ; Wang et al., 2024 ) .
+In this work, we show the critic is
+additionally a calibrated, general-purpose confidence estimator for LLMs. 
+ Appendix C Experimental Details 
+ Model. 
+ We initialize the actor and critic from Qwen3-8B or Nemotron-Cascade-8B, with a randomly initialized scalar value head for the critic.
+Thinking mode remains enabled under the default chat template.
+All prompts request a final answer in \ boxed ​ { } \backslash\mathrm{boxed}\{\} . 
+ PPO configuration. 
+ We train with PPO and GAE using a binary correctness reward applied only at the final response token.
+With γ = λ = 1 \gamma=\lambda=1 , the critic’s return target equals the observed correctness label at every response position.
+KL regularization is applied only to the actor loss, leaving the reward unchanged, and the critic uses unclipped MSE.
+Training runs for 300 steps without repeating prompts.
+Table  7 summarizes the key settings. 
+ Setting 
+ Value 
+ Algorithm 
+ PPO with GAE 
+ Discount γ \gamma / GAE λ \lambda 
+ 1.0 1.0 / 1.0 1.0 
+ Reward 
+ Terminal correctness, { 0 , 1 } \{0,1\} 
+ Actor / critic learning rate 
+ 10 − 6 10^{-6} / 2 × 10 − 5 2\times 10^{-5} 
+ Learning-rate schedule 
+ Constant 
+ Actor clip ratio 
+ 0.2 0.2 
+ Actor KL loss coefficient 
+ 10 − 3 10^{-3} 
+ Reward KL coefficient 
+ 0 0 
+ Critic loss 
+ Unclipped MSE 
+ Entropy coefficient 
+ 0 0 
+ PPO epochs per batch 
+ 1 1 (actor and critic) 
+ Gradient clipping 
+ 1.0 1.0 
+ Prompts per step 
+ 16 16 
+ Rollouts per prompt 
+ 64 64 
+ PPO mini-batch size 
+ 16 16 
+ Max prompt / response tokens 
+ 2,048 2{,}048 / 16,384 16{,}384 
+ Sampling temperature / top- p p 
+ 1.0 1.0 / 1.0 1.0 
+ Table 7: Key PPO hyperparameters. KL regularization affects only the actor objective. 
+ Evaluation. 
+ We use the same sampling temperature, top- p p , and response-length limit as in training, drawing four responses per prompt.
+Correctness is determined by rule-based grading, with truncated responses counted as incorrect.
+Confidence is read from the critic’s scalar output at the last non-padding token.
+We compute AUROC from raw outputs and compute ECE (15 equal-width bins) and Brier score after clipping outputs to [ 0 , 1 ] [0,1] . 
+ Appendix D Full Results 
+ Tables  8 – 10 report AUROC, ECE and Brier score for every math, code and agentic tool calling benchmark and both LLMs. 
+ In distribution 
+ Out of distribution 
+ Average 
+ Method 
+ synth. math 
+ olympiads 
+ synth. amc 
+ cn_k12 
+ aops 
+ amc_aime 
+ AIME 24 
+ AIME 25 
+ ID 
+ OOD 
+ Verbalized 
+ 0.70 
+ 0.63 
+ 0.69 
+ 0.62 
+ 0.63 
+ 0.67 
+ 0.75 
+ 0.70 
+ 0.66 
+ 0.73 
+ Self-consistency 
+ 0.67 
+ 0.73 
+ 0.64 
+ 0.68 
+ 0.77 
+ 0.72 
+ 0.91 
+ 0.96 
+ 0.70 
+ 0.94 
+ R-Tuning 
+ 0.86 
+ 0.89 
+ 0.93 
+ 0.87 
+ 0.87 
+ 0.91 
+ 0.91 
+ 0.85 
+ 0.89 
+ 0.88 
+ Probe 
+ 0.86 
+ 0.90 
+ 0.92 
+ 0.87 
+ 0.87 
+ 0.89 
+ 0.89 
+ 0.89 
+ 0.88 
+ 0.89 
+ AUC ↑ \uparrow 
+ CaC (ours) 
+ 0.89 
+ 0.93 
+ 0.95 
+ 0.88 
+ 0.89 
+ 0.89 
+ 0.92 
+ 0.95 
+ 0.91 
+ 0.94 
+ Verbalized 
+ 0.53 
+ 0.56 
+ 0.70 
+ 0.46 
+ 0.58 
+ 0.37 
+ 0.17 
+ 0.21 
+ 0.56 
+ 0.19 
+ Self-consistency 
+ 0.45 
+ 0.40 
+ 0.63 
+ 0.39 
+ 0.35 
+ 0.27 
+ 0.06 
+ 0.25 
+ 0.44 
+ 0.16 
+ R-Tuning 
+ 0.09 
+ 0.03 
+ 0.05 
+ 0.03 
+ 0.03 
+ 0.08 
+ 0.25 
+ 0.22 
+ 0.05 
+ 0.24 
+ Probe 
+ 0.06 
+ 0.04 
+ 0.06 
+ 0.03 
+ 0.05 
+ 0.09 
+ 0.25 
+ 0.24 
+ 0.05 
+ 0.24 
+ ECE ↓ \downarrow 
+ CaC (ours) 
+ 0.04 
+ 0.02 
+ 0.04 
+ 0.02 
+ 0.03 
+ 0.07 
+ 0.06 
+ 0.20 
+ 0.03 
+ 0.13 
+ Verbalized 
+ 0.50 
+ 0.54 
+ 0.65 
+ 0.45 
+ 0.55 
+ 0.35 
+ 0.19 
+ 0.23 
+ 0.53 
+ 0.21 
+ Self-consistency 
+ 0.44 
+ 0.37 
+ 0.60 
+ 0.38 
+ 0.34 
+ 0.27 
+ 0.05 
+ 0.06 
+ 0.42 
+ 0.06 
+ R-Tuning 
+ 0.16 
+ 0.13 
+ 0.10 
+ 0.14 
+ 0.14 
+ 0.12 
+ 0.15 
+ 0.20 
+ 0.13 
+ 0.18 
+ Probe 
+ 0.18 
+ 0.15 
+ 0.11 
+ 0.15 
+ 0.15 
+ 0.13 
+ 0.16 
+ 0.18 
+ 0.15 
+ 0.17 
+ Qwen3-8B 
+ Brier ↓ \downarrow 
+ CaC (ours) 
+ 0.19 
+ 0.12 
+ 0.10 
+ 0.13 
+ 0.14 
+ 0.11 
+ 0.15 
+ 0.14 
+ 0.14 
+ 0.15 
+ Verbalized 
+ 0.67 
+ 0.63 
+ 0.61 
+ 0.60 
+ 0.60 
+ 0.64 
+ 0.68 
+ 0.72 
+ 0.62 
+ 0.70 
+ Self-consistency 
+ 0.81 
+ 0.85 
+ 0.78 
+ 0.84 
+ 0.86 
+ 0.86 
+ 0.95 
+ 0.98 
+ 0.83 
+ 0.97 
+ R-Tuning 
+ 0.84 
+ 0.87 
+ 0.86 
+ 0.83 
+ 0.85 
+ 0.88 
+ 0.88 
+ 0.87 
+ 0.85 
+ 0.88 
+ Probe 
+ 0.83 
+ 0.86 
+ 0.85 
+ 0.82 
+ 0.83 
+ 0.85 
+ 0.89 
+ 0.84 
+ 0.84 
+ 0.87 
+ AUC ↑ \uparrow 
+ CaC (ours) 
+ 0.86 
+ 0.88 
+ 0.89 
+ 0.86 
+ 0.87 
+ 0.89 
+ 0.99 
+ 0.99 
+ 0.87 
+ 0.99 
+ Verbalized 
+ 0.42 
+ 0.48 
+ 0.58 
+ 0.39 
+ 0.54 
+ 0.27 
+ 0.19 
+ 0.33 
+ 0.47 
+ 0.26 
+ Self-consistency 
+ 0.25 
+ 0.20 
+ 0.35 
+ 0.17 
+ 0.18 
+ 0.14 
+ 0.20 
+ 0.16 
+ 0.23 
+ 0.18 
+ R-Tuning 
+ 0.04 
+ 0.02 
+ 0.05 
+ 0.05 
+ 0.01 
+ 0.10 
+ 0.21 
+ 0.18 
+ 0.04 
+ 0.20 
+ Probe 
+ 0.03 
+ 0.04 
+ 0.04 
+ 0.06 
+ 0.03 
+ 0.11 
+ 0.23 
+ 0.14 
+ 0.04 
+ 0.19 
+ ECE ↓ \downarrow 
+ CaC (ours) 
+ 0.02 
+ 0.01 
+ 0.04 
+ 0.04 
+ 0.03 
+ 0.10 
+ 0.22 
+ 0.12 
+ 0.03 
+ 0.17 
+ Verbalized 
+ 0.41 
+ 0.45 
+ 0.53 
+ 0.40 
+ 0.50 
+ 0.30 
+ 0.25 
+ 0.32 
+ 0.45 
+ 0.28 
+ Self-consistency 
+ 0.25 
+ 0.19 
+ 0.30 
+ 0.19 
+ 0.17 
+ 0.17 
+ 0.18 
+ 0.19 
+ 0.22 
+ 0.19 
+ R-Tuning 
+ 0.16 
+ 0.14 
+ 0.13 
+ 0.17 
+ 0.14 
+ 0.15 
+ 0.17 
+ 0.17 
+ 0.15 
+ 0.17 
+ Probe 
+ 0.17 
+ 0.14 
+ 0.13 
+ 0.18 
+ 0.15 
+ 0.17 
+ 0.18 
+ 0.18 
+ 0.15 
+ 0.18 
+ Nemotron- 
+ Cascade-8B 
+ Brier ↓ \downarrow 
+ CaC (ours) 
+ 0.16 
+ 0.13 
+ 0.12 
+ 0.16 
+ 0.13 
+ 0.14 
+ 0.15 
+ 0.13 
+ 0.14 
+ 0.14 
+ Table 8: Math, per benchmark. ID columns are the six NuminaMath sources used for RL. OOD is AIME 2024 and 2025. Best per column within each model and metric in bold. 
+ In distribution 
+ Out of distribution 
+ Average 
+ Method 
+ TACO 
+ Code- 
+ Contests 
+ Code- 
+ forces 
+ LCB 
+ Easy 
+ LCB 
+ Medium 
+ LCB 
+ Hard 
+ ID 
+ OOD 
+ Verbalized 
+ 0.53 
+ 0.69 
+ 0.65 
+ 0.52 
+ 0.65 
+ 0.65 
+ 0.60 
+ 0.61 
+ Self-consistency 
+ 0.66 
+ 0.90 
+ 0.90 
+ 0.83 
+ 0.92 
+ 0.92 
+ 0.78 
+ 0.89 
+ R-Tuning 
+ 0.87 
+ 0.86 
+ 0.84 
+ 0.84 
+ 0.89 
+ 0.84 
+ 0.86 
+ 0.85 
+ Probe 
+ 0.90 
+ 0.87 
+ 0.85 
+ 0.81 
+ 0.89 
+ 0.85 
+ 0.88 
+ 0.84 
+ AUC ↑ \uparrow 
+ CaC (ours) 
+ 0.93 
+ 0.93 
+ 0.91 
+ 0.84 
+ 0.94 
+ 0.95 
+ 0.93 
+ 0.91 
+ Verbalized 
+ 0.37 
+ 0.36 
+ 0.36 
+ 0.04 
+ 0.15 
+ 0.48 
+ 0.37 
+ 0.28 
+ Self-consistency 
+ 0.30 
+ 0.14 
+ 0.14 
+ 0.01 
+ 0.09 
+ 0.16 
+ 0.22 
+ 0.10 
+ R-Tuning 
+ 0.05 
+ 0.04 
+ 0.06 
+ 0.07 
+ 0.14 
+ 0.07 
+ 0.05 
+ 0.08 
+ Probe 
+ 0.07 
+ 0.05 
+ 0.05 
+ 0.11 
+ 0.15 
+ 0.07 
+ 0.06 
+ 0.10 
+ ECE ↓ \downarrow 
+ CaC (ours) 
+ 0.04 
+ 0.03 
+ 0.04 
+ 0.03 
+ 0.09 
+ 0.06 
+ 0.04 
+ 0.06 
+ Verbalized 
+ 0.40 
+ 0.36 
+ 0.37 
+ 0.04 
+ 0.21 
+ 0.42 
+ 0.38 
+ 0.26 
+ Self-consistency 
+ 0.31 
+ 0.14 
+ 0.15 
+ 0.02 
+ 0.08 
+ 0.16 
+ 0.23 
+ 0.10 
+ R-Tuning 
+ 0.14 
+ 0.16 
+ 0.16 
+ 0.04 
+ 0.13 
+ 0.14 
+ 0.15 
+ 0.11 
+ Probe 
+ 0.13 
+ 0.15 
+ 0.16 
+ 0.08 
+ 0.13 
+ 0.14 
+ 0.14 
+ 0.12 
+ Qwen3-8B 
+ Brier ↓ \downarrow 
+ CaC (ours) 
+ 0.11 
+ 0.11 
+ 0.12 
+ 0.05 
+ 0.12 
+ 0.09 
+ 0.11 
+ 0.08 
+ Verbalized 
+ 0.60 
+ 0.57 
+ 0.55 
+ 0.59 
+ 0.61 
+ 0.61 
+ 0.58 
+ 0.60 
+ Self-consistency 
+ 0.66 
+ 0.87 
+ 0.88 
+ 0.83 
+ 0.92 
+ 0.79 
+ 0.76 
+ 0.88 
+ R-Tuning 
+ 0.91 
+ 0.88 
+ 0.87 
+ 0.59 
+ 0.92 
+ 0.88 
+ 0.89 
+ 0.79 
+ Probe 
+ 0.91 
+ 0.88 
+ 0.87 
+ 0.62 
+ 0.90 
+ 0.88 
+ 0.89 
+ 0.80 
+ AUC ↑ \uparrow 
+ CaC (ours) 
+ 0.93 
+ 0.91 
+ 0.90 
+ 0.65 
+ 0.99 
+ 0.91 
+ 0.91 
+ 0.84 
+ Verbalized 
+ 0.33 
+ 0.35 
+ 0.33 
+ 0.09 
+ 0.10 
+ 0.55 
+ 0.33 
+ 0.32 
+ Self-consistency 
+ 0.31 
+ 0.18 
+ 0.14 
+ 0.01 
+ 0.09 
+ 0.27 
+ 0.24 
+ 0.20 
+ R-Tuning 
+ 0.04 
+ 0.02 
+ 0.04 
+ 0.12 
+ 0.16 
+ 0.04 
+ 0.03 
+ 0.09 
+ Probe 
+ 0.04 
+ 0.02 
+ 0.02 
+ 0.12 
+ 0.15 
+ 0.04 
+ 0.03 
+ 0.09 
+ ECE ↓ \downarrow 
+ CaC (ours) 
+ 0.04 
+ 0.02 
+ 0.02 
+ 0.13 
+ 0.14 
+ 0.03 
+ 0.03 
+ 0.08 
+ Verbalized 
+ 0.34 
+ 0.35 
+ 0.35 
+ 0.02 
+ 0.16 
+ 0.49 
+ 0.35 
+ 0.28 
+ Self-consistency 
+ 0.32 
+ 0.18 
+ 0.16 
+ 0.01 
+ 0.08 
+ 0.25 
+ 0.25 
+ 0.16 
+ R-Tuning 
+ 0.12 
+ 0.14 
+ 0.15 
+ 0.03 
+ 0.11 
+ 0.13 
+ 0.13 
+ 0.09 
+ Probe 
+ 0.12 
+ 0.14 
+ 0.15 
+ 0.03 
+ 0.12 
+ 0.13 
+ 0.13 
+ 0.09 
+ Nemotron- 
+ Cascade-8B 
+ Brier ↓ \downarrow 
+ CaC (ours) 
+ 0.11 
+ 0.12 
+ 0.13 
+ 0.03 
+ 0.12 
+ 0.13 
+ 0.12 
+ 0.09 
+ Table 9: Code, per benchmark. ID columns are the three sources used for RL. OOD is LiveCodeBench (LCB) by difficulty. Best per column within each model and metric in bold. 
+ In distribution 
+ Out of distribution 
+ Average 
+ Method 
+ ToolRL 
+ API-Bank L1 
+ API-Bank L2 
+ API-Bank L3 
+ ID 
+ OOD 
+ Verbalized 
+ 0.47 
+ 0.52 
+ 0.65 
+ 0.68 
+ 0.47 
+ 0.57 
+ Self-consistency 
+ 0.71 
+ 0.92 
+ 0.92 
+ 0.85 
+ 0.71 
+ 0.91 
+ R-Tuning 
+ 0.95 
+ 0.91 
+ 0.92 
+ 0.86 
+ 0.95 
+ 0.90 
+ Probe 
+ 0.93 
+ 0.84 
+ 0.92 
+ 0.85 
+ 0.93 
+ 0.85 
+ AUC ↑ \uparrow 
+ CaC (ours) 
+ 0.97 
+ 0.93 
+ 0.95 
+ 0.89 
+ 0.97 
+ 0.92 
+ Verbalized 
+ 0.37 
+ 0.21 
+ 0.41 
+ 0.51 
+ 0.37 
+ 0.30 
+ Self-consistency 
+ 0.38 
+ 0.23 
+ 0.33 
+ 0.49 
+ 0.38 
+ 0.30 
+ R-Tuning 
+ 0.07 
+ 0.20 
+ 0.17 
+ 0.16 
+ 0.07 
+ 0.19 
+ Probe 
+ 0.12 
+ 0.12 
+ 0.18 
+ 0.21 
+ 0.12 
+ 0.15 
+ ECE ↓ \downarrow 
+ CaC (ours) 
+ 0.06 
+ 0.09 
+ 0.12 
+ 0.15 
+ 0.06 
+ 0.11 
+ Verbalized 
+ 0.39 
+ 0.26 
+ 0.42 
+ 0.50 
+ 0.39 
+ 0.33 
+ Self-consistency 
+ 0.36 
+ 0.23 
+ 0.32 
+ 0.48 
+ 0.36 
+ 0.30 
+ R-Tuning 
+ 0.08 
+ 0.17 
+ 0.14 
+ 0.14 
+ 0.08 
+ 0.16 
+ Probe 
+ 0.10 
+ 0.18 
+ 0.14 
+ 0.18 
+ 0.10 
+ 0.18 
+ Qwen3-8B 
+ Brier ↓ \downarrow 
+ CaC (ours) 
+ 0.05 
+ 0.17 
+ 0.13 
+ 0.11 
+ 0.05 
+ 0.15 
+ Verbalized 
+ 0.56 
+ 0.49 
+ 0.48 
+ 0.34 
+ 0.56 
+ 0.46 
+ Self-consistency 
+ 0.81 
+ 0.80 
+ 0.75 
+ 0.68 
+ 0.81 
+ 0.77 
+ R-Tuning 
+ 0.86 
+ 0.78 
+ 0.71 
+ 0.54 
+ 0.86 
+ 0.72 
+ Probe 
+ 0.86 
+ 0.77 
+ 0.69 
+ 0.66 
+ 0.86 
+ 0.74 
+ AUC ↑ \uparrow 
+ CaC (ours) 
+ 0.88 
+ 0.79 
+ 0.76 
+ 0.74 
+ 0.88 
+ 0.77 
+ Verbalized 
+ 0.32 
+ 0.26 
+ 0.36 
+ 0.31 
+ 0.32 
+ 0.28 
+ Self-consistency 
+ 0.22 
+ 0.22 
+ 0.22 
+ 0.32 
+ 0.22 
+ 0.24 
+ R-Tuning 
+ 0.04 
+ 0.23 
+ 0.19 
+ 0.24 
+ 0.04 
+ 0.23 
+ Probe 
+ 0.04 
+ 0.33 
+ 0.28 
+ 0.23 
+ 0.04 
+ 0.30 
+ ECE ↓ \downarrow 
+ CaC (ours) 
+ 0.03 
+ 0.21 
+ 0.20 
+ 0.21 
+ 0.03 
+ 0.21 
+ Verbalized 
+ 0.36 
+ 0.33 
+ 0.40 
+ 0.40 
+ 0.36 
+ 0.35 
+ Self-consistency 
+ 0.22 
+ 0.28 
+ 0.26 
+ 0.30 
+ 0.22 
+ 0.28 
+ R-Tuning 
+ 0.15 
+ 0.24 
+ 0.26 
+ 0.31 
+ 0.15 
+ 0.26 
+ Probe 
+ 0.14 
+ 0.31 
+ 0.31 
+ 0.29 
+ 0.14 
+ 0.30 
+ Nemotron- 
+ Cascade-8B 
+ Brier ↓ \downarrow 
+ CaC (ours) 
+ 0.13 
+ 0.23 
+ 0.26 
+ 0.28 
+ 0.13 
+ 0.24 
+ Table 10: Agentic tool calling, per benchmark. ID is held-out ToolRL. OOD is API-Bank levels 1 to 3. Best per column within each model and metric in bold. 
+ Experimental support, please
+ view the build logs 
+ for errors. Generated by
+ L
+ A 
+ T
+ E 
+ xml 
+ .
+ Instructions for reporting errors 
+ We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+ support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+ methods listed below: 
+ Click the "Report Issue" ( 
+ ) button, located in the page header. 
+ Tip: You can select the relevant text first, to include it in your report. 
+ Our team has already identified the following issues . We appreciate your time reviewing and reporting rendering errors we
+ may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+ should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+ all. 
+ Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a list of packages that need conversion , and welcome developer contributions . 
+ We gratefully acknowledge support from our major funders ,
+ member institutions , ,
+ and all contributors.
+ About · 
+ Help · 
+ Contact · 
+ Subscribe · 
+ Copyright · 
+ Privacy · 
+ Accessibility · 
+ Operational Status (opens in new tab) 

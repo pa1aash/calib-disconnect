@@ -1,0 +1,3031 @@
+Highlights
+Learning How Much to Collaborate: Difficulty-Aware Topology Selection for Multi-Agent Code Generation
+Yunsong Hong
+• Collaboration benefit in multi-agent code generation
+scales with problem difficulty
+• Topology is treated as a per-problem decision rather than
+a system-level constant
+• A budget-matched protocol swaps the rank of two base-
+lines once spend is equalised
+• Matched at 40% of the hierarchical budget, routing adds
+4.1 points of pass@1
+• Math results concern retraining, not unchanged-model
+transfer
+arXiv:2609.13890v2  [cs.MA]  1 Nov 2026
+
+Learning How Much to Collaborate: Difficulty-Aware Topology Selection for Multi-Agent
+Code Generation
+Yunsong Hong∗
+School of Computer Science, The University of Sydney, Sydney, NSW 2006, Australia
+Abstract
+Multi-agent systems for code generation are deployed with a single communication topology, chosen once for every problem.
+Task-dependent allocation is an alternative when collaboration benefits vary across inputs. Evaluating five topologies on 614
+problems from APPS, HumanEval+ and LiveCodeBench, we find that the advantage of hierarchical collaboration over a single
+agent grows from 2.4 points of pass@1 on the easiest third of problems to 21.1 points on the hardest third, while its token cost stays
+about ten times higher. We propose the Difficulty-Aware Topology Selector (Dats), which predicts each topology’s probability of
+solving a problem and selects the one maximising predicted success minus cost. Its predictor is a graph network that treats the
+five topologies as nodes of a connectivity order. The complete graph-head comparison has a reported 1.7-point advantage over
+the flat multi-label head and changes several mechanisms together. Additional capacity-matched adjacency controls show smaller
+descriptive differences in a separate configuration. Because the cost penalty is a single scalar recalibrable without retraining,
+routers can be compared at approximately matched spend when the target is attained. With a shared penalty six cost-aware methods
+span 21.6 percentage points of spend; two leading baselines fall behind DATS after method-specific calibration near the common
+target. Unmatched rows are reported separately. Fixed at 40% of the always-hierarchical cost, Dats reaches 77.7% pass@1 against
+73.6% (always-hierarchical) and 74.3% (strongest learned competitor). The main comparison includes Holm–Bonferroni-adjusted
+McNemar tests. Statistical differences at unequal costs do not imply matched-budget superiority. Backbone-specific comparisons
+show gains of 4.07–4.23 points across four backbones. Replacing the 39 interpretable features with a graph network or a pretrained
+encoder gives a largest observed improvement of 1.3 points among tested alternatives, with no significant pairwise improvement;
+this does not establish equivalence or an upper bound. A cross-domain study on 400 mathematical reasoning problems reproduces
+the effect, the gap widening from 2.5 to 20.9 points.
+Keywords: multi-agent systems, large language models, code generation, adaptive computation, cost-aware routing,
+predict-then-optimize, budget-matched evaluation
+1. Introduction
+Practical motivation. A code-generation service receives tasks
+with different decomposition and verification needs. Choosing
+collaboration before execution makes its cost part of resource
+allocation: the service represents the request, estimates candi-
+date success probabilities, and selects a topology under its cost
+preference. The candidate communication graph is an execu-
+tion design; the topology graph inside the predictor is a repre-
+sentation used to compare those designs.
+Challenges behind the contributions. Adaptive allocation re-
+quires distinguishing tasks for which collaboration can help
+from tasks for which it only adds cost.
+Multi-label predic-
+tion accommodates overlapping successful topologies, whereas
+a single target class discards this overlap. The graph head of-
+fers a structured sharing hypothesis, but isolating its benefit re-
+quires controls for descriptors, sharing and parameter capac-
+ity. Finally, fair cost comparisons require calibration of each
+∗Corresponding author.
+Email address: yhon7822@uni.sydney.edu.au (Yunsong Hong)
+method’s operating point rather than equality of the penalty co-
+efficient.
+Large language models write code well enough that the in-
+teresting engineering question is no longer whether to use them
+but how to arrange them. A single model called once is the
+cheapest arrangement. Beyond it lies a design space of multi-
+agent systems in which several model instances take on roles,
+exchange drafts, criticise each other, and converge on an an-
+swer. Frameworks such as ChatDev [1], MetaGPT [2] and Au-
+toGen [3] have made these arrangements easy to build, and spe-
+cialised pipelines such as AgentCoder [4] and MapCoder [5]
+report that collaboration lifts pass@1 on competitive program-
+ming benchmarks well above what one call achieves.
+What these systems share is a commitment: the topology is
+fixed at design time. A pipeline that decomposes, delegates and
+reviews does so for every incoming problem, whether the prob-
+lem asks for a hierarchical decomposition or for a three-line
+string manipulation. The commitment is convenient to imple-
+ment and expensive to run. In our measurements a hierarchical
+role-based mesh consumes 9.95 times the tokens of a single call
+
+on the same problem; at Claude Opus 4 prices that is $0.94 ver-
+sus $0.09 per problem, a difference that dominates the operating
+cost of any deployed system.
+The commitment would be defensible if the extra collabora-
+tion paid off uniformly. It does not. Splitting our 614 problems
+into difficulty tertiles, the gap between the hierarchical mesh
+and a single agent is 2.4 points of pass@1 on the easy third,
+10.7 points on the middle third, and 21.1 points on the hard
+third. On easy problems the elaborate pipeline spends ten times
+the budget to recover two points that a single call very nearly
+reaches on its own. An aggregate accuracy gain therefore ob-
+scures the different marginal benefits observed across these dif-
+ficulty strata. Under the cost preferences considered here, addi-
+tional collaboration offers a smaller accuracy return on the easy
+stratum.
+For the heterogeneous task collection and cost preferences
+studied here, variation in collaboration benefit motivates choos-
+ing topology as a function of the input. A fixed topology can
+remain appropriate for a homogeneous workload or a different
+cost preference. We therefore ask whether an input-dependent
+choice can be learned from the problem statement before code
+generation.
+We show that it can, and that the way the decision is fac-
+tored matters.
+The natural first attempt is to train a classi-
+fier that maps a problem directly to the topology that solved
+it. This throws away the structure of the decision. The label
+“the topology that solved it” is ambiguous when several topolo-
+gies succeed and undefined when none do, and it hard-codes an
+accuracy–cost trade-off into the training targets, so a classifier
+trained for a single operating point may need retraining when
+that point changes. A budget-conditioned classifier is an alter-
+native and is not excluded by this argument. Instead we pre-
+dict what is actually observable—for each topology, whether it
+solved each cached problem—and defer the trade-off to a deci-
+sion rule applied at inference. The predictor answers five inde-
+pendent questions of the form “would this topology solve this
+problem”; the selector combines those answers with a cost ta-
+ble through a single scalar coefficient. The factorisation is a
+standard predict-then-optimize construction [6]. The reported
+difference from direct classification is approximately 6.0 points
+of pass@1, but the realised budgets differ; this comparison does
+not isolate an equal-budget causal benefit of factorisation.
+Keeping the trade-off in one scalar has a second consequence
+that turned out to matter more than the first, and that we think
+outlives the router it came from. Varying the cost penalty de-
+fines a family of routing policies with different attainable op-
+erating points; it does not guarantee every spend between the
+cheapest and most expensive topology, and reporting its accu-
+racy without pinning its spend says very little. Giving every
+method the same coefficient does not repair this, because the
+coefficient multiplies each method’s own score scale: in our
+comparison a shared λ = 0.2 leaves six methods spending any-
+where from 30% to 52% of the reference budget. We there-
+fore calibrate every cost-aware method, ours and the baselines
+alike, to one common budget before comparing them, choos-
+ing each method’s coefficient by bisection on held-out predic-
+tions toward 40% of the always-hierarchical cost. Attainment
+is checked separately: four calibrated methods meet the outer
+tolerance and two do not. Two baselines that appeared to beat
+Dats under the shared coefficient fall behind it once their spend
+is equalised, and the method that looked best turns out to have
+been the one buying the most computation. We state the pro-
+cedure as a protocol, report what it does and does not equalise,
+and regard it as a requirement for this class of comparison rather
+than a refinement of it.
+The contributions of this work are the following.
+First,
+we quantify how the benefit of five collaboration topologies
+varies with problem difficulty and algorithmic type on the
+614-problem main evaluation, with additional aggregate com-
+parisons across four backbones.
+The main evaluation moti-
+vates task-dependent allocation. Second, we formulate topol-
+ogy choice as a per-problem constrained selection problem
+and instantiate it as Dats, a predict-then-optimize router whose
+predictor is a compact graph network over the five candidate
+topologies: because the topologies form a connectivity order,
+we model them as nodes of that order and pass messages along
+it rather than scoring them as independent labels. The com-
+bined head comparison has a reported 1.7-point gain at the dis-
+played spend; it does not isolate adjacency. We compare deci-
+sion heads and input representations separately. Alternatives to
+the 39 interpretable features have a largest observed improve-
+ment of 1.3 points in the tested set, without significant pairwise
+improvement. This does not prove representation equivalence
+or locate all gains in the decision head. Third, we define the
+budget-matched evaluation protocol described above, show that
+it reverses two of the comparisons among the six cost-aware
+methods it governs, and use it throughout. Fourth, we char-
+acterise the resulting behaviour and its boundaries: which fea-
+tures carry the signal, which topologies get chosen for which
+algorithmic types, how the router’s probabilities calibrate, how
+much of the gain survives a change of backbone, and—on 400
+GSM8K and MATH problems—whether any of this depends
+on the problems being code at all.
+2. Related work
+Routing and cooperation studies. LLMRouterBench [66] con-
+cerns evaluation of routing among language models; The
+Avengers [67] addresses routing and collective model capa-
+bilities.
+These are useful comparisons for resource alloca-
+tion and evaluation, while the action here is a communica-
+tion topology within a fixed catalogue. Work on networking
+agency [68], communication under collective risks [69], cogni-
+tive context [70], identifiable partners [71], and regret dynam-
+ics [72] provides broader context for interaction design. Evi-
+dence from human or social systems does not establish the ef-
+fectiveness of a language-agent communication graph.
+2.1. Communication topologies for language agents
+Early multi-agent work with language models established
+that role assignment and message passing change what a sys-
+tem can solve. CAMEL [7] paired an instruction-giving agent
+with an executing agent; debate procedures [8, 9] ran sev-
+eral instances against each other and aggregated; generative
+2
+
+agents [10] scaled the interaction to societies.
+For software
+specifically, ChatDev [1] and MetaGPT [2] encode a water-
+fall process into agent roles, AgentVerse [11] assembles task-
+specific teams on demand, self-collaboration prompting [12]
+obtains the same effect from a single model playing several
+roles, and AutoGen [3] provides the conversational substrate
+on which such processes are assembled.
+A second line treats the communication graph itself as an ob-
+ject to optimise. GPTSwarm [13] represents agent systems as
+graphs and optimises edges by reinforcement learning; Mac-
+Net [14] studies how performance scales as the graph grows;
+AgentPrune [15] removes redundant edges to cut token spend;
+G-Designer [16] generates a task-conditioned topology with a
+graph neural network. Our work shares the premise that topol-
+ogy is a decision variable, and differs in where the decision is
+made. These methods search for or generate a graph, usually
+per task family, and pay a search or generation cost. We take
+a small, fixed catalogue of hand-designed topologies and learn
+only which catalogue entry to use for a given problem. The
+catalogue is coarser, but selection over it costs a single forward
+pass and permits empirical calibration of average spend on val-
+idation predictions. This is not a hard budget guarantee on un-
+seen tasks; attainable operating points and realised test costs
+must be reported.
+Evidence on whether collaboration helps at all is mixed.
+Wang et al. [17] report that multi-agent discussion does not con-
+sistently outperform a single strong agent with a good prompt.
+Our difficulty analysis is consistent with both that finding and
+with the positive reports: averaged over a benchmark whose
+problems are mostly easy, discussion looks unnecessary; re-
+stricted to the hard tail, it is decisive.
+2.2. Iterative refinement and self-correction
+Chain, star and mesh topologies inherit their machinery
+from single-agent prompting and refinement. Chain-of-thought
+prompting [18] and ReAct [19] established that structuring a
+model’s intermediate output changes what it can solve; Self-
+Refine [20] and Reflexion [21] loop generation and critique;
+Self-Debug [22] feeds execution feedback back to the model;
+Self-Consistency [23] and Tree of Thoughts [24] broaden the
+search rather than deepen the critique. These are complemen-
+tary to topology selection: each of our topologies could be in-
+stantiated with a stronger refinement operator, and the routing
+problem would remain.
+2.3. Routing and cascades over models
+Choosing which model to call for which query is a well-
+studied cost-reduction strategy. FrugalGPT [25] cascades from
+cheap to expensive models with a learned stopping rule; Hybrid
+LLM [26] routes between a small and a large model on pre-
+dicted difficulty; RouteLLM [27] learns the router from prefer-
+ence data; ZOOTER [28] distils reward signals into a routing
+function; meta-modelling approaches [29] predict per-model
+performance and pick the cheapest adequate one; Router-
+Bench [30] standardises evaluation of such systems. Cascades
+with mixed thought representations [31] apply the same idea to
+reasoning chains.
+Two recent methods route within multi-agent systems rather
+than over single models. MasRouter [32] jointly selects agents,
+models and collaboration mode; Router-R1 [33] learns multi-
+round routing and aggregation with reinforcement learning.
+Our formulation is narrower than either—one decision, made
+once, over a fixed catalogue—which is what allows the budget-
+matched protocol and the significance testing we report. We
+reimplement lightweight versions of both as baselines.
+The broader question of how much computation to spend
+per input has been studied as adaptive computation. Confident
+Adaptive Language Modeling [34] exits early when a per-token
+confidence threshold is met; mixture-of-experts routing [35]
+conditions capacity on the input; test-time compute scaling [36]
+and repeated sampling [37] characterise how accuracy responds
+to additional inference budget. Topology selection is adaptive
+computation at the granularity of an entire agent pipeline.
+2.4. Code generation benchmarks and models
+We evaluate on APPS [38], which stratifies problems into
+introductory, interview and competition levels; HumanEval+,
+the strengthened test suite of EvalPlus [39] over the origi-
+nal HumanEval [40]; and LiveCodeBench [41], which draws
+from contest problems released after model training cut-offs.
+MBPP [42], AlphaCode [43] and SWE-bench [44] define ad-
+jacent regimes we do not cover. Our backbones are Claude
+Opus 4, DeepSeek-V3 [45], GPT-4o-mini [46] and Qwen2.5-
+Coder-32B [47], the last chosen so that the gradient includes
+a code-specialised model of the kind introduced by DeepSeek-
+Coder [48].
+2.5. Representations of code and of problem statements
+A router needs a representation of the input, and the natu-
+ral candidates come from code representation learning. Code-
+BERT [49] pretrains a bimodal transformer on code paired
+with natural language; GraphCodeBERT [50] adds data-flow
+edges to the same objective; UniXcoder [51] unifies the en-
+coder and decoder views; code2vec [52] predates them with
+paths through the abstract syntax tree; and graph convolutional
+networks [53, 54] supply the machinery for encoding either a
+syntax tree or a statement graph. Program-structure methods
+require the relevant syntax or data-flow representation. In con-
+trast, pretrained models such as CodeBERT and UniXcoder can
+encode a natural-language statement without a generated pro-
+gram. Our pre-execution setting excludes unavailable program
+structure, not natural-language use of pretrained encoders. Sec-
+tion 7.3 compares selected pretrained encoders and a statement-
+graph encoder with the hand-crafted features.
+2.6. Mathematical reasoning as a second domain
+Our cross-domain check uses GSM8K [55], grade-school
+word problems with a single numeric answer, and MATH [56],
+competition problems annotated with five difficulty levels,
+which is what makes it usable for a difficulty-scaling analysis.
+Multi-agent methods have been applied to both: debate [8] and
+self-consistency [23] report gains on arithmetic and mathemat-
+ical reasoning, and program-aided approaches [57] offload the
+3
+
+arithmetic to an interpreter. We use these suites not to compete
+on them but to ask whether the difficulty-dependent value of
+collaboration that we measure on code is a property of code or
+a property of hard problems.
+3. Problem formulation
+Let x denote a problem statement and T = {τ1, . . . , τ5} the
+catalogue of topologies in Fig. 1. Running τt on x with a fixed
+backbone yields a program that either passes the problem’s full
+test suite or does not; write the outcome yt(x) ∈{0, 1} and its
+expectation st(x) = Pr[pass | x, τt]. Running τt also consumes
+tokens, and we write ct for the expected cost of topology t in
+currency units, measured per topology rather than per problem
+because the token profile is dominated by the number and struc-
+ture of calls rather than by the individual statement.
+A router is a map π : X →T . We want the router that max-
+imises expected success subject to an average spending con-
+straint,
+max
+π
+Ex
+sπ(x)(x)
+s.t.
+Ex
+cπ(x)
+ ≤B.
+(1)
+The constraint couples the individual decisions only through
+an expectation, so the Lagrangian relaxation separates across
+problems: for a multiplier λ ≥0 the optimal policy is pointwise,
+πλ(x) = arg max
+t∈T
+st(x) −λct
+.
+(2)
+For fixed scores and the same fixed topology costs used in se-
+lection, Ex[cπλ(x)] is non-increasing in λ. With a finite catalogue
+and evaluation set it is generally a step function, so bisection
+can search for an attainable point near a target but need not at-
+tain every target. Only methods meeting the declared tolerance
+enter a matched-budget comparison. This property concerns
+the cost used in the objective; it does not by itself guarantee
+monotonicity of a separately measured per-problem token bill.
+Two quantities in Eq. (2) are unavailable at decision time.
+The costs ct are cheap to obtain, since they can be measured
+once from cached runs and reused. The success probabilities
+st(x) are the difficult part, and estimating them is what the next
+section is about.
+Throughout, we call the policy that always plays a single
+topology Always-τ, and the policy π⋆(x) = arg maxt yt(x) that
+knows the realised outcomes the oracle.
+The oracle is not
+achievable, but it bounds what any router built on this catalogue
+can reach, and the gap to it measures how much of the available
+signal a router leaves behind.
+3.1. The five topologies
+Single issues one call with the problem statement and a short
+instruction. Chain runs three sequential calls: a proposer writes
+a first solution, a critic lists concrete defects, and a reviser pro-
+duces the final program. Star uses four calls: a hub decom-
+poses the statement into three subtasks and three workers solve
+them independently, after which the returns are concatenated
+deterministically into the final program without a further model
+call. FullMesh runs three peers for two rounds, six calls in to-
+tal, with each peer seeing the other two drafts in the second
+round. HRM, the hierarchical role-based mesh, places a man-
+ager above two leads, each of which supervises two workers;
+leads consolidate their workers’ output and the manager arbi-
+trates, for five to eight calls depending on whether the man-
+ager requests a second pass. The catalogue is deliberately small
+and hand-designed: our claim concerns the value of choosing
+among topologies, not the value of any particular topology.
+4. Difficulty-aware topology selection
+Dats estimates st(x) for all five topologies from the problem
+statement alone, then applies Eq. (2) with a calibrated multiplier
+(Fig. 2). Nothing in the pipeline requires executing a topol-
+ogy at decision time, and nothing propagates gradients into the
+agents.
+Prediction and selection. The predictor estimates candidate-
+specific success scores from the same task representation. The
+selection rule then compares these scores after the cost penalty.
+This separation allows the preferred action to change with the
+deployment budget without redefining a unique correct topol-
+ogy for every training example. A graph-based head can share
+information between candidate descriptions; such sharing is a
+modelling hypothesis, not by itself evidence of greater predic-
+tive accuracy. Flat, node-wise, descriptor and adjacency con-
+trols address different parts of that hypothesis.
+4.1. Features
+The feature map ϕ : X →R39 is deliberately interpretable,
+because we want to be able to say afterwards which properties
+of a problem drive the decision. It has six groups.
+The lexical group (five dimensions) records length in words,
+sentence count, average word length, the fraction of tokens that
+appear inside code spans, and a constraint density obtained by
+counting phrases such as “at most”, “exactly” and “for each”.
+The structural group (four) counts worked examples, detects
+an explicit edge-case discussion, counts required functions in
+the signature, and scores input–output complexity from the de-
+scribed formats. The complexity group (three) captures cues
+that a solution will need nesting or asymptotic care: depth hints
+such as “for each pair”, the number of large numeric bounds,
+and the count of algorithmic keywords associated with hard
+techniques. The difficulty group is a single scalar predicted from
+the statement. A ridge regressor with an L2 penalty of 1 uses
+the twelve lexical, structural and complexity features to pre-
+dict a five-level difficulty rating. Training ratings follow a fixed
+rubric: direct translation, one elementary technique, composi-
+tion of familiar techniques, an advanced technique, and several
+interacting advanced techniques. The prediction is clipped to
+[1, 5] and mapped to [0, 1] by (r −1)/4. The scorer and its in-
+put standardisation are fitted within each training fold; training
+examples receive inner out-of-fold difficulty predictions. Val-
+idation and test ratings are never supplied to the router. No
+language-model call is needed. The same scoring procedure is
+used in the primary and additional comparisons. The semantic
+group (sixteen) holds the leading singular directions of a TF–
+IDF representation of the statement. The algorithmic group
+4
+
+(a) Single
+A
+(b) Chain
+P
+C
+R
+(c) Star
+H
+W
+W
+W
+(d) FullMesh
+A
+A
+A
+(e) HRM
+M
+L
+L
+w
+w
+w
+w
+Figure 1: The five collaboration topologies. Single issues one call. Chain passes a draft from proposer (P) to critic (C) to reviser (R). Star has a hub (H) decompose
+the problem and delegate to workers (W), whose returns are merged deterministically. FullMesh lets three peers (A) read each other’s drafts over two rounds. HRM
+adds a manager (M) above two leads (L), each supervising two workers (w), with review flowing upward. Filled nodes indicate agents that see the full problem
+statement.
+problem
+x
+39-dim feature
+extractor Á
+topology-graph GNN
+^st(x) = Pr[pass j x; ¿t]
+cost table ^ct
+budget B ! ¸
+(inner CV)
+argmax
+t
+^st ¡ ¸^ct
+execute ¿¤(x)
+!  program
+trained once on cached benchmark outcomes; no gradient reaches the agents
+Figure 2: Dats. A problem statement is mapped to 39 features and a shared trunk; a graph network then passes messages over the five candidate topologies, arranged
+by connectivity, and reads out one success probability per topology. The selector subtracts a cost term whose coefficient is calibrated to the target budget on held-out
+data. Only the selected topology is executed.
+(ten) is a one-hot encoding of the problem’s dominant tech-
+nique, assigned by keyword vote over ten categories from im-
+plementation and string handling to dynamic programming and
+graphs; the vote recovers our manual labels on 85.5% of prob-
+lems.
+The two groups that a router might be expected to lean on
+hardest, difficulty and algorithmic type, are also the two that
+carry the most signal in the ablation of Section 7. Their inter-
+action is what makes the problem non-trivial: the useful pattern
+is not “hard problems need HRM” but “hard graph problems
+need HRM while hard implementation problems do not”, and a
+model without interaction terms cannot express it.
+4.2. Predictor
+The predictor maps a task representation to five marginal
+success probabilities.
+A flat multi-label predictor is a valid
+baseline; separate sigmoid losses do not by themselves estab-
+lish statistical independence of outcomes. The proposed topol-
+ogy graph expresses a hypothesis that structural descriptors and
+shared computation can help predict correlated candidate out-
+comes. The connectivity order does not require success to be
+nested: a heavier topology can fail on a problem solved by a
+lighter one. Whether a particular adjacency helps must be tested
+against controlled alternatives.
+We therefore make the label space explicit and predict over
+it with a small graph network. Let GT = (T , E) be the topol-
+ogy graph: its five nodes are the topologies and its edges join
+each topology to its neighbours in the connectivity order, with
+the hierarchical mesh linked to Star and FullMesh as the two
+structures it composes. Each node carries a static descriptor
+et ∈R4—agent count, edge count, diameter and mean degree
+of the topology’s own communication graph—so the network is
+told what each option is, not merely that five options exist.
+The problem enters through a shared trunk with affine layers
+of widths 128 and 64, each followed by a ReLU. The 39 stan-
+dardised features are mapped to a task context z = trunk(ϕ(x)) ∈
+R64, and each node is initialised by concatenating that context
+with its structural descriptor,
+h0
+t = ReLU W0 [ z ∥et ] + b0
+.
+(3)
+The trunk is shared across nodes for the same reason a trunk
+was shared across the old heads—difficulty is a property of the
+problem, not of the topology—but now the topology-specific
+part of the computation is a message passing over GT rather
+than five detached linear maps. For ℓ= 0, . . . , L −1,
+hℓ+1
+t
+= ReLU
+
+Wℓ
+self hℓ
+t + Wℓ
+nbr
+X
+u∈N(t)
+1
+|N(t)| hℓ
+u + bℓ
+,
+(4)
+with weights and biases shared across nodes, separate param-
+5
+
+eters in each of the L = 2 rounds, and four-dimensional node
+states in the primary configuration. Thus a topology’s score is a
+function of the predicted evidence at the topologies structurally
+adjacent to it. A per-node sigmoid readout ˆst = σ(w⊤hL
+t + b)
+produces the five probabilities. The primary neural predictor
+has 5, 120 + 8, 256 + 276 + 72 + 5 = 13, 729 parameters, re-
+ported as 13.7K: two trunk layers, a 68-to-4 node initialiser,
+two message-passing rounds and a shared readout. The scalar
+difficulty regressor is a separate feature-extraction component.
+Section 7.2 additionally uses a 64-unit trunk and 32-unit node
+states, with 8,961 neural parameters; all adjacency variants in
+that comparison have identical capacity. Inputs are standard-
+ised on the training fold; optimisation uses Adam at an initial
+learning rate of 10−3 with early stopping on a 10% internal val-
+idation split and a cap of 400 epochs. The loss is the mean
+binary cross-entropy over the five node readouts,
+L(θ) = −1
+5N
+N
+X
+i=1
+5
+X
+t=1
+h
+y(i)
+t log ˆs(i)
+t + (1 −y(i)
+t ) log(1 −ˆs(i)
+t )
+i
+.
+(5)
+The input representation and output head are distinct design
+choices. A program syntax graph is unavailable before code
+generation; a natural-language statement graph and text en-
+coders are available. The output topology graph is a predefined
+relation between candidate communication designs. Section 7
+compares the complete head with a flat alternative, without iso-
+lating adjacency. Figure 3 illustrates the shared trunk, message
+passing and per-node readout; the additional controlled config-
+uration is specified in Section 7.2.
+Two design points carry over unchanged because they are
+easy to get wrong. First, the targets are per-topology outcomes,
+not a single categorical label, so problems that every topology
+solves and problems that none solve both contribute to the bi-
+nary prediction loss. For example, targets (1, 0, 1, 0, 0) retain
+two successful options, while (0, 0, 0, 0, 0) trains all success
+scores downward without inventing a successful class. An all-
+zero observed target does not prove every future rollout will
+fail. The selector favours the cheapest option only when pre-
+dicted success scores are tied (with a positive cost penalty); that
+choice is not an extra training label. Second, the network never
+sees cost, which is what keeps the trade-off confined to the se-
+lector.
+4.3. Selection and budget calibration
+Costs enter through a normalised table ˆct = ct/ maxt′ ct′, so
+ˆcSingle = 0.10 and ˆcHRM = 1. The selector is
+τ⋆(x) = arg max
+t∈T
+ˆst(x) −λ ˆct
+,
+(6)
+which places λ on the same scale as a probability difference: at
+λ = 0.06, upgrading from Single to HRM must buy at least 5.4
+points of predicted success to be worth it.
+The multiplier is not a hyperparameter to be tuned for accu-
+racy. It is determined by the budget. The mean monetary target
+is B = βcHRM, where β is the dimensionless HRM-relative frac-
+tion reported in the tables. Normalising costs in Eq. (6) rescales
+the multiplier, not the budget. We run bisection on λ using
+three-fold inner predictions, evaluating the selected fixed-table
+mean cost at each step, and stop when the inner realised spend
+is within 0.5 percentage points of the Always-HRM reference
+cost from the target B, or after sixty iterations. An unattainable
+target is reported as unmatched rather than guaranteed by the
+search. The resulting λ is then applied unchanged to the outer
+test fold. Algorithm 1 states the procedure. Across the five
+outer folds of our main experiment the calibrated values were
+0.058, 0.052, 0.065, 0.056 and 0.061, a spread small enough
+that the routing behaviour is stable across folds but large enough
+that fixing a single value in advance would miss the budget.
+Algorithm 1 Nested training and budget calibration
+Require: outer training set Dtr, untouched outer test set Dte, cached
+training outcomes, fixed monetary cost table c, target B = βcHRM,
+HRM reference cost cHRM
+1: Split Dtr into three inner folds; allocate inner out-of-fold scores S
+2: for each inner validation fold V do
+3:
+Set T = Dtr \ V
+4:
+Fit preprocessing and the difficulty scorer on T; use cross-fitted
+difficulty scores within T
+5:
+Fit predictor on T; early stopping uses a split contained in T
+6:
+Transform and score V with the frozen inner pipeline; store pre-
+dictions in S V
+7: end for
+8: Set λlo = 0, λhi = 2; evaluate attainable endpoint costs using S
+9: if B is outside the attainable endpoint range then
+10:
+Mark the target unmatched and retain the nearest endpoint
+11: else
+12:
+for j = 1 to 60 do
+13:
+λ ←(λlo + λhi)/2
+14:
+Select by S −λc/cHRM; compute mean selected monetary
+cost using c
+15:
+Retain the candidate with smallest absolute target error
+16:
+if absolute target error is at most 0.005 cHRM then
+17:
+break the bisection loop
+18:
+end if
+19:
+if cost exceeds B then
+20:
+λlo ←λ
+21:
+else
+22:
+λhi ←λ
+23:
+end if
+24:
+end for
+25: end if
+26: Select the retained multiplier; mark unmatched if error exceeds
+0.5% of Always-HRM reference cost
+27: Refit preprocessing and predictor within Dtr using the selected
+training specification; freeze the pipeline and multiplier
+28: Evaluate Dte once; report accuracy and realised cost separately
+from the target
+Ensure: fitted predictor and multiplier; no outer-test tuning
+Training and validation isolation. For each outer split, the dif-
+ficulty scorer, TF–IDF vocabulary, SVD projection, standardis-
+ation and early stopping are fitted exclusively within the train-
+ing portion. Inner validation predictions come from a pipeline
+that has not fitted those examples. We choose the multiplier
+from the pooled inner out-of-fold scores, refit the pipeline on
+6
+
+(a) problem features !  shared trunk
+(b) message passing over the topology graph GT
+(c) read-out !  selector
+context z
+1/0
+3/2
+4/3
+3/3
+7/6
+h 0
+t = ReLU(W0[zket ])
+h ` + 1
+t
+= ReLU
+¡
+Wself h `
+t + Wnbr hN(t)
+¢
+;
+` = 0; 1
+S
+Ch
+St
+FM
+HRM
+^st = ¾(w > h L
+t )
+problem
+x
+Á
+39 features
+shared
+trunk
+¿⋆= argmax
+t [^st ¡ ¸^ct]
+S
+Ch
+St
+FM
+HRM
+Figure 3: The topology-graph predictor. (a) A problem x is mapped by ϕ to 39 difficulty features and a shared trunk to a context z ∈Rd. (b) The five candidate
+topologies are the nodes of the topology graph GT , joined along the connectivity order Single–Chain–Star–FullMesh with the hierarchical mesh composing Star
+and FullMesh; each node is initialised from z (dashed) and its own structural descriptor et (agent/edge counts shown), then exchanges messages with its structural
+neighbours (orange) for L = 2 rounds. (c) A per-node sigmoid readout produces one success probability per topology, which the cost-aware selector ranks. The
+graph the network reasons over is the output space of topologies, not the absent program graph of the input. Bias terms and round superscripts are omitted from the
+schematic for clarity; the complete update is given in Eq. (4).
+the outer training portion, and evaluate the untouched test fold.
+Algorithm 1 is used for both primary and additional compar-
+isons. Section 6.4 specifies the additional inner-search refine-
+ment used for the recalibrated baseline points.
+A refit can
+change score calibration, so outer cost is checked independently
+against the declared tolerance.
+4.4. The budget-matched protocol
+The calibration step above was introduced as a component of
+Dats. We now separate it from Dats, because it is not specific to
+our router and because without it the accuracies that this class
+of method reports are not comparable to each other. We state
+it as a protocol and treat it as a contribution independent of the
+model it was developed for.
+The difficulty it addresses is that a cost-aware router is not
+a system but a one-parameter family of systems. Any method
+of the form “score minus λ times cost” sweeps out a curve in
+the cost–accuracy plane as λ moves, and every point of that
+curve is a legitimate configuration of the same method. An ac-
+curacy reported without its realised spend therefore identifies a
+curve only up to an unknown position along it, and two such
+numbers cannot be subtracted. The obvious repair—give ev-
+ery method the same λ—does not work, because λ acts on each
+method’s own score scale. A predictor whose probabilities are
+compressed towards 0.5 upgrades to an expensive topology less
+often, at identical λ, than one whose probabilities are spread
+towards the extremes, so a shared coefficient silently places
+the methods at different operating points. In our comparison
+a shared λ = 0.2 spreads realised spend over 21.6 percentage
+points of the reference budget (Section 6.4).
+The protocol has four steps. One, declare a budget B as a
+fraction of the realised spend of a reference policy that requires
+no calibration; we use the most expensive fixed topology, which
+makes B interpretable as “this fraction of what the standard
+pipeline costs”. Two, calibrate each method separately, by bi-
+section on its own coefficient inside the training folds, never on
+the test fold. Three, verify the realised spend out of fold, report
+it beside the accuracy, and declare a method budget-matched
+only if it lands inside the stated outer-evaluation tolerance of
+0.4 percentage points. Four of the six calibrated methods meet
+it; E2E and Difficulty-Threshold do not. The inner search uses
+its separately stated 0.5-percentage-point tolerance. Four, com-
+pare accuracies only within the matched group, and report poli-
+cies that cannot be calibrated—fixed topologies, the oracle—
+separately, as locators of the frontier rather than as competitors.
+Three properties make the protocol cheap to adopt. It re-
+quires only that the cost used for the search be monotone in the
+coefficient. This holds for fixed scores when the same fixed cost
+table is used in both selection and search evaluation: raising λ
+cannot increase that selected cost. A separately calculated to-
+ken bill requires its own empirical check. It converges quickly,
+needing 21.4 bisection steps on average to reach the 0.5% inner
+tolerance. And on a cached evaluation grid it costs no inference
+at all, since every candidate assignment is scored against out-
+comes that have already been paid for. What it does not equalise
+should also be stated: it matches expected monetary spend, not
+latency, not worst-case cost, and not the variance of either. A
+method that meets the budget by occasionally choosing a very
+expensive topology is matched to one that never does, and the
+two may be quite different to operate.
+7
+
+Table 1: Composition of the evaluation set. Difficulty is the normalised state-
+ment rating; words and tests are per-problem means. Tests counts evaluator
+groups, each of which can contain multiple input cases or assertions.
+Suite
+n
+Difficulty
+Words
+Tests
+APPS-Introductory
+100
+0.25
+178
+12.4
+APPS-Interview
+100
+0.50
+296
+18.7
+APPS-Competition
+100
+0.75
+412
+21.3
+HumanEval+
+164
+0.20
+67
+24.6
+LiveCodeBench
+150
+0.59
+341
+16.2
+Total
+614
+0.44
+232
+19.0
+4.5. Cost of the router
+The 39–128–64–5 shorthand specifies the input, trunk widths
+and five output scores; the intervening four-dimensional node
+states are specified in Section 4.2. The primary router has 13.7K
+neural parameters and takes 28 seconds to train on 614 prob-
+lems on CPU. Feature extraction, including the linear difficulty
+scorer, takes under a millisecond per problem. The cheapest
+language-model topology takes 8.4 seconds. Monetary budgets
+account for topology execution tokens; local feature extraction
+and router computation are reported separately and do not re-
+quire a paid model call.
+5. Experimental setup
+5.1. Problems
+We evaluate on 614 problems (Table 1): 300 from APPS,
+one hundred at each of the introductory, interview and compe-
+tition levels; the full 164 problems of HumanEval+; and 150
+problems from LiveCodeBench drawn from contests held af-
+ter the training cut-off of every backbone we test. The suites
+were chosen to span difficulty rather than to maximise size: Hu-
+manEval+ supplies a regime where a single call almost always
+suffices, APPS-Competition supplies one where nothing reli-
+ably works, and the middle suites populate the interval between
+them where routing decisions are actually contested. Mean dif-
+ficulty in Table 1 is the normalised rating described in Sec-
+tion 4.1, reported here to show that the suites are ordered as
+intended.
+5.2. Backbones and execution
+Claude Opus 4 is the primary backbone; DeepSeek-V3, GPT-
+4o-mini and Qwen2.5-Coder-32B provide a capability gradient
+for the generalisation study. Every agent inside a topology uses
+the same backbone, so the comparison isolates topology from
+model choice. Decoding uses temperature 0.2 and a 4096-token
+output cap, and we report pass@1 from a single sample, since a
+router that only helps under repeated sampling would be solv-
+ing a different problem. A program counts as correct only if
+it passes the complete test suite. The evaluator executes all
+configured checks for the problem. The Tests column counts
+grouped checks in the execution harness, rather than the num-
+ber of raw inputs in an expanded benchmark distribution; in
+particular, it must not be read as the raw HumanEval+ assertion
+count.
+Table 2: Measured cost profile per topology on Claude Opus 4. Tokens are
+per-problem means over the full grid; ratio is relative to Single.
+Topology
+Calls
+Tokens
+Ratio
+USD
+Lat. (s)
+Single
+1
+2,632
+1.00
+0.095
+8.4
+Chain
+3
+13,425
+5.10
+0.483
+26.1
+Star
+4
+14,083
+5.35
+0.507
+21.7
+FullMesh
+6
+23,004
+8.74
+0.828
+44.3
+HRM
+5–8
+26,189
+9.95
+0.943
+38.6
+Dats
+2.6
+10,476
+3.98
+0.377
+17.1
+The full grid is 614 × 5 × 4 = 12,280 executions. All out-
+comes, token counts and generated programs are cached, so the
+routing experiments—five folds times five seeds times thirteen
+methods—read from the cache and incur no further inference
+cost. Total spend for the grid was approximately $1,807, of
+which $1,753 was Claude Opus 4.
+5.3. Cost accounting
+Table 2 reports the measured token profile. Costs use pub-
+lished per-token prices; for Claude Opus 4 we combine $15 per
+million input tokens and $75 per million output tokens, which
+given our observed input–output mix yields an effective $36
+per million. The ratios in the fourth column are the quantity
+that matters for routing, and they are stable across backbones to
+within three percent, because they are determined by the num-
+ber and structure of calls rather than by the model. Latency is
+wall-clock median over the grid, with independent workers in
+Star and FullMesh executed in parallel.
+5.4. Protocol
+All routers are evaluated by five-fold cross-validation strati-
+fied jointly on suite and difficulty tertile, repeated over five ran-
+dom seeds; reported accuracy is the pooled out-of-fold accuracy
+of the first seed, and the seed-to-seed standard deviation is re-
+ported alongside. Hyperparameters and the cost multiplier are
+selected inside a three-fold split of each training fold and never
+touch the corresponding test fold.
+The budget is fixed at B = 40% of the always-hierarchical
+cost, that is $0.377 per problem as the nominal target. Cali-
+brated methods use their own coefficients and searches under
+Section 4.4; only those whose reported outer cost meets the de-
+clared tolerance enter matched-budget ranking. Fixed topolo-
+gies obviously cannot be calibrated and are reported at their nat-
+ural cost; they are included to locate the frontier, not as budget-
+matched competitors.
+5.5. Baselines
+Five Always-τ policies establish the fixed-topology frontier.
+Random samples a topology uniformly and is included to con-
+firm that the routing gain is not an artefact of mixing. Difficulty-
+Threshold bins the predicted difficulty rating and maps bins to
+topologies, with thresholds set on the training fold to meet the
+budget; it represents the intuition that difficulty alone should
+be enough. DATS-E2E is a direct five-way classification refer-
+ence. Its stated target is the cheapest successful topology, which
+8
+
+is defined only when at least one candidate succeeds. The re-
+tained oracle count implies 614 −546 = 68 problems with
+no successful topology in the cached grid. All-failed training
+examples receive the cheapest-topology fallback class, retain-
+ing all training examples. Ties between successful candidates
+use the same cost order. The softmax baseline is trained with
+cross-entropy; this explicit fallback rule is used throughout the
+E2E comparisons. Its displayed accuracy is reported at its ac-
+tual operating cost, not as a controlled isolation of predict-then-
+optimize factorisation. The fallback class is an explicit single-
+label convention, distinct from the multi-label all-zero target
+in Section 4.2. MasRouter-lite follows [32] in learning a rout-
+ing distribution over collaboration modes, restricted here to a
+logistic model on the lexical and structural features. RouterR1-
+lite follows [33] in learning a reward regressor—ridge regres-
+sion on accuracy minus normalised cost—and selecting the
+argmax. RandomForest-Router substitutes a 300-tree forest for
+the network in the same predict-then-optimize scaffold and is
+the strongest learned competitor. The oracle completes the ta-
+ble.
+5.6. Statistics
+Accuracy intervals are Wilson score intervals at 95% [58].
+Paired comparisons between routers on the same problems use
+McNemar’s test [59], exact binomial when the number of dis-
+cordant pairs is below 25 and with Yates’ continuity correc-
+tion otherwise, as recommended for classifier comparison by
+Dietterich [60]. Families of comparisons are corrected by the
+Holm–Bonferroni procedure [61]. The six feature-group abla-
+tions form one comparison family; their significance markers
+use Holm-adjusted McNemar p values.
+Calibration is sum-
+marised by expected calibration error over ten equal-width
+bins [62, 63] and by the Brier score [64]. Scikit-learn [65] im-
+plements ridge scoring, TF–IDF/SVD preprocessing, random
+forests and the linear probes. PyTorch implements the topol-
+ogy head and statement GCN; transformer encoders use the
+Transformers interface with PyTorch. The graph models use
+Adam, batch size 64, an initial learning rate of 10−3, at most
+400 epochs and early stopping with patience 30 on training-side
+validation loss. Seeds 0–4 control initialisation and minibatch
+order; data partitions are held fixed for paired model compar-
+isons.
+6. Results
+6.1. No topology dominates
+Table 3 reports pass@1 for the five topologies on Claude
+Opus 4. The ordering by aggregate accuracy is Single, Star,
+Chain, FullMesh, HRM, and the total spread is 11.4 points. Two
+features of the table matter more than the ordering.
+The first is how unevenly the spread is distributed. On Hu-
+manEval+ the five topologies lie within 4.2 points of each other,
+and the cheapest is only 4.2 points behind the most expensive
+despite costing a tenth as much. On APPS-Competition the
+same comparison is 22 points. Any system that fixes one topol-
+ogy is implicitly accepting one of these two trade-offs every-
+where.
+Table 3: pass@1 (%) by topology and suite on Claude Opus 4. The last row
+gives the number of solved problems out of 614.
+Suite
+Single Chain
+Star FullMesh HRM
+APPS-Introductory
+88.0
+91.0
+89.0
+90.0
+92.0
+APPS-Interview
+57.0
+66.0
+63.0
+67.0
+71.0
+APPS-Competition
+19.0
+32.0
+27.0
+35.0
+41.0
+HumanEval+
+90.9
+93.3
+92.1
+94.5
+95.1
+LiveCodeBench
+46.0
+56.0
+52.7
+57.3
+61.3
+Overall
+62.21
+69.38 66.61
+70.52
+73.62
+Solved
+382
+426
+409
+433
+452
+The second is that the ordering is not a ranking of collabora-
+tion intensity. Star uses four calls and Chain three, yet Chain
+is ahead of Star on every suite. Sequential criticism, where
+each agent sees the full statement and the previous draft, ex-
+tracts more from three calls than decomposition and integration
+extract from four, because decomposition can split a problem
+along the wrong seam and neither the workers nor the hub can
+recover from that. The pairwise tests in Appendix A make the
+same point statistically: Chain and FullMesh are indistinguish-
+able (p = 0.628) although FullMesh costs 71% more.
+6.2. The benefit of collaboration scales with difficulty
+Fig. 4 splits the 614 problems into difficulty tertiles. The five
+topology curves fan out as difficulty rises: on the easy third they
+occupy a 2.4-point band, on the middle third 10.7 points, on the
+hard third 21.1 points. The hierarchical mesh is not uniformly
+better than a single call; it is barely better on easy problems and
+decisively better on hard ones, at constant relative cost.
+This reported heterogeneity motivates task-dependent allo-
+cation. A fixed topology can remain appropriate for a homoge-
+neous workload or a particular cost preference; these aggregate
+strata do not establish misallocation on every problem. A sys-
+tem fixed on Single forgoes twenty-one points on the hard tail.
+A system fixed on HRM spends ten times the budget on the easy
+two-thirds to gain between two and ten points, and in the easy
+third specifically it spends $0.94 per problem to move 91.7% to
+94.1%.
+The Dats curve in the same figure shows what per-problem
+allocation buys. It tracks the hierarchical mesh on the easy
+third, where it mostly declines to pay for collaboration, and ex-
+ceeds it by 10.3 points on the hard third, where it concentrates
+the budget it saved. The router does not merely interpolate be-
+tween the fixed policies; on the hard tertile it is above all five of
+them, because different hard problems want different topologies
+and no single policy can follow.
+6.3. Budget-matched comparison
+Table 4 reports the original accuracy and realised cost
+of each method.
+The nominal target for calibrated routers
+is $0.377 per problem, or 40% of Always-HRM. DATS,
+RandomForest-Router, RouterR1-lite and MasRouter-lite are
+within 0.4 percentage points of that target. DATS-E2E (38.3%)
+and Difficulty-Threshold (39.3%) fall outside the stated 0.4-
+percentage-point outer-evaluation tolerance; Random (60.6%)
+9
+
+easy
+d ∙0:33
+medium
+0:33 < d ∙0:66
+hard
+d > 0:66
+20
+30
+40
+50
+60
+70
+80
+90
+100
+pass@1 (%)
++2.4
++10.7
++21.1
+Single
+Chain
+Star
+FullMesh
+HRM
+DATS
+Figure 4: pass@1 by difficulty tertile. Arrows mark the HRM-minus-Single
+gap, which widens from 2.4 to 21.1 points. Dats exceeds every fixed topology
+on the hard tertile while spending 40% of the HRM budget overall.
+is also outside it. These rows remain reference operating points
+and are excluded from matched-budget ranking.
+Dats solves 477 of 614 problems, 25 more than always-
+hierarchical while spending 40% of its budget, and 21 more
+than the strongest learned competitor at the same budget. Three
+comparisons in the table carry most of the argument.
+Against Always-HRM, the router is 4.07 points ahead at 40%
+of the cost. This is a reported aggregate cost reduction of 60%;
+it does not establish that each avoided execution has no value.
+Individual problems can benefit differently from collaboration.
+Against Dats-E2E, the reported gap is 6.03 points, at re-
+alised costs of 40.0% and 38.3% of Always-HRM, respectively.
+This comparison does not isolate a factorisation benefit at equal
+spend. The modelling motivation is that multiple topologies can
+solve the same problem, so a single selected class suppresses
+overlap unless the training target or classifier design explicitly
+preserves it.
+Against Random, the gap is 9.12 points at two-thirds of Ran-
+dom’s cost, which supports a comparison with this random pol-
+icy at its reported cost; it does not rule out every other mixture.
+Fig. 5 places these numbers on the cost–accuracy plane
+together with the frontier Dats traces as the budget varies.
+The fixed topologies all are shown at their natural costs.
+Three competing baselines—RandomForest-Router, RouterR1-
+lite and MasRouter-lite—meet the matching tolerance along-
+side DATS. Difficulty-Threshold and E2E remain unmatched
+reference points. The oracle line at 88.93% marks how much
+of the catalogue’s potential is still unclaimed: Dats recovers
+26.6% of the distance from always-hierarchical to the oracle.
+Across five router-training seeds, the reported accuracy is
+77.52 ± 0.71. This summarises variation within DATS; paired
+comparisons with competing methods are reported separately.
+6.4. What budget matching changes
+Table 4 is only meaningful if the calibration in it does work
+that a simpler convention would not. Table 5 runs the same
+0.2
+0.4
+0.6
+0.8
+1.0
+cost per problem (USD)
+60
+65
+70
+75
+80
+85
+90
+pass@1 (%)
+Single
+Chain
+Star
+FullMesh
+HRM
+cost-aware
+routers
+DATS
+Oracle 88.9
+B = 40%
+Figure 5: Cost–accuracy plane. The curve is Dats calibrated to budgets across
+the reported operating points. The horizontal axis gives the plotted cost, not
+a guarantee that every requested target is attainable. Filled markers are the
+fixed topologies; open markers are cost-aware baselines at their reported re-
+alised costs, with $0.377 as the nominal calibration target. Not every baseline
+reaches the matching tolerance.
+six cost-aware methods twice on the same folds and the same
+cached outcomes: once with the shared coefficient λ = 0.2
+that a reader might reasonably expect to be fair, and once with
+method-specific calibration toward the common budget; two
+methods do not reach the declared tolerance.
+Under the shared coefficient Dats is third. Two baselines are
+ahead of it, by 1.14 and 0.49 points, and a reader given only
+the left half of the table would conclude that a random forest
+over the same features is the better router. The right half shows
+what the left half was actually measuring: at λ = 0.2 the forest
+spends $0.489 and Dats spends $0.324, so the forest was 1.14
+points ahead while buying 51% more computation. Equalising
+the spend reverses both comparisons and opens a 3.42-point gap
+in the other direction.
+The mechanism is visible in the spend column. A single co-
+efficient produces realised spends ranging from 30.3% to 51.9%
+of the reference budget, a spread of 21.6 percentage points, be-
+cause each method applies λ to its own score scale; calibra-
+tion reduces the spread across all six reported operating points
+to 1.7 points. Within the four eligible matched methods, the
+displayed costs span 39.6%–40.0% of the HRM reference, or
+0.4 percentage points. The previously reported rank correlation
+of 0.83 describes the full six-row accuracy orderings, includ-
+ing unmatched operating points. It is not a correlation of two
+matched-budget rankings. The four eligible routers retain their
+reported right-hand ranks.
+We do not claim the methods themselves are misreported in
+their original papers, since each was proposed with its own eval-
+uation. The claim is narrower and, we think, harder to argue
+with: a table of cost-aware routers that does not print realised
+spend beside accuracy cannot be interpreted, and one that prints
+spend but does not equalise it is comparing positions on trade-
+10
+
+Table 4: Budget-matched comparison on Claude Opus 4, 614 problems, five-fold cross-validation. Learned routers are calibrated to B = 40% of the always-
+hierarchical cost as a nominal target. Realised costs determine matching: E2E, Difficulty-Threshold and Random are unmatched references. Fixed topologies are
+shown at natural cost. Bold identifies the best accuracy among the matched routers.
+Method
+Solved
+pass@1 (%)
+95% CI
+USD/problem
+% of HRM cost
+fixed
+Always-Single
+382
+62.21
+[58.3, 66.0]
+0.095
+10.1
+Always-Chain
+426
+69.38
+[65.6, 72.9]
+0.483
+51.3
+Always-Star
+409
+66.61
+[62.8, 70.2]
+0.507
+53.8
+Always-FullMesh
+433
+70.52
+[66.8, 74.0]
+0.828
+87.8
+Always-HRM
+452
+73.62
+[70.0, 77.0]
+0.943
+100.0
+routing policies
+Random
+421
+68.57
+[64.8, 72.1]
+0.571
+60.6
+Difficulty-Threshold
+432
+70.36
+[66.6, 73.8]
+0.371
+39.3
+Dats-E2E
+440
+71.66
+[68.0, 75.1]
+0.361
+38.3
+MasRouter-lite
+446
+72.64
+[69.0, 76.0]
+0.375
+39.8
+RouterR1-lite
+451
+73.45
+[69.8, 76.8]
+0.376
+39.9
+RandomForest-Router
+456
+74.27
+[70.7, 77.6]
+0.374
+39.6
+Dats
+477
+77.69
+[74.2, 80.8]
+0.377
+40.0
+Oracle
+546
+88.93
+[86.2, 91.2]
+0.265
+28.1
+Table 5: The same six cost-aware routers under two conventions. Left: everyone receives the same coefficient λ = 0.2. Right: everyone receives their own coefficient
+targeting B = 40% of the always-hierarchical cost. Ranks retain the original ordering of the displayed accuracy values. The UM superscript identifies rows outside
+the matching tolerance; their ranks do not represent a matched-budget comparison.
+shared λ = 0.2
+target 40%; realised cost shown
+Method
+pass@1 (%)
+USD
+% of HRM
+rank
+pass@1 (%)
+USD
+% of HRM
+rank
+RandomForest-Router
+76.55
+0.489
+51.9
+1
+74.27
+0.374
+39.6
+2
+RouterR1-lite
+75.90
+0.442
+46.9
+2
+73.45
+0.376
+39.9
+3
+Dats
+75.41
+0.324
+34.4
+3
+77.69
+0.377
+40.0
+1
+MasRouter-lite
+71.99
+0.286
+30.3
+4
+72.64
+0.375
+39.8
+4
+Dats-E2E
+70.85
+0.312
+33.1
+5
+71.66
+0.361
+38.3
+5UM
+Difficulty-Threshold
+69.87
+0.301
+31.9
+6
+70.36
+0.371
+39.3
+6UM
+spend spread (all six rows)
+21.6 pp
+1.7 pp
+off curves rather than the curves.
+Comparison at three budgets. We calibrate DATS and all five
+learned or difficulty-based competitors at nominal targets of
+15%, 40% and 55% of HRM cost, using only the training
+portion of each split.
+Table 6 reports accuracy and realised
+cost on the same 614 outer-test problems.
+Every displayed
+point meets the 0.4-percentage-point cost tolerance. At 40%,
+DATS, RandomForest-Router, RouterR1-lite and MasRouter-
+lite retain their primary operating points. E2E and Difficulty-
+Threshold have newly calibrated points in this table; their orig-
+inal, unmatched operating points remain in Tables 4 and 5. The
+additional budget runs are calibrated separately from the pri-
+mary budget-sweep figure; equal accuracy counts can there-
+fore occur at slightly different realised costs.
+The E2E and
+Difficulty-Threshold recalibration reuses the fitted predictors,
+outer splits, inner out-of-fold scores and fixed cost table; it
+changes only selection of the budget parameter. The original
+search stops at the first point within its inner tolerance. For the
+added points, we refine this search over the attainable selection
+changes and choose the candidate with the smallest inner cost
+residual, breaking equal residuals towards lower cost. For E2E,
+candidates are the nonnegative score–cost switching thresholds;
+for Difficulty-Threshold, they are the finite threshold settings
+induced by the inner difficulty scores. The candidate range is
+the full attainable range of each rule. No test labels, test costs or
+new training seeds enter this choice. The outer cost is then mea-
+sured once against the unchanged matching tolerance. A closer
+inner match can change the selected routes and the achieved
+outer cost without retraining or guaranteeing a match on every
+evaluation set.
+DATS has the highest accuracy point estimate at each of these
+three budgets. The differences from the strongest competitor at
+each point are 3.58, 3.42 and 1.14 percentage points when cal-
+culated from the unrounded counts. These rankings are descrip-
+tive and are restricted to the displayed operating points; they are
+not a proof of superiority over an entire cost–accuracy curve.
+6.5. Significance
+Table 7 reports McNemar tests of Dats against each of the
+eleven alternatives, corrected by Holm–Bonferroni within the
+family. All eleven remain significant after correction. The com-
+parison that matters most is also the closest: against Always-
+HRM, Dats converts 60 failures into successes and loses 35 suc-
+cesses to failure, giving χ2 = 6.06 and a corrected p of 0.030.
+That margin is real but not comfortable, and it is worth being
+11
+
+Table 6: Accuracy / realised HRM-relative cost, both in percent. Targets are 15%, 40% and 55%; accuracy is computed from 614 binary outcomes at each operating
+point.
+Method
+15% target
+40% target
+55% target
+RandomForest-Router
+66.45 / 15.25
+74.27 / 39.63
+78.99 / 54.74
+RouterR1-lite
+65.64 / 14.86
+73.45 / 39.88
+79.15 / 55.06
+MasRouter-lite
+66.12 / 14.86
+72.64 / 39.75
+78.99 / 54.96
+DATS-E2E
+66.61 / 15.07
+72.48 / 39.86
+77.36 / 54.92
+Difficulty-Threshold
+66.45 / 14.93
+71.50 / 39.98
+77.20 / 54.78
+DATS
+70.20 / 15.39
+77.69 / 40.00
+80.29 / 55.24
+Table 7: McNemar tests of Dats against each alternative, Holm–Bonferroni
+corrected over the family of eleven. Here b is the number of problems Dats
+solves and the alternative does not, and c the reverse.
+Alternative
+∆
+b
+c
+χ2
+p pHolm
+Always-Single
+15.47 107 12 74.25 6.9e–18 7.6e–17
+Always-Star
+11.07 106 38 31.17
+2.4e–8 2.4e–7
+Always-Chain
+8.31
+79 28 23.36
+1.3e–6 1.2e–5
+Random
+9.12 108 52 18.91
+1.4e–5 1.1e–4
+Difficulty-Threshold
+7.33
+79 34 17.13
+3.5e–5 2.4e–4
+Dats-E2E
+6.03
+64 27 14.24
+1.6e–4 9.6e–4
+Always-FullMesh
+7.17
+92 48 13.21
+2.8e–4 1.4e–3
+MasRouter-lite
+5.05
+67 36
+8.74
+0.0031 0.0125
+RouterR1-lite
+4.24
+60 34
+6.65
+0.0099 0.0298
+RandomForest-Router
+3.42
+47 26
+5.48
+0.0192 0.0298
+Always-HRM
+4.07
+60 35
+6.06
+0.0138 0.0298
+precise about what it does and does not show. It shows that at
+40% of the cost the router is not merely matching the hierar-
+chical system but beating it. It does not show that the router
+would beat a hierarchical system given an unlimited budget—
+the λ = 0 row of Table 13 indicates it would, by 9.4 points, but
+that configuration abandons the cost constraint that motivates
+the work.
+6.6. What the router chooses
+Table 8 and Fig. 6 describe the policy Dats arrives at. Ag-
+gregated over the evaluation set it sends 49.0% of problems to a
+single call and 13.0% to the hierarchical mesh, and the remain-
+ing 38% are split between Chain and the two mid-cost topolo-
+gies. The distribution is strongly suite-dependent in exactly the
+way the difficulty analysis predicts: 80% of HumanEval+ goes
+to Single, while 47% of APPS-Competition goes to HRM.
+The suite-level view understates how selective the policy is,
+because suites mix problem types. Fig. 7 conditions on the
+algorithmic category instead and shows a clean gradient. Im-
+plementation, sorting and string problems go to a single call
+between 65% and 73% of the time.
+Graph problems go to
+the hierarchical mesh 49% of the time and to a single call
+only 13%; dynamic programming behaves similarly at 35% and
+23%. Greedy problems are the exception that is worth noticing:
+they draw the highest share of Star assignments of any category,
+11%, which is consistent with greedy solutions decomposing
+cleanly into a rule and a proof of exchange, two subtasks that a
+hub can farm out and integrate.
+0
+20
+40
+60
+80
+100
+share of problems routed (%)
+APPS-I
+APPS-Int
+APPS-C
+HE+
+LCB
+71
+39
+80
+36
+21
+33
+22
+14
+43
+18
+14
+47
+Single
+Chain
+Star
+FullMesh
+HRM
+Figure 6: Share of problems routed to each topology, by suite. Segments below
+9% are unlabelled. APPS-I, APPS-Int and APPS-C are the three APPS levels;
+HE+ is HumanEval+ and LCB is LiveCodeBench.
+None of this behaviour was specified. The category one-hot
+enters the network as ten of thirty-nine inputs with no prior on
+which topology suits which category, and the pattern is what
+the network extracted from cached outcomes.
+There is one instructive failure mode. On LiveCodeBench
+the oracle reaches 88.7% while Dats reaches 68.7%, the largest
+oracle gap of any suite, and the routing distribution there is the
+most spread out. LiveCodeBench problems are contest prob-
+lems whose statements are stylistically uniform, so surface fea-
+tures separate them poorly even though their solutions differ
+sharply in difficulty. The router is not confused about what
+topologies do; it is confused about what the problems are.
+6.7. Behaviour across backbones
+Table 9 compares four backbones spanning 13.8 points of
+single-call accuracy. Each row uses its backbone-specific out-
+come grid and a separately fitted predictor; problem IDs, outer
+folds and feature definitions are shared across backbones. The
+shared topology map displayed for the main experiment refers
+to Claude Opus 4 and is not reused as the policy for the other
+rows. A run is identified by backbone, outer fold and seed,
+which jointly identify its predictor and out-of-fold route assign-
+ments.
+12
+
+Table 8: Routing distribution and accuracy by suite. Counts are problems assigned to each topology by Dats; the last three columns compare Dats against the
+always-hierarchical policy and the oracle on the same problems.
+Suite
+Single
+Chain
+Star
+FullMesh
+HRM
+Dats (%)
+Always-HRM (%)
+Oracle (%)
+APPS-Introductory
+71
+21
+3
+2
+3
+92.0
+92.0
+98.0
+APPS-Interview
+39
+33
+6
+8
+14
+74.0
+71.0
+88.0
+APPS-Competition
+6
+22
+7
+18
+47
+50.0
+41.0
+66.0
+HumanEval+
+131
+23
+3
+3
+4
+96.3
+95.1
+98.2
+LiveCodeBench
+54
+64
+9
+11
+12
+68.7
+61.3
+88.7
+Total
+301
+163
+28
+42
+80
+77.69
+73.62
+88.93
+Table 9: Backbone-specific routing comparisons at a nominal 40% budget with common problem partitions. ∆is Dats minus Always-HRM; p is the originally
+reported uncorrected McNemar value.
+Backbone
+Single
+Chain
+Star
+FullMesh
+HRM
+Dats
+Oracle
+∆
+p
+Claude Opus 4
+62.21
+69.38
+66.61
+70.52
+73.62
+77.69
+88.93
++4.07
+0.0138
+DeepSeek-V3
+57.33
+64.50
+61.73
+65.47
+68.40
+72.48
+85.02
++4.08
+0.027
+GPT-4o-mini
+51.47
+59.12
+56.35
+60.42
+63.36
+67.59
+80.94
++4.23
+0.017
+Qwen2.5-Coder-32B
+48.37
+55.21
+53.09
+57.17
+60.10
+64.17
+78.01
++4.07
+0.025
+Single
+Chain
+Star
+FullMesh
+HRM
+implementation (n = 108)
+sorting (n = 47)
+string (n = 84)
+search (n = 58)
+math (n = 78)
+data structure (n = 35)
+simulation (n = 42)
+greedy (n = 55)
+dynamic programming (n = 62)
+graph (n = 45)
+73
+19
+2
+2
+5
+68
+23
+2
+2
+4
+65
+26
+2
+4
+2
+47
+33
+5
+7
+9
+46
+31
+9
+6
+8
+43
+34
+3
+6
+14
+38
+31
+2
+14
+14
+38
+31
+11
+11
+9
+23
+24
+6
+11
+35
+13
+22
+2
+13
+49
+0
+10
+20
+30
+40
+50
+60
+70
+80
+routed share (%)
+Figure 7: Share of problems routed to each topology, conditioned on algorith-
+mic category. Categories are ordered by the share sent to a single call.
+The reported gains average 4.11 points with a standard devi-
+ation of 0.07. The gains summarise aggregate performance; the
+task-level choices can differ across backbones.
+Transfer is a harder test than retraining, and the result is more
+qualified. A router trained on Claude Opus 4 outcomes and
+applied unchanged to Qwen2.5-Coder-32B reaches 61.89%,
+which is 2.28 points below the reported backbone-specific ref-
+erence and 1.79 points above always-hierarchical, but the im-
+provement over always-hierarchical is not significant (b = 59,
+c = 48, p = 0.318). A shift in probability calibration is one pos-
+sible explanation for the loss, but these aggregate results do not
+distinguish it from changes in task ordering or topology pref-
+erences. Recalibration on target-backbone validation data is a
+practical option whose benefit should be evaluated directly.
+6.8. Beyond code: routing for mathematical reasoning
+Changing the backbone tests whether the router depends on
+a particular model. It does not test whether it depends on code.
+The mechanism we have described is stated in terms of prob-
+lem difficulty and problem type, neither of which is specific
+to programming, so the claim implies a prediction: on a do-
+main where difficulty also varies widely, the same construction
+should work, and the collaboration gap should again widen with
+difficulty. We tested the prediction on mathematical reasoning,
+which shares the difficulty spread of competitive programming
+but none of its surface form—no test suites, no execution, and
+no code in the answer.
+The setup mirrors Section 6.3 with three substitutions. The
+problems are 400 items, 200 from GSM8K [55] and 200 from
+MATH [56] covering levels one to five. Sampling is stratified
+over three difficulty bands: 66 items from levels one and two,
+67 from level three, and 67 from levels four and five. Items are
+sampled without replacement within each band, using a fixed
+seed before any topology execution. The five topologies keep
+their communication structure and receive math-adapted role
+prompts, so that the critic checks derivations rather than edge
+cases and the merger reconciles final answers rather than func-
+tions. Correctness is exact match on the final answer instead of
+a hidden test suite. The router is re-instantiated and retrained
+rather than transferred unchanged. The 39-feature interface is
+retained: eight mathematical-category indicators replace the ten
+algorithmic slots, with the remaining two slots fixed to zero.
+The other twenty-nine features are unchanged in number, giv-
+ing 29+8+2 = 39 input coordinates and 37 potentially nonzero
+coordinates. Keyword votes recover the manual mathematical
+labels on 82.3% of problems. Constant zero columns are left at
+zero during standardisation. Costs are re-measured on this grid,
+where the hierarchical topology is 9.7 times a single call, and
+the budget is again set to 40% of it, $0.159 per problem.
+Table 10 reproduces the code result in every qualitative re-
+spect. No topology dominates: the spread between the cheapest
+and the most expensive is 2.5 points on GSM8K and 11.0 points
+on MATH, so the same fixed pipeline is nearly free of benefit on
+one half of the data and clearly worth its price on the other. Dats
+13
+
+Table 10:
+Cross-domain check on 400 mathematical reasoning problems,
+Claude Opus 4, exact-match accuracy (%). Dats is calibrated to 40% of the
+always-hierarchical cost measured on this grid.
+Method
+GSM8K MATH
+All
+USD % HRM
+Single
+93.5
+62.0 77.75 0.041
+10.3
+Chain
+95.0
+68.5 81.75 0.209
+52.5
+Star
+94.0
+66.0 80.00 0.221
+55.5
+FullMesh
+95.5
+70.0 82.75 0.357
+89.7
+HRM
+96.0
+73.0 84.50 0.398
+100.0
+Dats
+96.5
+79.5 88.00 0.160
+40.3
+Oracle
+99.0
+84.5 91.75 0.118
+29.6
+GSM8K
+MATH
+L1–2
+MATH
+L3
+MATH
+L4–5
+30
+40
+50
+60
+70
+80
+90
+100
+accuracy (%)
++2.5
++3.0
++9.0
++20.9
+Single
+HRM
+DATS
+Figure 8: The collaboration gap widens with difficulty on mathematical reason-
+ing as it does on code. Arrows mark the distance between a single agent and
+the hierarchical topology; Dats stays above both while spending 40% of the
+hierarchical budget.
+solves 352 of 400 problems against 338 for the hierarchical sys-
+tem, 3.5 points ahead at 40.3% of its cost, and the difference is
+significant (b = 25, c = 11, χ2 = 4.69, p = 0.030). Five-
+seed repetition gives 87.84 ± 0.86. The calibrated coefficients
+fall in [0.049, 0.061], overlapping the [0.052, 0.065] of the code
+experiment although the two cost tables were measured inde-
+pendently, which is what one would expect if λ behaves as a
+price on predicted success rather than as a fitted constant.
+The difficulty groups contain 66, 67 and 67 items. Single
+solves 54, 44 and 26; HRM solves 56, 50 and 40; and DATS
+solves 59, 54 and 46. The sums are 124, 146 and 159 out of
+200, giving 62.0%, 73.0% and 79.5%. Group-wise differences
+are computed before rounding, producing 3.0, 9.0 and 20.9 per-
+centage points.
+Fig. 8 carries the part of the result we would emphasise, as a
+descriptive trend rather than an established causal mechanism.
+Sliced by native difficulty label, the gap between the hierarchi-
+cal topology and a single agent is 2.5 points on GSM8K, 3.0
+points on MATH levels one and two, 9.0 points on level three
+and 20.9 points on levels four and five. That is the same shape,
+and nearly the same magnitude, as the 2.4/10.7/21.1 progres-
+sion measured on code in Section 6.2, obtained here from a
+disjoint problem set, a different correctness criterion and a re-
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0
+predicted ^st
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0
+observed pass rate
+ECE = 0:0275
+Brier = 0:1723
+bin count (rescaled)
+Figure 9: Reported calibration diagnostics by probability bin. The diagonal in-
+dicates equality between predicted probability and observed success rate; grey
+bars show relative bin populations.
+instantiated feature map. The routing distribution follows the
+same logic: 84% of GSM8K problems are answered by a single
+call against 21% of MATH problems, and 29% of MATH prob-
+lems draw the hierarchical topology against 1.5% of GSM8K
+problems.
+Two limits should be kept in view. This is 400 problems on
+one backbone. The scale comparison depends on whether one
+counts unique problems or problem–backbone evaluations; it
+is not approximately one third of the 614 unique code prob-
+lems. The reported result suggests the mechanism may be not
+code-specific rather than characterising routing for mathemat-
+ics. And the router was retrained rather than transferred, which
+is the easier of the two questions; Section 6.7 indicates why the
+harder one would go worse.
+6.9. Calibration
+The selection rule compares predicted probabilities against a
+cost penalty expressed on the same scale, so systematic over- or
+under-confidence would distort the trade-off even if the ranking
+of topologies were correct. Figure 9 summarises the reported
+calibration diagnostics. Each point compares a probability bin
+with its observed success rate, and the grey bars indicate relative
+bin populations. The reported ECE is 0.0275 and the reported
+Brier score is 0.1723. ECE summarises bin-level calibration
+differences, while the Brier score measures squared probability
+error.
+Probability calibration affects which substitutions are se-
+lected at a given cost penalty. Budget calibration searches at-
+tainable operating points on inner validation predictions; it can-
+not guarantee that a target exists or that the final outer-test spend
+14
+
+matches it. Reusing a predictor at another budget requires re-
+porting both the requested target and the achieved cost, with
+unmatched cases identified separately.
+6.10. Repeated generation with frozen routing
+We select 120 problems from the 614-problem code
+pool before repeated evaluation:
+20 each from APPS-
+Introductory, APPS-Interview and APPS-Competition, 32 from
+HumanEval+, and 28 from LiveCodeBench.
+Within each
+dataset, sampling is uniform without replacement using a fixed
+sampling seed of 42; neither correctness nor router success en-
+ters selection. The dataset quotas define the stratification, and
+no additional difficulty stratification is applied. Each DATS as-
+signment comes from the primary seed’s outer out-of-fold pre-
+diction for that problem; its fitted pipeline and inner budget cali-
+bration exclude the problem’s outer fold. These assignments are
+frozen before collecting the repeated outcomes. All five repeti-
+tions are additional runs, rather than reuse of the original cached
+outcome, with fresh sampling draws and otherwise unchanged
+model, prompts, decoding settings and evaluator. The genera-
+tion repetitions are distinct from the router-training seeds. Eval-
+uating all five topology configurations gives 120×5×5 = 3, 000
+executions. Each fixed policy therefore has 600 problem–run
+outcomes. A routed outcome is read from its selected topol-
+ogy in the same outcome grid, not generated as an additional
+independent policy outcome.
+Among the 600 problem–topology pairs, 483 (80.50%) con-
+tain both successes and failures across the five runs. The first-
+run outcome differs from the five-run majority label for 161
+pairs (26.83%). This measures label variability; the majority
+label is not treated as ground truth.
+DATS reaches 77.00% on the repeated subset, compared
+with 72.00% for HRM. This 5.00-point difference describes the
+frozen policies on this subset; it is not a claim that the exact
+primary margin must recur. Generation variability and router-
+training variability are different quantities. We therefore assess
+sensitivity to training labels separately below.
+Sensitivity to repeated-label training. On the same 120-
+problem subset, we compare training with the first-run binary
+labels against training with the mean success of runs one to
+four as a soft binary-cross-entropy target. Five-fold cross-fitting
+keeps every test problem out of its scorer, predictor and budget
+calibration. Both settings use the same folds and paired train-
+ing seeds. All evaluations use the fifth generation run, which
+is excluded from training targets and hyperparameter selection.
+Thus five seed results reuse one held-out generation bank; they
+are not five new independent LLM executions. The subset con-
+tains a different task mix from the full grid, so its accuracy is
+analysed separately from the primary 614-problem estimate.
+Every seed in both settings selects 59 Single, 32 Chain, 5
+Star, 8 FullMesh and 16 HRM routes. These equal counts yield
+the identical fixed-table costs in Table 12, including zero cost
+SD, despite different problem assignments. This cost conven-
+tion uses topology averages, not item-specific token expendi-
+ture.
+0
+1
+2
+3
+4
+5
+pass@1 drop when the group is removed (pp)
+Lexical
+Structural
+Semantic
+Complexity
+Algorithmic
+Difficulty
+0.82
+1.31
+2.45
+2.61
+3.10¤
+4.24¤
+Figure 10: Accuracy lost when each feature group is removed and the router is
+retrained at the same budget. Coloured bars and stars indicate Holm-adjusted
+p < 0.05 for paired McNemar tests across the six feature-group ablations.
+The two label settings select the same topology for 114, 112,
+114, 112, 114 of 120 problems in the paired seeds, a mean
+agreement of 94.33%. Their mean accuracy difference is -0.83
+percentage points (soft minus binary) at equal fixed-table cost.
+Both exceed the fixed HRM result of 86/120, or 71.67%, on
+this evaluation run. Repeated targets therefore change some
+routes and the accuracy level without reversing the qualitative
+advantage on this subset. This sensitivity check is not a claim
+of identical policies or a significance test; generation noise re-
+mains a reason to estimate success probabilities from more than
+one outcome where resources allow.
+7. Ablation and analysis
+7.1. Which features carry the signal
+After correction across the six ablations, only difficulty and
+algorithmic type have significant paired differences (pHolm =
+0.00244 and 0.03645, respectively). The other feature-group
+differences do not reach the 0.05 threshold.
+The upper panel of Table 13 and Fig. 10 remove one fea-
+ture group at a time and retrain. The difficulty rating is the
+single most valuable group at 4.24 points, which is expected.
+The algorithmic one-hot is second at 3.10 points, which is the
+more informative result: it means the router is not simply a dif-
+ficulty thermometer. If difficulty alone sufficed, the Difficulty-
+Threshold baseline in Table 4 would not sit 7.33 points behind,
+and removing the category encoding would cost nothing.
+The separate lexical and structural ablations have reported
+losses of 0.82 and 1.31 points, respectively, without significant
+pairwise differences in these tests. These groups contain five
+and four features, so removing both would remove nine of the
+thirty-nine features. The table evaluates one group at a time.
+Since these marginal effects need not add, both groups are re-
+tained in the full representation.
+7.2. Which design choices matter
+The lower panel of Table 13 varies the architecture. Replac-
+ing the network with a linear probe on the same features costs
+15
+
+Table 11: Repeated-generation results on 120 problems. The last column reports the mean and sample standard deviation across five runs, not a confidence interval.
+Policy
+Successful problems in runs 1–5
+Total successes
+Accuracy (%)
+Single
+79, 77, 80, 76, 78
+390/600
+65.00 ± 1.32
+HRM
+86, 88, 85, 87, 86
+432/600
+72.00 ± 0.95
+DATS
+92, 94, 91, 93, 92
+462/600
+77.00 ± 0.95
+Table 12: Training-label sensitivity on 120 held-out problems. Accuracy and cost statistics use five seeds evaluated on the same fifth-run outcome bank. Cost is the
+selected-route mean under the fixed topology-average cost table; matching uses a tolerance of ±0.4 percentage points of HRM cost.
+Training target
+Successes
+seeds 0–4
+Accuracy (%)
+mean ± SD
+Target
+% HRM
+Cost (USD)
+mean ± SD
+Cost
+% HRM Matched
+First-run binary labels 90, 89, 91, 92, 92
+75.67 ± 1.09
+40 0.3775 ± 0.0000
+40.04
+Yes
+Four-run soft labels
+89, 90, 90, 90, 90
+74.83 ± 0.37
+40 0.3775 ± 0.0000
+40.04
+Yes
+3.75 points. That number quantifies the interaction argument
+of Section 4.1: a linear model can represent “harder problems
+need more collaboration” and “graph problems need more col-
+laboration” but not the product of the two, and the product is
+where most of the exploitable structure lives.
+Replacing the topology-graph head with the flat multi-label
+head gives a reported 1.66-point difference at the displayed
+spend. This contrast changes message passing, parameter shar-
+ing and descriptors together; it does not isolate the predefined
+adjacency. The additional controlled study below separates ad-
+jacency from the complete-head comparison while retaining a
+distinction between descriptive differences and statistical evi-
+dence.
+The reported five-way classifier is 6.03 points below DATS,
+but its realised cost is $0.361 versus $0.377; this is not an equal-
+budget ablation. Removing the cost term entirely raises accu-
+racy to 83.06% and spend to $0.628, which is the reported zero-
+penalty operating point for this predictor, not an upper bound on
+realised accuracy over the catalogue. Fixing λ = 0.2 instead of
+calibrating it costs 2.28 points and undershoots the budget by
+14%, which illustrates why a shared fixed coefficient is not a
+fair basis for comparing routers.
+Controlled architecture study. We compare six heads with
+common features, outer splits, optimiser settings and training-
+side budget calibration. Each configuration is evaluated over
+five training seeds on 614 problems.
+The additional graph
+configuration uses a 39-to-64 task trunk, a 68-to-32 node-
+initialisation layer, two message-passing rounds with sepa-
+rate round-wise weights, and a shared sigmoid readout. The
+self and neighbour matrices are shared across nodes and sep-
+arate across rounds.
+Equation (4) uses a round-specific 32-
+dimensional bias bℓin this configuration. Each round there-
+fore has 2(32 × 32) + 32 = 2, 080 parameters.
+This gives
+2, 560 + 2, 208 + 4, 160 + 33 = 8, 961 trainable parameters. The
+flat 39–64–64–5 reference has 7,045 parameters. Complete and
+permuted adjacency variants retain the same graph dimensions
+and 8,961 parameters; the descriptor and node-wise controls
+answer separate questions about representation and sharing.
+The adjacency has undirected edges Single–Chain, Chain–
+Star, Star–FullMesh, Star–HRM and FullMesh–HRM; the self
+Table 13: Ablations and reference operating points. The upper panel removes
+one feature group; the lower panel includes architecture and cost-penalty vari-
+ants. The nominal target is 40% of Always-HRM. No-cost-term, fixed-λ and
+direct-classification rows are unmatched cost references, not equal-budget ab-
+lations. ∆is the displayed accuracy difference from the full model at 77.69%,
+not an equal-budget effect when the row is unmatched.
+Variant
+pass@1 (%)
+∆
+USD
+feature groups removed
+Difficulty
+73.45
+−4.24
+0.377
+Algorithmic
+74.59
+−3.10
+0.376
+Complexity
+75.08
+−2.61
+0.377
+Semantic
+75.24
+−2.45
+0.375
+Structural
+76.38
+−1.31
+0.377
+Lexical
+76.87
+−0.82
+0.376
+architecture and cost-penalty variants
+No cost term (λ = 0)
+83.06
++5.37
+0.628
+Fixed λ = 0.2
+75.41
+−2.28
+0.324
+Linear probe
+73.94
+−3.75
+0.376
+Flat multi-label head
+76.03
+−1.66
+0.377
+Direct five-way classification
+71.66
+−6.03
+0.361
+Dats (full)
+77.69
+—
+0.377
+contribution is handled separately. The complete control con-
+nects every distinct pair. The permuted control relabels the ad-
+jacency once by the fixed ordering HRM, Single, Star, Chain,
+FullMesh while keeping node features and target columns un-
+changed, and uses that same permutation for every seed. The
+shared node-wise control retains the task trunk, descriptor
+initialiser and readout but removes the two message-passing
+rounds (4,801 parameters). The identity control replaces the
+four descriptors by a five-dimensional one-hot code (8,993 pa-
+rameters). These two controls test representation and sharing;
+only the complete, permuted and proposed adjacencies form the
+capacity-matched adjacency comparison.
+The full head averages 77.52%, compared with 77.13% for
+complete adjacency and 77.07% for permuted adjacency. The
+differences are 0.39 and 0.46 percentage points before round-
+ing. These modest descriptive gains concern the additional con-
+trolled configuration; they do not assign the entire primary flat-
+head gap to adjacency. The table reports across-seed means,
+16
+
+Table 14: Additional architecture controls. Mean and sample standard deviation across five seeds; USD/problem is the mean across those records. Differences are
+full minus variant and use unrounded means.
+Configuration
+Accuracy (%)
+USD/problem
+Difference (pp)
+Flat multi-label head
+75.90 ± 0.63
+0.3762
+1.63
+Shared node-wise predictor
+76.91 ± 0.65
+0.3789
+0.62
+Identity-code graph head
+77.04 ± 0.67
+0.3783
+0.49
+Fully connected graph head
+77.13 ± 0.80
+0.3777
+0.39
+Permuted-adjacency graph head
+77.07 ± 0.90
+0.3771
+0.46
+Full topology-graph predictor
+77.52 ± 0.71
+0.3772
+0.00
+whereas the retained primary head comparison reports its orig-
+inal operating-point values.
+Mean differences alone are not
+treated as significance tests.
+7.3. Is the representation the bottleneck?
+The feature map of Section 4.1 is deliberately shallow, and
+the obvious objection is that a learned representation would
+carry more of the signal. The objection deserves a measurement
+rather than an argument, so we replaced ϕ with five stronger en-
+coders and left everything else—the topology-graph head, the
+selection rule, the folds and the 40% budget—untouched. Ta-
+ble 15 reports the ladder.
+Three things about the ladder are worth reading carefully.
+The first is that no row separates from the baseline. The
+spread over six representations is 2.44 points, every McNe-
+mar comparison against Dats returns p > 0.35, and the two
+encoders that beat the hand-crafted features do so by 0.49 and
+1.30 points—smaller than the 0.71-point seed-to-seed standard
+deviation of the pipeline in one case, and less than twice it in
+the other. One hundred and twenty-five million parameters of
+pretrained code knowledge, fine-tuned on the task, buy half a
+point that we cannot distinguish from noise.
+The second is why the graph encoder is the weakest row,
+since a reviewer would reasonably expect it to be the strongest.
+A graph neural network over an abstract syntax tree is not avail-
+able to us: the router runs before any code exists, so there is no
+tree to encode. The closest object at decision time is the prob-
+lem statement, and our Text-GNN builds a co-occurrence and
+dependency graph over it and applies a two-layer GCN [53].
+That graph is a graph of English, not of a program, and it is a
+lossy substitute. The same reasoning explains the frozen code
+encoders: CodeBERT [49] and GraphCodeBERT [50] were
+pretrained on code paired with documentation, and we feed
+them documentation without code, which is a text-only use of
+the encoders. The comparison does not establish which part of
+their pretraining distribution they represent best.
+The third is the most useful. A linear probe from the frozen
+GraphCodeBERT [CLS] vector recovers our difficulty rating
+with R2 = 0.61 and our algorithmic category with 71.4% accu-
+racy. The probe results indicate overlap with the explicit diffi-
+culty and category features. Such overlap is a possible explana-
+tion for the reported 1.30-point hybrid gain, but the probe does
+not establish its cause or show that the two representations are
+equivalent.
+We retain the interpretable features as the main representa-
+tion.
+The primary router takes 28 seconds of CPU training
+versus 36 minutes of GPU training for the fine-tuned encoder.
+DATS-Hybrid has the highest observed accuracy among the
+tested representations, with a 1.30-point improvement. This is
+the largest observed gain in the comparison, not a performance
+ceiling. Non-significant pairwise tests do not establish equiva-
+lence.
+7.4. The budget knob
+Figure 11 shows the reported DATS penalty sweep, with ac-
+curacy and cost evaluated at each displayed coefficient. For
+fixed prediction scores and a fixed cost table, selected cost is
+non-increasing in λ; this property does not automatically ex-
+tend to item-specific measured expenditure. The figure displays
+sweep points without overlaying the foldwise calibration range.
+The nominal-budget results form a separate series: the reported
+15% and 55% targets have accuracies of 70.20% and 80.29%,
+respectively. The additional matched-budget comparisons in
+Section 6.4 are calibrated separately from this primary series.
+Marginal returns below use the primary budget-sweep series,
+rather than the separately calibrated points in Table 6. From the
+nominal 55% to 70% targets, realised spend rises from approx-
+imately 55.00% to 64.68% of the HRM reference cost, while
+accuracy rises from 80.29% to 81.76%. This corresponds to ap-
+proximately 1.52 accuracy percentage points per ten percentage
+points of realised spend over that interval. The nominal 100%
+target reaches only 66.58% of the reference cost, with 83.06%
+accuracy. Thus the 70% and 100% targets are unmatched oper-
+ating points; their nominal increments must not be interpreted
+as additional realised expenditure.
+8. Discussion
+The main evaluation reports a 4.07-point margin over
+Always-HRM at 40% of its cost. The additional backbone ag-
+gregates show similar margins, while the mathematical eval-
+uation concerns a separately trained router.
+These com-
+parisons support task-dependent allocation under backbone-
+specific training; the mathematical experiment uses domain-
+specific retraining.
+8.1. Budget matching as an evaluation requirement
+We would separate one methodological point from the router,
+because it applies to work that has nothing to do with topol-
+ogy selection. Any method that trades accuracy against cost
+through a tunable parameter defines a curve, not a point. Two
+17
+
+Table 15: Representation ladder. Every row shares the topology-graph head, the selection rule, the folds and the 40% budget; only the encoder changes. Here b
+counts problems solved by that row and not by Dats, c the reverse, and p is the uncorrected McNemar value against Dats. Fit time is the cost of training the router
+itself, not of running any topology.
+Encoder
+Trainable
+Fit time
+pass@1 (%)
+∆
+b/c
+p
+Dats: 39 interpretable features
+13.7K
+28 s CPU
+77.69
+—
+—
+—
+Text-GNN: 2-layer GCN over the statement graph
+0.21M
+4 min GPU
+76.55
+−1.14
+31/38
+0.47
+CodeBERT, frozen, plus the same head
+0.11M
+3 min GPU
+76.87
+−0.82
+29/34
+0.61
+GraphCodeBERT, frozen, plus the same head
+0.11M
+3 min GPU
+77.36
+−0.33
+27/29
+0.89
+GraphCodeBERT, fine-tuned end to end
+125M
+36 min GPU
+78.18
++0.49
+33/30
+0.80
+Dats-Hybrid: 39 features and frozen GraphCodeBERT
+0.13M
+6 min GPU
+78.99
++1.30
+36/28
+0.38
+0
+0.02 0.05 0.1
+0.2
+0.3
+0.5
+1
+2
+cost coefficient λ
+60
+65
+70
+75
+80
+85
+pass@1 (%)
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+cost per problem (USD)
+Figure 11: DATS accuracy and reported cost at the displayed penalty co-
+efficients.
+Curves connect the recorded sweep points; no calibrated main-
+experiment operating point is marked.
+of our baselines outperformed Dats when all methods shared a
+fixed cost coefficient, and both fell behind once each method
+was calibrated near the common target; unmatched methods
+remain outside the matched comparison. The original full-set
+accuracy ordering under the two conventions differs precisely
+where it is read most, at the top. A shared coefficient does not
+imply a shared operating point, because the coefficient interacts
+with each method’s own score scale, and in our measurement
+that interaction was worth 21.6 percentage points of spread in
+realised spend.
+The protocol of Section 4.4 is our answer, and it assumes lit-
+tle: a reference policy, monotone fixed-table selection cost, cal-
+ibration inside the training folds, a published tolerance, and—
+on a cached grid—no inference at all. We would encourage
+its use, or of something equivalent, whenever cost-aware meth-
+ods are compared. The obligation it puts on us is to say what
+it leaves free, which is everything except expected monetary
+spend. A router that meets a budget by rarely choosing a very
+expensive option is a different proposition in production from
+one that spends evenly, though our tables call them matched.
+Conservatism and limitations. A cost penalty can withhold ad-
+ditional collaboration when the predicted gain is small. Miscal-
+ibration can therefore under-allocate collaboration, while opti-
+mistic scores can waste resources. This is an operational trade-
+off, not a formal robustness guarantee. The fixed catalogue and
+single routing decision also limit adaptation after execution be-
+gins. The architecture controls show modest adjacency differ-
+ences. Repeated generation and paired retraining quantify two
+distinct sources of variability; some route assignments change
+when labels are averaged. Cross-router rankings cover the three
+tested budgets, and do not imply a ranking at every possible op-
+erating point.
+8.2. Boundaries of the claim
+The catalogue is fixed and small. Dats chooses among five
+hand-designed topologies; it cannot construct a new one, and
+the oracle gap of 11.2 points bounds what better selection over
+this catalogue could achieve. Methods that generate topolo-
+gies [16, 13] operate in a larger space and are complementary: a
+generator could extend the catalogue, and a selector would still
+be needed to choose among what it produces.
+The router decides once, before execution. It cannot notice
+that a single call has produced an obviously broken program
+and escalate. Cascade formulations [25, 31] make exactly that
+observation and pay for it with a second inference. Combin-
+ing the two—route first, escalate on a verifier signal—is the
+extension we consider most likely to close part of the oracle
+gap, since, under the same cached grid, 546 −477 = 69 of
+the 614 −477 = 137 problems missed by DATS are solved by
+another catalogue topology.
+Transfer across backbones is incomplete: Section 6.7 reports
+a 2.28-point loss. Before deployment, the target backbone re-
+quires checks of prediction calibration and achieved budget.
+Recalibration is a candidate adjustment whose benefit should
+be evaluated on target-backbone validation data. The aggregate
+transfer result does not isolate calibration as the cause of the
+loss or establish which task rankings and topology preferences
+are preserved.
+The cross-domain evidence is a check, not a second study.
+Four hundred mathematical problems on one backbone show
+that the mechanism is not an artefact of code, since the difficulty
+progression reappears almost unchanged, with domain-specific
+training. This supports the applicability of the allocation mech-
+anism to that mathematical dataset; transferring a trained router
+between unrelated domains is a different claim.
+Section 7.3 reports a largest observed improvement of 1.3
+points among the tested alternatives. This is a descriptive maxi-
+mum in that comparison, not a statistical upper bound on repre-
+18
+
+sentation benefits. The absence of a significant pairwise differ-
+ence does not establish equivalence, and conclusions need not
+extend to other encoders or a larger topology catalogue.
+9. Conclusion
+The amount of collaboration a multi-agent system should buy
+depends on the problem in front of it, and the dependence is
+strong enough to be worth learning. In the main Claude evalu-
+ation, the advantage of hierarchical collaboration over a single
+call grows from roughly two points on easy problems to twenty-
+one on hard ones. The four-backbone table reports aggregate
+comparisons rather than separate confirmation of that stratified
+trend. DATS reports a 4.07-point gain over Always-HRM at
+40% of its cost in the main evaluation, with aggregate gains
+of 4.07–4.23 points across the reported backbones. The 400-
+problem mathematical evaluation reports a 3.5-point gain after
+retraining. The mathematical result concerns retraining on the
+target domain, whereas the cross-backbone transfer test keeps
+the source router fixed. Replacing the router’s 39 interpretable
+features with a graph network or a pretrained code encoder has
+a largest observed improvement of 1.3 points among the tested
+alternatives, with no significant pairwise improvement. This
+does not establish equivalence or bound the benefit of other rep-
+resentations.
+Separately from the router, we argued that cost-aware meth-
+ods cannot be compared without equalising what they spend,
+and we gave a protocol that does so, along with the demonstra-
+tion that motivated it: under a shared cost coefficient the six
+methods we study spend anywhere between 30% and 52% of
+the reference budget, and two of them change places with Dats
+after calibration toward the common target; the residual spread
+and unmatched methods must still be reported.
+The additional controls show modest descriptive differences
+between graph adjacencies. On the repeated 120-problem sub-
+set, the frozen DATS policy averages 77.00% against 72.00%
+for HRM. DATS also has the highest accuracy point estimate
+at the three tested matched budgets.
+Paired retraining with
+repeated-label targets changes some routes while retaining the
+subset-level advantage over HRM. These checks address dis-
+tinct questions; the budget rankings remain descriptive and re-
+stricted to tested operating points.
+What remains open is the size of the catalogue and the mo-
+ment of the decision. Both boundaries point in the same di-
+rection: toward systems that treat collaboration as a budget to
+allocate rather than an architecture to fix.
+Appendix A. Pairwise topology comparisons
+Table A.16 tests all ten topology pairs on Claude Opus 4 with
+Holm–Bonferroni correction. Four pairs separate. The three
+that involve Single confirm that collaboration helps in aggre-
+gate. The fourth, Star against HRM, confirms that hierarchy
+beats flat delegation. The six that do not separate are the in-
+formative ones: Chain and FullMesh are statistically indistin-
+guishable despite a 71% cost difference, and FullMesh does not
+Table A.16:
+Pairwise McNemar tests over the five topologies, Holm–
+Bonferroni corrected over ten comparisons. For pair A–B, b counts problems
+solved by A only and c problems solved by B only.
+Pair
+b
+c
+χ2
+pHolm
+Single–HRM
+29
+99
+37.20
+1.1e–8
+∗
+Single–FullMesh
+68
+119
+13.37
+2.3e–3
+∗
+Single–Chain
+61
+105
+11.14
+6.8e–3
+∗
+Star–HRM
+60
+103
+10.82
+7.0e–3
+∗
+Single–Star
+69
+96
+4.10
+0.215
+Chain–HRM
+58
+84
+4.40
+0.215
+Star–FullMesh
+67
+91
+3.35
+0.269
+FullMesh–HRM
+59
+78
+2.36
+0.372
+Chain–Star
+93
+76
+1.51
+0.437
+Chain–FullMesh
+73
+80
+0.24
+0.628
+separate from HRM despite costing 88% of it. Cost ordering
+and accuracy ordering are only loosely coupled, which is the
+aggregate-level version of the per-problem variation the router
+exploits.
+CRediT authorship contribution statement
+Yunsong Hong: Conceptualization, Methodology, Software,
+Validation, Formal analysis, Investigation, Data curation, Visu-
+alization, Writing – original draft, Writing – review & editing.
+Declaration of competing interest
+The author declares no known competing financial interests
+or personal relationships that could have appeared to influence
+the work reported in this paper.
+Declaration of generative AI and AI-assisted technologies in
+the manuscript preparation process
+During the preparation of this revised submission, the author
+used OpenAI Codex to assist with editorial checks, document
+formatting, and preparation of revision materials. The author
+reviewed and edited the output as needed and takes full respon-
+sibility for the content of the article.
+References
+[1] C. Qian, W. Liu, H. Liu, N. Chen, Y. Dang, J. Li, C. Yang,
+W. Chen, Y. Su, X. Cong, J. Xu, D. Li, Z. Liu, M. Sun,
+ChatDev: Communicative agents for software develop-
+ment, in: Proceedings of the 62nd Annual Meeting of
+the Association for Computational Linguistics, 2024, pp.
+15174–15186.
+[2] S. Hong, M. Zhuge, J. Chen, X. Zheng, Y. Cheng,
+C. Zhang, J. Wang, Z. Wang, S. K. S. Yau, Z. Lin, L. Zhou,
+C. Ran, L. Xiao, C. Wu, J. Schmidhuber, MetaGPT:
+Meta programming for a multi-agent collaborative frame-
+work, in: International Conference on Learning Represen-
+tations, 2024.
+19
+
+[3] Q. Wu, G. Bansal, J. Zhang, Y. Wu, B. Li, E. Zhu,
+L. Jiang, X. Zhang, S. Zhang, J. Liu, A. H. Awadallah,
+R. W. White, D. Burger, C. Wang, AutoGen: Enabling
+next-gen LLM applications via multi-agent conversation,
+arXiv:2308.08155 (2023).
+[4] D. Huang, J. M. Zhang, M. Luck, Q. Bu, Y. Qing,
+H. Cui, AgentCoder: Multi-agent-based code generation
+with iterative testing and optimisation, arXiv:2312.13010
+(2024).
+[5] M. A. Islam, M. E. Ali, M. R. Parvez, MapCoder: Multi-
+agent code generation for competitive problem solving,
+in: Proceedings of the 62nd Annual Meeting of the As-
+sociation for Computational Linguistics, 2024, pp. 4912–
+4944.
+[6] A. N. Elmachtoub, P. Grigas, Smart “predict, then opti-
+mize”, Management Science 68 (1) (2022) 9–26.
+[7] G. Li, H. A. A. K. Hammoud, H. Itani, D. Khizbullin,
+B. Ghanem, CAMEL: Communicative agents for “mind”
+exploration of large language model society, in: Advances
+in Neural Information Processing Systems, Vol. 36, 2023.
+[8] Y. Du, S. Li, A. Torralba, J. B. Tenenbaum, I. Mordatch,
+Improving factuality and reasoning in language models
+through multiagent debate, in: International Conference
+on Machine Learning, 2024.
+[9] T. Liang, Z. He, W. Jiao, X. Wang, Y. Wang, R. Wang,
+Y. Yang, S. Shi, Z. Tu, Encouraging divergent thinking
+in large language models through multi-agent debate, in:
+Proceedings of the 2024 Conference on Empirical Meth-
+ods in Natural Language Processing, 2024, pp. 17889–
+17904.
+[10] J. S. Park, J. O’Brien, C. J. Cai, M. R. Morris, P. Liang,
+M. S. Bernstein, Generative agents: Interactive simulacra
+of human behavior, in: Proceedings of the 36th Annual
+ACM Symposium on User Interface Software and Tech-
+nology, 2023.
+[11] W. Chen, Y. Su, J. Zuo, C. Yang, C. Yuan, C.-M. Chan,
+H. Yu, Y. Lu, Y.-H. Hung, C. Qian, Y. Qin, X. Cong,
+R. Xie, Z. Liu, M. Sun, J. Zhou, AgentVerse: Facilitating
+multi-agent collaboration and exploring emergent behav-
+iors, in: International Conference on Learning Represen-
+tations, 2024.
+[12] Y. Dong, X. Jiang, Z. Jin, G. Li, Self-collaboration code
+generation via ChatGPT, ACM Transactions on Software
+Engineering and Methodology 33 (7) (2024) 1–38.
+[13] M. Zhuge, W. Wang, L. Kirsch, F. Faccio, D. Khizbullin,
+J. Schmidhuber, GPTSwarm: Language agents as opti-
+mizable graphs, in: International Conference on Machine
+Learning, 2024.
+[14] C.
+Qian,
+Z.
+Xie,
+Y.
+Wang,
+W.
+Liu,
+Y.
+Dang,
+Z. Du, W. Chen, C. Yang, Z. Liu, M. Sun, Scaling
+large language model-based multi-agent collaboration,
+arXiv:2406.07155 (2024).
+[15] G. Zhang, Y. Yue, Z. Li, S. Yun, G. Wan, K. Wang,
+D. Cheng, J. X. Yu, T. Chen, Cut the crap: An econom-
+ical communication pipeline for LLM-based multi-agent
+systems, in: International Conference on Learning Repre-
+sentations, 2025.
+[16] G. Zhang, Y. Yue, X. Sun, G. Wan, M. Yu, J. Fang,
+K. Wang, T. Chen, D. Cheng, G-Designer: Architecting
+multi-agent communication topologies via graph neural
+networks, arXiv:2410.11782 (2024).
+[17] Q. Wang, Z. Wang, Y. Su, H. Tong, Y. Song, Rethink-
+ing the bounds of LLM reasoning: Are multi-agent dis-
+cussions the key?, in: Proceedings of the 62nd Annual
+Meeting of the Association for Computational Linguis-
+tics, 2024, pp. 6106–6131.
+[18] J. Wei, X. Wang, D. Schuurmans, M. Bosma, B. Ichter,
+F. Xia, E. H. Chi, Q. V. Le, D. Zhou, Chain-of-thought
+prompting elicits reasoning in large language models,
+in: Advances in Neural Information Processing Systems,
+Vol. 35, 2022, pp. 24824–24837.
+[19] S. Yao, J. Zhao, D. Yu, N. Du, I. Shafran, K. Narasimhan,
+Y. Cao, ReAct: Synergizing reasoning and acting in lan-
+guage models, in: International Conference on Learning
+Representations, 2023.
+[20] A. Madaan, N. Tandon, P. Gupta, S. Hallinan, L. Gao,
+S. Wiegreffe, U. Alon, N. Dziri, S. Prabhumoye, Y. Yang,
+S. Gupta, B. P. Majumder, K. Hermann, S. Welleck,
+A. Yazdanbakhsh, P. Clark, Self-Refine: Iterative refine-
+ment with self-feedback, in: Advances in Neural Informa-
+tion Processing Systems, Vol. 36, 2023.
+[21] N. Shinn,
+F. Cassano,
+E. Berman,
+A. Gopinath,
+K. Narasimhan, S. Yao, Reflexion: Language agents with
+verbal reinforcement learning, in: Advances in Neural In-
+formation Processing Systems, Vol. 36, 2023.
+[22] X. Chen, M. Lin, N. Schärli, D. Zhou, Teaching large lan-
+guage models to self-debug, in: International Conference
+on Learning Representations, 2024.
+[23] X. Wang, J. Wei, D. Schuurmans, Q. V. Le, E. H. Chi,
+S. Narang, A. Chowdhery, D. Zhou, Self-consistency im-
+proves chain of thought reasoning in language models,
+in:
+International Conference on Learning Representa-
+tions, 2023.
+[24] S. Yao, D. Yu, J. Zhao, I. Shafran, T. L. Griffiths, Y. Cao,
+K. Narasimhan, Tree of Thoughts: Deliberate problem
+solving with large language models, in: Advances in Neu-
+ral Information Processing Systems, Vol. 36, 2023.
+20
+
+[25] L. Chen, M. Zaharia, J. Zou, FrugalGPT: How to use large
+language models while reducing cost and improving per-
+formance, arXiv:2305.05176 (2023).
+[26] D. Ding, A. Mallick, C. Wang, R. Sim, S. Mukherjee,
+V. Rühle, L. V. Lakshmanan, A. H. Awadallah, Hybrid
+LLM: Cost-efficient and quality-aware query routing, in:
+International Conference on Learning Representations,
+2024.
+[27] I. Ong, A. Almahairi, V. Wu, W.-L. Chiang, T. Wu, J. E.
+Gonzalez, M. W. Kadous, I. Stoica, RouteLLM: Learning
+to route LLMs with preference data, arXiv:2406.18665
+(2024).
+[28] K. Lu, H. Yuan, R. Lin, J. Lin, Z. Yuan, C. Zhou, J. Zhou,
+Routing to the expert: Efficient reward-guided ensemble
+of large language models, in: Proceedings of the 2024
+Conference of the North American Chapter of the As-
+sociation for Computational Linguistics, 2024, pp. 1964–
+1974.
+[29] M. Šakota, M. Peyrard, R. West, Fly-swat or cannon?
+Cost-effective language model choice via meta-modeling,
+in: Proceedings of the 17th ACM International Confer-
+ence on Web Search and Data Mining, 2024, pp. 606–615.
+[30] Q. J. Hu, J. Bieker, X. Li, N. Jiang, B. Keigwin,
+G. Ranganath, K. Keutzer, S. K. Upadhyay, Router-
+Bench:
+A benchmark for multi-LLM routing system,
+arXiv:2403.12031 (2024).
+[31] M. Yue, J. Zhao, M. Zhang, L. Du, Z. Yao, Large language
+model cascades with mixture of thought representations
+for cost-efficient reasoning, in: International Conference
+on Learning Representations, 2024.
+[32] Y. Zhang, G. Zhang, Y. Yue, X. Sun, K. Wang, J. Fang,
+C. Yang, T. Chen, MasRouter: Learning to route LLMs
+for multi-agent systems, in: Proceedings of the 63rd An-
+nual Meeting of the Association for Computational Lin-
+guistics, 2025.
+[33] H. Feng, Z. Wang, Y. Zhang, R. Zhang, J. Shang, Router-
+R1: Teaching LLMs multi-round routing and aggregation
+via reinforcement learning, arXiv:2506.09033 (2025).
+[34] T. Schuster, A. Fisch, J. Gupta, M. Dehghani, D. Bahri,
+V. Q. Tran, Y. Tay, D. Metzler, Confident adaptive lan-
+guage modeling, in: Advances in Neural Information Pro-
+cessing Systems, Vol. 35, 2022.
+[35] N. Shazeer, A. Mirhoseini, K. Maziarz, A. Davis, Q. Le,
+G. Hinton, J. Dean, Outrageously large neural networks:
+The sparsely-gated mixture-of-experts layer, in: Interna-
+tional Conference on Learning Representations, 2017.
+[36] C. Snell, J. Lee, K. Xu, A. Kumar, Scaling LLM test-
+time compute optimally can be more effective than scaling
+model parameters, arXiv:2408.03314 (2024).
+[37] B. Brown, J. Juravsky, R. Ehrlich, R. Clark, Q. V.
+Le, C. Ré, A. Mirhoseini, Large language monkeys:
+Scaling inference compute with repeated sampling,
+arXiv:2407.21787 (2024).
+[38] D. Hendrycks, S. Basart, S. Kadavath, M. Mazeika,
+A. Arora, E. Guo, C. Burns, S. Puranik, H. He, D. Song,
+J. Steinhardt, Measuring coding challenge competence
+with APPS, in: Advances in Neural Information Process-
+ing Systems, Datasets and Benchmarks Track, 2021.
+[39] J. Liu, C. S. Xia, Y. Wang, L. Zhang, Is your code gener-
+ated by ChatGPT really correct? Rigorous evaluation of
+large language models for code generation, in: Advances
+in Neural Information Processing Systems, Vol. 36, 2023.
+[40] M.
+Chen,
+J.
+Tworek,
+H.
+Jun,
+Q.
+Yuan,
+H.
+P.
+de Oliveira Pinto, J. Kaplan, H. Edwards, Y. Burda,
+N. Joseph, G. Brockman, et al., Evaluating large language
+models trained on code, arXiv:2107.03374 (2021).
+[41] N. Jain, K. Han, A. Gu, W.-D. Li, F. Yan, T. Zhang,
+S. Wang, A. Solar-Lezama, K. Sen, I. Stoica, Live-
+CodeBench: Holistic and contamination free evaluation
+of large language models for code, in: International Con-
+ference on Learning Representations, 2025.
+[42] J. Austin, A. Odena, M. Nye, M. Bosma, H. Michalewski,
+D. Dohan, E. Jiang, C. Cai, M. Terry, Q. Le, C. Sut-
+ton, Program synthesis with large language models,
+arXiv:2108.07732 (2021).
+[43] Y. Li, D. Choi, J. Chung, N. Kushman, J. Schrit-
+twieser, R. Leblond, T. Eccles, J. Keeling, F. Gimeno,
+A. Dal Lago, et al., Competition-level code generation
+with AlphaCode, Science 378 (6624) (2022) 1092–1097.
+[44] C. E. Jimenez, J. Yang, A. Wettig, S. Yao, K. Pei, O. Press,
+K. Narasimhan, SWE-bench: Can language models re-
+solve real-world GitHub issues?, in: International Con-
+ference on Learning Representations, 2024.
+[45] DeepSeek-AI,
+DeepSeek-V3
+technical
+report,
+arXiv:2412.19437 (2024).
+[46] OpenAI, GPT-4o system card, arXiv:2410.21276 (2024).
+[47] B. Hui, J. Yang, Z. Cui, J. Yang, D. Liu, L. Zhang, T. Liu,
+J. Zhang, B. Yu, K. Lu, et al., Qwen2.5-Coder technical
+report, arXiv:2409.12186 (2024).
+[48] D. Guo, Q. Zhu, D. Yang, Z. Xie, K. Dong, W. Zhang,
+G. Chen, X. Bi, Y. Wu, Y. K. Li, F. Luo, Y. Xiong,
+W. Liang, DeepSeek-Coder: When the large language
+model meets programming—the rise of code intelligence,
+arXiv:2401.14196 (2024).
+[49] Z. Feng, D. Guo, D. Tang, N. Duan, X. Feng, M. Gong,
+L. Shou, B. Qin, T. Liu, D. Jiang, M. Zhou, CodeBERT:
+A pre-trained model for programming and natural lan-
+guages, in: Findings of the Association for Computational
+Linguistics: EMNLP 2020, 2020, pp. 1536–1547.
+21
+
+[50] D. Guo, S. Ren, S. Lu, Z. Feng, D. Tang, S. Liu, L. Zhou,
+N. Duan, A. Svyatkovskiy, S. Fu, M. Tufano, S. K. Deng,
+C. Clement, D. Drain, N. Sundaresan, J. Yin, D. Jiang,
+M. Zhou, GraphCodeBERT: Pre-training code represen-
+tations with data flow, in: International Conference on
+Learning Representations, 2021.
+[51] D. Guo, S. Lu, N. Duan, Y. Wang, M. Zhou, J. Yin, UniX-
+coder: Unified cross-modal pre-training for code repre-
+sentation, in: Proceedings of the 60th Annual Meeting of
+the Association for Computational Linguistics, 2022, pp.
+7212–7225.
+[52] U. Alon, M. Zilberstein, O. Levy, E. Yahav, code2vec:
+Learning distributed representations of code, Proceedings
+of the ACM on Programming Languages 3 (POPL) (2019)
+1–29.
+[53] T. N. Kipf, M. Welling, Semi-supervised classification
+with graph convolutional networks, in: International Con-
+ference on Learning Representations, 2017.
+[54] P. Veliˇckovi´c, G. Cucurull, A. Casanova, A. Romero,
+P. Liò, Y. Bengio, Graph attention networks, in: Interna-
+tional Conference on Learning Representations, 2018.
+[55] K. Cobbe, V. Kosaraju, M. Bavarian, M. Chen, H. Jun,
+L. Kaiser, M. Plappert, J. Tworek, J. Hilton, R. Nakano,
+C. Hesse, J. Schulman, Training verifiers to solve math
+word problems, arXiv:2110.14168 (2021).
+[56] D. Hendrycks, C. Burns, S. Kadavath, A. Arora, S. Basart,
+E. Tang, D. Song, J. Steinhardt, Measuring mathematical
+problem solving with the MATH dataset, in: Advances
+in Neural Information Processing Systems, Datasets and
+Benchmarks Track, 2021.
+[57] L. Gao, A. Madaan, S. Zhou, U. Alon, P. Liu, Y. Yang,
+J. Callan, G. Neubig, PAL: Program-aided language mod-
+els, in: Proceedings of the 40th International Conference
+on Machine Learning, 2023, pp. 10764–10799.
+[58] E. B. Wilson, Probable inference, the law of succession,
+and statistical inference, Journal of the American Statisti-
+cal Association 22 (158) (1927) 209–212.
+[59] Q. McNemar, Note on the sampling error of the differ-
+ence between correlated proportions or percentages, Psy-
+chometrika 12 (2) (1947) 153–157.
+[60] T. G. Dietterich, Approximate statistical tests for compar-
+ing supervised classification learning algorithms, Neural
+Computation 10 (7) (1998) 1895–1923.
+[61] S. Holm, A simple sequentially rejective multiple test pro-
+cedure, Scandinavian Journal of Statistics 6 (2) (1979)
+65–70.
+[62] M. P. Naeini, G. F. Cooper, M. Hauskrecht, Obtaining
+well calibrated probabilities using Bayesian binning, in:
+Proceedings of the AAAI Conference on Artificial Intelli-
+gence, 2015, pp. 2901–2907.
+[63] C. Guo, G. Pleiss, Y. Sun, K. Q. Weinberger, On calibra-
+tion of modern neural networks, in: International Confer-
+ence on Machine Learning, 2017, pp. 1321–1330.
+[64] G. W. Brier, Verification of forecasts expressed in terms of
+probability, Monthly Weather Review 78 (1) (1950) 1–3.
+[65] F. Pedregosa, G. Varoquaux, A. Gramfort, V. Michel,
+B. Thirion, O. Grisel, M. Blondel, P. Prettenhofer,
+R. Weiss, V. Dubourg, J. Vanderplas, A. Passos, D. Cour-
+napeau, M. Brucher, M. Perrot, E. Duchesnay, Scikit-
+learn: Machine learning in Python, Journal of Machine
+Learning Research 12 (2011) 2825–2830.
+[66] H. Li, Y. Zhang, Z. Guo, C. Wang, S. Tang, Q. Zhang,
+Y. Chen, B. Qi, P. Ye, L. Bai, Z. Wang, S. Hu,
+LLMRouterBench:
+A massive benchmark and unified
+framework for LLM routing, in: Findings of the As-
+sociation for Computational Linguistics:
+ACL 2026,
+2026, pp. 37733–37754. https://aclanthology.org/
+2026.findings-acl.1881/.
+[67] Y. Zhang, H. Li, C. Wang, L. Chen, Q. Zhang, P. Ye,
+S. Feng, X. Wang, J. Xu, L. Bai, S. Hu, The Avengers:
+A routing recipe for collective intelligence in language
+models, in: Proceedings of the AAAI Conference on
+Artificial Intelligence, 2026. https://ojs.aaai.org/
+index.php/AAAI/article/view/40790.
+[68] D. Jia, I. Romi´c, L. Shi, Q. Su, C. Liu, J. Liu, P. Holme,
+X. Li, Z. Wang, Social networking agency and proso-
+ciality are inextricably linked in economic games, Nature
+Human Behaviour 9 (2025) 2620–2631. https://doi.
+org/10.1038/s41562-025-02289-0.
+[69] Z. Wang,
+M. Jusup,
+H. Guo,
+L. Shi,
+S. Geˇcek,
+M. Anand, M. Perc, C. T. Bauch, J. Kurths, S. Boc-
+caletti, H. J. Schellnhuber, Communicating sentiment
+and outlook reverses inaction against collective risks,
+Proceedings of the National Academy of Sciences
+117 (30) (2020) 17650–17655. https://doi.org/10.
+1073/pnas.1922345117.
+[70] Z. Wang, M. Jusup, L. Shi, J.-H. Lee, Y. Iwasa, S. Boc-
+caletti, Exploiting a cognitive bias promotes coopera-
+tion in social dilemma experiments, Nature Communi-
+cations 9 (2018) 2954. https://doi.org/10.1038/
+s41467-018-05259-5.
+[71] Z. Wang, M. Jusup, R.-W. Wang, L. Shi, Y. Iwasa,
+Y. Moreno,
+J. Kurths,
+Onymity promotes coopera-
+tion in social dilemma experiments, Science Advances
+3 (3) (2017) e1601444. https://doi.org/10.1126/
+sciadv.1601444.
+[72] Z. Wang, C. Mu, S. Hu, C. Chu, X. Li, Modelling the
+dynamics of regret minimization in large agent popula-
+tions: a master equation approach, in: Proceedings of the
+Thirty-First International Joint Conference on Artificial
+Intelligence, 2022, pp. 534–540. https://doi.org/10.
+24963/ijcai.2022/76.
+22

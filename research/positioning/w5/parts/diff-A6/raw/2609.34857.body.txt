@@ -1,0 +1,768 @@
+Abstract 
+Reinforcement learning with verifiable rewards (RLVR) trains reasoning models
+to produce correct answers, but does not ensure that their stated confidence
+is calibrated. The resulting models are systematically overconfident.
+Recent methods train calibration inside the RLVR loop by having the model
+state a numerical confidence alongside its answer, but they all obtain the
+confidence by sampling it as text.
+This choice imposes two costs: a sampled confidence introduces variance and in
+practice collapses to a handful of distinct values, and sampling makes the
+confidence non-differentiable, forcing the calibration loss through a scalar
+reward.
+We propose CREDO (Confidence REaDOut) to replace sampling with a
+deterministic readout. While RLVR optimizes correctness, CREDO reads the
+confidence from a dedicated token pair in the model’s output distribution and
+trains it by differentiable regression.
+CREDO further turns the trained confidence into a signal for accuracy,
+weighting rollouts by how far confidence and outcome disagree, so that
+accuracy and calibration improve together.
+Across mathematical and code reasoning, CREDO attains the best accuracy and
+calibration, and the gains extend to abstention and selective prediction. 
+ 1 Introduction 
+Reinforcement learning with verifiable rewards (RLVR) has become the standard
+recipe for training reasoning models ( Shao et al., 2024 ; Guo et al., 2025 ) .
+Answers in mathematics and code can be checked automatically, so the training
+reward is simply whether the answer is correct.
+This produces strong reasoners, but the reward carries no signal about how
+confident the model should be in any particular answer. Models trained this way
+are systematically overconfident
+ ( Yang et al., 2024 ; Bereket and Leskovec, 2025 ; Mei et al., 2025 ) . 
+Overconfidence has practical costs: downstream systems route answers by their
+stated confidence, so a confidently wrong answer passes through the filters
+meant to catch it ( Geifman and El-Yaniv, 2017 ; Kirichenko et al., 2025 ) .
+The remedy is calibration: a model’s stated confidence should match how
+often it is actually correct, so that when it reports 0.9, roughly nine in ten
+of those answers are right ( DeGroot and Fienberg, 1983 ; Guo et al., 2017 ) .
+Calibration does not emerge from a correctness reward, so it has to be trained
+for. 
+For calibration to be trainable, the model must produce a confidence estimate
+alongside each answer (Figure  1 a).
+One approach reads confidence from the model’s generation probabilities
+ ( Fomicheva et al., 2020 ) , but these reflect the likelihood
+of the generated text rather than the probability of being correct.
+Recent methods instead ask the model to state a numerical confidence after its
+answer, scored by a reward based on a proper scoring rule
+ ( Gneiting and Raftery, 2007 ) .
+Several methods along this route have refined the reward design and the balance
+between correctness and calibration
+ ( Damani et al., 2026 ; Ma et al., 2026 ; Xu et al., 2024 ; Bani-Harouni et al., 2026 ; Leng et al., 2025 ) .
+Despite their differences, these methods share one choice: the confidence
+is a numeral sampled as text , which forces the calibration loss to work
+through a scalar reward (Figure  1 b). 
+ Figure 1: (a) The calibration task: a model answers and reports a
+confidence; calibration means the reported probability matches observed
+correctness. (b) Verbalized methods sample the confidence as text and
+train it through a scalar reward. CREDO reads the relative probability of a
+pair of reserved tokens and trains it by direct regression from the calibration
+loss. (c) Confidence distributions on code. Verbalized reports (GRPO, RLCR, DCPO)
+concentrate on a few values shared by correct and incorrect answers, even when
+calibration is trained explicitly (RLCR, DCPO). The readout (CREDO) spreads
+across the full range. 
+This choice imposes two costs. First, a sampled confidence introduces variance
+that persists as long as the report is stochastic. In practice, the reported
+confidence collapses to a handful of distinct values, and correct and incorrect
+answers end up sharing the same confidence (Figure  1 c).
+Second, sampling makes the confidence non-differentiable, forcing the
+calibration loss to work through a scalar reward rather than a direct gradient.
+The resulting gradient estimate carries additional variance from the report,
+making calibration harder to learn.
+Both costs follow from verbalizing the confidence; redesigning the reward
+cannot remove them. 
+We propose CREDO (Confidence REaDOut), 1 1 
+ 1 
+ The name also reads as the Latin
+ credo , “I believe.” which reads the confidence directly from the
+output distribution rather than sampling it.
+While RLVR optimizes correctness, CREDO sets aside a pair of reserved tokens
+and takes their relative probability as the confidence, trained by
+differentiable regression (Figure  1 b).
+The readout is deterministic and directly differentiable, so the calibration
+loss trains it by gradient descent.
+CREDO further turns the trained confidence into a signal for accuracy.
+A confident mistake or an unexpected success is more informative than a rollout
+where confidence and outcome already agree, so CREDO weights learning on the
+answer by the size of the discrepancy.
+Accuracy and calibration improve together in both domains. 
+Our main contributions are as follows: 
+ • 
+We show that sampling the confidence as text imposes two costs: the
+report introduces variance and in practice collapses to a handful of distinct
+values, and the sampling step makes the confidence non-differentiable, forcing
+the calibration loss through a scalar reward. 
+ • 
+We propose CREDO, which reads the confidence as the relative probability
+between a pair of reserved tokens and trains it by differentiable regression,
+giving the calibration loss a direct gradient path. The policy gradient
+continues to handle correctness and credit assignment. 
+ • 
+We turn the trained confidence into a signal for accuracy, weighting
+each rollout by the gap between confidence and outcome. The weighting improves
+accuracy in both domains. 
+ • 
+Across mathematical and code reasoning, CREDO attains the best accuracy
+and calibration. Ablations isolate the contributions of the readout and the
+weighting, and the improved calibration pays off downstream in abstention and
+selective prediction. 
+ 2 Confidence channels and their costs 
+We start from the RLVR setup and the calibration objective
+(§ 2.1 ). The rest of the section identifies the channel choice
+behind verbalized confidence (§ 2.2 ), analyzes its two costs
+(§ 2.3 ), and derives three requirements for removing them
+(§ 2.4 ). 
+ 2.1 Setup: RLVR and the calibration objective 
+We work in the GRPO form of RLVR ( Shao et al., 2024 ) .
+For a question , the policy samples a group of rollouts
+ , and a verifier scores each one for correctness,
+ , where is the answer extracted from
+ and the reference answer. The policy maximizes the clipped
+objective of Schulman et al. (2017) , using the group as the baseline: 
+ (1) 
+Here is the token-level importance ratio, the clipping
+range, and and the mean and standard deviation of the group’s
+rewards. The reward is the correctness score, . In standard GRPO every
+token of a rollout shares the same .
+The verifier’s signal is not differentiable in the parameters, so training on
+it runs through the policy gradient. 
+A calibrated model must also report a scalar alongside its answer,
+and the report must be right as often as it claims: 
+ (2) 
+The standard way to train toward equation  2 is a strictly proper scoring
+rule, whose expectation is uniquely minimized at 
+ ( Gneiting and Raftery, 2007 ) ; the Brier score is the canonical example
+ ( Brier, 1950 ) .
+RLVR on its own does not target equation  2 . Its reward depends only on correctness and is indifferent to the model’s
+confidence, so nothing in the objective pushes a confident error down ( Damani et al., 2026 ) . 
+ 2.2 The verbalized channel 
+A confidence report has two design choices: where the confidence comes from
+and how it is trained. 
+ Definition 1 (confidence channel) . 
+A confidence channel is a pair : an emission map
+ from the rollout prefix to a scalar report, and a training path
+ , the route by which the calibration objective reaches the
+report’s value. 
+The methods that train a model to state its confidence inside RLVR make the
+same pair of choices. The confidence is written out as a numeral in the text, 
+ (3) 
+where is the rollout prefix up to the confidence slot. The
+model generates a rollout containing a solution to , samples a numeral
+ (say “0.9”) at the confidence slot, and parses it into a
+report . We call a channel whose emission includes a sampling step a
+ verbalized channel . 
+This choice of determines . Sampling makes the
+realized value of non-differentiable in the parameters, so the
+calibration signal can only enter equation  1 as a scalar reward.
+RLCR ( Damani et al., 2026 ) and DCPO ( Ma et al., 2026 ) are the two representative methods
+along this route, 
+ (4) 
+where is the group’s mean accuracy and its
+mixing weight.
+The first couples the calibration term into a single reward; the second scores
+the two segments separately and mixes the target. The disagreements are all
+internal to the reward, but the channel is shared: every verbalized variant
+uses the same emission and training path
+ ( Xu et al., 2024 ; Bani-Harouni et al., 2026 ; Leng et al., 2025 ; Stengel-Eskin et al., 2024 ; Zhang et al., 2026 ) . 
+In both analyses, the optimal report is calibrated and the calibration term
+does not hurt accuracy ( Damani et al., 2026 ; Ma et al., 2026 ) .
+These analyses validate the reward design but leave the channel unexamined. 
+ 2.3 Costs of the verbalized channel 
+Each component of the verbalized channel carries a cost.
+The first falls on the emission 
+(proofs of all propositions are in Appendix  A ). 
+ Proposition 1 (a verbalized report pays a variance tax or determinizes) . 
+ Fix a rollout prefix and let be the parsed report of equation  3 ,
+with conditional mean and variance . Every verbalized policy either
+pays a per-prefix tax that persists as long as the report is stochastic, or
+determinizes its per-prefix report distribution. Under the squared loss the tax
+is exactly , since for any target
+ ; under any strictly convex loss , Jensen’s inequality gives
+ . 
+Proposition  1 leaves two outcomes: variance or
+determinization. Determinization avoids the tax but does not by itself prevent
+different prefixes from using different values.
+Empirically, however, reports cluster onto a handful of values,
+so correct and incorrect answers share the same confidence
+(Figure  2 ). The collapse is visible already in an untrained
+base model, and training does not spread the values out: GRPO, RLCR, and DCPO
+all have effective levels in single digits. 
+ Figure 2: Collapse of the verbalized channel, with CREDO for contrast. Effective levels (equiprobable-level
+equivalent); top-value share = pool fraction of the most frequent value; tie
+tax = AUROC lost to exactly equal reports. 
+The variance can be avoided if the report is not sampled but computed. We call
+a channel whose report is a
+deterministic functional of the output distribution a readout channel 
+(the rightmost group of Figure  2 ).
+Even the conditional mean of a verbalized channel is such a functional and
+removes the variance, but it cannot be optimized through the reward, which only
+observes sampled values. Removing the variance is not enough; the
+calibration loss must also reach the report directly. 
+The second cost falls on : how the calibration loss trains the
+report. 
+ Proposition 2 (gradient availability) . 
+ Fix a calibration loss . A sampled report admits no unbiased pathwise
+gradient estimator, so can be queried only through its value. If instead
+the report is a differentiable function of the parameters at a single
+position, the exact derivative 
+is available, with zero estimator variance given the rollout. Exact pathwise
+training also requires the report to be computable inside the forward pass that
+generates the rollout. A verbalized numeral does not satisfy this: its realized
+value is a sample, and its conditional mean requires marginalizing over the
+numeral span. 
+For the same loss , the two kinds of report give gradient estimators 
+ (5) 
+where is a baseline. The left side is the score-function estimator of
+ Williams (1992) ; the right is the pathwise form, available when the report
+is differentiable in the parameters ( Kingma and Welling, 2014 ; Mohamed et al., 2020 ) . 
+The two costs reinforce each other: once the grid collapses, the channel can no
+longer express fine-grained values, and the scalar reward provides no direct gradient to recover them. 
+ 2.4 Design requirements 
+The two costs come from a single choice. A report is either sampled, and then
+the calibration signal reaches it only through a score-function estimate, or
+computed deterministically, and then the calibration gradient reaches it
+directly. 
+The two costs then convert into three requirements, two on and one
+on : 
+ (i) 
+the report is a deterministic functional of the
+output distribution rather than a sample from it, removing the variance term of
+Proposition  1 ; 
+ (ii) 
+its value is not confined to the vocabulary grid,
+removing the tie tax of Figure  2 ; 
+ (iii) 
+the calibration loss is differentiable in the
+report, and the report is computable exactly in the forward pass that
+generates the rollout, which yields the right-hand branch
+of equation  5 . 
+A pair of reserved tokens and their relative probability is a simple
+functional of the output distribution that meets all three. The next section
+develops such a channel and trains its report directly. 
+ 3 CREDO: instantiating the readout channel 
+CREDO operates within the RLVR loop of § 2.1 
+(Figure  3 ), changing the confidence channel. It takes the
+report from a pair of reserved tokens (§ 3.1 ) and trains it by a
+regression that uses the calibration gradient directly (§ 3.2 ),
+meeting the three requirements of § 2.4 . The policy gradient keeps
+the verifier’s correctness judgment and the credit assignment over the text
+(§ 3.3 ), and the trained readout weights learning on the
+answer (§ 3.4 ). 
+ Figure 3: Overview of CREDO. Each rollout contains an answer,
+a confidence analysis, and a confidence slot. The readout  is the
+relative probability of two reserved tokens at the slot. The calibration
+loss trains  by differentiable regression toward a hybrid target  .
+The policy gradient scores the answer and analysis segments through
+their text. Discrepancy weighting gives more weight to rollouts where
+the outcome and the readout disagree. 
+ 3.1 Rollout format and the readout 
+A rollout ends in a fixed format with three segments: an answer, a confidence
+analysis, and the confidence slot.
+At the first generated position inside the slot, a pair of reserved tokens
+ set aside in the vocabulary serves as the two events of the readout
+ ( Chuang et al., 2025 ) .
+Writing for the prefix up to the slot, we
+restrict the next-token distribution to the pair and renormalize, 
+ (6) 
+where and are the logits of the two tokens and is the
+logistic function.
+ depends on the output distribution alone and varies continuously, which
+gives  (i) and  (ii) .
+Because the readout is finished inside the forward pass that generates the
+rollout, the second half of  (iii) holds as well. The training in § 3.2 gives
+ its meaning as a confidence. 
+ 3.2 The calibration loss 
+The readout is differentiable, which gives the first half
+of  (iii) . We train it by a regression whose target takes the
+within-group hybrid form of Ma et al. (2026) , 
+ (7) 
+where collects the rollouts whose readout is available,
+ is the mixing weight, and is the mean
+correctness over all rollouts. The group term shrinks the binary target toward
+the group mean, reducing target variance conditional on the question.
+The gradient follows the right-hand branch of equation  5 into the
+readout position:
+ ,
+one term per sample, with no estimator variance given the rollout. 
+ Proposition 3 (the Bayes-optimal readout) . 
+ Fix the rollout policy and assume independent rollouts given  .
+Let comprise and this rollout’s prefix up to the readout,
+and the conditional correctness probability.
+The Bayes-optimal readout for the unfiltered per-rollout risk of equation  7 is
+ ,
+ , and 
+for every  . 
+Here is prompt-level accuracy under the
+current policy.
+Decreasing reduces target variance conditional on the question but
+shrinks toward , biasing it relative to  .
+Prompt-level mean consistency does not, in general, imply calibration as
+defined in equation  2 , so we treat the hybrid target as regularized
+correctness supervision. § 4.3 evaluates sensitivity to  ;
+Appendix  A contains the proof and quantifies target variance and shrinkage. 
+ 3.3 Policy losses and credit assignment 
+With the report’s value trained by the regression, the policy gradient is left
+with two jobs: whether the answer is right, and whether the confidence
+analysis deserves reinforcement.
+The answer and analysis segments are scored separately, on the token sets
+ and , and records whether all
+three segments are present and parseable, 
+ (8) 
+where weights the format term.
+Each reward is standardized within its own group into 
+and , each acting only on its own segment; the segmented
+credit assignment is inherited from Ma et al. (2026) .
+The policy gradient thus scores the two text segments, while the slot’s value
+is trained by the exact derivative of ; the policy gradient and the calibration loss
+share parameters but no credit. 
+ 3.4 Discrepancy weighting: the readout as a training signal 
+A rollout whose outcome falls far from what the model expected has more to teach
+about the answer.
+We therefore turn that distance into a per-sample weight.
+ Discrepancy weighting centers it within the group and lets the
+high-discrepancy rollouts count for more in the answer segment, 
+ (9) 
+where is the discrepancy, sets the strength,
+ is its group mean, and are clipping bounds
+with .
+The standardization uses the unweighted rewards, and the weights have group
+mean one before clipping, so the weighting redistributes learning within the group.
+Calibration information thus becomes a per-sample signal inside the training
+loop. 
+The training objective is 
+ (10) 
+where is the objective of equation  1 , weights the
+calibration loss, and the per-token advantage 
+of equation  1 now takes the form on the right. 
+ 4 Experiments 
+We compare the methods in and out of domain
+(§ 4.2 ), locate the gain by removing one component at a time
+(§ 4.3 ), and measure what the calibration is worth to a user
+who can abstain (§ 4.4 ). 
+ 4.1 Experimental setup 
+ Datasets and metrics. 
+Mathematics trains on DeepScaleR ( Luo et al., 2025b ) and is evaluated on
+seven sets: its in-distribution split, MATH-500
+ ( Hendrycks et al., 2021 ; Lightman et al., 2024 ) , AIME 2024–2026, and AMC
+2023–2024. Code trains on DeepCoder ( Luo et al., 2025a ) and is evaluated on
+four: its in-distribution split, LiveCodeBench v5 and v6
+ ( Jain et al., 2025 ) , and HumanEval+ ( Liu et al., 2023 ) . We report
+accuracy and three calibration measures: ECE ( Guo et al., 2017 ) on the
+reported values, AUROC on the ranking they induce, and Brier
+ ( Brier, 1950 ) on both. 
+ Baselines and training. 
+On Qwen3-8B ( Yang et al., 2025a ) we compare the untrained base model with GRPO
+ ( Shao et al., 2024 ) , which trains no calibration term, and with RLCR ( Damani et al., 2026 ) and
+DCPO ( Ma et al., 2026 ) , which train one. Training runs for two
+epochs at learning rate with eight rollouts per question and
+temperature 1.0. Every run uses seed 43, and the main comparisons add seeds 44
+and 45. 
+Appendix  B provides prompt templates, training hyperparameters, the evaluation protocol, and other implementation details. 
+ 4.2 Accuracy and calibration in and out of domain 
+ Table 1: Accuracy and calibration in and out of domain, each entry
+macro-averaged over evaluation sets and training seeds. Column groups are the evaluation domain. Baselines are read through their
+own verbalized numeral and again through a digit expectation (Appendix  B.3 ), in the
+rows named -d ; CREDO is read
+through its readout. Bold marks the best mean in each column and any
+within one joint standard error of it. 
+ Mathematics 
+ Code 
+ Method 
+ Acc  
+ ECE  
+ AUROC  
+ Brier  
+ Acc  
+ ECE  
+ AUROC  
+ Brier  
+ Base 
+ .439 .001 
+ .472 .002 
+ .644 .004 
+ .453 .002 
+ .455 .001 
+ .418 .001 
+ .690 .004 
+ .395 .002 
+ GRPO 
+ .706 .009 
+ .199 .027 
+ .775 .062 
+ .204 .029 
+ .581 .007 
+ .182 .070 
+ .753 .061 
+ .205 .066 
+ RLCR 
+ .682 .010 
+ .159 .012 
+ .831 .009 
+ .171 .009 
+ .553 .013 
+ .075 .005 
+ .815 .014 
+ .146 .006 
+ DCPO 
+ .722 .008 
+ .217 .008 
+ .848 .012 
+ .198 .003 
+ .576 .003 
+ .153 .024 
+ .776 .025 
+ .153 .024 
+ Base-d 
+ .439 .001 
+ .442 .001 
+ .765 .010 
+ .424 .001 
+ .455 .001 
+ .389 .002 
+ .782 .003 
+ .373 .002 
+ GRPO-d 
+ .706 .009 
+ .192 .025 
+ .864 .020 
+ .203 .023 
+ .581 .007 
+ .155 .022 
+ .833 .034 
+ .184 .025 
+ RLCR-d 
+ .682 .010 
+ .163 .005 
+ .852 .006 
+ .171 .009 
+ .553 .013 
+ .080 .004 
+ .818 .011 
+ .145 .005 
+ DCPO-d 
+ .722 .008 
+ .188 .010 
+ .858 .006 
+ .191 .013 
+ .576 .003 
+ .152 .025 
+ .849 .027 
+ .152 .025 
+ In domain 
+ CREDO 
+ .752 .013 
+ .103 .013 
+ .933 .007 
+ .086 .004 
+ .600 .018 
+ .064 .020 
+ .850 .027 
+ .127 .016 
+ GRPO 
+ .564 .003 
+ .335 .019 
+ .734 .030 
+ .325 .020 
+ .495 .004 
+ .315 .041 
+ .721 .032 
+ .308 .040 
+ RLCR 
+ .515 .011 
+ .170 .004 
+ .815 .016 
+ .186 .007 
+ .502 .002 
+ .228 .014 
+ .792 .005 
+ .229 .010 
+ DCPO 
+ .548 .003 
+ .205 .021 
+ .755 .024 
+ .205 .020 
+ .508 .014 
+ .330 .040 
+ .746 .038 
+ .318 .032 
+ GRPO-d 
+ .564 .003 
+ .311 .017 
+ .826 .004 
+ .308 .015 
+ .495 .004 
+ .298 .028 
+ .792 .026 
+ .299 .028 
+ RLCR-d 
+ .515 .011 
+ .172 .006 
+ .833 .014 
+ .184 .006 
+ .502 .002 
+ .232 .013 
+ .816 .003 
+ .226 .011 
+ DCPO-d 
+ .548 .003 
+ .203 .020 
+ .835 .004 
+ .203 .020 
+ .508 .014 
+ .275 .027 
+ .778 .021 
+ .283 .017 
+ Out of domain 
+ CREDO 
+ .560 .007 
+ .117 .030 
+ .855 .013 
+ .142 .013 
+ .504 .021 
+ .138 .016 
+ .836 .009 
+ .165 .008 
+Table  1 compares each method three ways: in its own domain, with
+only the readout replaced, and on the other domain with nothing adapted. 
+In domain, CREDO leads on all four metrics in both mathematics and code. Among the
+baselines, DCPO is the most accurate on mathematics but still trails CREDO on calibration;
+RLCR trades accuracy for a tighter ECE on code, where it is the only baseline to match CREDO on any calibration metric.
+All baselines use the verbalized channel and incur both costs of
+§ 2.3 (Figure  2 ). 
+The -d rows replace the sampled numeral with the expectation over
+each baseline’s digit distribution, giving a continuous confidence without
+retraining. Every swap improves ranking metrics such as AUROC,
+confirming that sampling adds noise to an otherwise informative signal. None of
+the swaps closes the calibration gap to CREDO: the reported values were shaped
+by the training path, and changing the emission alone does not recalibrate them. 
+The out of domain rows move each checkpoint to the other domain.
+Accuracy is comparable across methods, but CREDO’s calibration
+advantage persists and remains the largest.
+RLCR was the only baseline to match CREDO’s code ECE in domain; that match
+does not survive the domain shift. The calibration advantage transfers across domains. 
+Appendix  C.1 repeats the mathematics comparison at 1.7B and
+4B. CREDO leads on all four metrics at every scale, and its calibration
+advantage widens as models grow larger. Per-set breakdowns and calibration
+curves appear in Appendices  D and  C.5 . 
+ 4.3 Ablation and attribution 
+ Table 2: Leave-one-out ablation of CREDO (seed 43). 
+ Mathematics 
+ Code 
+ Acc  
+ ECE  
+ AUROC  
+ Brier  
+ Acc  
+ ECE  
+ AUROC  
+ Brier  
+ CREDO 
+ .753 
+ .094 
+ .933 
+ .088 
+ .614 
+ .052 
+ .869 
+ .117 
+ w/o differentiable regression ( ) 
+ .696 
+ .241 
+ .880 
+ .232 
+ .611 
+ .172 
+ .857 
+ .172 
+ w/o uncertainty-analysis segment 
+ .709 
+ .096 
+ .902 
+ .107 
+ .587 
+ .048 
+ .868 
+ .117 
+ w/o confidence-segment advantage ( ) 
+ .696 
+ .099 
+ .909 
+ .102 
+ .576 
+ .047 
+ .867 
+ .126 
+ w/o discrepancy weighting ( ) 
+ .721 
+ .122 
+ .904 
+ .102 
+ .572 
+ .051 
+ .843 
+ .132 
+ Figure 4: Accuracy and Brier for the two evaluation domains as each
+coefficient ( , , ) of § 3 is varied on seed 43, the others held fixed.
+Exact values are in Table  D.2 . 
+Table  2 removes one component at a time. Setting 
+disables the calibration loss entirely: ECE and Brier degrade sharply in both
+domains, and accuracy drops on mathematics. Without differentiable regression
+the readout loses its direct supervision and calibration collapses. The next two rows
+restore the regression but remove the confidence reasoning: dropping the
+analysis text, or keeping it but withholding its policy-gradient credit, both
+lower accuracy in both domains while calibration is largely unaffected. This
+suggests that reasoning about confidence improves the model’s answers, not only
+its confidence estimates. Appendix  C.2 goes further,
+independently swapping the emission and training path; neither axis alone
+recovers the full method’s performance. 
+Discrepancy weighting is the only component feeding the readout back into
+the answer segment. Removing it causes the largest accuracy drop on code and a
+substantial drop on mathematics. Calibration also degrades on mathematics,
+though the weighting acts only on the answer advantage. The confidence and
+answer channels are therefore not independent: the readout
+shapes how the model learns from its answers.
+Appendix  C.3 adds the same weighting to RLCR and DCPO,
+driven by the parsed numeral or a continuous digit expectation; in
+neither case are the gains as large or as consistent as CREDO’s. 
+Figure  4 varies each coefficient in turn. Any moderate
+discrepancy weight outperforms , confirming that the
+weighting itself, not just the readout, contributes to accuracy. The calibration
+weight has a threshold effect: disables calibration
+training and both ECE and Brier collapse, while all tested positive values restore
+calibration. The target mixture trades variance against shrinkage (§ 3.2 );
+among tested values, gives the best accuracy and Brier in both domains, though achieves lower code ECE.
+Appendix  C.4 compares two alternative reward shapes;
+the additive form is the best or tied in mathematics and competitive in code. 
+ 4.4 Downstream benefits of calibration 
+ Table 3: AURC, selective accuracy at three coverages, and the number of
+operable thresholds. 
+ AURC (%)  
+ acc@50  
+ acc@80  
+ acc@90  
+ Thr.  
+ Mathematics 
+ CREDO 
+ 2.62 0.04 
+ .986 .001 
+ .962 .001 
+ .927 .002 
+ 372 
+ DCPO 
+ 4.98 0.65 
+ .958 .006 
+ .941 .002 
+ .909 .005 
+ 22 
+ RLCR 
+ 5.88 0.67 
+ .952 .009 
+ .910 .009 
+ .878 .007 
+ 15 
+ GRPO 
+ 7.92 0.67 
+ .927 .003 
+ .915 .023 
+ .888 .011 
+ 21 
+ Base 
+ 29.64 0.30 
+ .712 .001 
+ .705 .005 
+ .666 .001 
+ 34 
+ Code 
+ CREDO 
+ 16.80 1.57 
+ .885 .013 
+ .686 .025 
+ .617 .019 
+ 932 
+ DCPO 
+ 21.26 0.95 
+ .863 .016 
+ .679 .003 
+ .611 .003 
+ 10 
+ RLCR 
+ 21.36 1.00 
+ .809 .015 
+ .608 .014 
+ .562 .014 
+ 12 
+ GRPO 
+ 21.50 3.08 
+ .797 .081 
+ .652 .041 
+ .599 .023 
+ 17 
+ Base 
+ 45.10 0.50 
+ .572 .005 
+ .478 .002 
+ .437 .002 
+ 16 
+ Figure 5: Risk–coverage frontiers, pooled over three seeds; Base omitted. 
+Figure  5 plots the error among answered questions as the model
+keeps only its most confident fraction ( Geifman and El-Yaniv, 2017 ) . In mathematics CREDO
+is below every baseline throughout. In code RLCR is lower at very low coverage; above
+it CREDO is lowest. At the evaluated coverage budgets
+(Table  5 ), CREDO answers the most accurately and has the lowest
+aggregate error in both domains; only the two tightest code budgets are
+statistically tied with DCPO.
+Selective prediction relies on setting a confidence threshold, and the channel’s granularity determines how finely it can be tuned.
+Verbalized reports concentrate on a few values
+(Figure  2 ), leaving a threshold policy only a dozen or two
+operating points (Table  5 ); the readout supplies hundreds. On
+code, DCPO’s most confident value already covers half the pool. 
+ 5 Related work 
+Confidence estimation. 
+The most direct way to obtain a confidence estimate is to ask for one:
+ Lin et al. (2022) fine-tune a model to state a number, but such numbers
+are systematically overconfident ( Xiong et al., 2024 ; Tian et al., 2023 ) .
+Instead of asking, the confidence can be read from the model’s own probabilities
+or internal representations
+ ( Fomicheva et al., 2020 ; Kadavath et al., 2022 ; Azaria and Mitchell, 2023 ; Orgad et al., 2025 ) , or
+estimated from sample agreement
+ ( Kuhn et al., 2023 ; Aichberger et al., 2025 ; Geng et al., 2024 ) .
+A dedicated readout can also be trained directly: Chuang et al. (2025) learn a
+confidence-token readout under supervised finetuning, applied to routing
+and rejection. CREDO trains the same form of readout on-policy inside
+RLVR, against a hybrid calibration target, and feeds it back as a signal
+for answer learning. 
+Calibration in RLVR. 
+Inside RLVR, one line of work incorporates confidence derived from response
+likelihood or token-level statistics into policy optimization
+ ( Wang et al., 2026 ; Liu et al., 2025 ; Zhao et al., 2026 ) . Another trains the model to state a numerical
+confidence and scores it with a reward.
+RLCR ( Damani et al., 2026 ) folds a proper scoring rule into the reward, while
+DCPO ( Ma et al., 2026 ) separates credit by scoring answer and confidence tokens; other work extends to question answering, preference
+tuning, and generative recommendation
+ ( Xu et al., 2024 ; Bani-Harouni et al., 2026 ; Stengel-Eskin et al., 2024 ; Leng et al., 2025 ; Fan et al., 2026 ) .
+In the numerical-report methods, the confidence is sampled as text and
+trained through a scalar reward (§ 2 ).
+A dedicated readout can also serve as a self-reward signal:
+LaSeR ( Yang et al., 2025b ) aligns a last-token score with verifier rewards
+during RLVR and mixes score-derived advantages into policy updates.
+CREDO targets calibration rather than self-reward: it regresses a
+normalized two-token readout toward a hybrid calibration target and
+uses confidence–outcome discrepancies to rescale answer advantages. 
+ 6 Conclusion 
+In this work, we examined the confidence channel shared by all verbalized
+calibration methods. We analyzed the variance cost of sampling the report,
+observed that it collapses to a handful of values in the baselines we
+evaluated, and showed that sampling forces the calibration loss through a
+scalar reward.
+We therefore proposed CREDO, which reads the confidence as a deterministic
+function of the output distribution and trains it by differentiable regression,
+while the policy gradient optimizes correctness.
+The same readout also serves as a training signal: it weights learning on the
+answer by how far each outcome departs from the model’s own confidence, and
+this improves accuracy in both domains.
+On mathematical and code reasoning tasks CREDO attains the best accuracy and
+calibration, and its confidence translates into finer abstention control.
+Because CREDO trains confidence by regression, it is not tied to binary
+correctness labels; open-ended tasks with graded reward models are a natural
+next step.
+Looking further, feeding the confidence signal back during generation would let
+uncertain steps be reconsidered before the answer is finalized, moving toward
+reasoners that know when they are right. 
+References 

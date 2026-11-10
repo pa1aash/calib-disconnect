@@ -1,0 +1,4726 @@
+Compare to Correct: Pairwise-Guided Logit
+Adjustment for LLM Test-Time Scaling
+Cong Hua1,2
+Qianqian Xu1,3,*
+Zitai Wang1
+Zhiyong Yang2
+Shilong Bao1
+Linchao Zhang4
+Qingming Huang1,2,*
+1 State Key Laboratory of AI Safety, Institute of Computing Technology, Chinese Academy of Sciences.
+2 School of Computer Science and Technology, University of Chinese Academy of Sciences.
+3 Beijing Academy of Artificial Intelligence.
+4 Artificial Intelligence Institute of China Electronics Technology Group Corporation.
+*Corresponding authors: xuqianqian@ict.ac.cn; qmhuang@ucas.ac.cn.
+Other emails: huacong23z@ict.ac.cn; wangzitai@ict.ac.cn;
+yangzhiyong21@ucas.ac.cn; baoshilong@ict.ac.cn; zhanglinchao@cetc.com.cn.
+Abstract
+Sampling-based test-time scaling enhances LLM reasoning by aggregating multiple reasoning
+paths for the same query. Existing methods use answer frequencies or path confidence to compute
+candidate scores, which do not explicitly characterize comparisons between competing answers.
+Inspired by the Condorcet principle in social choice theory, we introduce pairwise confidence
+comparisons between paths supporting different answers to capture answer-level comparative
+advantage. We combine this comparative evidence with voting support through a KL-regularized
+objective. Theoretically, we show that this comparative-advantage is equivalent to the adjustment
+to the traditional voting logits. In this way, our proposed Pairwise-Guided Logit Adjustment (PGLA)
+framework allows comparative evidence to compensate for weaker voting support and correct
+voting-based ranking errors. Experiments on 10 challenging benchmarks including mathematical
+reasoning, knowledge reasoning, and code generation with 7 models ranging from 1.7B to 32B
+parameters speak to the effectiveness of this plug-and-play term. Additional evaluations with
+external reward scores and online sampling further demonstrate its applicability.
+Introduction
+Large language models (LLMs) have demonstrated strong reasoning capabilities across mathematical,
+symbolic, and multi-step decision-making tasks (Wei et al., 2022; Lewkowycz et al., 2022; Yao et al., 2023).
+Beyond increasing model size, allocating additional computation at inference time can further improve
+reasoning performance, establishing test-time scaling as an important paradigm for LLM reasoning (Snell
+et al., 2025; Balachandran et al., 2025). Among its variants, sampling-based approaches generate multiple
+reasoning paths for the same query and aggregate evidence from these paths (e.g., answer frequencies and
+path confidence scores) into a collective decision (Cobbe et al., 2021; Wang et al., 2023). In this direction,
+the central challenge becomes how to aggregate path-level evidence into reliable answer-level scores.
+Representative approaches include best-of-N selection that chooses the answer from the path with the highest
+confidence score (Cobbe et al., 2021), majority voting based on answer frequencies (Wang et al., 2023), and
+confidence-based voting that combines answer frequencies with path confidence scores by weighting or
+filtering path contributions (Kang et al., 2025; Fu et al., 2026).
+Although these methods achieve substantial improvements, we observe that their aggregation rules could
+overlook some crucial information hidden among sampled paths. To illustrate this, we turn to social
+choice theory, which studies how individual preferences among available options can be combined into a
+1
+arXiv:2610.18583v1  [cs.AI]  13 Oct 2026
+
+Figure 1: From voting support to pairwise comparative evidence. (a) Plurality voting selects A, whereas pairwise
+preference comparisons identify B as the Condorcet winner. (b) Sampled reasoning paths provide answers and
+confidence scores. Pairwise confidence comparisons complement voting support, enabling the proposed aggregation
+method to select B.
+collective decision (Zwicker, 2016). The well-known Condorcet principle highlights that the most frequently
+selected option does not necessarily rank higher than competing options in direct comparisons (Young,
+1988; Fishburn, 1977). As shown in Figure 1(a), options A, B, and C receive 3, 2, and 2 first-choice selections,
+respectively, so majority voting selects A. Under the preference P, however, four of seven rankings place
+B above A, and five place B above C, so B is selected through pairwise comparisons. Similarly, this
+principle highlights why prior sampling-based approaches are insufficient: an answer can be assigned
+the highest score even when its reasoning paths remain at a disadvantage in comparisons with those
+supporting a competing answer. As shown in Figure 1(b), answer A is selected by majority voting because
+it appears most frequently, although every path producing answer B has a higher confidence score than
+those producing A. This motivates us to incorporate pairwise information between candidate answers
+on top of existing voting-based aggregation.
+Ideally, we could apply the Condorcet principle to the reasoning paths if the ranking of candidate answers
+were available for each path. However, in practice, we only observe each path’s first-choice answer and
+its confidence score, leaving the ordering among the remaining answers unknown. To estimate such
+missing ordering, we use pairwise confidence comparisons between paths producing different answers,
+as illustrated in Figure 1(b). These comparisons yield an answer-level comparative advantage, which
+we combine with voting evidence through a KL-regularized objective. In this way, the objective can
+balance this advantage against deviations from the base voting distribution, as an alternative to the naive
+Condorcet approach. Furthermore, we show that its solution is essientially a logit adjustment to the base
+voting distribution, yielding a simple yet effective Pairwise-Guided Logit Adjustment (PGLA) approach. This
+plug-and-play adjustment allows comparative evidence to compensate for weaker evidence from existing
+voting-based aggregation.
+Finally, we conduct extensive experiments on mathematical reasoning, knowledge reasoning, and code
+generation using both reasoning and non-reasoning models from the Qwen, DeepSeek, and InternLM
+families, with model sizes ranging from 1.7B to 32B parameters. With internal confidence scores, PGLA
+achieves an average accuracy gain of approximately 2% over the corresponding voting baselines across
+33 model–benchmark settings. Additional experiments show gains with external reward scores. On six
+2
+
+Figure 2: Path-answer evidence and its aggregation. The
+three methods use each block’s maximum confidence, size,
+or confidence-based contributions.
+Figure 3: Identical majority-voting scores can cor-
+respond to different pairwise comparison matrices
+and different winners.
+mathematical reasoning settings, its online extension also achieves higher mean accuracy with fewer
+sampled paths than Online SC under the same stopping rule.
+Problem Formulation and Representative Aggregators
+Problem Formulation
+Given an input query, a language model generates K reasoning paths z1, . . . , zK. Each path produces an
+answer ai = g(zi) and receives a confidence score pi from the model or an external verifier. Together, they
+form the path-level evidence pool D = {(ai, pi)}K
+i=1. Let A be the set of different answers produced by
+these paths, which may be predefined for multiple-choice questions or dynamically formed from sampled
+answers in open-ended mathematical reasoning and code generation.
+Based on D, we construct a path-answer matrix P, with one row per path and one column per candidate
+answer. Each row records pi in the column for its output answer ai and the entries for other answers
+remain unobserved. Grouping paths by their output answers produces the block-diagonal pattern shown
+in Fig. 2. Each block contains the confidence scores of paths sharing the same answer.
+The aggregation task is to convert the path-level evidence into an answer-level score for each candidate,
+followed by selecting the candidate with the highest score. Formally, an aggregation method M assigns
+candidate a the score sM
+a
+based on D:
+sM
+a
+= M(a; D),
+ˆa ∈arg max
+a∈A sM
+a .
+(1)
+ˆa is the final predicted answer selected from the candidates with the highest score. Representative methods
+use different information from the path-answer matrix to compute sM
+a .
+Best-of-N selection. Best-of-N uses the highest confidence among the paths sharing answer a (Cobbe et al.,
+2021). This corresponds to taking the largest value within the block for a in matrix P:
+sBoN
+a
+= max
+i:ai=a pi.
+(2)
+The confidence pi may be perplexity (Adiwardana et al., 2020), self-certainty (Kang et al., 2025), DeepConf
+confidence (Fu et al., 2026), or an external verifier’s reward (Lightman et al., 2024).
+Majority voting. Self-consistency (SC) treats each path as one vote for its output answer and selects the
+most frequently generated answer (Wang et al., 2023).
+3
+
+The answer-level score is therefore its total vote count:
+sSC
+a
+=
+K
+∑
+i=1
+1(ai = a).
+(3)
+where 1(·) is the indicator function. In P, this corresponds to the size of the diagonal block for answer a,
+measured by its number of observed entries. Every supporting path contributes equally, regardless of its
+confidence.
+Confidence-based voting. Confidence-based voting methods adjust path contributions through weighting
+or filtering (Kang et al., 2025; Fu et al., 2026). Let hi ≥0 be the weighting or filtering coefficient for path i,
+with hi = 0 for filtered paths. The resulting answer-level score is
+sConf-Vote
+a
+=
+K
+∑
+i=1
+hi · pi 1(ai = a).
+(4)
+This method aggregates confidence-based contributions within each diagonal block in P.
+Despite these differences, these methods aggregate only the observed evidence in the diagonal blocks
+of P. They do not explicitly model the unobserved preferences among alternative answers. In the next
+section, we use social choice theory to explain why these preferences matter for answer aggregation.
+Motivation: A Social Choice Perspective
+Social choice theory studies how individual preferences over available options are aggregated into a collective
+decision (Zwicker, 2016). To illustrate this, Fig. 3 shows two complete preference profiles, P and P′, with
+the same majority-voting support. To be specific, A, B, and C receive 3, 2, and 2 first-choice selections,
+respectively. Majority voting therefore selects A in both. However, the remaining options are ranked
+differently in P and P′, giving different pairwise comparison matrices Y. Each entry YP
+uv measures the
+voting advantage of u over v in a direct comparison under P. A positive value means that more rankings
+place u above v. Then, YP can be aggregated into answer-level comparative advantages sM,P
+u
+using different
+rules M. The highest-scoring answer is selected as in Eq. (1). For example, selection under the Condorcet
+principle (Young, 1988; Fishburn, 1977) can be represented by
+sCondorcet,P
+u
+= 1
+n
+YP
+uv > 0 for every v ∈A \ {u}
+o
+.
+(5)
+This selects the answer that wins every direct comparison, whenever one exists. Otherwise, all scores are
+zero, and an additional selection rule is needed. Following this rule, we select B under P in Fig. 3 because
+it defeats A by 4:3 and C by 5:2. Under P′, A defeats both B and C by 5:2 and is selected. Thus, we arrive
+at the following proposition.
+Proposition 2.1. There exist two complete preference profiles P and P′ such that:
+(i) Under P, the most frequently selected option is still less preferred than another option in direct pairwise
+comparisons.
+(ii) P has the same majority-voting scores as P′, but different pairwise comparison matrices and different winners.
+Connection to the Sampling-based LLM reasoning. In sampling-based LLM reasoning, we only observe
+each path’s first-choice answer ai and its confidence score pi, leaving the complete preference among the
+remaining answers unknown. To approximate the missing ordering, we construct a proxy pairwise matrix
+Y by comparing path confidence scores across answer groups. A similar disagreement highlighted in
+Thm. 2.1 also occurs in this setting: an answer with the highest aggregation score may still lose to another
+answer in pairwise comparisons. To examine this phenomenon empirically, we consider SC errors with
+the following disagreement. An incorrect answer w receives at least as many votes as a correct answer c,
+i.e., sSC
+w ≥sSC
+c , yet paths supporting c tend to have higher confidence scores than those supporting w in
+pairwise comparisons. The formal definition is provided in Sec. C.
+4
+
+Figure 4: Disagreement between voting and pairwise confidence comparisons: (a) an illustrative example; (b)
+percentage of recoverable SC errors.
+Using PPL confidence, 69.87%–91.62% of recoverable SC errors (i.e., candidate pools containing at least
+one correct answer) satisfy this condition across three models and three mathematical benchmarks as
+shown in Fig. 4(b).
+These observations motivate enhancing existing voting-based aggregation by incorporating explicit
+comparisons between answer. We will discuss our solution in the next section.
+Pairwise-Guided Path Aggregation
+In this section, we propose Pairwise-Guided Logit Adjustment (PGLA) for Path Aggregation. This method
+aims to construct answer-level comparative evidence through pairwise confidence comparisons and
+combine it with the voting distribution, as an alternative to the Condorcet approach.
+Pairwise Confidence Comparisons
+Sampled reasoning paths provide answers and confidence scores rather than complete preference rankings.
+We therefore use confidence comparisons between paths supporting different answers to construct a proxy
+for answer-level preference comparisons. For each answer u ∈A, let Cu = {i : ai = u} denote the indices
+of its supporting paths. For two different answers u, v ∈A, we define the corresponding entry of the
+confidence-based comparison matrix Y as
+Yuv =
+1
+|Cu||Cv| ∑
+i∈Cu ∑
+j∈Cv
+sgn(pi −pj),
+u ̸= v,
+(6)
+Each comparison contributes +1, 0, or −1 when the path supporting u has a higher, equal, or lower
+confidence score. A positive Yuv means that paths supporting u have higher confidence more often than
+paths supporting v in these comparisons than the reverse.
+We next summarize Y as an answer-level comparative advantage. For a voting aggregator V, sV
+u ≥0 is the
+base voting support for the answer u defined in Eqs. (3) and (4). We give greater weight to comparisons
+against answers with stronger voting support. Accordingly, the comparative advantage of answer u is
+sPair
+u
+= ∑
+v̸=u
+πv|uYuv,
+πv|u =
+sV
+v
+∑k̸=u sV
+k
+,
+v ̸= u.
+(7)
+5
+
+sPair
+u
+∈[−1, 1] is a weighted average of comparison scores. Alternative rules include uniform averaging of
+pairwise scores; Copeland, which counts pairwise wins minus losses (Zwicker, 2016); and Maximin, which
+takes the minimum pairwise score (Fischer et al., 2016). We use Eq. (7) by default. Definitions and matched
+comparisons of the alternatives appear in Sec. G.11.
+Regardless of the aggregation rule, sPair
+u
+summarizes confidence comparisons rather than the preference
+votes used by the Condorcet principle in Eq. (5). Since this score does not directly consider answer u’s own
+voting support, we therefore explore to combine this comparative advantage with the voting information
+provided by any voting-based aggregation strategy V.
+Combining with Voting Information
+Our goal is to refine the answer-level scores sV
+u with two complementary objectives: (G1) favoring answers
+with stronger comparative advantages and (G2) exploiting the voting support provided by the aggregator
+V. We formulate this refinement over answer distributions, using the normalized base scores to obtain
+the reference distribution ¯sV, with ¯sV
+u = sV
+u / ∑v∈A sV
+v . We then seek an adjusted distribution through the
+following regularized objective:
+¯sPGLA ∈arg max
+¯s
+"
+∑
+u∈A
+¯susPair
+u
+|
+{z
+}
+(G1)
+−DKL
+ ¯s ∥¯sV
+|
+{z
+}
+(G2)
+#
+.
+(8)
+Here, ¯s is the optimization variable, with ¯su ≥0 and ∑u∈A ¯su = 1; ¯sV and sPair
+u
+are fixed by the observed
+candidate pool.
+The first term rewards favorable answer comparisons, allowing pairwise confidence evidence to guide
+answer selection (G1). The KL term penalizes departures from the voting distribution, using the original
+voting support to constrain this adjustment (G2). The resulting distribution balances comparative evidence
+with voting support. Intuitively, reversing a strong voting preference requires a larger difference in
+comparative scores, whereas pairwise evidence can more readily influence selection when answers have
+similar voting support. This formulation extends the pairwise-comparison perspective of the Condorcet
+principle to confidence-based path aggregation.
+At first glance, Eq. (8) makes the property of the solution unclear. Fortunately, the following proposition
+can alleviate this issue, with proof in Sec. E.
+Proposition 3.1. If ¯sV
+u > 0 for every u ∈A, the objective in Eq. (8) is strictly concave and has the unique
+solution
+¯sPGLA
+u
+=
+¯sV
+u exp(sPair
+u
+)
+∑v∈A ¯sVv exp(sPair
+v
+).
+(9)
+Since ¯sV
+u ∝sV
+u , the optimal distribution in Eq. (9) can be obtained by normalizing the score sPGLA
+u
+=
+sV
+u exp(sPair
+u
+). Taking logarithms gives the equivalent formulation in the logit space:
+log
+
+sPGLA
+u
+
+= log
+
+sV
+u
+
++ sPair
+u
+.
+(10)
+The highest-scoring answer is selected as in Eq. (1).
+Remark 3.1 (Test-time logit adjustment). Thus, we find that the proposed PGLA can be viewed as a form
+of Pairwise-guided logit adjustment, operating on answer-logit in the observed sampling pool. This
+additive form connects PGLA to the classical strategy of Logit Adjustment (LA) (Menon et al., 2021).
+In long-tailed classification, post-hoc LA uses offsets based on class priors to reduce the preference for
+frequent classes. Here, this adjustment allows pairwise confidence comparison evidence to compensate
+for weaker voting support. What’s more, as confidence scores better distinguish correct from incorrect
+6
+
+Table 1: Performance of reasoning models at different scales on three mathematical reasoning benchmarks, GPQA,
+and three open-ended code-generation benchmarks, using K = 32 sampled responses per problem. Each voting-
+based baseline is followed by its PGLA-enhanced variant, denoted by +Ours. The enhanced HumanEval+ and
+MBPP+ tests for the same sampled pools are reported in Tab. 6.
+Method
+AIME24
+AIME25
+HMMT25
+GPQA-D
+HE
+MBPP
+LCB
+Qwen3-1.7B Reasoning mode
+PPL Best-of-N
+36.00±4.42
+34.00±2.91
+23.00±3.48
+39.90±2.02
+81.10±2.06
+75.13±0.68
+30.67±1.47
+DeepConf Best-of-N
+62.00±4.52
+42.67±2.49
+28.33±3.73
+42.93±1.52
+84.15±2.69
+76.72±1.18
+34.29±1.62
+Self-Certainty Best-of-N
+60.67±4.16
+46.67±3.33
+30.67±4.42
+42.17±0.25
+85.06±2.70
+81.75±1.04
+33.33±1.64
+SC
+69.50±1.98
+47.33±3.67
+27.00±1.00
+44.44±0.51
+83.84±1.32
+83.07±0.89
+29.90±1.33
++ Ours (DeepConf)
+75.00±1.67
+51.33±2.67
+30.00±2.98
+46.72±0.25
+88.11±2.24
+85.45±0.80
+34.29±1.36
++ Ours (Self-Certainty)
+74.00±1.33
+50.67±3.27
+30.33±2.77
+44.95±0.51
+87.80±1.61
+85.45±0.80
+33.33±1.35
+DeepConf-Weighted SC
+70.00±1.49
+48.33±4.28
+27.00±1.00
+44.19±0.76
+85.06±1.11
+84.66±0.67
+33.71±1.30
++ Ours
+75.00±1.67
+51.00±3.00
+31.33±3.40
+46.21±0.76
+87.50±2.22
+85.45±0.80
+34.67±1.63
+Self-Certainty-Weighted SC
+70.33±1.80
+48.67±4.27
+27.00±1.00
+44.19±0.76
+83.54±1.07
+84.66±0.57
+32.57±1.11
++ Ours
+74.00±1.33
+50.67±3.27
+31.00±3.35
+44.70±0.76
+88.11±1.94
+85.71±0.86
+33.71±1.31
+Self-Certainty Borda
+73.33±1.49
+50.33±3.48
+29.33±2.91
+43.69±2.27
+86.59±1.54
+85.19±0.86
+32.95±1.28
++ Ours
+74.67±1.63
+50.67±3.27
+34.33±3.96
+44.95±2.02
+88.11±1.83
+85.45±0.77
+33.52±1.43
+DeepConf-Filter (90%)
+70.33±1.80
+50.67±4.42
+27.00±1.80
+44.44±1.01
+86.28±1.39
+85.19±0.71
+33.90±1.38
++ Ours
+75.00±1.67
+52.33±3.67
+33.67±2.33
+47.22±0.25
+87.50±2.32
+85.71±0.85
+34.48±1.63
+Qwen3-4B Reasoning mode
+PPL Best-of-N
+57.00±2.33
+64.33±3.96
+40.33±4.33
+54.71±1.41
+92.38±0.77
+91.85±0.75
+44.00±1.26
+DeepConf Best-of-N
+77.00±2.33
+76.00±3.89
+50.00±4.94
+58.42±2.00
+96.19±0.81
+93.44±0.28
+47.43±0.85
+Self-Certainty Best-of-N
+81.67±2.24
+71.67±3.07
+51.67±4.01
+59.93±1.12
+96.04±0.82
+93.70±0.41
+47.81±1.16
+SC
+80.00±0.00
+76.33±0.67
+51.50±1.57
+58.25±0.45
+93.60±1.00
+93.92±0.58
+41.71±1.26
++ Ours (DeepConf)
+83.00±1.00
+76.33±1.80
+54.00±2.91
+60.27±0.88
+95.88±0.95
+94.29±0.41
+47.62±0.85
++ Ours (Self-Certainty)
+82.00±1.63
+78.67±1.63
+55.67±1.53
+61.28±0.85
+95.73±0.55
+94.31±0.49
+48.00±1.12
+DeepConf-Weighted SC
+80.00±0.00
+76.33±1.00
+51.33±1.63
+58.59±0.53
+94.36±1.01
+94.21±0.48
+47.24±0.95
++ Ours
+83.33±1.49
+76.33±2.33
+54.00±2.91
+60.10±0.79
+95.88±0.87
+94.26±0.44
+47.62±0.88
+Self-Certainty-Weighted SC
+80.00±0.00
+76.33±1.00
+52.67±2.00
+58.42±0.38
+94.21±0.86
+94.31±0.49
+47.81±1.18
++ Ours
+82.00±1.63
+79.33±1.33
+55.33±1.63
+61.45±0.94
+95.73±0.58
+94.31±0.49
+48.19±1.15
+Self-Certainty Borda
+81.00±1.53
+79.33±1.33
+55.00±1.67
+60.10±0.60
+94.97±0.90
+94.18±0.49
+47.81±1.18
++ Ours
+82.33±2.13
+79.33±1.33
+55.33±1.63
+60.94±0.75
+95.73±0.58
+94.26±0.31
+48.00±1.14
+DeepConf-Filter (90%)
+80.00±0.00
+78.67±2.21
+52.67±3.27
+58.59±0.72
+94.66±0.81
+94.23±0.39
+47.24±0.95
++ Ours
+83.33±2.11
+79.00±1.53
+55.67±2.60
+61.11±1.10
+96.04±0.71
+94.29±0.36
+47.43±0.81
+Qwen3-8B Reasoning mode
+PPL Best-of-N
+61.00±3.35
+59.33±2.00
+35.33±3.06
+59.43±0.63
+93.70±1.24
+93.47±0.40
+46.29±1.87
+DeepConf Best-of-N
+79.33±4.16
+76.00±2.91
+53.67±3.14
+63.64±0.41
+96.14±0.51
+94.44±0.44
+49.71±0.00
+Self-Certainty Best-of-N
+83.67±1.80
+76.33±2.77
+52.67±2.00
+63.47±0.63
+96.54±0.66
+95.24±0.33
+52.38±1.08
+SC
+81.50±1.57
+75.67±2.91
+55.94±1.17
+63.22±0.95
+93.90±0.60
+94.71±0.39
+44.57±1.68
++ Ours (DeepConf)
+86.67±2.11
+79.67±1.80
+58.67±1.63
+64.98±0.24
+96.14±0.86
+95.68±0.39
+49.90±0.27
++ Ours (Self-Certainty)
+86.00±2.00
+76.67±1.49
+60.00±2.11
+64.31±0.86
+96.54±1.14
+96.12±0.52
+52.38±1.08
+DeepConf-Weighted SC
+81.67±1.67
+76.00±3.27
+56.67±1.49
+63.30±1.19
+94.11±0.62
+94.97±0.46
+49.14±0.47
++ Ours
+87.00±2.33
+79.67±1.80
+59.00±1.53
+64.81±0.24
+96.14±0.72
+95.68±0.37
+49.90±0.27
+Self-Certainty-Weighted SC
+81.67±1.67
+76.00±3.27
+56.67±1.49
+63.30±1.19
+94.31±0.62
+95.15±0.41
+51.81±0.71
++ Ours
+86.33±1.80
+76.67±1.49
+60.00±1.49
+64.31±0.86
+96.54±1.01
+96.21±0.54
+52.38±1.08
+Self-Certainty Borda
+83.67±1.80
+76.67±1.49
+59.33±2.49
+63.97±0.95
+95.33±0.49
+95.59±0.33
+52.00±0.47
++ Ours
+86.33±1.80
+76.67±1.49
+60.00±2.11
+64.31±0.86
+96.34±0.91
+96.12±0.52
+52.38±1.08
+DeepConf-Filter (90%)
+81.67±1.67
+78.00±2.67
+59.00±1.53
+63.30±0.95
+94.31±0.49
+94.97±0.40
+49.14±0.47
++ Ours
+87.00±2.33
+79.33±1.33
+61.67±2.24
+64.31±0.63
+96.14±0.51
+95.68±0.39
+49.90±0.27
+paths, PGLA can make more reliable pairwise comparisons and further improve aggregation performance.
+In Sec. 4.4, we test how the reliability of these confidence scores affects PGLA accuracy.
+Experiments
+In this section, we conduct extensive experiments to evaluate the effectiveness of PGLA. More experimental
+details and results are provided in Sec. F and Sec. G.
+Experimental Setup
+Competitors. We compare against 11 representative sampling-based aggregation baselines using the same
+pool of sampled reasoning paths. The max-based baselines follow the Best-of-N paradigm, using path
+perplexity confidence (PPL) (Chen et al., 1998), DeepConf (Fu et al., 2026), and Self-Certainty (Kang
+et al., 2025) to score each path. The voting-based baselines include self-consistency (SC), three confidence-
+weighted SC variants based on the above scores, the Self-Certainty Borda rule (Kang et al., 2025),
+DeepConf’s offline top-90% filtered weighted voting (Fu et al., 2026), adaptive self-consistency (Aggarwal
+7
+
+Table 2: Performance comparison of different mathematics-specialized models in terms of accuracy and expected
+calibration error (ECE). Following the RPC setting, perplexity-based confidence (PPL) is used by default. Each
+voting-based baseline is followed by its PGLA-enhanced variant, denoted by +Ours.
+Method
+MATH
+MathOdyssey
+AIME
+Average
+Acc. ↑
+ECE ↓
+Acc. ↑
+ECE ↓
+Acc. ↑
+ECE ↓
+Acc. ↑ECE ↓
+InternLM2-Math-Plus-1.8B
+PPL
+33.23±0.25
+61.58±0.25
+16.63±0.83
+77.20±0.82
+1.66±0.15
+92.28±0.16
+17.17
+77.02
+SC
+36.48±0.14
+6.66±0.14
+14.57±0.45
+18.51±0.41
+2.66±0.20
+16.84±0.16
+17.90
+14.00
++ Ours
+39.77±0.17
+5.63±0.13
+18.28±0.56
+13.97±0.59
+3.37±0.17
+15.51±0.15
+20.47
+11.70
+Weighted SC
+36.72±0.12
+6.52±0.14
+14.86±0.47
+18.05±0.50
+2.75±0.23
+16.65±0.19
+18.11
+13.74
++ Ours
+39.91±0.22
+5.55±0.17
+18.56±0.56
+13.47±0.56
+3.37±0.17
+15.34±0.15
+20.61
+11.45
+Adaptive SC
+36.48±0.16
+10.61±0.23
+14.43±0.51
+22.69±0.73
+2.65±0.20
+19.25±0.25
+17.85
+17.52
++ Ours
+39.05±0.23
+9.28±0.27
+17.47±0.63
+17.96±0.60
+3.23±0.21
+17.53±0.41
+19.92
+14.92
+RPC
+37.87±0.14
+6.45±0.15
+16.43±0.60
+16.25±0.76
+3.28±0.23
+16.32±0.20
+19.19
+13.01
++ Ours
+40.29±0.27
+5.50±0.22
+20.28±0.48
+10.78±0.60
+3.57±0.21
+14.67±0.23
+21.38
+10.32
+InternLM2-Math-Plus-7B
+PPL
+47.00±0.20
+48.98±0.20
+27.51±1.18
+67.54±1.18
+5.96±0.48
+88.98±0.49
+26.82
+68.50
+SC
+50.57±0.18
+6.72±0.19
+28.30±0.61
+12.18±0.57
+9.40±0.21
+14.35±0.23
+29.42
+11.08
++ Ours
+53.99±0.18
+6.10±0.20
+35.30±0.55
+9.69±1.02
+9.95±0.24
+13.90±0.23
+33.08
+9.90
+Weighted SC
+50.81±0.20
+6.56±0.21
+28.82±0.67
+11.57±0.68
+9.45±0.23
+14.27±0.25
+29.69
+10.80
++ Ours
+53.99±0.13
+6.15±0.17
+35.78±0.51
+9.37±1.16
+9.88±0.28
+13.86±0.27
+33.22
+9.79
+Adaptive SC
+50.54±0.22
+11.02±0.23
+28.20±0.68
+18.17±1.02
+9.38±0.23
+17.39±0.41
+29.37
+15.53
++ Ours
+52.66±0.26
+10.53±0.35
+33.14±0.73
+13.22±1.52
+9.83±0.21
+16.45±0.33
+31.87
+13.40
+RPC
+51.94±0.14
+6.41±0.16
+31.70±0.71
+9.88±0.80
+9.74±0.23
+14.31±0.21
+31.13
+10.20
++ Ours
+53.81±0.12
+6.72±0.15
+36.53±1.06
+7.90±1.09
+10.08±0.24
+13.31±0.22
+33.47
+9.31
+Deepseek-Math-RL-7B
+PPL
+42.50±0.23
+53.84±0.23
+22.34±1.00
+73.85±0.99
+3.37±0.46
+93.38±0.46
+22.74
+73.69
+SC
+53.33±0.08
+6.43±0.11
+36.57±0.56
+9.40±1.21
+9.42±0.23
+12.12±0.26
+33.11
+9.32
++ Ours
+53.52±0.10
+6.86±0.09
+37.87±0.55
+9.31±0.95
+10.02±0.23
+10.88±0.25
+33.80
+9.02
+Weighted SC
+53.35±0.09
+6.43±0.10
+36.68±0.61
+9.55±1.31
+9.43±0.31
+12.10±0.34
+33.16
+9.36
++ Ours
+53.53±0.10
+6.84±0.09
+37.94±0.58
+9.53±0.79
+10.00±0.24
+10.84±0.25
+33.82
+9.07
+Adaptive SC
+53.28±0.09
+10.01±0.14
+36.30±0.58
+13.25±1.14
+9.36±0.22
+14.88±0.41
+32.98
+12.71
++ Ours
+53.44±0.16
+10.10±0.15
+36.27±0.80
+12.33±0.87
+9.92±0.23
+13.31±0.49
+33.21
+11.91
+RPC
+53.36±0.11
+6.47±0.12
+37.12±0.61
+9.54±1.54
+9.51±0.28
+11.94±0.32
+33.33
+9.32
++ Ours
+53.52±0.11
+6.85±0.10
+38.10±0.61
+8.89±0.76
+10.01±0.26
+10.44±0.29
+33.88
+8.73
+et al., 2023), and RPC (Zhou et al., 2025). Beyond internal confidence scores, we evaluate three baselines
+based on scores from an external process reward model (PRM): PRM Best-of-N, PRM-Weighted SC, and
+PRM-RPC. We use Qwen2.5-Math-PRM-7B as the external scorer (Lightman et al., 2024; Zhang et al., 2025).
+PRM-Weighted SC assigns each path a voting weight equal to the product of its step-level PRM scores
+and sums these weights within each answer group. We also apply the same PGLA adjustment to all
+voting-based aggregators.
+LLM Backbones. To test generality across model families and scales, we run our pipeline with Qwen3-1.7B,
+Qwen3-4B, Qwen3-8B, and Qwen3-32B (Qwen, 2025), all in reasoning mode. We also include three open
+math-specialized LLM backbones: DeepSeek-Math-RL-7B (Shao et al., 2024), InternLM2-Math-Plus-1.8B,
+and InternLM2-Math-Plus-7B (Ying et al., 2024).
+Datasets. We evaluate on ten challenging datasets, AIME 2024 (AI-MO, 2024), AIME 2025 (OpenCompass,
+2025), HMMT 2025 (Balunovi´c et al., 2025), AIME (Zamil & Rabby, 2024), MATH (Hendrycks et al., 2021),
+MathOdyssey (Fang et al., 2025), and GPQA-Diamond (GPQA-D), together with the code benchmarks
+HumanEval (Chen et al., 2021), MBPP (Austin et al., 2021), and LiveCodeBench V6 (Jain et al., 2025). The
+first four are high-difficulty mathematical competition problems, while GPQA comprises graduate-level
+STEM reasoning tasks. Most of benchmarks are widely adopted in recent evaluations of top reasoning
+LLMs. Additionally, we also report HumanEval+ and MBPP+ using the strengthened EvalPlus tests (Liu
+et al., 2023).
+Overall performance
+Performance using Advanced Models. Tab. 1 compares the overall performance of different aggregation
+methods on Qwen3 reasoning models at three scales. We observe that our method matches or improves
+upon the corresponding voting baselines across the evaluated reasoning and code-generation tasks. In
+8
+
+Table 3: Accuracy (%) using Qwen2.5-Math-PRM-7B scores at sampling budgets K/2 and K (K = 64 for MATH; 128
+otherwise). + Ours denotes the PGLA-enhanced voting rule.
+Method
+MATH
+MathOdyssey
+AIME
+Average
+K/2 ↑
+K ↑
+K/2 ↑
+K ↑
+K/2 ↑
+K ↑
+K/2 ↑
+K ↑
+InternLM2-Math-Plus-7B
+PRM-Weighted SC
+57.56±0.31
+58.67±0.10
+33.57±1.13
+34.34±0.58
+15.49±0.36
+16.23±0.48
+35.54
+36.42
++ Ours
+58.86±0.29
+60.40±0.24
+37.63±1.18
+38.79±0.62
+15.55±0.42
+16.57±0.35
+37.35
+38.59
+PRM-RPC
+57.74±0.28
+58.90±0.13
+34.83±1.18
+35.48±0.40
+15.57±0.42
+16.31±0.44
+36.05
+36.90
++ Ours
+58.88±0.24
+60.41±0.25
+37.63±1.24
+38.87±0.60
+15.53±0.37
+16.50±0.28
+37.35
+38.59
+DeepSeek-Math-RL-7B
+PRM-Weighted SC
+60.76±0.25
+62.04±0.20
+39.69±0.59
+40.28±0.53
+15.77±0.27
+16.93±0.43
+38.74
+39.75
++ Ours
+61.17±0.24
+62.41±0.20
+40.18±0.64
+40.69±0.53
+16.13±0.48
+17.49±0.57
+39.16
+40.20
+PRM-RPC
+60.91±0.27
+62.26±0.22
+40.05±0.83
+40.67±0.51
+15.85±0.32
+17.05±0.36
+38.94
+39.99
++ Ours
+61.19±0.23
+62.55±0.19
+39.85±0.75
+40.69±0.42
+16.14±0.51
+17.52±0.66
+39.06
+40.26
+(a) AIME24, 1.7B
+(b) AIME24, 8B
+(c) AIME25, 1.7B
+(d) AIME25, 8B
+Figure 5: Tradeoff between Case I and Case II on AIME24 and AIME25 using Qwen3-1.7B and Qwen3-8B. DWSC
+denotes the DeepConf-Weighted SC method.
+particular, averaged over the six corresponding voting baselines on Qwen3-8B, PGLA improves accuracy
+by 4.61%, 1.78%, and 2.63% on AIME24, AIME25, and HMMT25, respectively. The gains also extend to
+the larger Qwen3-32B model on mathematical reasoning tasks shown in Tab. 22. These consistent gains
+demonstrate that PGLA generalizes well across model scales and task domains.
+Performance with the Reliability of Confidence Estimation. Tab. 2 compares the aggregation methods
+under internal confidence estimates from three mathematics-specialized backbones. We observe that our
+method consistently improves accuracy while reducing ECE across the four voting baselines, achieving an
+average accuracy improvement of 1.96% and an average ECE reduction of 1.42%. This demonstrates the
+robustness of our method to confidence estimates of varying reliability.
+Performance with the External Reward Setting. Tab. 3 and Tab. 9 compares the methods using product-
+aggregated rewards from an external process reward model. We observe that our method improves
+PRM-Weighted SC and PRM-RPC in most settings. To be specific, at the full budget, PGLA raises their
+average accuracy from 33.98 to 35.51 and from 34.30 to 35.55, respectively. This further demonstrates that
+our method can effectively use externally provided reward signals.
+Case analysis
+We examine two cases that highlight different weaknesses of answer aggregation. In Case I, an incorrect
+answer has higher maximum path confidence, while a correct answer has stronger voting support. In
+Case II, an incorrect answer receives equal or stronger voting support, while pairwise confidence compar-
+isons favor a correct answer. Best-of-N often fails in Case I, while voting-based methods typically struggle
+in Case II. As shown in Fig. 5 and Fig. 10, PGLA better balances the two cases by combining voting support
+with pairwise comparisons. See Sec. C for detailed definitions and examples.
+9
+
+(a) MATH
+(b) MathOdyssey
+Figure 6: Scaling behavior under varying numbers of
+sampled reasoning paths K on MATH and MathOdy.
+using InternLM2-Math-Plus-7B.
+(a) DeepSeek
+(b) InternLM2
+Figure 7: Effect of confidence reliability in pairwise com-
+parisons on accuracy, averaged over three math datasets.
+Fine-grained Analysis
+Effect of Confidence Reliability. Larger λ indicates more reliable PRM scores for pairwise comparisons.
+As shown in Fig. 7, more reliable scores lead to higher PGLA accuracy on both models. Base denotes the
+PRM-Weighted SC baseline. Experimental details are provided in Sec. G.5.
+Scaling with Varying K Values We examine how the number of sampled reasoning paths affects aggre-
+gation performance on MATH and MathOdyssey using InternLM2-Math-Plus-7B. Fig. 6 varies K over
+{1, 2, 4, 8, 16, 32, 40, 48, 64, 80, 96, 112, 128} . Increasing K generally improves performance by providing
+richer candidate sets, and PGLA remains consistently strong across most of the sampling range.
+Performance using High Sampling Temperatures. To further examine robustness under more diverse
+sampled reasoning paths, we conduct additional experiments on MathOdyssey and AIME using InternLM2-
+Math-Plus-1.8B, InternLM2-Math-Plus-7B, and DeepSeek-Math-RL-7B. At higher sampling temperatures
+T = 1.1 and T = 1.3, PGLA generally outperforms the comparison methods as shown in Tab. 16. This
+supports its robustness to more diverse reasoning paths.
+Effect of Various Comparative Advantage Functions. We compare the default voting-weighted rule with
+uniform averaging, Copeland, and Maximin in Sec. G.11. These rules generally improve accuracy over the
+voting baselines, with the default achieving strong overall performance. This shows that PGLA benefits
+from pairwise evidence under different comparative advantage rules.
+Performance in the Online Setting. As shown in
+Tab. 4, Online SC+PGLA improves accuracy over
+full-budget SC by 0.28–3.63% while reducing the
+sampling cost by 50.8%–73.1% on InternLM2-Math-
+Plus-1.8B. Full comparisons with Adaptive SC and
+Online SC, along with results on InternLM2-Math-
+Plus-7B, are provided in Sec. G.9.
+Table 4: Online setting on InternLM2-1.8B.
+Dataset
+Method
+Acc.
+K
+Saving
+MATH
+SC (Full Budget)
+36.48±0.14
+64.0
+–
+Online SC+PGLA 39.32±0.31
+31.5
+50.8%
+MathOdyssey SC (Full Budget)
+14.57±0.45 128.0
+–
+Online SC+PGLA 18.20±0.90
+34.5
+73.1%
+AIME
+SC (Full Budget)
+2.66±0.20
+128.0
+–
+Online SC+PGLA 2.94±0.29
+38.3
+70.1%
+Conclusion
+Inspired by social choice theory and the Condorcet principle, we propose Pairwise-Guided Logit Adjustment
+(PGLA), a plug-and-play framework for sampling-based LLM reasoning. Through pairwise confidence
+comparisons between sampled reasoning paths, PGLA estimates the implicit preference structure among
+candidate answers and captures their comparative advantages. A KL-regularized objective combines this
+comparative evidence with voting support, yielding a simple adjustment to the base voting logits. The
+framework accommodates different voting methods, confidence sources, and comparative advantage rules.
+Experiments on mathematical reasoning, knowledge reasoning, and code generation demonstrate overall
+gains over voting baselines, while the online extension improves sampling efficiency.
+10
+
+References
+Daniel Adiwardana, Minh-Thang Luong, David R. So, Jamie Hall, Noah Fiedel, Romal Thoppilan, Zi Yang,
+Apoorv Kulshreshtha, Gaurav Nemade, Yifeng Lu, and Quoc V. Le. Towards a human-like open-domain
+chatbot. CoRR, abs/2001.09977, 2020.
+Pranjal Aggarwal, Aman Madaan, Yiming Yang, and Mausam. Let’s sample step by step: Adaptive-
+consistency for efficient reasoning and coding with LLMs. In Proceedings of the Conference on Empirical
+Methods in Natural Language Processing, pp. 12375–12396, 2023.
+AI-MO. AIME 2024, 2024. URL https://huggingface.co/datasets/AI-MO/aimo-validation-aime.
+Jacob Austin, Augustus Odena, Maxwell I. Nye, Maarten Bosma, Henryk Michalewski, David Dohan,
+Ellen Jiang, Carrie J. Cai, Michael Terry, Quoc V. Le, and Charles Sutton. Program synthesis with large
+language models. CoRR, abs/2108.07732, 2021.
+Vidhisha Balachandran, Jingya Chen, Lingjiao Chen, Shivam Garg, Neel Joshi, Yash Lara, John Langford,
+Besmira Nushi, Vibhav Vineet, Yue Wu, and Safoora Yousefi. Inference-time scaling for complex tasks:
+Where we stand and what lies ahead. CoRR, abs/2504.00294, 2025.
+Mislav Balunovi´c, Jasper Dekoninck, Ivo Petrov, Nikola Jovanovi´c, and Martin T. Vechev. MathArena:
+Evaluating LLMs on uncontaminated math competitions. In Advances in Neural Information Processing
+Systems, 2025.
+Mark Chen, Jerry Tworek, Heewoo Jun, Qiming Yuan, Henrique Pondé de Oliveira Pinto, Jared Kaplan,
+Harri Edwards, Yuri Burda, Nicholas Joseph, Greg Brockman, Alex Ray, Raul Puri, Gretchen Krueger,
+Michael Petrov, Heidy Khlaaf, Girish Sastry, Pamela Mishkin, Brooke Chan, Scott Gray, Nick Ryder,
+Mikhail Pavlov, Alethea Power, Lukasz Kaiser, Mohammad Bavarian, Clemens Winter, Philippe Tillet,
+Felipe Petroski Such, Dave Cummings, Matthias Plappert, Fotios Chantzis, Elizabeth Barnes, Ariel
+Herbert-Voss, William Hebgen Guss, Alex Nichol, Alex Paino, Nikolas Tezak, Jie Tang, Igor Babuschkin,
+Suchir Balaji, Shantanu Jain, William Saunders, Christopher Hesse, Andrew N. Carr, Jan Leike, Joshua
+Achiam, Vedant Misra, Evan Morikawa, Alec Radford, Matthew Knight, Miles Brundage, Mira Murati,
+Katie Mayer, Peter Welinder, Bob McGrew, Dario Amodei, Sam McCandlish, Ilya Sutskever, and Wojciech
+Zaremba. Evaluating large language models trained on code. CoRR, abs/2107.03374, 2021.
+Stanley F. Chen, Douglas Beeferman, and Ronald Rosenfeld. Evaluation metrics for language models. In
+Proceedings of the DARPA Broadcast News Transcription and Understanding Workshop, pp. 275–280, 1998.
+Wenbo Chen, Puheng Li, Mengyang Liu, Weijie Su, and Tianpei Xie. MARS: Margin-adversarial risk-
+controlled stopping for parallel LLM test-time scaling. CoRR, abs/2606.12935, 2026.
+Xinyun Chen, Renat Aksitov, Uri Alon, Jie Ren, Kefan Xiao, Pengcheng Yin, Sushant Prakash, Charles
+Sutton, Xuezhi Wang, and Denny Zhou. Universal self-consistency for large language model generation.
+CoRR, abs/2311.17311, 2023.
+Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun, Lukasz Kaiser, Matthias
+Plappert, Jerry Tworek, Jacob Hilton, Reiichiro Nakano, Christopher Hesse, and John Schulman. Training
+verifiers to solve math word problems. CoRR, abs/2110.14168, 2021.
+Meng Fang, Xiangpeng Wan, Fei Lu, Fei Xing, and Kai Zou. MathOdyssey: Benchmarking mathematical
+problem-solving skills in large language models using odyssey math data. Scientific Data, 12(1):1392,
+2025.
+Austin Feng, Marius Alonso, Ambroise Odonnat, Vasilii Feofanov, and Ievgen Redko. Optimal self-
+consistency for efficient reasoning with large language models. In International Conference on Machine
+Learning, 2026.
+11
+
+Felix A. Fischer, Olivier Hudry, and Rolf Niedermeier. Weighted tournament solutions. In Felix Brandt,
+Vincent Conitzer, Ulle Endriss, Jérôme Lang, and Ariel D. Procaccia (eds.), Handbook of Computational
+Social Choice, pp. 85–102. Cambridge University Press, 2016.
+Peter C. Fishburn. Condorcet social choice functions. SIAM Journal on Applied Mathematics, 33(3):469–489,
+1977.
+Yichao Fu, Xuewei Wang, Hao Zhang, Yuandong Tian, and Jiawei Zhao. Deep think with confidence. In
+International Conference on Learning Representations, pp. 94355–94377, 2026.
+Dan Hendrycks, Collin Burns, Saurav Kadavath, Akul Arora, Steven Basart, Eric Tang, Dawn Song, and
+Jacob Steinhardt. Measuring mathematical problem solving with the MATH dataset. In Proceedings of the
+Neural Information Processing Systems Track on Datasets and Benchmarks, 2021.
+Naman Jain, King Han, Alex Gu, Wen-Ding Li, Fanjia Yan, Tianjun Zhang, Sida Wang, Armando Solar-
+Lezama, Koushik Sen, and Ion Stoica. Livecodebench: Holistic and contamination free evaluation of
+large language models for code. In International Conference on Learning Representations, 2025.
+Zhewei Kang, Xuandong Zhao, and Dawn Song. Scalable best-of-N selection for large language models
+via self-certainty. In Advances in Neural Information Processing Systems, pp. 19720–19745, 2025.
+Junseok Kim, Nakyeong Yang, Kyungmin Min, and Kyomin Jung.
+Reliability-aware adaptive self-
+consistency for efficient sampling in LLM reasoning. In Findings of the Association for Computational
+Linguistics, pp. 21575–21590, 2026.
+Joshua Ong Jun Leang, Zheng Zhao, Aryo Pradipta Gema, Sohee Yang, Wai-Chung Kwan, Xuanli He,
+Wenda Li, Pasquale Minervini, Eleonora Giunchiglia, and Shay B. Cohen. PiCSAR: Probabilistic con-
+fidence selection and ranking for reasoning chains. In Findings of the Association for Computational
+Linguistics: ACL 2026, pp. 31511–31544, 2026.
+Aitor Lewkowycz, Anders Andreassen, David Dohan, Ethan Dyer, Henryk Michalewski, Vinay V. Ra-
+masesh, Ambrose Slone, Cem Anil, Imanol Schlag, Theo Gutman-Solo, Yuhuai Wu, Behnam Neyshabur,
+Guy Gur-Ari, and Vedant Misra. Solving quantitative reasoning problems with language models. In
+Advances in Neural Information Processing Systems, pp. 3843–3857, 2022.
+Yiwei Li, Peiwen Yuan, Shaoxiong Feng, Boyuan Pan, Xinglin Wang, Bin Sun, Heda Wang, and Kan Li.
+Escape sky-high cost: Early-stopping self-consistency for multi-step reasoning. In International Conference
+on Learning Representations, 2024.
+Hunter Lightman, Vineet Kosaraju, Yuri Burda, Harrison Edwards, Bowen Baker, Teddy Lee, Jan Leike,
+John Schulman, Ilya Sutskever, and Karl Cobbe. Let’s verify step by step. In International Conference on
+Learning Representations, 2024.
+Jiawei Liu, Chunqiu Steven Xia, Yuyao Wang, and Lingming Zhang. Is your code generated by ChatGPT
+really correct? rigorous evaluation of large language models for code generation. In Advances in Neural
+Information Processing Systems, pp. 21558–21572, 2023.
+Maria Marina, Daniil Moskovskiy, Sergey Pletenev, Mikhail Salnikov, Alexander Panchenko, and Viktor
+Moskvoretskii. Boosting self-consistency with ranking. In Proceedings of the Annual Meeting of the
+Association for Computational Linguistics, pp. 1017–1032, 2026.
+Aditya Krishna Menon, Sadeep Jayasumana, Ankit Singh Rawat, Himanshu Jain, Andreas Veit, and Sanjiv
+Kumar. Long-tail learning via logit adjustment. In International Conference on Learning Representations,
+2021.
+12
+
+Jungsuk Oh and Jay-Yoon Lee. Latent self-consistency for reliable majority-set selection in short- and
+long-answer reasoning. In Proceedings of the AAAI Conference on Artificial Intelligence, pp. 32591–32599,
+2026.
+OpenCompass. AIME 2025, 2025. URL https://huggingface.co/datasets/opencompass/AIME2025.
+Qwen. Qwen3 technical report. CoRR, abs/2505.09388, 2025.
+David Rein, Betty Li Hou, Asa Cooper Stickland, Jackson Petty, Richard Yuanzhe Pang, Julien Dirani,
+Julian Michael, and Samuel R. Bowman. GPQA: A graduate-level google-proof Q&A benchmark. In
+Conference on Language Modeling, 2024.
+Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Mingchuan Zhang, Y. K. Li, Y. Wu, and
+Daya Guo. Deepseekmath: Pushing the limits of mathematical reasoning in open language models.
+CoRR, abs/2402.03300, 2024.
+Charlie Victor Snell, Jaehoon Lee, Kelvin Xu, and Aviral Kumar. Scaling LLM test-time compute optimally
+can be more effective than scaling parameters for reasoning. In International Conference on Learning
+Representations, 2025.
+Amir Taubenfeld, Tom Sheffer, Eran Ofek, Amir Feder, Ariel Goldstein, Zorik Gekhman, and Gal Yona.
+Confidence improves self-consistency in LLMs. In Findings of the Association for Computational Linguistics,
+pp. 20090–20111, 2025.
+Han Wang, Archiki Prasad, Elias Stengel-Eskin, and Mohit Bansal. Soft self-consistency improves language
+models agents. In Proceedings of the Annual Meeting of the Association for Computational Linguistics, pp.
+287–301, 2024.
+Weiqin Wang, Yile Wang, and Hui Huang. Ranked voting based self-consistency of large language models.
+In Findings of the Association for Computational Linguistics, pp. 14410–14426, 2025.
+Xuezhi Wang, Jason Wei, Dale Schuurmans, Quoc V. Le, Ed H. Chi, Sharan Narang, Aakanksha Chowdhery,
+and Denny Zhou. Self-consistency improves chain of thought reasoning in language models. In
+International Conference on Learning Representations, 2023.
+Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Brian Ichter, Fei Xia, Ed H. Chi, Quoc V. Le,
+and Denny Zhou. Chain-of-thought prompting elicits reasoning in large language models. In Advances
+in Neural Information Processing Systems, pp. 24824–24837, 2022.
+Shunyu Yao, Dian Yu, Jeffrey Zhao, Izhak Shafran, Tom Griffiths, Yuan Cao, and Karthik Narasimhan. Tree
+of thoughts: Deliberate problem solving with large language models. In Advances in Neural Information
+Processing Systems, pp. 11809–11822, 2023.
+Huaiyuan Ying, Shuo Zhang, Linyang Li, Zhejian Zhou, Yunfan Shao, Zhaoye Fei, Yichuan Ma, Jiawei
+Hong, Kuikun Liu, Ziyi Wang, Yudong Wang, Zijian Wu, Shuaibin Li, Fengzhe Zhou, Hongwei Liu,
+Songyang Zhang, Wenwei Zhang, Hang Yan, Xipeng Qiu, Jiayu Wang, Kai Chen, and Dahua Lin.
+Internlm-math: Open math large language models toward verifiable reasoning. CoRR, abs/2402.06332,
+2024.
+H. P. Young. Condorcet’s theory of voting. American Political Science Review, 82(4):1231–1244, 1988.
+Parvez Zamil and Gollam Rabby. AIME problems 1983 to 2024, 2024. URL https://www.kaggle.com/
+datasets/tourist800/aime-problems-1983-to-2024.
+Zhenru Zhang, Chujie Zheng, Yangzhen Wu, Beichen Zhang, Runji Lin, Bowen Yu, Dayiheng Liu, Jingren
+Zhou, and Junyang Lin. The lessons of developing process reward models in mathematical reasoning.
+In Findings of the Association for Computational Linguistics, pp. 10495–10516, 2025.
+13
+
+Zhi Zhou, Yuhao Tan, Zenan Li, Yuan Yao, Lan-Zhe Guo, Yu-Feng Li, and Xiaoxing Ma. A theoretical
+study on bridging internal probability and self-consistency for LLM reasoning. In Advances in Neural
+Information Processing Systems, pp. 87380–87413, 2025.
+William S. Zwicker. Introduction to the theory of voting. In Felix Brandt, Vincent Conitzer, Ulle Endriss,
+Jérôme Lang, and Ariel D. Procaccia (eds.), Handbook of Computational Social Choice, pp. 23–56. Cambridge
+University Press, 2016.
+14
+
+Appendix Contents
+A Related Work
+16
+B
+Representative Methods
+17
+B.1
+Path-Confidence Measures and Selection
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+17
+B.2
+Answer-Level Voting . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+18
+C Case Analysis
+18
+D Online PGLA Extension
+19
+E
+Proof for Proposition 3.1
+20
+F
+Additional Experimental Setup
+21
+F.1
+Comparison Methods . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+21
+F.2
+LLM Backbones . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+22
+F.3
+Datasets
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+23
+F.4
+Implementation Details . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+23
+G Additional Experimental Results
+24
+G.1 Enhanced Code Tests in Reasoning Mode . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+24
+G.2 Comparison of Non-Thinking and Reasoning Modes
+. . . . . . . . . . . . . . . . . . . . . .
+24
+G.3 Performance with the External Reward Setting . . . . . . . . . . . . . . . . . . . . . . . . . .
+27
+G.4 Tradeoff between Case I and Case II
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+28
+G.5 Effect of Ranking Quality by Dataset . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+29
+G.6 Temperature Sensitivity
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+29
+G.7 Efficiency Comparison . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+29
+G.8 Complete Scaling Results with Varying K . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+32
+G.9 Online Sampling Efficiency
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+35
+G.10 Extension to 32B Models . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+36
+G.11 Effect of Comparative Advantage Rules . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+37
+G.12 Computational Overhead
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+39
+G.13 Connection to Rank-Based Borda Aggregation . . . . . . . . . . . . . . . . . . . . . . . . . .
+40
+H Impact Statement
+42
+I
+AI Use Statement
+42
+15
+
+Related Work
+Sampling-based reasoning and confidence aggregation. Sampling-based test-time scaling improves LLM
+reasoning by generating multiple reasoning paths and selecting an answer from their collective evidence.
+Self-Consistency (SC) aggregates paths through majority voting over their final answers (Wang et al., 2023),
+whereas Best-of-N selects a single candidate using a quality score, such as a learned verifier or process
+reward model (Cobbe et al., 2021; Lightman et al., 2024). For outputs that cannot be grouped by exact
+answers, Universal Self-Consistency uses an LLM to assess consistency (Chen et al., 2023), while Latent
+Self-Consistency learns representations for semantic agreement (Oh & Lee, 2026).
+Confidence-aware methods further exploit differences in path quality. Soft Self-Consistency scores candi-
+date actions using model likelihoods in interactive tasks (Wang et al., 2024). RPC combines internal proba-
+bility with answer consistency through Perplexity Consistency and Reasoning Pruning (Zhou et al., 2025).
+CISC weights votes by model confidence and shows that distinguishing correct from incorrect responses
+within the same question is more relevant to aggregation than cross-question calibration alone (Taubenfeld
+et al., 2025). Self-Certainty derives confidence from the token distribution (Kang et al., 2025), while Deep-
+Conf uses local confidence to filter traces and weight their votes (Fu et al., 2026). More recently, PiCSAR
+combines reasoning and answer likelihoods for candidate selection (Leang et al., 2026). Self-Certainty’s
+Borda variant ranks sampled paths by confidence and accumulates rank-dependent votes for their an-
+swers (Kang et al., 2025). Ranked Voting SC instead elicits ordered candidate answers within each response
+and aggregates these lists using ranked voting rules (Wang et al., 2025). RISC learns an answer ranker from
+frequency, semantic, and reasoning-consistency features (Marina et al., 2026).
+Our work studies preference reconstruction from ordinary single-answer samples. Each path provides one
+answer and a confidence score, leaving its ordering over alternatives unobserved. We seek to reconstruct
+an answer-level preference structure through pairwise confidence comparisons across answer groups, and
+reconcile this proxy for the missing preferences with voting support through KL-regularized aggregation.
+Efficient and adaptive reasoning. The benefits of additional inference computation depend on how it
+is allocated across problems and reasoning paths (Snell et al., 2025). Adaptive-Consistency and Early-
+Stopping Self-Consistency reduce the number of completed samples by monitoring answer agreement
+and stopping when sufficient evidence has accumulated (Aggarwal et al., 2023; Li et al., 2024). DeepConf
+additionally monitors confidence during generation, terminates low-confidence traces, and uses answer
+consensus to stop further sampling (Fu et al., 2026).
+Recent work refines both allocation and stopping. Blend-ASC analyzes SC through mode estimation and
+voting theory and dynamically distributes a sampling budget across questions (Feng et al., 2026). ReASC
+incorporates response-level confidence into its evidence accumulation and stopping decisions (Kim et al.,
+2026). MARS probes intermediate answers during parallel generation and stops when a conservative
+bound on future vote changes protects the current leader; its theoretical target is agreement with the full-
+budget vote (Chen et al., 2026). Our primary focus is the preference structure used for answer aggregation.
+The online extension updates this structure as paths arrive and stops when the resulting decision remains
+stable, allowing us to examine whether preference-aware aggregation also improves sample efficiency.
+16
+
+Representative Methods
+We follow the notation and scoring rules in Sec. 2.1. The K sampled paths zi produce answers ai = g(zi)
+and confidence scores pi, forming D = {(ai, pi)}K
+i=1. For each candidate answer a ∈A, an aggregation
+method M computes sM
+a
+= M(a; D); the predicted answer ˆa is selected by Eq. (1). We first specify possible
+confidence scores pi and then apply the same selection and voting formulas.
+Path-Confidence Measures and Selection
+Let Ti be the number of tokens in path zi, and let zi,t be its t-th token. For a vocabulary token v, Pi,t(v)
+denotes the model’s predicted probability of v at position t, conditioned on the input query and preceding
+tokens of zi. The vocabulary is denoted by Vtok. The following superscripts distinguish alternative choices
+for the confidence pi in Sec. 2.1.
+Perplexity confidence uses inverse perplexity so that higher values indicate higher confidence (Chen et al.,
+1998):
+pPPL
+i
+= exp
+ 
+1
+Ti
+Ti
+∑
+t=1
+log Pi,t(zi,t)
+!
+= PPL(zi)−1.
+(11)
+Here, PPL(zi) is the perplexity of the sampled path. Its negative log-perplexity is log pPPL
+i
+; exponentiation
+preserves its ordering and ties, so either scale gives the same Best-of-N selection and pairwise confidence
+comparisons. The positive scale above also supplies the original perplexity-derived voting contribution
+directly as pi in Eq. (4).
+Self-Certainty (Kang et al., 2025) measures deviation from the uniform distribution over the vocabulary:
+pSCert
+i
+= −
+1
+Ti|Vtok|
+Ti
+∑
+t=1 ∑
+v∈Vtok
+log(|Vtok|Pi,t(v)) .
+(12)
+The notation |Vtok| denotes the vocabulary size. Unlike perplexity, this score uses the entire predicted
+token distribution at each position, rather than only the probability of the sampled token.
+DeepConf (Fu et al., 2026) computes token confidences and aggregates them over local windows. Let
+k ∈{1, . . . , |Vtok|} be the number of highest-probability tokens used at each position, and let Topk(Pi,t) be
+that set of vocabulary tokens. Its bottom-10% variant is
+ci,t = −1
+k
+∑
+v∈Topk(Pi,t)
+log Pi,t(v),
+Gi,ℓ=
+1
+|Wi,ℓ| ∑
+t∈Wi,ℓ
+ci,t,
+pDeepConf
+i
+=
+1
+|Li| ∑
+ℓ∈Li
+Gi,ℓ.
+(13)
+Here, ci,t is the token confidence; ℓindexes a local window; Wi,ℓ⊆{1, . . . , Ti} is its nonempty set of
+token positions; and Gi,ℓis the average confidence in that window. The nonempty index set Li selects the
+lowest-10% window confidences, with at least one window retained. Vertical bars denote set size. Tail and
+minimum-window variants use the same local-confidence principle. We use k = 20, following DeepConf.
+This score averages negative log-probabilities over the top-k candidate tokens and differs from the negative
+log-likelihood of the sampled token. Larger values are treated as higher confidence. The resulting token
+scores and their window averages are nonnegative, allowing direct use as voting weights.
+For any chosen confidence pi, Best-of-N uses exactly the answer-level score in Eq. (2):
+sBoN
+a
+= max
+i:ai=a pi,
+a ∈A.
+(14)
+The index condition ai = a restricts the maximum to paths producing answer a. Best-of-N is the conven-
+tional method name; its sampling budget here is the K paths defined in Sec. 2.1.
+17
+
+(a) Case I.
+(b) Case II.
+(c) MATH.
+(d) MathOdyssey.
+Figure 8: Complementary roles of voting support and pairwise confidence comparisons. In Case I, an incorrect
+answer contains the highest-confidence path despite weaker voting support. In Case II, an incorrect answer has
+stronger or tied voting support, while pairwise confidence comparisons favor a correct answer. The last two panels
+report the corresponding behavior on MATH and MathOdyssey.
+Answer-Level Voting
+Self-Consistency (SC) (Wang et al., 2023) assigns one vote to each sampled path, as in Eq. (3):
+sSC
+a
+=
+K
+∑
+i=1
+1(ai = a).
+(15)
+The indicator 1(·) is one when its condition holds and zero otherwise. Thus sSC
+a
+counts paths supporting
+answer a without using their confidence values.
+Confidence-based voting uses the same coefficient hi ≥0 as Eq. (4), with hi = 0 for a filtered path:
+sConf-Vote
+a
+=
+K
+∑
+i=1
+hi · pi 1(ai = a).
+(16)
+Unfiltered Weighted SC sets hi = 1 for every path. PPL-Weighted SC uses pi = pPPL
+i
+from Eq. (11);
+DeepConf-Weighted SC and Self-Certainty-Weighted SC use pDeepConf
+i
+and pSCert
+i
+, respectively. Confidence
+filtering instead sets hi = 0 for discarded paths and hi = 1 for retained paths.
+RPC (Zhou et al., 2025) is another instance of this confidence-based voting rule. Perplexity Consistency
+aggregates probability-derived contributions from distinct path–confidence pairs, while Reasoning Pruning
+filters low-confidence paths under its original query-specific mixture rule. With pi = pPPL
+i
+, set hi = 1 for
+one representative of each retained distinct pair (zi, pi), and hi = 0 for pruned paths and repeated copies
+of the same pair. Its score is therefore
+sRPC
+a
+=
+K
+∑
+i=1
+hi · pi 1(ai = a),
+(17)
+where the superscript RPC identifies this particular choice of confidence and filtering coefficients in the
+Conf-Vote family. Further baseline-specific rules, including rank-weighted voting, are described in Sec. F.1.
+Case Analysis
+We use the Best-of-N, SC, and confidence-based voting scores in Eqs. (2) to (4). Fix a voting method M:
+its score sM
+a
+is either sSC
+a
+or an instance of sConf-Vote
+a
+with specified confidence scores pi and coefficients
+hi. Thus, Best-of-N uses a confidence maximum, while voting sums the path contributions prescribed in
+Sec. 2.1.
+Let c, w ∈A be two distinct observed answers, with c correct and w incorrect. Each has at least one
+supporting path, so sSC
+c
+and sSC
+w are positive. In Case I, voting support favors c, whereas Best-of-N favors
+18
+
+w because an incorrect path has the higher confidence maximum:
+sM
+c
+> sM
+w ,
+sBoN
+w
+> sBoN
+c
+.
+(18)
+To describe Case II, define the empirical confidence preference for c over w:
+bρcw :=
+1
+sSC
+c sSC
+w ∑
+i:ai=c ∑
+j:aj=w
+
+1(pi > pj) + 1
+21(pi = pj)
+
+.
+(19)
+Here, i and j index observed paths supporting c and w, respectively. The denominator counts all such path
+pairs, so bρcw is the fraction favoring c, with confidence ties counted as one half. Case II occurs when voting
+support favors or ties w, while these pairwise comparisons favor c:
+sM
+w ≥sM
+c ,
+bρcw > 1
+2.
+(20)
+The confidence-based comparison entry Ycw in Eq. (6) is the average signed comparison over the same path
+pairs; hence Ycw = 2bρcw −1. The SC-error analysis in Fig. 4 takes M = SC, giving sSC
+w ≥sSC
+c
+and Ycw > 0.
+Conditioning on recoverable SC errors.
+We call an SC error recoverable if its candidate pool contains at
+least one correct answer, and denote the set of such pools by Trec. For each pool t, let et ∈[0, 1] be its SC
+error weight, with fractional credit used for ties. We measure the prevalence of Case II among recoverable
+SC errors by
+Rrec
+II := ∑t∈Trec et 1{Case IIt}
+∑t∈Trec et
+.
+(21)
+This conditioning excludes only pools with no correct candidate, for which reranking over the observed
+answers is impossible.
+Tab. 5 reports both the share of NoCorrect pools among all SC errors and the Case-II share after excluding
+them. We use PPL confidence, with K = 64 on MATH and K = 128 on MathOdyssey and AIME.
+Table 5: Breakdown of SC errors (%). NoCorrect is measured over all SC errors; recoverable Case II is measured after
+excluding NoCorrect pools. Results use PPL confidence.
+Model
+MATH
+MathOdyssey
+AIME
+NoCorrect / all SC errors
+InternLM2-Math-Plus-1.8B
+50.16
+46.94
+75.83
+InternLM2-Math-Plus-7B
+48.58
+53.10
+63.70
+DeepSeek-Math-RL-7B
+51.83
+59.42
+62.18
+Case II / recoverable SC errors
+InternLM2-Math-Plus-1.8B
+82.22
+83.81
+91.62
+InternLM2-Math-Plus-7B
+79.30
+88.60
+88.62
+DeepSeek-Math-RL-7B
+69.87
+81.42
+84.81
+These cases reveal complementary weaknesses: Best-of-N is susceptible to Case I because it relies on a
+single confidence maximum, whereas voting-based methods are susceptible to Case II because they do not
+explicitly account for answer-level pairwise confidence comparisons. Pairwise-Guided Logit Adjustment
+(PGLA) combines the two sources of evidence, using voting support to temper isolated confidence outliers
+and comparative advantage to compensate for weaker voting support. This combination yields a better
+empirical tradeoff between the two error types, as shown in Figs. 5 and 10.
+Online PGLA Extension
+The full-budget formulation above applies PGLA after collecting all sampled paths. To examine whether
+its comparative evidence can reduce unnecessary inference-time sampling, we extend it to the online
+19
+
+setting. As new paths become available, PGLA updates its answer prediction and stops sampling once the
+prediction becomes stable.
+Let tj denote the number of observed paths at the j-th update, and let Dj = {(ai, pi)}
+tj
+i=1 be this prefix of
+the evidence pool. Its observed answers form Aj, with supporting-path groups Cu,j = {i ≤tj : ai = u}
+for u ∈Aj. From this prefix, we update the voting support sV
+u,j and comparative advantage sPair
+u,j using
+Eqs. (6) and (7), with all answer sums restricted to Aj. We set sPair
+u,j = 0 when no other observed answer has
+positive voting support, including the single-answer case. The adjusted score is
+sPGLA
+u,j
+= sV
+u,j exp(sPair
+u,j ).
+(22)
+For sV
+u,j > 0, this is equivalently log sPGLA
+u,j
+= log sV
+u,j + sPair
+u,j , as in Eq. (10); the multiplicative form also
+applies to zero voting support without adding a smoothing term.
+Let ˆaj denote the unique highest-scoring answer in Aj, with ˆaj = ∅under a tie. Given a stability length L,
+sampling stops at the first j ≥L satisfying
+ˆaj−L+1 = · · · = ˆaj ̸= ∅.
+(23)
+A tie resets the stability count, and sampling continues to Kmax if the condition is never met. This label-free
+rule applies unchanged to a base aggregator and its PGLA-adjusted counterpart, enabling a matched online
+comparison.
+Proof for Proposition 3.1
+Proof. Consider an observed candidate pool with answer set A and U = |A| ≥1. The voting distribution
+¯sV and comparative advantages sPair
+u
+are determined by this pool and are constants with respect to the
+optimization variable ¯s. They may be computed from the same paths; no statistical independence between
+them is required. Under the proposition’s positive-support assumption,
+¯sV
+u =
+sV
+u
+∑v∈A sVv
+> 0,
+∑
+u∈A
+¯sV
+u = 1,
+(24)
+and each sPair
+u
+∈[−1, 1] is finite. For U = 1, we take sPair
+u
+= 0 because there is no competing answer.
+The objective in Eq. (8) is
+J (¯s) := ∑
+u∈A
+¯susPair
+u
+−∑
+u∈A
+¯su log ¯su
+¯sVu
+= −∑
+u∈A
+¯su log ¯su + ∑
+u∈A
+¯su
+ sPair
+u
++ log ¯sV
+u
+
+,
+(25)
+over the probability simplex ∆A = {¯s : ¯su ≥0,
+∑u∈A ¯su = 1}. Terms with ¯su = 0 are defined by
+continuity, so 0 log 0 = 0 and 0 log(0/¯sV
+u ) = 0.
+Existence and strict concavity. The function x 7→x log x, with its continuous extension at zero, is strictly
+convex on [0, 1]. Thus the entropy term −∑u∈A ¯su log ¯su is strictly concave on the simplex, while the
+second term in Eq. (25) is linear in ¯s. Consequently, J is strictly concave for U ≥2. It is also continuous
+on the compact simplex, so a maximizer exists and is unique. For U = 1, the simplex contains only the
+distribution assigning probability one to its sole answer, and uniqueness is immediate.
+Closed-form solution. Define the positive normalizing constant and a candidate distribution by
+Z := ∑
+v∈A
+¯sV
+v exp(sPair
+v
+),
+¯s⋆
+u := ¯sV
+u exp(sPair
+u
+)
+Z
+.
+(26)
+Since ¯sV
+u > 0 and sPair
+u
+is finite, 0 < Z < ∞, ¯s⋆
+u > 0, and ∑u∈A ¯s⋆
+u = 1. Hence ¯s⋆is feasible. Moreover,
+20
+
+log ¯s⋆
+u = log ¯sV
+u + sPair
+u
+−log Z. For every ¯s ∈∆A, including its boundary, substitution gives
+J (¯s) = ∑
+u∈A
+¯su
+ sPair
+u
++ log ¯sV
+u −log ¯su
+
+= ∑
+u∈A
+¯su
+ log Z + log ¯s⋆
+u −log ¯su
+
+= log Z −DKL(¯s ∥¯s⋆) .
+(27)
+The KL divergence is nonnegative and vanishes if and only if ¯s = ¯s⋆. Therefore J (¯s) ≤log Z, with equality
+uniquely at ¯s⋆. This proves that ¯sPGLA = ¯s⋆and yields exactly Eq. (9).
+Connection to the logit adjustment.
+Substituting Eq. (24) into the optimizer gives
+¯sPGLA
+u
+=
+sV
+u exp(sPair
+u
+)
+∑v∈A sVv exp(sPair
+v
+)
+= softmax
+ log sV
+v + sPair
+v
+
+v∈A
+
+u .
+(28)
+Thus the adjusted distribution is obtained by normalizing the answer-level scores sPGLA
+u
+= sV
+u exp(sPair
+u
+).
+For positive voting support, taking logarithms gives log sPGLA
+u
+= log sV
+u + sPair
+u
+, exactly as in Eq. (10). If all
+comparative advantages are equal, their common exponential factor cancels and ¯sPGLA = ¯sV.
+Additional Experimental Setup
+Comparison Methods
+Competitors. We compare 11 internal-confidence and voting baselines on the same sampled paths, together
+with three external-PRM baselines. We also include Online SC for the sampling-efficiency comparison; +
+Ours denotes the corresponding voting rule enhanced by PGLA.
+PPL Best-of-N. This baseline selects the path with the highest mean token log-probability, equivalently the
+lowest perplexity (Chen et al., 1998). Its answer-level score is the maximum PPL confidence among paths
+supporting that answer.
+DeepConf Best-of-N. DeepConf summarizes token confidence over local windows to identify low-
+confidence portions of a path (Fu et al., 2026). We use the average of the bottom-10% window confidences
+as the path score and select the highest-scoring path.
+Self-Certainty Best-of-N. Self-Certainty measures the divergence of the model’s next-token distribution
+from a uniform vocabulary distribution (Kang et al., 2025). This baseline selects the path with the highest
+average Self-Certainty score.
+SC. Self-Consistency gives each sampled path one vote for its final answer (Wang et al., 2023). It selects the
+answer with the largest voting support, sSC
+u = |Cu|.
+PPL-Weighted SC. This variant uses the inverse-perplexity confidence pPPL
+i
+in Eq. (11) and sets hi = 1 in
+Eq. (4). It is denoted by Weighted SC in the PPL-based experiments.
+DeepConf-Weighted SC. This variant sums the DeepConf path scores over each answer group (Fu et al.,
+2026). It uses all eligible paths, with no additional path-level confidence filter.
+Self-Certainty-Weighted SC. This variant sums the Self-Certainty path scores over each answer
+group (Kang et al., 2025). It retains the numerical confidence values as voting weights.
+Self-Certainty Borda. This rule ranks paths by decreasing Self-Certainty and assigns rank r the voting
+weight (K −r + 1)γ (Kang et al., 2025). We use γ = 1.2 and sum the rank-based weights for each answer.
+DeepConf-Filter (90%). This offline rule retains paths at or above the tenth percentile of eligible path-
+confidence scores and sums their DeepConf weights for each answer (Fu et al., 2026). The top-90% path
+21
+
+filter is separate from the bottom-10% window summary used to score each path; threshold ties are
+retained.
+Adaptive SC. Adaptive Self-Consistency stops sampling according to the accumulated evidence for the
+leading answer (Aggarwal et al., 2023). We retain its original stopping criterion as a dynamic-budget
+baseline.
+RPC. RPC combines Perplexity Consistency, which aggregates probability-derived support from distinct
+path–confidence pairs, with Reasoning Pruning, which filters low-confidence paths (Zhou et al., 2025). It
+provides a confidence-aware voting baseline without an external scorer.
+PRM Best-of-N. This baseline uses Qwen2.5-Math-PRM-7B to score the reasoning steps of each sampled
+path (Zhang et al., 2025). It multiplies the step scores into a path score and selects the highest-scoring path.
+PRM-Weighted SC. This variant sums the same product of step-level PRM scores over each answer group.
+It combines answer agreement with externally estimated path quality (Lightman et al., 2024; Zhang et al.,
+2025).
+PRM-RPC. This variant substitutes the product of step-level PRM scores for the internal confidence
+weights in RPC. It retains RPC’s path deduplication and pruning before aggregating the remaining voting
+support (Zhou et al., 2025; Zhang et al., 2025).
+Online SC. This baseline updates the majority-vote prediction after every eight paths and stops after the
+unique winning answer remains unchanged for three consecutive updates. It uses the same stability rule
+as Online SC+PGLA, as detailed in Sec. G.9.
+LLM Backbones
+LLM Backbones. We use seven generators spanning the Qwen3, DeepSeekMath, and InternLM-Math
+families. Qwen3 models use reasoning mode unless a result is explicitly marked as non-thinking; the
+external PRM serves only as a scorer.
+Qwen3-1.7B. This is the smallest Qwen3 generator in our experiments (Qwen, 2025). It provides a
+small-model setting for evaluating aggregation across mathematical reasoning and code generation.
+Qwen3-4B. This Qwen3 model increases the parameter scale to 4B while retaining the family’s think-
+ing and non-thinking modes (Qwen, 2025). We include it in the confidence-transfer comparisons and
+complementary non-thinking evaluations.
+Qwen3-8B. This 8B Qwen3 model extends the reasoning-mode comparisons to a larger backbone (Qwen,
+2025). Together with the 1.7B and 4B models, it supports comparisons across model scales within the same
+family.
+Qwen3-32B. This is the largest Qwen3 generator evaluated in our study (Qwen, 2025). We report its
+reasoning-mode results on AIME 2024, AIME 2025, and HMMT 2025 in Sec. G.10.
+DeepSeek-Math-RL-7B. This math-specialized 7B model is the reinforcement-learning variant of DeepSeek-
+Math (Shao et al., 2024). It tests aggregation on a generator trained specifically for mathematical reasoning.
+InternLM2-Math-Plus-1.8B. This is the smallest math-specialized generator in our evaluation (Ying et al.,
+2024). It provides a lower-capacity counterpart for the mathematical-reasoning and online sampling
+experiments.
+InternLM2-Math-Plus-7B. This 7B model belongs to the same math-specialized family as the 1.8B vari-
+ant (Ying et al., 2024). It is included in the main mathematical-reasoning comparisons and the detailed
+aggregation analyses.
+Qwen2.5-Math-PRM-7B. This process reward model assigns scores to individual reasoning steps (Zhang
+et al., 2025). We use it as an external scorer for the three PRM baselines and their applicable PGLA variants,
+separately from the seven generators above.
+22
+
+Datasets
+Datasets. The ten benchmarks in the main experimental setup cover competition mathematics, graduate-
+level science, and code generation. HumanEval+ and MBPP+ provide additional evaluations with strength-
+ened tests for the corresponding code benchmarks.
+AIME 2024. This benchmark contains problems from the 2024 American Invitational Mathematics Exami-
+nation (AI-MO, 2024). It evaluates short-answer mathematical reasoning and is reported separately from
+the historical AIME collection.
+AIME 2025. This benchmark contains the 2025 AIME problems released by OpenCompass (OpenCompass,
+2025). It provides a separate competition-year evaluation under the same short-answer format.
+HMMT 2025. We use the February 2025 Harvard–MIT Mathematics Tournament problems provided by
+MathArena (Balunovi´c et al., 2025). The benchmark covers challenging competition mathematics, including
+algebra, geometry, combinatorics, and number theory.
+AIME. The historical AIME collection contains 993 problems from the American Invitational Mathematics
+Examination from 1983 to 2024 (Zamil & Rabby, 2024). This larger short-answer benchmark is used in the
+math-specialized-model experiments.
+MATH. MATH contains challenging competition mathematics problems spanning algebra, geometry,
+number theory, counting, and combinatorics (Hendrycks et al., 2021). We use its 5,000-problem test split.
+MathOdyssey. MathOdyssey contains 387 problems covering advanced high-school, university-level, and
+olympiad-level mathematics (Fang et al., 2025). It extends the evaluation beyond a single competition or
+curriculum level.
+GPQA-Diamond (GPQA-D). GPQA comprises expert-written multiple-choice questions in biology,
+physics, and chemistry (Rein et al., 2024). We use its 198-question Diamond subset to evaluate graduate-
+level scientific reasoning.
+HumanEval. HumanEval contains 164 Python programming tasks specified by function signatures and
+natural-language descriptions (Chen et al., 2021). We evaluate the selected programs using the original-test
+outcomes in our evaluation pipeline.
+MBPP. Mostly Basic Programming Problems consists of short Python programming tasks with natural-
+language descriptions and tests (Austin et al., 2021). Our code-transfer evaluations use the cached
+378-problem split.
+LiveCodeBench V6. LiveCodeBench collects programming-contest problems from LeetCode, AtCoder,
+and Codeforces (Jain et al., 2025). We use the V6 code-generation benchmark to evaluate the correctness of
+selected programs by execution.
+HumanEval+ and MBPP+. EvalPlus augments HumanEval and MBPP with additional tests that detect
+errors missed by the original suites (Liu et al., 2023). We retain the sampled programs and problem sets
+and report results under the strengthened tests separately from the original-test results.
+Implementation Details
+Sampling and consistency. For each query, all methods use matched K-path subsets of the same sam-
+pled pool, generated with common decoding parameters. The consistency function treats two paths as
+consistent in mathematical and knowledge reasoning when their normalized final answers match. For
+code generation, we follow RPC and define consistency through execution behavior (Zhou et al., 2025).
+For the math-specialized backbones, we set K = 64 on MATH and K = 128 on MathOdyssey and AIME.
+For Qwen3 comparisons in reasoning and non-thinking modes, we set K = 32 on AIME 2024, AIME 2025,
+HMMT 2025, GPQA-D, HumanEval, MBPP, and LiveCodeBench V6. We use a temperature of 1.0 and
+top-p of 0.95. The maximum generation length is 2,048 tokens for MATH, MathOdyssey, and AIME, and
+23
+
+16,384 tokens for the remaining datasets. Within each experimental setting, all methods are evaluated on
+the same problem set and sampled-path subsets. The same repetitions are used for each baseline and its
+PGLA-enhanced counterpart.We report the mean and standard deviation. All experiments are conducted
+on Linux servers equipped with NVIDIA A100 and RTX 3090 GPUs, except for the CPU-only aggregation
+microbenchmark in Sec. G.12.
+Aggregation. For a voting rule V, sV
+u denotes its answer-level voting support and sPair
+u
+denotes the voting-
+weighted comparative advantage in Eq. (7). The default adjustment is log sPGLA
+u
+= log sV
+u + sPair
+u
+from
+Eq. (10). A illustrative example of the adjustment is given in Fig. 9.
+Figure 9: Illustration of PGLA.
+Additional Experimental Results
+Enhanced Code Tests in Reasoning Mode
+Tab. 6 reports the strengthened HumanEval+ and MBPP+ tests for the same sampled pools used in Tab. 1.
+A prediction must pass both the original and enhanced tests. PGLA generally improves accuracy under
+these strengthened tests, suggesting that its benefits persist under stricter verification.
+Comparison of Non-Thinking and Reasoning Modes
+Tabs. 7 and 8 compare non-thinking and reasoning modes of Qwen3-1.7B and Qwen3-4B on AIME 2024,
+AIME 2025, and HMMT 2025. Reasoning-mode results are reproduced from Tab. 1 for the methods shared
+by both modes. All columns use K = 32. Reasoning mode consistently achieves higher accuracy, and PGLA
+generally improves the voting baselines in both modes.
+24
+
+Table 6: Enhanced code-test accuracy (%) in reasoning mode (K = 32). Here + Ours denotes a PGLA-enhanced
+variant.
+Qwen3-1.7B Reasoning
+Qwen3-4B Reasoning
+Methods
+HumanEval+
+MBPP+
+HumanEval+
+MBPP+
+PPL Best-of-N
+73.48±1.80
+64.55±0.99
+86.99±0.55
+77.59±0.74
+DeepConf Best-of-N
+77.44±2.36
+66.40±0.76
+90.04±0.99
+78.89±0.76
+Self-Certainty Best-of-N
+78.05±2.67
+67.46±0.97
+90.24±1.06
+78.99±0.62
+SC
+77.29±1.14
+71.16±0.83
+88.01±1.16
+80.58±0.62
+SC + Ours (DeepConf)
+81.10±2.46
+71.43±0.53
+90.04±1.14
+80.79±0.46
+SC + Ours (Self-Certainty)
+81.25±1.91
+71.96±0.37
+90.65±1.36
+80.85±0.41
+DeepConf-Weighted SC
+78.51±1.64
+70.37±0.85
+89.02±0.85
+80.77±0.46
+DeepConf-Weighted SC + Ours
+81.10±2.38
+71.69±0.46
+90.24±0.92
+80.77±0.46
+Self-Certainty-Weighted SC
+77.59±1.54
+70.90±0.82
+88.82±0.78
+80.85±0.41
+Self-Certainty-Weighted SC + Ours
+81.25±1.95
+71.96±0.45
+90.65±1.22
+80.87±0.41
+Self-Certainty Borda
+80.18±1.78
+71.43±0.66
+89.02±0.99
+80.32±0.50
+Self-Certainty Borda + Ours
+81.40±1.98
+72.22±0.54
+90.65±1.09
+80.32±0.50
+DeepConf-Filter (90%)
+80.03±1.89
+70.63±0.73
+89.02±0.87
+80.53±0.46
+DeepConf-Filter (90%) + Ours
+81.10±2.49
+71.69±0.44
+90.24±0.95
+80.58±0.45
+Table 7: Comparison of non-thinking and reasoning modes for Qwen3-1.7B on three mathematical reasoning
+benchmarks (K = 32).
+Qwen3-1.7B
+Methods
+Non-thinking mode
+Reasoning mode
+AIME 2024 AIME 2025 HMMT 2025 AIME 2024 AIME 2025 HMMT 2025
+PPL Best-of-N
+12.00±2.21
+11.33±3.40
+5.00±3.42
+36.00±4.42
+34.00±2.91
+23.00±3.48
+DeepConf Best-of-N
+12.33±2.13
+14.33±2.60
+8.33±3.73
+62.00±4.52
+42.67±2.49
+28.33±3.73
+Self-Certainty Best-of-N
+12.67±2.49
+15.00±3.42
+9.67±2.33
+60.67±4.16
+46.67±3.33
+30.67±4.42
+SC
+15.17±1.55
+14.83±1.57
+6.94±0.57
+69.50±1.98
+47.33±3.67
+27.00±1.00
+SC + Ours (DeepConf)
+16.00±2.49
+16.67±0.00
+7.67±1.53
+75.00±1.67
+51.33±2.67
+30.00±2.98
+SC + Ours (Self-Certainty)
+16.50±2.17
+16.67±0.00
+7.67±1.53
+74.00±1.33
+50.67±3.27
+30.33±2.77
+DeepConf-Weighted SC
+15.67±2.13
+15.67±1.53
+7.33±1.33
+70.00±1.49
+48.33±4.28
+27.00±1.00
+DeepConf-Weighted SC + Ours
+15.67±2.13
+16.67±0.00
+7.67±1.53
+75.00±1.67
+51.00±3.00
+31.33±3.40
+Self-Certainty-Weighted SC
+15.67±2.13
+15.00±1.67
+7.33±1.33
+70.33±1.80
+48.67±4.27
+27.00±1.00
+Self-Certainty-Weighted SC + Ours
+16.00±2.49
+16.67±0.00
+7.67±1.53
+74.00±1.33
+50.67±3.27
+31.00±3.35
+25
+
+Table 8: Comparison of non-thinking and reasoning modes for Qwen3-4B on three mathematical reasoning bench-
+marks (K = 32).
+Qwen3-4B
+Methods
+Non-thinking mode
+Reasoning mode
+AIME 2024 AIME 2025 HMMT 2025 AIME 2024 AIME 2025 HMMT 2025
+PPL Best-of-N
+30.00±3.94
+24.14±2.82
+13.00±2.77
+57.00±2.33
+64.33±3.96
+40.33±4.33
+DeepConf Best-of-N
+31.67±4.77
+25.29±1.63
+15.33±3.06
+77.00±2.33
+76.00±3.89
+50.00±4.94
+Self-Certainty Best-of-N
+32.33±3.96
+26.44±3.25
+14.33±2.60
+81.67±2.24
+71.67±3.07
+51.67±4.01
+SC
+39.56±4.24
+26.25±1.51
+15.67±1.53
+80.00±0.00
+76.33±0.67
+51.50±1.57
+SC + Ours (DeepConf)
+41.83±3.69
+28.74±1.63
+16.67±0.00
+83.00±1.00
+76.33±1.80
+54.00±2.91
+SC + Ours (Self-Certainty)
+41.33±3.40
+28.74±1.63
+16.67±0.00
+82.00±1.63
+78.67±1.63
+55.67±1.53
+DeepConf-Weighted SC
+41.00±4.23
+26.44±1.63
+15.67±1.53
+80.00±0.00
+76.33±1.00
+51.33±1.63
+DeepConf-Weighted SC + Ours
+42.33±3.96
+27.59±2.82
+16.67±0.00
+83.33±1.49
+76.33±2.33
+54.00±2.91
+Self-Certainty-Weighted SC
+40.33±4.07
+26.44±1.63
+15.67±1.53
+80.00±0.00
+76.33±1.00
+52.67±2.00
+Self-Certainty-Weighted SC + Ours
+41.67±3.07
+27.59±2.82
+16.67±0.00
+82.00±1.63
+79.33±1.33
+55.33±1.63
+26
+
+Table 9: Accuracy comparison under the sampling budgets of K
+2 and K, using product-aggregated rewards from an
+external process reward model Qwen2.5-Math-PRM-7B (Lightman et al., 2024; Zhang et al., 2025). + Ours denotes
+the PGLA-enhanced variant of each voting baseline.
+Method
+MATH
+MathOdyssey
+AIME
+Average
+K/2 ↑
+K ↑
+K/2 ↑
+K ↑
+K/2 ↑
+K ↑
+K/2 ↑
+K ↑
+InternLM2-Math-Plus-1.8B
+PRM Best-of-N
+46.50±0.33
+48.48±0.21
+24.75±1.44
+25.47±1.24
+4.43±0.24
+4.93±0.34
+25.23
+26.30
+PRM-Weighted SC
+45.64±0.26
+47.39±0.23
+23.24±1.04
+24.91±1.07
+4.63±0.25
+5.02±0.23
+24.50
+25.77
++ Ours
+46.88±0.29
+49.09±0.20
+26.99±1.16
+28.95±1.26
+4.73±0.33
+5.17±0.27
+26.20
+27.73
+PRM-RPC
+45.77±0.25
+47.61±0.23
+23.60±1.19
+25.32±1.04
+4.66±0.24
+5.07±0.21
+24.68
+26.00
++ Ours
+46.88±0.28
+49.18±0.17
+27.02±1.28
+29.05±1.30
+4.73±0.32
+5.19±0.26
+26.21
+27.80
+InternLM2-Math-Plus-7B
+PRM Best-of-N
+58.22±0.34
+59.34±0.32
+32.85±1.78
+33.07±0.99
+15.10±0.50
+15.96±0.36
+35.39
+36.12
+PRM-Weighted SC
+57.56±0.31
+58.67±0.10
+33.57±1.13
+34.34±0.58
+15.49±0.36
+16.23±0.48
+35.54
+36.42
++ Ours
+58.86±0.29
+60.40±0.24
+37.63±1.18
+38.79±0.62
+15.55±0.42
+16.57±0.35
+37.35
+38.59
+PRM-RPC
+57.74±0.28
+58.90±0.13
+34.83±1.18
+35.48±0.40
+15.57±0.42
+16.31±0.44
+36.05
+36.90
++ Ours
+58.88±0.24
+60.41±0.25
+37.63±1.24
+38.87±0.60
+15.53±0.37
+16.50±0.28
+37.35
+38.59
+Deepseek-Math-RL-7B
+PRM Best-of-N
+61.27±0.24
+62.79±0.16
+34.34±1.27
+34.31±0.66
+15.93±0.23
+17.14±0.40
+37.18
+38.08
+PRM-Weighted SC
+60.76±0.25
+62.04±0.20
+39.69±0.59
+40.28±0.53
+15.77±0.27
+16.93±0.43
+38.74
+39.75
++ Ours
+61.17±0.24
+62.41±0.20
+40.18±0.64
+40.69±0.53
+16.13±0.48
+17.49±0.57
+39.16
+40.20
+PRM-RPC
+60.91±0.27
+62.26±0.22
+40.05±0.83
+40.67±0.51
+15.85±0.32
+17.05±0.36
+38.94
+39.99
++ Ours
+61.19±0.23
+62.55±0.19
+39.85±0.75
+40.69±0.42
+16.14±0.51
+17.52±0.66
+39.06
+40.26
+Performance with the External Reward Setting
+Tab. 9 compares the methods using product-aggregated rewards from an external process reward model.
+We observe that our method improves PRM-Weighted SC and PRM-RPC in most settings. To be specific, at
+the full budget, PGLA raises their average accuracy from 33.98 to 35.51 and from 34.30 to 35.55, respectively.
+This further demonstrates that our method can effectively use externally provided reward signals.
+27
+
+Tradeoff between Case I and Case II
+Fig. 10 illustrates complementary failure modes: Best-of-N often fails in Case I, while voting-based methods
+tend to fail in Case II. By combining voting support with pairwise confidence comparisons, PGLA generally
+achieves a better balance between the two cases.
+(a) AIME24, 1.7B
+(b) AIME24, 4B
+(c) AIME24, 8B
+(d) AIME25, 1.7B
+(e) AIME25, 4B
+(f) AIME25, 8B
+(g) HMMT25, 1.7B
+(h) HMMT25, 4B
+(i) HMMT25, 8B
+Figure 10: Tradeoff between Case I and Case II on AIME24, AIME25, and HMMT25 using Qwen3-1.7B, Qwen3-4B,
+and Qwen3-8B. Ours denotes PGLA. DeepConf, PPL, and Self-Certainty denote DeepConf Best-of-N, PPL Best-of-N,
+and Self-Certainty Best-of-N, respectively. SWSC and DWSC denote Self-Certainty-Weighted SC and DeepConf-
+Weighted SC, respectively.
+28
+
+Effect of Ranking Quality by Dataset
+We study how the ranking quality of path scores affects PGLA. Following Sec. 2.1, let ai and pi be the answer
+and confidence of path i. Here pi is the product-aggregated reward from Qwen2.5-Math-PRM-7B, floored
+at 10−8. We keep the sampled paths, answers, and PRM-Weighted SC support sV
+a = ∑K
+i=1 pi1(ai = a) fixed,
+where V denotes PRM-Weighted SC. Only the scores used for pairwise comparisons are perturbed; the
+opponent weights and unit-strength PGLA update remain unchanged.
+Controlled perturbation. The retention parameter λ ∈{0, 0.2, 0.4, 0.6, 0.8, 1} controls how many path-score
+assignments are preserved. For each query, define
+mλ = round((1 −λ)K),
+ep(λ)
+i
+= pσλ(i),
+(29)
+where round denotes nearest-integer rounding and σλ is a random cyclic permutation on mλ uniformly
+selected distinct path indices, extended by the identity on the remaining indices. If mλ < 2, σλ is the identity
+everywhere. Thus, λ = 1 preserves the original ranking, while λ = 0 permutes all score assignments
+within the query. This procedure preserves the score multiset and uses no correctness labels. Because of
+rounding and score ties, λ is a nominal retention fraction, rather than the exact fraction of unchanged score
+values.
+Ranking quality. We measure ranking quality by the empirical area under the ROC curve (AUC) for
+distinguishing correct from incorrect paths. Let q index evaluated queries, and let ep(λ)
+q,i be the perturbed
+confidence of path i for query q. Define I+
+q and I−
+q as the index sets of paths whose answers are correct
+and incorrect, respectively. For a query containing both kinds of paths, its AUC is
+bρq(λ) =
+1
+|I+
+q | |I−
+q | ∑
+i∈I+
+q ∑
+j∈I−
+q
+
+1
+
+ep(λ)
+q,i > ep(λ)
+q,j
+
++ 1
+21
+
+ep(λ)
+q,i = ep(λ)
+q,j
+
+.
+(30)
+This uses the same tie convention as Eq. (6): a correct path outranking an incorrect path contributes one,
+and a tie contributes one half. Let Qmix contain the queries for which both I+
+q and I−
+q are nonempty. The
+dataset-level AUC is their equally weighted average,
+bρ(λ) =
+1
+|Qmix| ∑
+q∈Qmix
+bρq(λ).
+(31)
+Queries containing only correct or only incorrect paths are excluded from this AUC but remain in the
+accuracy evaluation. The tables abbreviate bρ(λ) as bρ; the model-level curves in Fig. 7 further average the
+dataset metrics equally.
+The gains from PGLA generally grow as ranking quality improves across datasets. In Fig. 7, increasing bρ
+from 0.496 to 0.729 on InternLM2-Math-Plus-7B raises the absolute accuracy gain from −0.54% to +2.17%.
+A similar trend appears on DeepSeek-Math-RL-7B in Tabs. 11, 13 and 15, supporting the benefit of more
+reliable pairwise confidence comparisons.
+Temperature Sensitivity
+To further examine robustness under more diverse sampled reasoning paths, we conduct additional
+experiments on MathOdyssey and AIME using InternLM2-Math-Plus-1.8B, InternLM2-Math-Plus-7B,
+and DeepSeek-Math-RL-7B. Tab. 16 compares the methods under higher decoding temperatures with
+T = 1.1 and T = 1.3. Our method remains competitive and generally outperforms the comparison
+methods, indicating that the proposed aggregation mechanism is still effective when the sampled proposal
+pool becomes more diverse.
+Efficiency Comparison
+Tabs. 17 and 18 compare the sampling budgets of SC, SC + Ours, RPC, and RPC + Ours on MATH,
+MathOdyssey, and AIME, capped at 64 paths for MATH and 128 otherwise. For each model–dataset
+29
+
+Table 10: Controlled ranking on MATH with InternLM2-
+Math-Plus-7B (K = 64).
+Base Acc.: 58.67±0.10
+λ
+bρ
+PGLA Acc.
+∆Acc
+0.0
+0.496±0.003
+58.23±0.09
+−0.45±0.12
+0.2
+0.557±0.002
+58.69±0.16
++0.01±0.16
+0.4
+0.617±0.002
+59.23±0.20
++0.56±0.19
+0.6
+0.671±0.002
+59.61±0.07
++0.94±0.15
+0.8
+0.732±0.002
+60.05±0.20
++1.37±0.17
+1.0
+0.791±0.002
+60.40±0.24
++1.73±0.18
+Table 11: Controlled ranking on MATH with DeepSeek-
+Math-RL-7B (K = 64).
+Base Acc.: 62.04±0.20
+λ
+bρ
+PGLA Acc.
+∆Acc
+0.0
+0.495±0.003
+61.53±0.18
+−0.51±0.23
+0.2
+0.561±0.002
+61.83±0.24
+−0.22±0.13
+0.4
+0.627±0.003
+62.03±0.23
+−0.01±0.07
+0.6
+0.688±0.003
+62.15±0.16
++0.11±0.20
+0.8
+0.754±0.001
+62.32±0.20
++0.28±0.23
+1.0
+0.821±0.001
+62.41±0.20
++0.37±0.19
+Table 12: Controlled ranking on MathOdyssey with
+InternLM2-Math-Plus-7B (K = 128).
+Base Acc.: 34.34±0.58
+λ
+bρ
+PGLA Acc.
+∆Acc
+0.0
+0.499±0.008
+33.60±0.85
+−0.75±0.89
+0.2
+0.538±0.008
+35.35±0.55
++1.00±0.72
+0.4
+0.577±0.010
+36.25±0.46
++1.90±0.81
+0.6
+0.615±0.006
+37.56±0.60
++3.21±0.45
+0.8
+0.652±0.009
+38.17±0.49
++3.83±0.82
+1.0
+0.692±0.008
+38.79±0.62
++4.45±0.78
+Table 13: Controlled ranking on MathOdyssey with
+DeepSeek-Math-RL-7B (K = 128).
+Base Acc.: 40.28±0.53
+λ
+bρ
+PGLA Acc.
+∆Acc
+0.0
+0.497±0.009
+40.00±0.53
+−0.28±0.52
+0.2
+0.539±0.010
+40.41±0.47
++0.13±0.35
+0.4
+0.564±0.008
+40.33±0.33
++0.05±0.54
+0.6
+0.603±0.007
+40.44±0.75
++0.15±0.88
+0.8
+0.634±0.006
+40.57±0.69
++0.28±0.62
+1.0
+0.670±0.005
+40.69±0.53
++0.41±0.52
+Table 14: Controlled ranking on AIME with InternLM2-
+Math-Plus-7B (K = 128).
+Base Acc.: 16.23±0.48
+λ
+bρ
+PGLA Acc.
+∆Acc
+0.0
+0.493±0.011
+15.81±0.32
+−0.42±0.32
+0.2
+0.542±0.007
+16.08±0.42
+−0.15±0.38
+0.4
+0.579±0.011
+16.14±0.53
+−0.09±0.44
+0.6
+0.623±0.010
+16.36±0.55
++0.13±0.51
+0.8
+0.659±0.010
+16.50±0.59
++0.27±0.38
+1.0
+0.703±0.008
+16.57±0.35
++0.34±0.35
+Table 15: Controlled ranking on AIME with DeepSeek-
+Math-RL-7B (K = 128).
+Base Acc.: 16.93±0.43
+λ
+bρ
+PGLA Acc.
+∆Acc
+0.0
+0.497±0.008
+16.53±0.42
+−0.41±0.37
+0.2
+0.547±0.013
+16.68±0.34
+−0.26±0.41
+0.4
+0.590±0.008
+16.78±0.57
+−0.15±0.38
+0.6
+0.631±0.007
+16.87±0.60
+−0.06±0.52
+0.8
+0.675±0.010
+17.18±0.61
++0.25±0.39
+1.0
+0.720±0.007
+17.49±0.57
++0.56±0.42
+30
+
+Table 16: Temperature sensitivity under the same internal-confidence protocol as Tab. 2. We vary only the decoding
+temperature; + Ours denotes the PGLA-enhanced variant of each voting baseline.
+Method
+MathOdyssey
+AIME
+T = 1.1
+T = 1.3
+T = 1.1
+T = 1.3
+Acc. ↑
+ECE ↓
+Acc. ↑
+ECE ↓
+Acc. ↑
+ECE ↓
+Acc. ↑
+ECE ↓
+InternLM2-Math-Plus-1.8B
+PPL
+16.43±0.91
+75.99±0.89
+16.38±1.42
+71.72±1.43
+1.97±0.29
+90.29±0.28
+2.08±0.27
+84.85±0.27
+SC
+13.75±0.51
+18.02±0.57
+14.95±0.87
+5.15±1.12
+2.12±0.10
+16.52±0.13
+1.26±0.08
+8.80±0.12
+SC + Ours
+18.59±0.78
+12.75±0.75
+19.23±0.76
+6.86±1.04
+3.11±0.17
+14.78±0.19
+1.82±0.17
+10.64±0.16
+Weighted SC
+13.91±0.54
+17.76±0.62
+15.68±0.79
+9.41±0.86
+2.14±0.11
+16.28±0.16
+1.58±0.07
+12.65±0.12
+Weighted SC + Ours
+18.84±0.76
+12.25±0.79
+21.31±1.15
+6.95±1.10
+3.29±0.24
+14.40±0.29
+2.22±0.17
+13.80±0.26
+Adaptive SC
+13.81±0.63
+22.30±0.96
+15.05±0.77
+6.56±0.85
+2.12±0.10
+18.93±0.27
+1.26±0.08
+9.65±0.12
+Adaptive SC + Ours
+17.60±1.01
+17.05±1.31
+18.46±0.90
+8.02±1.09
+3.10±0.19
+16.67±0.43
+1.81±0.18
+11.62±0.26
+RPC
+15.53±0.54
+16.10±0.82
+16.07±0.94
+11.41±0.95
+2.80±0.18
+15.64±0.15
+1.64±0.14
+14.42±0.21
+RPC + Ours
+20.41±0.69
+10.45±0.71
+21.83±0.96
+7.69±1.24
+3.63±0.25
+13.78±0.26
+2.33±0.17
+14.83±0.28
+InternLM2-Math-Plus-7B
+PPL
+28.61±1.33
+65.31±1.33
+26.38±1.41
+65.61±1.41
+6.02±0.34
+87.67±0.35
+6.50±0.41
+84.66±0.40
+SC
+27.89±0.43
+11.31±0.52
+27.51±0.69
+9.38±1.14
+8.73±0.24
+13.71±0.25
+8.02±0.20
+12.02±0.24
+SC + Ours
+35.84±0.84
+9.07±0.90
+36.35±0.50
+8.82±0.75
+9.61±0.15
+13.08±0.15
+9.09±0.26
+11.23±0.31
+Weighted SC
+28.38±0.33
+10.77±0.45
+28.71±0.60
+8.11±0.85
+8.89±0.22
+13.53±0.23
+8.40±0.25
+11.52±0.28
+Weighted SC + Ours
+36.07±0.86
+9.20±0.84
+36.79±0.53
+8.85±0.94
+9.75±0.23
+12.83±0.24
+9.32±0.28
+10.90±0.29
+Adaptive SC
+27.92±0.61
+16.96±0.77
+27.75±0.65
+13.27±0.80
+8.71±0.25
+16.61±0.46
+8.00±0.16
+14.51±0.26
+Adaptive SC + Ours
+34.00±0.99
+12.35±0.82
+34.24±0.83
+10.02±0.98
+9.43±0.32
+15.62±0.48
+9.11±0.21
+13.11±0.41
+RPC
+32.93±0.64
+8.05±0.92
+33.01±0.50
+5.97±0.96
+9.31±0.28
+13.52±0.25
+8.83±0.23
+11.40±0.28
+RPC + Ours
+36.99±1.07
+8.38±1.26
+38.02±0.68
+7.97±0.91
+10.13±0.38
+12.17±0.40
+9.30±0.22
+10.88±0.26
+Deepseek-Math-RL-7B
+PPL
+24.78±1.15
+70.85±1.18
+25.76±1.26
+68.39±1.29
+3.94±0.37
+92.17±0.37
+4.39±0.33
+90.33±0.34
+SC
+36.76±0.39
+9.46±0.81
+37.75±0.25
+8.78±1.16
+8.95±0.26
+11.95±0.34
+9.39±0.24
+10.23±0.26
+SC + Ours
+37.22±0.55
+11.03±1.11
+38.55±0.61
+9.01±0.70
+9.39±0.30
+11.01±0.34
+10.15±0.33
+9.57±0.36
+Weighted SC
+36.84±0.45
+9.40±0.81
+37.76±0.39
+8.91±0.86
+9.04±0.29
+11.86±0.38
+9.42±0.24
+10.24±0.24
+Weighted SC + Ours
+37.17±0.60
+11.22±1.23
+38.56±0.63
+9.14±0.88
+9.41±0.33
+10.93±0.37
+10.19±0.31
+9.46±0.34
+Adaptive SC
+36.62±0.35
+12.71±1.30
+37.63±0.42
+11.23±1.22
+8.93±0.29
+14.23±0.42
+9.40±0.24
+12.72±0.36
+Adaptive SC + Ours
+35.94±0.38
+12.33±0.84
+37.03±0.96
+11.30±1.89
+9.26±0.36
+13.09±0.55
+9.89±0.34
+11.95±0.33
+RPC
+36.92±0.40
+10.19±0.60
+38.25±0.47
+8.96±0.81
+9.09±0.34
+11.81±0.40
+10.04±0.39
+10.35±0.44
+RPC + Ours
+37.22±0.43
+11.63±1.45
+38.95±0.82
+8.82±1.06
+9.35±0.29
+10.47±0.31
+10.32±0.26
+8.82±0.30
+31
+
+Table 17: Post-hoc sampling-budget comparison for InternLM2-Math-Plus-1.8B. Best of SC gives its highest grid
+mean and smallest attaining K. Alternatives use the minimum K matching or exceeding this unrounded target. ∆
+gives absolute accuracy change (%) and sample-count change (%) relative to SC.
+Method
+MATH
+MathOdyssey
+AIME
+Acc.
+K
+Acc.
+K
+Acc.
+K
+Best of SC
+36.48 ± 0.14
+64
+14.91 ± 0.95
+48
+2.67 ± 0.21
+112
+SC + Ours
+37.76 ± 0.34
+16
+16.53 ± 0.92
+8
+2.76 ± 0.34
+32
+∆vs. SC
++1.27
+-75.0%
++1.62
+-83.3%
++0.09
+-71.4%
+RPC
+37.09 ± 0.20
+32
+15.37 ± 1.45
+8
+2.71 ± 0.39
+32
+∆vs. SC
++0.61
+-50.0%
++0.46
+-83.3%
++0.04
+-71.4%
+RPC + Ours
+37.67 ± 0.36
+16
+16.20 ± 0.82
+8
+2.86 ± 0.36
+40
+∆vs. SC
++1.18
+-75.0%
++1.28
+-83.3%
++0.19
+-64.3%
+Table 18: Post-hoc sampling-budget comparison for DeepSeek-Math-RL-7B. Best of SC gives its highest grid mean
+and smallest attaining K. Alternatives use the minimum K matching or exceeding this unrounded target. ∆gives
+absolute accuracy change (%) and sample-count change (%) relative to SC.
+Method
+MATH
+MathOdyssey
+AIME
+Acc.
+K
+Acc.
+K
+Acc.
+K
+Best of SC
+53.33 ± 0.08
+64
+36.57 ± 0.56
+128
+9.56 ± 0.24
+96
+SC + Ours
+53.52 ± 0.10
+64
+36.76 ± 1.00
+40
+9.80 ± 0.37
+64
+∆vs. SC
++0.19
+0.0%
++0.19
+-68.8%
++0.23
+-33.3%
+RPC
+53.36 ± 0.11
+64
+36.86 ± 0.57
+112
+-
+-
+∆vs. SC
++0.03
+0.0%
++0.29
+-12.5%
+-
+-
+RPC + Ours
+53.52 ± 0.11
+64
+36.58 ± 0.95
+40
+9.70 ± 0.30
+64
+∆vs. SC
++0.19
+0.0%
++0.01
+-68.8%
++0.14
+-33.3%
+setting, the target is the best mean accuracy attained by SC on the evaluated grid. We then find the smallest
+grid budget at which each other method matches or exceeds that target. The reported savings describe
+empirical accuracy–budget tradeoffs.
+Tabs. 17 and 18 show that PGLA-enhanced SC and RPC generally reach SC’s best observed accuracy with
+fewer sampled paths. The savings are larger on InternLM2-Math-Plus-1.8B, while DeepSeek-Math-RL-7B
+also benefits on MathOdyssey and AIME. These results suggest that pairwise evidence improves the
+tradeoff between accuracy and sampling budget.
+The computational cost of the additional aggregation step is analyzed separately in Sec. G.12.
+Complete Scaling Results with Varying K
+Tabs. 19 and 20 report the complete current-method curves for InternLM2-Math-Plus-1.8B and InternLM2-
+Math-Plus-7B. We use K ∈{1, 2, 4, 8, 16, 32, 40, 48, 64, 80, 96, 112, 128}, capped at 64 for MATH and 128 for
+MathOdyssey and AIME by the evaluation protocol. All methods use the same candidate subsets at each
+budgets. Here + Ours denotes PGLA with the voting-weighted comparative advantage sPair
+u
+in Eq. (7).
+Tabs. 19 and 20 show that PGLA generally improves SC and RPC across sampling budgets. The gains
+become clearer at moderate and large K, especially on MATH and MathOdyssey, indicating that pairwise
+evidence helps make better use of additional reasoning paths.
+32
+
+Table 19: Accuracy across sampling budgets for InternLM2-Math-Plus-1.8B on MATH, MathOdyssey, and AIME.
+MATH
+K
+PPL
+SC
+SC + Ours
+RPC
+RPC + Ours
+1
+26.94 ± 0.49
+26.94 ± 0.49
+26.94 ± 0.49
+26.94 ± 0.49
+26.94 ± 0.49
+2
+29.62 ± 0.47
+27.13 ± 0.44
+29.62 ± 0.47
+29.62 ± 0.47
+29.62 ± 0.47
+4
+31.32 ± 0.44
+31.01 ± 0.36
+31.32 ± 0.42
+32.36 ± 0.41
+31.30 ± 0.42
+8
+32.53 ± 0.42
+33.93 ± 0.26
+34.81 ± 0.46
+34.78 ± 0.32
+34.34 ± 0.47
+16
+33.15 ± 0.42
+35.49 ± 0.28
+37.76 ± 0.34
+36.08 ± 0.30
+37.67 ± 0.36
+32
+33.58 ± 0.22
+36.27 ± 0.22
+39.04 ± 0.28
+37.09 ± 0.20
+39.13 ± 0.38
+40
+33.43 ± 0.22
+36.34 ± 0.12
+39.35 ± 0.25
+37.40 ± 0.20
+39.50 ± 0.33
+48
+33.39 ± 0.28
+36.37 ± 0.19
+39.53 ± 0.24
+37.54 ± 0.21
+39.99 ± 0.28
+64
+33.23 ± 0.25
+36.48 ± 0.14
+39.77 ± 0.17
+37.87 ± 0.14
+40.29 ± 0.27
+MathOdyssey
+K
+PPL
+SC
+SC + Ours
+RPC
+RPC + Ours
+1
+11.41 ± 1.23
+11.41 ± 1.23
+11.41 ± 1.23
+11.41 ± 1.23
+11.41 ± 1.23
+2
+13.26 ± 1.87
+11.47 ± 1.04
+13.26 ± 1.87
+13.26 ± 1.87
+13.26 ± 1.87
+4
+13.91 ± 1.52
+13.21 ± 1.54
+13.98 ± 1.53
+13.91 ± 1.57
+14.04 ± 1.53
+8
+14.76 ± 1.26
+14.43 ± 0.93
+16.53 ± 0.92
+15.37 ± 1.45
+16.20 ± 0.82
+16
+15.35 ± 1.29
+14.84 ± 0.65
+17.71 ± 1.08
+15.30 ± 0.89
+17.51 ± 1.11
+32
+15.94 ± 1.69
+14.52 ± 1.05
+18.25 ± 0.93
+15.45 ± 1.01
+18.64 ± 1.05
+40
+16.38 ± 0.76
+14.70 ± 0.92
+18.11 ± 0.56
+15.68 ± 1.07
+18.59 ± 1.44
+48
+16.09 ± 0.64
+14.91 ± 0.95
+18.33 ± 0.92
+15.99 ± 1.09
+19.41 ± 1.28
+64
+16.71 ± 1.12
+14.76 ± 0.90
+18.41 ± 0.69
+16.22 ± 0.82
+19.64 ± 0.91
+80
+16.35 ± 1.35
+14.38 ± 0.84
+18.48 ± 0.81
+15.89 ± 0.52
+19.92 ± 0.87
+96
+16.35 ± 1.08
+14.40 ± 0.76
+18.23 ± 0.60
+16.02 ± 0.61
+19.61 ± 0.74
+112
+16.58 ± 1.10
+14.69 ± 0.85
+18.41 ± 0.67
+16.32 ± 0.40
+20.36 ± 0.61
+128
+16.63 ± 0.83
+14.57 ± 0.45
+18.28 ± 0.56
+16.43 ± 0.60
+20.28 ± 0.48
+AIME
+K
+PPL
+SC
+SC + Ours
+RPC
+RPC + Ours
+1
+1.50 ± 0.37
+1.50 ± 0.37
+1.50 ± 0.37
+1.50 ± 0.37
+1.50 ± 0.37
+2
+1.56 ± 0.28
+1.41 ± 0.20
+1.56 ± 0.28
+1.56 ± 0.28
+1.56 ± 0.28
+4
+1.70 ± 0.35
+1.68 ± 0.24
+1.70 ± 0.36
+1.77 ± 0.39
+1.69 ± 0.36
+8
+1.78 ± 0.27
+2.01 ± 0.35
+1.99 ± 0.39
+2.14 ± 0.51
+1.92 ± 0.32
+16
+1.88 ± 0.30
+2.33 ± 0.26
+2.45 ± 0.34
+2.37 ± 0.36
+2.37 ± 0.35
+32
+1.64 ± 0.24
+2.40 ± 0.29
+2.76 ± 0.34
+2.71 ± 0.39
+2.64 ± 0.31
+40
+1.75 ± 0.28
+2.46 ± 0.29
+2.98 ± 0.38
+2.77 ± 0.28
+2.86 ± 0.36
+48
+1.80 ± 0.22
+2.50 ± 0.25
+3.02 ± 0.23
+2.93 ± 0.28
+3.00 ± 0.36
+64
+1.60 ± 0.26
+2.56 ± 0.17
+3.10 ± 0.20
+2.94 ± 0.25
+3.18 ± 0.29
+80
+1.61 ± 0.26
+2.58 ± 0.16
+3.30 ± 0.30
+3.19 ± 0.19
+3.38 ± 0.28
+96
+1.67 ± 0.27
+2.63 ± 0.23
+3.37 ± 0.15
+3.20 ± 0.22
+3.45 ± 0.17
+112
+1.61 ± 0.27
+2.67 ± 0.21
+3.37 ± 0.13
+3.27 ± 0.18
+3.54 ± 0.24
+128
+1.66 ± 0.15
+2.66 ± 0.20
+3.37 ± 0.17
+3.28 ± 0.23
+3.57 ± 0.21
+33
+
+Table 20: Accuracy across sampling budgets for InternLM2-Math-Plus-7B on MATH, MathOdyssey, and AIME.
+MATH
+K
+PPL
+SC
+SC + Ours
+RPC
+RPC + Ours
+1
+41.69 ± 0.42
+41.69 ± 0.42
+41.69 ± 0.42
+41.69 ± 0.42
+41.69 ± 0.42
+2
+43.93 ± 0.39
+41.73 ± 0.22
+43.93 ± 0.39
+43.93 ± 0.39
+43.93 ± 0.39
+4
+45.57 ± 0.38
+45.92 ± 0.26
+45.51 ± 0.37
+47.09 ± 0.33
+45.48 ± 0.38
+8
+46.49 ± 0.42
+48.45 ± 0.21
+49.06 ± 0.51
+49.10 ± 0.18
+48.54 ± 0.46
+16
+47.14 ± 0.22
+49.76 ± 0.16
+52.07 ± 0.19
+50.24 ± 0.13
+51.80 ± 0.17
+32
+47.09 ± 0.26
+50.38 ± 0.26
+53.40 ± 0.28
+51.17 ± 0.29
+53.18 ± 0.18
+40
+46.96 ± 0.29
+50.48 ± 0.10
+53.62 ± 0.22
+51.22 ± 0.14
+53.31 ± 0.27
+48
+46.96 ± 0.26
+50.51 ± 0.17
+53.70 ± 0.20
+51.40 ± 0.16
+53.58 ± 0.21
+64
+47.00 ± 0.20
+50.57 ± 0.18
+53.99 ± 0.18
+51.94 ± 0.14
+53.81 ± 0.12
+MathOdyssey
+K
+PPL
+SC
+SC + Ours
+RPC
+RPC + Ours
+1
+20.57 ± 1.13
+20.57 ± 1.13
+20.57 ± 1.13
+20.57 ± 1.13
+20.57 ± 1.13
+2
+23.42 ± 1.17
+20.22 ± 0.65
+23.42 ± 1.17
+23.42 ± 1.17
+23.42 ± 1.17
+4
+25.40 ± 0.90
+23.77 ± 0.96
+25.42 ± 0.97
+25.27 ± 1.43
+25.37 ± 1.16
+8
+27.51 ± 0.84
+25.60 ± 0.80
+29.36 ± 1.19
+27.15 ± 1.08
+29.10 ± 1.12
+16
+27.92 ± 1.33
+26.69 ± 1.09
+32.12 ± 1.01
+27.94 ± 1.08
+31.88 ± 1.04
+32
+28.33 ± 0.73
+27.25 ± 1.01
+34.14 ± 1.30
+29.23 ± 1.51
+34.29 ± 1.31
+40
+28.66 ± 1.21
+27.58 ± 0.83
+34.73 ± 1.01
+29.67 ± 1.36
+34.40 ± 0.90
+48
+28.97 ± 1.49
+27.79 ± 0.74
+34.81 ± 1.00
+29.92 ± 0.89
+35.04 ± 0.92
+64
+28.59 ± 1.35
+27.65 ± 0.70
+34.96 ± 0.69
+30.93 ± 1.36
+35.60 ± 1.07
+80
+28.17 ± 0.96
+27.76 ± 0.44
+35.01 ± 0.72
+31.34 ± 0.77
+35.81 ± 0.81
+96
+28.30 ± 1.01
+27.99 ± 0.51
+35.14 ± 0.85
+31.23 ± 0.76
+36.20 ± 0.52
+112
+27.61 ± 0.73
+28.32 ± 0.55
+35.17 ± 0.57
+31.54 ± 0.61
+36.56 ± 0.68
+128
+27.51 ± 1.18
+28.30 ± 0.61
+35.30 ± 0.55
+31.70 ± 0.71
+36.53 ± 1.06
+AIME
+K
+PPL
+SC
+SC + Ours
+RPC
+RPC + Ours
+1
+5.06 ± 0.30
+5.06 ± 0.30
+5.06 ± 0.30
+5.06 ± 0.30
+5.06 ± 0.30
+2
+5.66 ± 0.54
+5.19 ± 0.26
+5.66 ± 0.54
+5.66 ± 0.54
+5.66 ± 0.54
+4
+5.93 ± 0.35
+6.23 ± 0.31
+5.92 ± 0.34
+6.57 ± 0.35
+5.89 ± 0.37
+8
+6.14 ± 0.48
+7.49 ± 0.67
+7.15 ± 0.61
+7.86 ± 0.68
+6.86 ± 0.69
+16
+6.21 ± 0.72
+8.51 ± 0.35
+8.64 ± 0.35
+8.71 ± 0.43
+8.48 ± 0.41
+32
+6.31 ± 0.60
+8.89 ± 0.34
+9.44 ± 0.39
+9.10 ± 0.33
+9.12 ± 0.33
+40
+6.21 ± 0.72
+9.04 ± 0.26
+9.56 ± 0.41
+9.37 ± 0.44
+9.39 ± 0.28
+48
+6.37 ± 0.69
+9.05 ± 0.30
+9.63 ± 0.34
+9.51 ± 0.44
+9.60 ± 0.42
+64
+6.48 ± 0.43
+9.24 ± 0.21
+9.68 ± 0.44
+9.54 ± 0.33
+9.97 ± 0.35
+80
+6.41 ± 0.49
+9.33 ± 0.22
+9.66 ± 0.29
+9.69 ± 0.38
+9.92 ± 0.45
+96
+6.28 ± 0.43
+9.31 ± 0.12
+9.87 ± 0.32
+9.86 ± 0.21
+10.05 ± 0.34
+112
+6.11 ± 0.44
+9.39 ± 0.21
+9.87 ± 0.35
+9.69 ± 0.15
+10.09 ± 0.38
+128
+5.96 ± 0.48
+9.40 ± 0.21
+9.95 ± 0.24
+9.74 ± 0.23
+10.08 ± 0.24
+34
+
+Table 21: Online aggregation across the two InternLM2-Math-Plus backbones. K is the average number of sampled
+paths. Gain is the absolute accuracy change (%) against Online SC under the same stopping rule, and saving is
+relative to Kmax, which is 64 for MATH and 128 otherwise.
+Dataset
+Method
+Accuracy
+Sampling Cost
+Acc.
+Gain over
+Online SC
+K
+Saving
+InternLM2-Math-Plus-1.8B
+MATH
+SC (Full Budget)
+36.48±0.14
+–
+64.0
+–
+Adaptive SC
+36.49±0.16
+–
+36.3
+43.3%
+Online SC
+36.38±0.19
+–
+33.4
+47.7%
+Online SC + PGLA
+39.32±0.31
++2.95
+31.5
+50.8%
+MathOdyssey
+SC (Full Budget)
+14.57±0.45
+–
+128.0
+–
+Adaptive SC
+14.48±0.46
+–
+70.0
+45.3%
+Online SC
+14.47±0.93
+–
+37.4
+70.8%
+Online SC + PGLA
+18.20±0.90
++3.73
+34.5
+73.1%
+AIME
+SC (Full Budget)
+2.66±0.20
+–
+128.0
+–
+Adaptive SC
+2.66±0.19
+–
+92.6
+27.7%
+Online SC
+2.55±0.24
+–
+45.4
+64.5%
+Online SC + PGLA
+2.94±0.29
++0.39
+38.3
+70.1%
+InternLM2-Math-Plus-7B
+MATH
+SC (Full Budget)
+50.57±0.18
+–
+64.0
+–
+Adaptive SC
+50.55±0.22
+–
+27.2
+57.5%
+Online SC
+50.51±0.20
+–
+30.2
+52.8%
+Online SC + PGLA
+53.49±0.22
++2.98
+29.0
+54.7%
+MathOdyssey
+SC (Full Budget)
+28.30±0.61
+–
+128.0
+–
+Adaptive SC
+28.22±0.67
+–
+58.8
+54.1%
+Online SC
+27.79±0.86
+–
+35.3
+72.4%
+Online SC + PGLA
+34.19±0.94
++6.40
+32.0
+75.0%
+AIME
+SC (Full Budget)
+9.40±0.21
+–
+128.0
+–
+Adaptive SC
+9.38±0.23
+–
+81.6
+36.3%
+Online SC
+9.04±0.41
+–
+42.0
+67.2%
+Online SC + PGLA
+9.50±0.42
++0.46
+36.3
+71.7%
+Online Sampling Efficiency
+The full-budget results establish the aggregation benefit of PGLA. We next examine whether this benefit
+remains when the sampling budget is determined independently for each query. Following Sec. D, we
+apply the same stopping rule and hyperparameters to SC and SC+PGLA on identical nested path prefixes,
+with each rule tracking its own unique winner. Both methods update their predictions every eight paths
+and stop after the winner remains unchanged for three consecutive updates. We impose no additional
+warm-up threshold, making K = 24 the earliest possible stopping point. To isolate the effect of PGLA, its
+online variant uses count-based SC support, i.e., sSC
+u,j = |Cu,j|. We fix this protocol across the evaluated
+datasets and include Adaptive SC with its original stopping criterion as a representative online baseline.
+Performance in the Online Setting. As shown in Tab. 21, Online SC+PGLA consistently outperforms
+Online SC across the evaluated datasets, yielding gains of 0.39–6.40% under the same stopping rule.
+Meanwhile, it reduces the sampling cost by 50.8%–75.0% and uses fewer paths than Online SC in every
+setting. Despite this reduction, Online SC+PGLA remains 0.10–5.89% above full-budget SC. These results
+show that the comparative evidence introduced by PGLA improves both the accuracy and the sampling
+efficiency of online aggregation.
+35
+
+Extension to 32B Models
+We further evaluate the aggregation methods in Tab. 1 using Qwen3-32B in reasoning mode on AIME24,
+AIME25, and HMMT25 (February). Each benchmark contains 30 problems with 64 sampled responses per
+problem. All methods use the same K = 32 subsets.
+Tab. 22 shows that PGLA matches or improves the corresponding voting baselines on Qwen3-32B, with
+the most gains on HMMT25. These results suggest that the benefits of pairwise confidence comparisons
+extend to larger reasoning models.
+Table 22: Accuracy (%) of Qwen3-32B in reasoning mode at K = 32.
+Method
+AIME24
+AIME25
+HMMT25
+Qwen3-32B Reasoning mode
+PPL Best-of-N
+75.67±3.96
+67.33±6.29
+41.00±3.96
+DeepConf Best-of-N
+84.33±3.96
+79.33±2.00
+55.33±2.67
+Self-Certainty Best-of-N
+88.33±2.69
+77.00±2.33
+62.33±3.00
+SC
+90.17±1.57
+81.33±1.63
+59.50±2.67
++ Ours (DeepConf)
+90.67±2.00
+81.67±1.67
+63.67±2.77
++ Ours (Self-Certainty)
+90.33±1.80
+81.33±1.63
+65.00±2.24
+DeepConf-Weighted SC
+90.33±1.80
+81.33±1.63
+60.67±2.91
++ Ours
+90.67±2.00
+81.67±1.67
+63.67±1.80
+Self-Certainty-Weighted SC
+90.33±1.80
+81.33±1.63
+60.67±3.27
++ Ours
+90.33±1.80
+81.33±1.63
+65.00±1.67
+Self-Certainty Borda
+89.00±2.13
+80.33±1.00
+64.33±3.00
++ Ours
+89.33±2.00
+81.00±1.53
+65.00±2.24
+DeepConf-Filter (90%)
+90.33±1.80
+81.33±1.63
+64.00±3.27
++ Ours
+90.67±2.00
+82.00±1.63
+65.00±2.69
+36
+
+Effect of Comparative Advantage Rules
+The comparative term in PGLA is modular: changing its aggregation rule leaves the voting distribution
+and KL-regularized update unchanged. For U = |A| > 1, we compare the default voting-weighted
+comparative advantage in Eq. (7) with three alternatives:
+sPair
+u
+= ∑v̸=u sV
+v Yuv
+∑v̸=u sVv
+,
+sPair,Unif
+u
+=
+1
+U −1 ∑
+v̸=u
+Yuv,
+sPair,Copeland
+u
+=
+1
+U −1 ∑
+v̸=u
+sgn(Yuv),
+sPair,Maximin
+u
+= min
+v̸=u Yuv.
+(32)
+Uniform averaging takes the mean of signed pairwise scores; Copeland retains only their signs, with ties
+contributing zero (Zwicker, 2016); Maximin retains the smallest signed margin (Fischer et al., 2016). All
+four scores lie in [−1, 1] and are set to zero for U = 1. The weighted score is also zero when its denominator
+vanishes. These rules aggregate confidence-based comparisons, and the default weights apply to opposing
+answers. Each alternative can replace sPair
+u
+in Eq. (9).
+Matched protocol.
+We extend Tab. 2 using InternLM2-Math-Plus-1.8B, InternLM2-Math-Plus-7B, and
+DeepSeek-Math-RL-7B on MATH (K = 64), MathOdyssey (K = 128), and AIME (K = 128), using internal
+mean log-probability scores. We evaluate SC, Weighted SC, Adaptive SC, and RPC. Only the comparative
+rule changes.
+Results.
+Tabs. 23 to 25 report the results by model. Voting-weighted comparisons attain higher mean
+accuracy than uniform averaging in most settings, with macro-average accuracy of 29.06% versus 28.70%,
+but uniform averaging yields lower macro-average ECE. Copeland can outperform voting-weighted
+comparisons and has slightly higher model-average accuracy on InternLM2-1.8B, but lower averages on
+the other models. Maximin is consistently less accurate. Overall, all four rules improve accuracy over their
+corresponding baselines in most evaluated settings, supporting the effectiveness of incorporating com-
+parative advantage and demonstrating that our general framework accommodates diverse comparative
+advantage rules.
+Table 23: Comparative-advantage functions on InternLM2-Math-Plus-1.8B. We expand Tab. 2 using the same
+coefficients (Sec. G.11). Voting denotes the default voting-weighted comparative advantage and + Ours denotes the
+scaled PGLA variants described in Sec. G.11.
+Method
+MATH
+MathOdyssey
+AIME
+Average
+Acc. ↑
+ECE ↓
+Acc. ↑
+ECE ↓
+Acc. ↑
+ECE ↓
+Acc. ↑ECE ↓
+InternLM2-Math-Plus-1.8B
+PPL
+33.23±0.25
+61.58±0.25
+16.63±0.83
+77.20±0.82
+1.66±0.15
+92.28±0.16
+17.17
+77.02
+SC
+36.48±0.14
+6.66±0.14
+14.57±0.45
+18.51±0.41
+2.66±0.20
+16.84±0.16
+17.90
+14.00
++ Ours (voting)
+39.77±0.17
+5.63±0.13
+18.28±0.56
+13.97±0.59
+3.37±0.17
+15.51±0.15
+20.47
+11.70
++ Ours (Uniform)
+39.24±0.14
+4.94±0.13
+17.46±0.61
+14.39±0.69
+3.25±0.14
+15.34±0.11
+19.98
+11.55
++ Ours (Copeland)
+39.65±0.17
+5.71±0.16
+18.87±0.62
+13.37±0.58
+3.53±0.12
+15.56±0.17
+20.68
+11.55
++ Ours (Maximin)
+38.17±0.19
+6.19±0.26
+16.13±0.33
+16.35±0.37
+2.78±0.25
+16.56±0.25
+19.03
+13.04
+Weighted SC
+36.72±0.12
+6.52±0.14
+14.86±0.47
+18.05±0.50
+2.75±0.23
+16.65±0.19
+18.11
+13.74
++ Ours (voting)
+39.91±0.22
+5.55±0.17
+18.56±0.56
+13.47±0.56
+3.37±0.17
+15.34±0.15
+20.61
+11.45
++ Ours (Uniform)
+39.40±0.17
+4.83±0.19
+17.53±0.73
+14.16±0.79
+3.32±0.19
+15.11±0.15
+20.09
+11.37
++ Ours (Copeland)
+39.75±0.19
+5.69±0.17
+19.13±0.48
+13.00±0.42
+3.59±0.13
+15.40±0.19
+20.82
+11.36
++ Ours (Maximin)
+38.28±0.15
+6.21±0.24
+16.38±0.42
+15.95±0.39
+2.83±0.20
+16.39±0.22
+19.16
+12.85
+Adaptive SC
+36.48±0.16
+10.61±0.23
+14.43±0.51
+22.69±0.73
+2.65±0.20
+19.25±0.25
+17.85
+17.52
++ Ours (voting)
+39.05±0.23
+9.28±0.27
+17.47±0.63
+17.96±0.60
+3.23±0.21
+17.53±0.41
+19.92
+14.92
++ Ours (Uniform)
+38.74±0.20
+8.66±0.24
+16.79±0.63
+18.22±0.84
+3.14±0.14
+17.31±0.31
+19.56
+14.73
++ Ours (Copeland)
+38.21±0.18
+10.26±0.18
+17.76±0.80
+17.66±0.90
+3.40±0.19
+17.59±0.47
+19.79
+15.17
++ Ours (Maximin)
+36.95±0.28
+10.77±0.31
+16.18±0.88
+19.32±1.28
+2.75±0.28
+18.46±0.44
+18.63
+16.18
+RPC
+37.87±0.14
+6.45±0.15
+16.43±0.60
+16.25±0.76
+3.28±0.23
+16.32±0.20
+19.19
+13.01
++ Ours (voting)
+40.29±0.27
+5.50±0.22
+20.28±0.48
+10.78±0.60
+3.57±0.21
+14.67±0.23
+21.38
+10.32
++ Ours (Uniform)
+39.90±0.25
+4.83±0.29
+19.00±0.48
+11.89±0.55
+3.52±0.12
+14.63±0.12
+20.80
+10.45
++ Ours (Copeland)
+40.13±0.23
+5.87±0.20
+20.33±0.62
+11.31±0.86
+3.63±0.09
+15.23±0.15
+21.37
+10.80
++ Ours (Maximin)
+38.81±0.22
+6.82±0.27
+17.92±0.61
+14.01±0.55
+3.09±0.22
+16.37±0.23
+19.94
+12.40
+37
+
+Table 24: Comparative-advantage functions on InternLM2-Math-Plus-7B. We expand Tab. 2 using the same
+coefficients (Sec. G.11). Voting denotes the default voting-weighted comparative advantage and + Ours denotes the
+scaled PGLA variants described in Sec. G.11.
+Method
+MATH
+MathOdyssey
+AIME
+Average
+Acc. ↑
+ECE ↓
+Acc. ↑
+ECE ↓
+Acc. ↑
+ECE ↓
+Acc. ↑ECE ↓
+InternLM2-Math-Plus-7B
+PPL
+47.00±0.20
+48.98±0.20
+27.51±1.18
+67.54±1.18
+5.96±0.48
+88.98±0.49
+26.82
+68.50
+SC
+50.57±0.18
+6.72±0.19
+28.30±0.61
+12.18±0.57
+9.40±0.21
+14.35±0.23
+29.42
+11.08
++ Ours (voting)
+53.99±0.18
+6.10±0.20
+35.30±0.55
+9.69±1.02
+9.95±0.24
+13.90±0.23
+33.08
+9.90
++ Ours (Uniform)
+53.72±0.13
+5.13±0.23
+33.62±0.72
+8.68±0.75
+10.04±0.23
+13.26±0.25
+32.46
+9.02
++ Ours (Copeland)
+52.98±0.23
+6.54±0.25
+34.37±0.80
+8.52±1.18
+10.21±0.28
+13.67±0.30
+32.52
+9.58
++ Ours (Maximin)
+52.56±0.17
+6.25±0.20
+31.79±0.92
+10.16±1.01
+9.17±0.19
+14.75±0.20
+31.17
+10.38
+Weighted SC
+50.81±0.20
+6.56±0.21
+28.82±0.67
+11.57±0.68
+9.45±0.23
+14.27±0.25
+29.69
+10.80
++ Ours (voting)
+53.99±0.13
+6.15±0.17
+35.78±0.51
+9.37±1.16
+9.88±0.28
+13.86±0.27
+33.22
+9.79
++ Ours (Uniform)
+53.82±0.15
+5.08±0.29
+34.06±0.81
+8.46±0.99
+10.01±0.24
+13.21±0.24
+32.63
+8.92
++ Ours (Copeland)
+53.02±0.21
+6.57±0.23
+34.55±0.75
+8.50±1.01
+10.29±0.36
+13.55±0.40
+32.62
+9.54
++ Ours (Maximin)
+52.67±0.17
+6.20±0.19
+32.11±0.72
+10.01±0.98
+9.22±0.18
+14.64±0.20
+31.33
+10.28
+Adaptive SC
+50.54±0.22
+11.02±0.23
+28.20±0.68
+18.17±1.02
+9.38±0.23
+17.39±0.41
+29.37
+15.53
++ Ours (voting)
+52.66±0.26
+10.53±0.35
+33.14±0.73
+13.22±1.52
+9.83±0.21
+16.45±0.33
+31.87
+13.40
++ Ours (Uniform)
+52.62±0.28
+9.60±0.39
+31.93±0.46
+13.31±0.98
+9.87±0.19
+15.90±0.34
+31.47
+12.94
++ Ours (Copeland)
+50.73±0.26
+12.43±0.31
+31.75±1.00
+14.22±1.21
+9.73±0.28
+16.58±0.35
+30.74
+14.41
++ Ours (Maximin)
+50.66±0.35
+11.71±0.36
+30.73±0.64
+14.99±1.19
+8.57±0.27
+17.83±0.22
+29.99
+14.85
+RPC
+51.94±0.14
+6.41±0.16
+31.70±0.71
+9.88±0.80
+9.74±0.23
+14.31±0.21
+31.13
+10.20
++ Ours (voting)
+53.81±0.12
+6.72±0.15
+36.53±1.06
+7.90±1.09
+10.08±0.24
+13.31±0.22
+33.47
+9.31
++ Ours (Uniform)
+53.80±0.10
+5.74±0.26
+35.19±0.59
+8.22±0.93
+10.14±0.32
+12.98±0.33
+33.04
+8.98
++ Ours (Copeland)
+52.83±0.19
+7.36±0.21
+35.12±1.04
+7.87±1.59
+10.20±0.32
+13.70±0.38
+32.72
+9.64
++ Ours (Maximin)
+52.79±0.22
+6.97±0.23
+33.73±0.79
+9.72±1.34
+9.68±0.21
+14.45±0.23
+32.07
+10.38
+Table 25: Comparative-advantage functions on DeepSeek-Math-RL-7B. We expand Tab. 2 using the same coefficients
+(Sec. G.11). Voting denotes the default voting-weighted comparative advantage and + Ours denotes the scaled PGLA
+variants described in Sec. G.11.
+Method
+MATH
+MathOdyssey
+AIME
+Average
+Acc. ↑
+ECE ↓
+Acc. ↑
+ECE ↓
+Acc. ↑
+ECE ↓
+Acc. ↑ECE ↓
+DeepSeek-Math-RL-7B
+PPL
+42.50±0.23
+53.84±0.23
+22.34±1.00
+73.85±0.99
+3.37±0.46
+93.38±0.46
+22.74
+73.69
+SC
+53.33±0.08
+6.43±0.11
+36.57±0.56
+9.40±1.21
+9.42±0.23
+12.12±0.26
+33.11
+9.32
++ Ours (voting)
+53.52±0.10
+6.86±0.09
+37.87±0.55
+9.31±0.95
+10.02±0.23
+10.88±0.25
+33.80
+9.02
++ Ours (Uniform)
+53.49±0.11
+6.57±0.09
+37.51±0.64
+9.24±0.76
+9.99±0.22
+10.78±0.20
+33.66
+8.87
++ Ours (Copeland)
+53.30±0.16
+7.17±0.14
+38.12±0.55
+8.12±0.87
+9.90±0.25
+11.20±0.23
+33.78
+8.83
++ Ours (Maximin)
+53.38±0.15
+6.56±0.15
+37.10±0.48
+9.29±1.27
+9.26±0.25
+11.99±0.27
+33.25
+9.28
+Weighted SC
+53.35±0.09
+6.43±0.10
+36.68±0.61
+9.55±1.31
+9.43±0.31
+12.10±0.34
+33.16
+9.36
++ Ours (voting)
+53.53±0.10
+6.84±0.09
+37.94±0.58
+9.53±0.79
+10.00±0.24
+10.84±0.25
+33.83
+9.07
++ Ours (Uniform)
+53.48±0.10
+6.59±0.07
+37.56±0.69
+9.05±0.83
+9.98±0.21
+10.75±0.17
+33.67
+8.80
++ Ours (Copeland)
+53.30±0.18
+7.17±0.17
+38.20±0.60
+8.14±0.92
+9.92±0.30
+11.15±0.28
+33.81
+8.82
++ Ours (Maximin)
+53.40±0.17
+6.54±0.18
+37.12±0.53
+9.32±1.19
+9.31±0.30
+11.92±0.33
+33.28
+9.26
+Adaptive SC
+53.28±0.09
+10.01±0.14
+36.30±0.58
+13.25±1.14
+9.36±0.22
+14.88±0.41
+32.98
+12.71
++ Ours (voting)
+53.44±0.16
+10.10±0.15
+36.27±0.80
+12.33±0.87
+9.92±0.23
+13.31±0.49
+33.21
+11.91
++ Ours (Uniform)
+53.41±0.15
+9.88±0.15
+36.22±0.87
+12.47±1.62
+9.79±0.22
+13.20±0.51
+33.14
+11.85
++ Ours (Copeland)
+53.09±0.17
+10.45±0.25
+33.57±1.11
+14.89±1.22
+9.54±0.25
+13.93±0.44
+32.07
+13.09
++ Ours (Maximin)
+53.29±0.15
+9.85±0.23
+34.58±0.86
+13.50±0.95
+8.43±0.52
+14.93±0.66
+32.10
+12.76
+RPC
+53.36±0.11
+6.47±0.12
+37.12±0.61
+9.54±1.54
+9.51±0.28
+11.94±0.32
+33.33
+9.32
++ Ours (voting)
+53.52±0.11
+6.85±0.10
+38.10±0.61
+8.89±0.76
+10.01±0.26
+10.44±0.29
+33.88
+8.73
++ Ours (Uniform)
+53.48±0.10
+6.60±0.09
+38.12±0.65
+8.17±0.93
+10.02±0.27
+10.36±0.34
+33.87
+8.38
++ Ours (Copeland)
+53.31±0.18
+7.16±0.17
+38.07±0.68
+7.62±0.81
+9.99±0.36
+10.90±0.34
+33.79
+8.56
++ Ours (Maximin)
+53.40±0.18
+6.57±0.18
+37.48±0.73
+9.19±1.17
+9.34±0.28
+11.85±0.33
+33.41
+9.20
+38
+
+Computational Overhead
+Complexity.
+Let K be the number of sampled paths, U = |A| the number of candidate answers, and
+nu = |Cu|. Given answer groups and confidence scores, accumulating voting support requires O(K + U)
+time. Directly evaluating the pairwise correction in Eqs. (6) and (7) takes O(K2) time. The number of
+unordered cross-answer path pairs is ∑u<v nunv = (K2 −∑u n2
+u)/2 ≤K(K −1)/2. At our experimental
+budgets K = 32, 64, 128, this is at most 496, 2,016, and 8,128 scalar comparisons, respectively. The final
+score adjustment in Eq. (10) is computed in closed form in O(U) time, without iterative optimization.
+Impact on inference time.
+Pairwise comparisons reuse the scalar confidence scores of the sampled paths;
+they require neither additional reasoning paths nor per-pair LLM or verifier calls. Even direct evaluation
+has a reported median aggregation latency below 0.109 ms per query on the real candidate pools in Tab. 26.
+For context, the K = 32 Qwen3-4B/AIME 2024 pools contain approximately 4.77 × 105 generated tokens
+per pool on average. Relative to this GPU-based autoregressive generation workload, sub-millisecond CPU
+post-processing is expected to have a negligible effect on total inference time. This assessment concerns
+aggregation given available scores; separate confidence-model inference is not included, and we do not
+infer a measured end-to-end latency percentage from these timings.
+Exact acceleration.
+To further reduce aggregation latency as the candidate pool grows, we implement an
+exact sorting-and-prefix-sum evaluation of the default voting-weighted correction. Define
+wi = sV
+ai
+nai
+,
+di = ∑
+j:pj<pi
+wj −∑
+j:pj>pi
+wj,
+sPair
+u
+=
+∑i∈Cu di
+nu ∑v̸=u sVv
+.
+(33)
+Within-answer signed comparisons cancel because all paths in the same group have the same comparison
+weight wi, yielding the exact identity above. We sort confidence scores once and collect equal scores into
+blocks. Prefix and suffix sums of block weights give the total weights below and above each block, hence
+every di; ties contribute zero. A final group-wise reduction computes the correction and adjusted scores. A
+zero denominator gives zero correction, as in Sec. D. This implementation takes O(K log K + U) time and
+O(K + U) working memory, avoiding a dense pairwise matrix while preserving the original aggregation
+rule.
+Measured implementation cost.
+We compare two different implementations of PGLA with identical
+confidence-weighted voting support on the same device. Direct evaluation constructs a dense path-
+comparison array; the accelerated implementation uses Eq. (33). We use 300 cached Qwen3-4B/AIME
+2024 pools with DeepConf (K = 32) and 1,000 InternLM2-Math-Plus-1.8B pools each from MATH (K = 64)
+and MathOdyssey (K = 128), with inverse-perplexity weights. At K = 128, sorting reduces the reported
+median aggregation time from 108.3 to 60.3 µs, a 1.80× speedup over direct evaluation. For K = 32 and 64,
+the vectorized direct implementation remains faster because of its lower fixed cost. Thus sorting improves
+scalability and the measured latency at the largest experimental budget, while direct evaluation remains
+efficient for smaller pools.
+Table 26: CPU aggregation latency of two exact PGLA implementations (µs per query), measured on real cached
+candidate pools. Both use identical inputs and confidence-weighted voting support.
+Implementation
+K = 32
+K = 64
+K = 128
+AIME 2024
+MATH
+MathOdyssey
+Direct pairwise evaluation
+29.7
+48.9
+108.3
+Exact sorting + prefix sums
+53.4
+57.4
+60.3
+39
+
+Connection to Rank-Based Borda Aggregation
+Under SC, PGLA admits an exact rank representation. Let nu = |Cu|, let Ri ∈[1, K] be the ascending
+confidence rank of path i (averaged for ties), and define ¯Ru = n−1
+u ∑i∈Cu Ri. Rank-based Borda assigns
+answer u the score TBorda
+u
+= ∑i∈Cu Ri = nu ¯Ru.
+Proposition G.1 (Rank representation under SC). For the SC base sV
+u = nu and at least two observed answer
+groups, the correction in Eq. (7) satisfies
+sPair
+u
+= 2 ¯Ru −K −1
+K −nu
+.
+(34)
+Consequently, SC-PGLA selects the answer maximizing log nu + (2 ¯Ru −K −1)/(K −nu).
+Proof. Under SC, the correction averages all signed cross-group comparisons. Summing the rank identity
+∑j sgn(pi −pj) = 2Ri −K −1 over i ∈Cu, canceling within-group terms by antisymmetry, and dividing
+by nu(K −nu) gives Eq. (34). The selection rule follows from Eq. (10).
+Proposition G.1 makes the connection to rank-based voting precise. Under SC, both Borda and SC-PGLA
+use the same path-confidence ordering, but they aggregate it differently. With γ = 1, Borda sums ranks as
+T(1)
+u
+= nu ¯Ru, whereas SC-PGLA selects by log nu + (2 ¯Ru −K −1)/(K −nu). The latter treats the ordering
+as a bounded cross-answer comparative correction while retaining voting support as a separate term. In
+particular, an answer u with nu < nv can overtake v only if sPair
+u
+−sPair
+v
+> log(nv/nu). Thus, reversing a
+larger vote margin requires stronger comparative evidence. The rank identity in Eq. (34). is specific to
+SC; Eq. (7) also combines pairwise comparisons with confidence-weighted and externally scored voting
+support. The KL solution provides the mechanism for this combination, while the aggregation rule is
+determined by how the comparative evidence is constructed and weighted.
+To test whether PGLA can also enhance Borda itself, we use sV
+u = TBorda
+u
+in Eqs. (7) and (10), including the
+opponent weights. Tabs. 27 and 28 compare SC and Borda with their PGLA-adjusted counterparts on the
+same sampled subsets.
+Borda improves over SC on average, showing that confidence ordering can help correct voting-based
+selection errors. More importantly, applying PGLA directly to Borda raises macro-average accuracy from
+59.17% to 61.21% on Qwen’s AIME24 and HMMT25 comparisons, and from 25.89% to 27.76% across the
+six InternLM settings. These paired comparisons support explicit answer-level preference modeling as a
+way to further refine rank-based voting on the evaluated settings.
+Table 27: Qwen3 reasoning-mode accuracy on AIME24 and HMMT25 (%; K = 32).
+Qwen3-1.7B
+Qwen3-4B
+Avg.
+results
+Method
+AIME24
+HMMT25
+AIME24
+HMMT25
+DeepConf
+SC
+69.50±1.98
+27.00±1.00
+80.00±0.00
+51.50±1.57
+57.00
+SC-PGLA
+75.00±1.67
+30.00±2.98
+83.00±1.00
+54.00±2.91
+60.50
+Borda
+72.67±2.49
+29.00±3.35
+82.00±1.63
+52.33±2.60
+59.00
+Borda+PGLA 74.00±2.49
+33.17±3.83
+83.67±2.33
+54.00±2.91
+61.21
+Self-Certainty
+SC
+69.50±1.98
+27.00±1.00
+80.00±0.00
+51.50±1.57
+57.00
+SC-PGLA
+74.00±1.33
+30.33±2.77
+82.00±1.63
+55.67±1.53
+60.50
+Borda
+72.67±2.00
+29.00±2.60
+80.67±1.33
+55.00±1.67
+59.33
+Borda+PGLA 74.00±2.00
+33.50±4.25
+82.33±2.13
+55.00±1.67
+61.21
+40
+
+Table 28: InternLM2-Math-Plus accuracy (%; PPL ordering), with K = 64 for MATH and K = 128 otherwise.
+InternLM2-Math-Plus-1.8B
+InternLM2-Math-Plus-7B
+Avg.
+results
+Method
+MATH
+MathOdyssey
+AIME
+MATH
+MathOdyssey
+AIME
+SC
+36.48±0.14
+14.57±0.45
+2.66±0.20
+50.57±0.18
+28.30±0.61
+9.40±0.21
+23.66
+SC-PGLA
+39.77±0.17
+18.28±0.56
+3.37±0.17
+53.99±0.18
+35.30±0.55
+9.95±0.24
+26.77
+Borda
+38.83±0.08
+17.12±0.62
+3.23±0.18
+53.07±0.16
+33.14±0.59
+9.97±0.12
+25.89
+Borda+PGLA 40.58±0.21
+21.13±0.57
+3.56±0.20
+53.60±0.16
+37.48±0.58
+10.20±0.34
+27.76
+41
+
+Impact Statement
+PGLA aims to make LLM reasoning more accurate and efficient by improving how sampled responses are
+aggregated. The observed gains in mathematical reasoning, knowledge reasoning, and code generation
+may benefit applications in problem solving and software development, while the online extension can
+reduce the number of sampled responses needed. These benefits do not eliminate errors or biases in the
+underlying models or confidence signals. In particular, agreement among sampled responses is not a
+guarantee of correctness, and stronger capabilities in reasoning and code generation may also facilitate
+misuse. Deployment should therefore include evaluation in the intended setting, appropriate safeguards,
+and human oversight for consequential decisions.
+AI Use Statement
+In this work, we used LLMs to generate the sampled responses evaluated in our test-time scaling experi-
+ments, and process reward models to score reasoning steps in the external-reward setting, as described
+in Sec. 4.1. Generative AI tools assisted with implementation and debugging, checks of mathematical
+notation and derivations, interpretation and presentation of experimental results, and manuscript drafting,
+language editing, and LATEX formatting. AI assistance was also used to create parts of the illustrations,
+including the voting-game illustration in Fig. 1. The authors reviewed and revised AI-assisted manuscript
+content and take responsibility for the final text, claims, experimental results, code, and figures.
+42

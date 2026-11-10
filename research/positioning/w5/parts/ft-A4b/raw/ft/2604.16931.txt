@@ -1,0 +1,1334 @@
+ 
+ Playing Psychic: Using Thought Trees to Predict Reasoning Models Accuracy on Coding Tasks 
+ Skip to main content 
+ Report GitHub Issue 
+ × 
+ Title: 
+ Content selection saved. Describe the issue below: 
+ Description: 
+ Submit without GitHub 
+ Submit in GitHub 
+ Why HTML? 
+ Report Issue 
+ Back to Abstract 
+ Download PDF 
+ Contents 
+ Reading mode 
+ Colour theme 
+ Abstract 
+ 1 Introduction 
+ 2 Problem Formulation 
+ 3 Approach 
+ 3.1 Programmatic Problem Generation 
+ 3.2 Tree Generation 
+ 3.3 Analyzing Thought-Trees 
+ 4 Experiments 
+ 4.1 Experiment Setup 
+ 4.2 Evaluation Results 
+ 4.3 Reasoning Trace Analysis 
+ 4.3.1 Classification and Feature Analysis. 
+ 4.3.2 Intervention 
+ 4.4 Ablation Studies 
+ 4.4.1 An Oracle Classifier 
+ 4.4.2 Random Feature Sampling 
+ 5 Related Work 
+ 6 Conclusion 
+ References 
+ A Dataset Description 
+ A.1 CRUXEval Example Problem 
+ A.2 Codelingua Example Problem 
+ A.3 SAFIM Example Problem 
+ B Partial Dependence Plot 
+ C An “Oracle” Classifier 
+ D Feature Correlation 
+ E Top Features 
+ F Prompts 
+ F.1 CRUXEval Prompts 
+ F.2 SAFIM Prompts 
+ F.3 Codelingua Prompts 
+ F.4 Semantic Labeling Prompt 
+ F.5 Tree Generation Prompt 
+ F.6 Intervention Prompt 
+ G Qualitative Examples 
+ G.1 CRUXEval Example 
+ G.2 SAFIM Example 
+ G.3 CodeLingua Example 
+ License: arXiv.org perpetual non-exclusive license
+arXiv:2604.16931v1 [cs.AI] 18 Apr 2026 
+ Playing Psychic: Using Thought Trees to Predict Reasoning Models Accuracy on Coding Tasks 
+ Jiaxin Fang 1 
+ Runyuan He 1 
+ Sahil Bhatia 1 
+ Neel Gajare 1 
+ Alvin Cheung 1 
+ 1 University of California, Berkeley
+ Abstract 
+ Recent advances in large language models (LLMs) have shown that test-time scaling can substantially improve model performance on complex tasks, particularly in the coding domain. Under this paradigm, models use a larger token budget during inference to generate intermediate reasoning traces before producing a final answer. However, current evaluations primarily rely on competitive programming benchmarks, which may not capture the full range of reasoning abilities. In this work, we perform a systematic study of frontier reasoning models to understand their performance on real-world coding benchmarks. To gain more insights into the performance of such models, we devise a programmatic way to automatically generate coding tasks of arbitrary difficulty and structure from existing benchmarks. Using this framework, our analysis reveals that the structure of a reasoning trace, not just its contents, is a strong predictor of correctness. Motivated by this, we propose structured thought-trees as means to represent reasoning traces. To illustrate their use, we train a lightweight classifier on features extracted from thought-trees to predict trace correctness, and demonstrate that flagging and retrying structurally anomalous traces based on the extracted features yields consistent gains at lower complexity levels. 
+ 1 Introduction 
+ Recent advances in large language models (LLMs) have shown that test-time scaling  ( Guo et al., 2025 ; OpenAI et al., 2024 ) , i.e., allocating larger inference budgets to generate intermediate reasoning before generating a final answer, can substantially improve performance on complex tasks, particularly in coding and mathematics. Under this paradigm, LLMs produce explicit reasoning traces, often in the form of chain-of-thought  ( Wei et al., 2022 ) style decompositions before committing to a solution. This has led to major gains on benchmarks where solutions are verifiable, such as coding and mathematical problem solving. 
+ Despite these advances, our understanding of the reasoning processes remains limited. Most evaluations focus on final answer correctness over a small set of domains, and provide little or no insights into the structure, quality or failure modes of the generated reasoning traces. Existing attempts to analyze reasoning traces  ( Shojaee et al., 2025 ; Devic et al., 2025 ; Zhao et al., 2025 ; Aggarwal et al., 2025 ) have provided initial insights but remain limited in scope and methodology. These works largely rely on coarse heuristics such as trace length, token counts, self-consistency scores, or verifier-based correctness checks, and are often confined to narrow task domains such as competitive mathematics, symbolic reasoning, or single-task programming benchmarks. As a result, they offer limited understanding of the structure of reasoning traces, their generalization behavior across task distributions, and the systematic failure modes that emerge as reasoning complexity increases. 
+ In this paper, we analyze reasoning traces through a structured and programmatic lens. Rather than the typical “natural language to code” task, we evaluate the frontier reasoning models on programming tasks that require semantic reasoning over programs, including code execution, fill-in-the-middle, and code translation. A key challenge in LLM evaluation is finding benchmarks that are not already present in the training data. To address this, we introduce programmatic task generation that automatically creates new programming problems by intelligently composing existing ones. Doing so allows us to control the level of complexity as desired, and thus enables us to systematically evaluate different models across problem difficulty levels. 
+ Another challenge in evaluating these traces at scale is that traces generated under test-time scaling are long and complex. Moreover, reasoning is inherently hierarchical and non-linear: LLMs explore alternatives, refine partial ideas, and backtrack. This makes the flat output token sequences a poor abstraction and tree-structured representation a natural abstraction for reasoning ( Yao et al., 2023 ) . Motivated by this, we represent each reasoning trace as a thought-tree , where nodes correspond to atomic reasoning segments and edges encode semantic relationship between them. We construct these trees automatically using off-the-shelf LLMs, which incrementally organizes segments into a hierarchical structure. From these trees, we extract structural and semantic features that summarize how reasoning traces are organized. 
+ To demonstrate the usefulness of thought-trees, we extract structural and semantic features from thought-trees, and use such features to train lightweight classifiers to predict if a given reasoning trace correctly solves the programming task.
+Surprisingly, our evaluation shows the extracted structural and semantic features are highly predictive of correctness, despite the simplicity of our classifiers’ architecture. Across 3 different real-world programming benchmarks, our trained classifiers can correctly predict up to 89% of them. We furthermore use the extracted features to augment the original prompt, and results show that the augmented prompts can improve the accuracy of the generated answers by up to 80%.
+Thought-trees thus act as structural probes and demonstrate that reasoning organization alone contains strong signal about success and failure of a trace. 
+ In sum, we make the following contributions in this paper: 
+ • 
+ We propose programmatic benchmark generation ( Sec.   3.1 ) for coding tasks, to enable scalable and controllable evaluation beyond static datasets. 
+ • 
+ We define structured thought-tree representation ( Sec.   3.2 ) as a means to model reasoning traces, and we argue that thought-trees can be used to provide a principled abstraction for reasoning analysis. 
+ • 
+ We leverage thought-tree to train structure-based classifiers ( Sec.   3.3 ). Results show that trace structure is a strong predictor of solution correctness. We show that classifier-identified structural failure signals can guide targeted intervention: retrying flagged traces yields consistent gains at lower complexity levels
+ 1 1 
+ 1 
+ Our code and experiment results are available at: https://github.com/lmcode-ai/thought-tree-analysis 
+ 2 Problem Formulation 
+ We consider an LLM evaluated under a test-time scaling paradigm, where the model generates an explicit reasoning trace prior to outputting the final solution.
+ Let 𝒫 = { p 1 , … , p N } \mathcal{P}=\{p_{1},\dots,p_{N}\} 
+denote a set of coding problems, where each problem p ∈ 𝒫 p\in\mathcal{P} consists of a natural language specification and an associated correctness oracle.
+ Given a problem p p , the LLM generates a reasoning trace τ \tau 
+followed by a final program output o ⁡ ( τ , p ) o(\tau;p) . The trace may include intermediate reasoning steps, partial code, or planning tokens, and is generated using an expanded inference budget.
+ We define a binary correctness label:
+ y ⁡ ( p , τ ) ∈ { 0 , 1 } y(p,\tau)\in\{0,1\} ,
+where y = 1 y=1 if the output o ⁡ ( τ , p ) o(\tau;p) solves problem p p according to the oracle, and y = 0 y=0 otherwise. 
+ Instead of treating τ \tau as a flat token sequence, we represent each reasoning trace using a structured abstraction, referred to as a thought-tree . Formally, a thought-tree is a rooted tree T ⁡ ( τ ) = ( V , E ) T(\tau)=(V,E) , where each node in V V corresponds to reasoning segments and each directed edge ( u , v ) ∈ E (u,v)\in E means that node v v is a refinement or continuation of node u u . 
+ For each reasoning trace τ \tau , we extract a feature vector
+ ϕ ( τ ) = [ ϕ tree ( T ( τ ) ) ∥ ϕ trace ( τ ) ] ∈ ℝ d \phi(\tau)=\big[\phi_{\text{tree}}(T(\tau))\;\|\;\phi_{\text{trace}}(\tau)\big]\in\mathbb{R}^{d} ,
+where ϕ tree \phi_{\text{tree}} captures structural properties of the thought-tree, and ϕ trace \phi_{\text{trace}} captures features derived directly from the raw reasoning trace. Here ∥ \| denotes feature concatenation.
+ Given a dataset of problems and generated traces
+ 𝒟 = { ( p i , τ i , y i ) } i = 1 M \mathcal{D}=\{(p_{i},\tau_{i},y_{i})\}_{i=1}^{M} ,
+our goal is to learn a lightweight classifier
+ f θ : ℝ d → { 0 , 1 } f_{\theta}:\mathbb{R}^{d}\rightarrow\{0,1\} 
+that predicts whether a reasoning trace leads to a correct solution:
+ f θ ​ ( ϕ ⁡ ( τ ) ) ≈ y ⁡ ( p , τ ) f_{\theta}(\phi(\tau))\approx y(p,\tau) .
+The classifier parameters θ \theta are learned by minimizing a standard empirical risk objective,
+ min θ ⁡ 1 M ​ ∑ i = 1 M ℓ ⁡ ( f θ ​ ( ϕ ⁡ ( τ i ) ) , y i ) \min_{\theta}\;\frac{1}{M}\sum_{i=1}^{M}\ell\big(f_{\theta}(\phi(\tau_{i})),y_{i}\big) ,
+where ℓ ⁡ ( ⋅ , ⋅ ) \ell(\cdot,\cdot) is a binary classification loss. 
+ Solve f1(f2(text))
+ ⬇ 
+ def f1 ( text : str ) -> str :
+ i = 0
+ while i < len ( text ) and text [ i ]. isspace ():
+ i +=1
+ if i == len ( text ):
+ return ’space’ 
+ return ’no’ 
+ (a) Source Code 1 
+ ⬇ 
+ def f2 ( text : str ) -> list [ int ]:
+ occ = {}
+ for ch in text :
+ n = { ’a’ : ’b’ , ’b’ : ’c’ , ’c’ : ’d’ , ’d’ : ’e’ }
+ n = n . get ( ch , ch )
+ occ [ n ] = occ . get ( n , 0) + 1
+ return [ x for _ , x in occ . items ()]
+ (b) Source Code 2 
+ Workflow Step: Segmentation 
+ Raw Reasoning Trace
+ We are given two functions: f1 and f2. 
+ First, let’s analyze f1:
+ f1(text) does:
+ - It skips any leading whitespace by incrementing i until a non-space character is found or the end of the string.
+ - If the entire string is spaces (i.e., i reaches the length of the text), it returns the string ’space’.
+ - Otherwise, it returns ’no’.
+ Now, we are to compute: f2(f1(” ”))
+ … 
+ ⇒ \Rightarrow 
+ Segmentation Results
+ Seg 0: ”We are given two functions: f1 and f2.”
+ Seg 1: ”First, let’s analyze f1: \n f1(text)” 
+ Seg 2: ”does: \n - It skips any leading whitespace by incrementing i until a non-space character is found or the end of the string.\n - If the entire string is spaces (i.e., i reaches the length of the text), it returns the string ’space’.\n - Otherwise, it returns ’no’.”
+ Seg 3: ”Now, we are to compute: f2(f1(” ”)) Step 1: Evaluate f1(” ”)”
+ … 
+ Figure 1 : Overview of the approach: Input code is analyzed and segmented to produce atomic reasoning units. 
+ 3 Approach 
+ We illustrate our overall approach in  Fig.   1 and   Fig.   2 . It consists of three stages: programmatic problem generation, converting raw reasoning traces to thought-tree and learning classifiers to predict which we describe next in detail. 
+ 3.1 Programmatic Problem Generation 
+ LLMs are primarily trained and evaluated on natural language (NL) → \rightarrow code tasks  ( Hendrycks et al., 2021 ; Jain et al., 2024 ; Chen et al., 2021 ; Austin et al., 2021 ) . While strong performance on such benchmarks demonstrates the model’s code generation capabilities, it provides a limited view of the model’s reasoning abilities on a broader class of programming problems.
+ We focus on 3 canonical programming task families: code execution reasoning, code translation, and fill-in-the-middle (FIM) completion. These tasks differ from the classical NL → \rightarrow code tasks as they provide a structured programming interface, enabling systematic composition and the generation of new problems. We use them as atomic building blocks to construct structured, multi-stage coding tasks.
+ We construct new coding problems by composing existing programs through type inference . Each base problem p p is first annotated with its input and output types, resulting in a typed signature:
+ f p : ( x 1 : τ 1 , … , x k : τ k ) → y : τ o ​ u ​ t f_{p}:(x_{1}:\tau_{1},\dots,x_{k}:\tau_{k})\rightarrow y:\tau_{out} 
+Given a problem p i p_{i} , we select another problem p j p_{j} such that the output type of p i p_{i} matches the input signature of p j p_{j} , and define a composed program as:
+ f i ​ j ​ ( x ) = f p j ​ ( f p i ​ ( x ) ) f_{ij}(x)=f_{p_{j}}(f_{p_{i}}(x)) 
+This can be applied recursively to form composition chains:
+ f 1 : n ( x ) = f p n ∘ ⋯ ∘ f p 1 ( x ) f_{1:n}(x)=f_{p_{n}}\circ\dotsb\circ f_{p_{1}}(x) 
+yielding new problems whose solutions require solving multiple subprograms in sequence. 
+ Our construction has two key advantages:
+ 1. controllable composition depth, which enables systematic scaling of task complexity, and
+ 2. inherited correctness oracles, since composed tasks remain automatically evaluable through execution of their constituent programs.
+ Figs.   1 and  1 illustrate two example base programs from the code execution reasoning dataset. Function f 1 : s ​ t ​ r → s ​ t ​ r f_{1}:str\rightarrow str maps an input string to a categorical output ( "space" or "no" ), while f 2 : s ​ t ​ r → l ​ i ​ s ​ t ​ [ i ​ n ​ t ] f_{2}:str\rightarrow list[int] performs a character-level transformation and frequency aggregation. Since the output type of f 1 f_{1} matches the input type of f 2 f_{2} , the programs are type-compatible and can be composed to form a higher-order task f 2 ∘ f 1 f_{2}\circ f_{1} . The resulting task is: given an input to f 1 f_{1} , predict the output of f 2 ​ ( f 1 ​ ( ⋅ ) ) f_{2}(f_{1}(\cdot)) which requires multi-stage reasoning over both subprograms.
+ Unlike manual problem curation or community-sourced benchmarks, this approach provides a programmatic, scalable, controllable, and automatically evaluable mechanism for generating structured reasoning tasks. 
+ 3.2 Tree Generation 
+ For each problem p p , the model generates a reasoning trace τ \tau under test-time scaling, which we transform into a structured thought-tree representation through three sequential steps: segmentation, semantic labeling, and tree construction (illustrated in Figs.   1 and  2 ). 
+ Segmentation. Fig.   1 shows the segmentation process. On the left, we show a sample of the raw reasoning trace τ \tau for the composed problem described in the previous section, while the right shows the resulting decomposition into atomic thought segments. Each segment corresponds to a coherent reasoning unit (e.g., setup, function analysis, logic description, or execution planning), demonstrating how a flat trace is transformed into structured, self-contained reasoning components. We decompose τ \tau into a sequence of atomic thought units S ⁡ ( τ ) = ( s 1 , s 2 , … , s K ) S(\tau)=(s_{1},s_{2},\dots,s_{K}) using a rule-based approach: sentences are greedily merged based on transition signals (e.g., “ wait ”, “ alternatively ”), sentence length, and code-span boundaries. 
+ {forest} 
+ Figure 2 : Hierarchical thought tree. 
+ Semantic Labeling. 
+Each segment s i s_{i} is assigned a label l ⁡ ( s i ) ∈ ℒ l(s_{i})\in\mathcal{L} by an off-the-shelf LLM (prompt in App.   F ), where ℒ = { \mathcal{L}=\{ code analysis, mental execution, test generation, bug fixing, language mapping, high level plan, empty } \} captures the functional role of each reasoning step. These labels are not used during tree construction; instead, they serve as distributional features for the classifier ( Sec.   3.3 ). 
+ Tree Construction. 
+ Fig.   2 illustrates an example of the resulting hierarchical thought-tree. Each node corresponds to a segmented reasoning unit, and the tree structure makes explicit how the model’s reasoning evolves through analysis, execution, and composition, transforming a flat trace into an interpretable hierarchical representation. Segments are organized into a rooted tree T ⁡ ( τ ) = ( V , E ) T(\tau)=(V,E) by an off-the-shelf LLM that processes segments sequentially, attaching each to an existing node with a relation from ℛ = { Continuation, Contrast, Rephrase } \mathcal{R}=\{\textit{Continuation, Contrast, Rephrase}\} . These relations capture whether a segment extends, opposes, or rephrases its parent. The resulting tree makes explicit how reasoning evolves through analysis, execution, and backtracking, and serves as the basis for feature extraction. 
+ 3.3 Analyzing Thought-Trees 
+ We manually examine the thought-trees and design a number of feature groups that can be used to analyze them. Specifically, for each reasoning trace τ \tau , we extract a feature vector ϕ ⁡ ( τ ) ∈ ℝ d \phi(\tau)\in\mathbb{R}^{d} consisting of three feature groups: 
+ Structural tree features: 
+ • 
+ Tree depth and size (e.g., maximum depth, total number of nodes), reflecting overall reasoning depth and structural complexity. 
+ • 
+ Branching behavior (e.g., average branching factor, root branching factor), capturing exploration and early-stage divergence. 
+ • 
+ Depth-normalized statistics (e.g., node distributions per depth, internal nodes per depth), describing how reasoning effort is allocated across stages. 
+ • 
+ Internal structure metrics (e.g., # of internal/non-leaf nodes), capturing the extent of intermediate reasoning. 
+ Raw Trace-level features: 
+ • 
+ Exploration and revision signals, such as explicit backtracking events and forward-progress markers, capturing whether the model revises earlier decisions or commits to a reasoning path. 
+ • 
+ Lexical diversity and confidence-related features (e.g., unique word ratio, success word count), capturing variation and certainty in expression. 
+ • 
+ Length and density statistics (e.g., token counts, code-to-text ratio), characterizing trace verbosity and structure. 
+ Semantic label features: We add the semantic labels (described in  Sec.   3.2 ) assigned to each segment as distributional features. These features provide additional signals beyond purely structural properties. 
+ The final feature vector is:
+ ϕ ⁡ ( τ ) = [ ϕ t ​ r ​ e ​ e ​ ( T ⁡ ( τ ) ) ​ ‖ ϕ t ​ r ​ a ​ c ​ e ​ ( τ ) ‖ ​ ϕ l ​ a ​ b ​ e ​ l ​ ( τ ) ] \phi(\tau)=[\phi_{tree}(T(\tau))\;\|\;\phi_{trace}(\tau)\;\|\;\phi_{label}(\tau)] . 
+ To study thought-trees, we use the extracted features for 2 purposes: first, we train a lightweight classifier f θ f_{\theta} on ϕ ⁡ ( τ ) \phi(\tau) to predict trace correctness. The model is intentionally simple, as our goal is not to maximize predictive capacity, but to evaluate if structural properties of reasoning contain sufficient signal to predict correctness. Next, we use ϕ ⁡ ( τ ) \phi(\tau) for intervention by augmenting the prompts to see if they can improve accuracy ( Sec.   4.3.2 ). 
+ 4 Experiments 
+ We evaluate on three coding benchmarks: CRUXEval  ( Gu et al., 2024 ) , SAFIM  ( Gong et al., 2024 ) , and CodeLingua  ( Pan et al., 2024 ) . Details of the benchmarks are provided in App.   A . 
+ Benchmark 
+ Task Type 
+ Size 
+ Description 
+ CRUXEval 
+ Code execution reasoning 
+ 800 
+ Predict output of a Python function on a given input 
+ SAFIM 
+ Fill-in-the-middle 
+ 17,720 
+ Generate missing code blocks from context 
+ CodeLingua 
+ Code translation 
+ 1,700 
+ Translate code across languages preserving semantics 
+ Figure 3 : Benchmarks used in our evaluation. 
+ DeepSeek-R1 
+ QwQ-32B 
+ Benchmark 
+ Task 
+ L1 
+ L2 
+ L3 
+ L1 
+ L2 
+ L3 
+ CRUXEval 
+ Output 
+ 94.13 
+ 79.13 
+ 79.25 
+ 82.63 
+ 74.50 
+ 72.38 
+ SAFIM 
+ Block 
+ 69.47 
+ 17.38 
+ 16.24 
+ 48.90 
+ 12.92 
+ 9.35 
+ CodeLingua 
+ Java → \rightarrow C 
+ 94.00 
+ 91.60 
+ 90.00 
+ 84.44 
+ 72.00 
+ 55.02 
+ Python → \rightarrow C 
+ 82.40 
+ 86.00 
+ 85.20 
+ 65.60 
+ 60.24 
+ 46.00 
+ Java → \rightarrow Fortran 
+ 58.40 
+ 52.80 
+ 48.00 
+ 42.40 
+ 27.60 
+ 11.29 
+ Figure 4 : Pass@1 (%) results across benchmarks and composition levels. 
+ 4.1 Experiment Setup 
+ Problem Generation. 
+Each problem in the three selected benchmarks is treated as a Level-1 (L1) task. Following the approach detailed in  Sec.   3.1 , we generate higher-complexity datasets by function composition: Level-2 (L2) tasks are formed by composing two base programs, and Level-3 (L3) tasks by composing three base programs. 
+ Evaluating LLMs. 
+For every problem across all composition levels (L1, L2, and L3), we evaluate DeepSeek-R1  ( Guo et al., 2025 ) and QwQ-32B  ( Yang et al., 2025 ) using their default temperature settings under a test-time scaling regime. Prompt templates used for evaluating the models are provided in  App.   F . 
+ Tree Generation. 
+The collected reasoning traces are converted to thought-tree representations using the approach described in  Sec.   3.2 . Segmentation, semantic labeling, and tree construction are done using Gemini 2.0 Flash and Qwen3-235B-A22B-Instruct (temperature = 0.2). From each trace, we extract a feature set consisting of tree-structural, trace-level and semantic label features, as described in  Sec.   3.3 . 
+ Classifier Learning. 
+We train lightweight Random Forest classifiers in Python scikit-learn library to predict whether a given reasoning trace produces a correct program output. Classification is formulated as a supervised binary prediction task over feature vectors derived from thought-tree and traces. We adopt a cross-level generalization setup: classifiers are trained exclusively on 80% of the L1 traces and evaluated the trained classifiers on the remaining 20% of L1 , L2 , and L3 traces. For each benchmark, we use Random Forest classifiers with 50 estimators, and tune the maximum tree depth. 
+ Model Output Trace 
+ [Step-by-Step Stagnation] …Wait, the elements are: Indices 0:9, 1:7 …Wait let me do it step by step …Wait let’s count each element in reverse …
+ [Hypothesis Fixation] Wait, but the loop is up to len(digits) …
+ [Infinite Loop Phase] Hmm. Alternatively, perhaps the code is correct and the error is not there. Hmm. Alternatively, perhaps the code is correct and the error is not there. [Repeated till the end] … 
+ Figure 5 : Example of a terminal reasoning loop where brute-force manual execution triggers a collapse into infinite repetition. 
+ 4.2 Evaluation Results 
+ We first evaluate the reasoning models on the composed benchmarks to evaluate their robustness under increasing compositional complexity. In Fig.   4 , the performance degradation follows a distinct ”cliff” pattern that varies by benchmark complexity. For CRUXEval, the drop-off is relatively small; given good performance on L1 baseline and the simplicity of short Python functions, both R1 and QwQ successfully solve chained functions one-by-one with minimal state-tracking overhead.
+ In contrast, SAFIM exhibits a near-vertical decline. This suggests that for ”block” reasoning—which requires infilling code based on long-range dependencies—the compositional overhead becomes multiplicative. Manual inspection reveals two primary failure modes in higher-level SAFIM tasks: (1) State-Tracking Exhaustion: the model fails to correctly propagate input/ouput between functions, and (2) Logical Recursion: the model often enters repetitive reasoning loops when attempting to track nested dependencies, leading to token limit exhaustion before a conclusion is reached ( Fig.   5 ) . These results indicate that while LLMs excel at local function logic, their “working memory” for nested functional states remains a primary bottleneck. 
+ The CodeLingua results reveal a divergence in compositional robustness between the two models. In high-resource pairs like Java → \rightarrow C and Python → \rightarrow C, R1 remains stable, preserving semantic invariance across nested layers. Conversely, QwQ’s accuracy decays sharply, likely due to its much smaller parameter scale leading to multiplicative error accumulation. This “compositional breaking point” is further evidenced in Java → \rightarrow Fortran, where even R1’s performance drops significantly. In low-resource contexts like Fortran, the lack of foundational proficiency acts as a bottleneck; the additional cognitive overhead of functional composition exceeds the model’s reasoning capacity, leading to a performance collapse. 
+ Dataset 
+ Level 
+ R1 Acc. 
+ R1 Interv. Pass@1 
+ QwQ Acc. 
+ QwQ Interv. Pass@1 
+ CRUXEval 
+ L1 
+ 0.88 
+ 0.80 (16/20) 
+ 0.89 
+ 0.65 (42/65) 
+ L2 
+ 0.75 
+ 0.22 (11/51) 
+ 0.77 
+ 0.13 (4/30) 
+ L3 
+ 0.73 
+ 0.15 (10/66) 
+ 0.74 
+ 0.27 (28/104) 
+ SAFIM 
+ L1 
+ 0.79 
+ 0.39 (47/119) 
+ 0.79 
+ 0.16 (39/241) 
+ L2 
+ 0.83 
+ 0.21 (22/106) 
+ 0.74 
+ 0.06 (25/397) 
+ L3 
+ 0.81 
+ 0.17 (13/78) 
+ 0.71 
+ 0.04 (13/332) 
+ CodeLingua 
+ L1 
+ 0.73 
+ - 
+ 0.68 
+ - 
+ L2 
+ 0.75 
+ - 
+ 0.68 
+ - 
+ L3 
+ 0.76 
+ - 
+ 0.65 
+ - 
+ Figure 6: Random Forest classification results and intervention performance across three composition levels. Classifiers were independently trained and validated on Level 1 (L1) data for R1 and QwQ, with the resulting classifiers evaluated on Level 2 (L2) and Level 3 (L3) data to assess generalization. We further report the Intervention Pass@1, representing the success rate of the model in recovering the correct output after the classifier identifies a potential failure. 
+ 4.3 Reasoning Trace Analysis 
+ 4.3.1 Classification and Feature Analysis. 
+ To understand whether observed performance “cliffs” are reflected in models’ internal logic, we trained Random Forest classifiers to predict output correctness from reasoning trace features ( Sec.   4.1 ).
+As shown in Fig.   6 , classifiers generalize well across complexity levels, though with benchmark-specific trends. For CRUXEval , accuracy is strongest at L1 and degrades gradually at L2–L3 as task complexity increases, yet remains relatively high throughout. For SAFIM , its balanced correct/incorrect trace distribution enables the classifier to learn diverse failure cases effectively, with accuracy remaining stable across all levels. For CodeLingua , R1 accuracy improves slightly from L1 to L3, suggesting that correctness signals learned at L1 are transferable and become more distinct at higher complexity; QwQ exhibits a mild downward trajectory toward L3, indicating that correct-trace markers become harder to identify as complexity grows.
+ We use Partial Dependence Plots (PDPs) to analyze the marginal effect of each feature on predicted failure probability, visualizing the top-six features per classifier ( Fig.   8 ). 
+ Common Features. Structural tree features, such as total segments, internal and total nodes, are positively associated with error probability, suggesting that deeper, more fragmented reasoning trees increase failure risk. Length-based metrics (log word count, log length) similarly correlate with higher failure rates, while greater lexical diversity is associated with lower error probability, indicating that vocabulary-rich, high-level reasoning is a marker of robustness. 
+ CRUXEval. Mental execution (brute-force simulation steps) is positively correlated with error probability and strongly co-varies with word count ( Fig.   10a ), consistent with “overthinking” on straightforward tasks. Conversely, a higher analysis rate (statements referencing the code directly) is negatively correlated with failure, indicating that grounded code analysis, rather than exhaustive simulation, drives correctness. 
+ CodeLingua. Frequent code-analysis segments are strongly associated with failure for both R1 and QwQ, suggesting the model stalls in repeated source code description rather than progressing toward actual translation. For QwQ, excessive high-level planning similarly predicts failure, while higher code density, which reflects concrete implementation logic, is associated with correctness. Structurally, depth is preferable to breadth: deep trees reflect coherent reasoning, whereas excessive branching produces fragmented traces that impede translation. 
+ 4.3.2 Intervention 
+ To assess the practical utility of the features, we augment the prompt (shown in  Sec.   F.6 ) to retry traces that are truly incorrect and statistically distinguishable as failures, as characterized by the predictive features in Sec.   4.3.1 . Specifically, a trace is flagged for retry if it exhibits a z-score greater than 1.96 on at least one common predictive feature, indicating statistically significant deviation from the distribution of correct traces. We do not run intervention on CodeLingua, as the proportion of flagged traces meeting this criterion is too small to yield meaningful recovery statistics. We report the recovery rate as Intervention Pass@1 in Fig.   6 . Across CRUXEval and SAFIM, intervention is most effective at L1, where the model successfully recovers correct outputs at a high rate. However, recovery degrades sharply at higher composition levels, suggesting that failures at L2 and L3 reflect deeper reasoning breakdowns that a simple retry cannot resolve. This decay mirrors the performance cliff observed in Fig.   4 , reinforcing that compositional complexity introduces systematic failure modes rather than incidental errors. 
+ 4.4 Ablation Studies 
+ 4.4.1 An Oracle Classifier 
+ To evaluate the robustness and upper-bound performance of the reasoning trace classifiers, an ablation study was conducted comparing a level-specific transfer approach against an “Oracle” baseline. In the absence of a ground-truth standard, the Oracle classifier represents a theoretical ceiling; it is trained and validated on a pooled dataset containing all composition levels (L1, L2 and L3), ensuring exposure to the full distribution of task complexities ( App.   C ). This benchmark is then compared to the results in Fig.   6 .
+ We find that training on L2 and L3 data does not yield substantial performance gains: accuracy remains largely consistent across CRUXEval, SAFIM, and CodeLingua. This indicates that single-level (L1) training already captures the core indicators of reasoning success and failure, enabling effective prediction even in highly composed tasks without level-specific training data. 
+ L1 
+ L2 
+ L3 
+ Length Only 
+ Non-Tree 
+ Figure 7 : Classification accuracy as a function of randomly sampled feature count. Shaded regions indicate ± \pm 1 standard deviation across 10 random sampling trials. Dotted and dashed horizontal lines show the performance of Length Only (9 features) and Non-Tree (44 features) subsets, respectively. 
+ 4.4.2 Random Feature Sampling 
+ To further investigate feature redundancy and the marginal contribution of additional features, we conduct a random sampling experiment across all six dataset-model combinations. Specifically, we randomly sample 1, 5, 10, 20, and all features, repeating each configuration 10 times to obtain mean and standard deviation estimates. We additionally evaluate two fixed feature subsets: Length Only (9 length-related features such as log_length , log_word_count , and segment/sentence length statistics) and Non-Tree (all features except the 10 tree-structure features). The results are shown in Fig.   7 . 
+ Several findings emerge from this analysis. First, the high variance observed with single-feature sampling (standard deviation ranging from 0.05 to 0.22) confirms that feature importance varies substantially—certain features carry significantly more predictive power than others. Second, classification performance generally saturates at 10–20 features, suggesting that a small subset of structural features captures most of the discriminative information. 
+ However, the fixed feature subset results reveal that neither length-based nor non-tree features alone provide consistently reliable performance. The Length Only subset exhibits dramatic accuracy drops across multiple configurations: on SAFIM QwQ, accuracy at L2 and L3 falls well below the full model, and similar regressions are observed on CRUXEval QwQ at higher composition levels, where the gap between Length Only and the full model widens substantially as task complexity increases. The Non-Tree subset similarly regresses on SAFIM R1, demonstrating that discarding tree-structure information introduces meaningful performance losses even when other features are retained. These regressions illustrate that relying on any single feature category introduces blind spots: length features miss structural signals critical for cross-level transfer, while removing tree features discards information essential for maintaining generalization accuracy. Consequently, the complete feature set remains necessary to avoid these performance regressions across diverse dataset-model-level configurations. 
+ 5 Related Work 
+ Reasoning Models. 
+Recent work has focused on building LLMs that explicitly generate intermediate reasoning before generating the final answer. Models such as OpenAI’s o1 family  ( OpenAI et al., 2024 ) and DeepSeek-R1  ( Guo et al., 2025 ) use reinforcement learning and test-time scaling to induce emergent reasoning behaviors, achieving strong performance on verifiable domains such as math and coding. However, these efforts primarily focus on improving task performance rather than analyzing the structure, organization and failure modes of the reasoning traces themselves. 
+ Analyzing Reasoning Traces. 
+ Shojaee et al. (2025) study reasoning under increasing complexity but focus on performance collapse rather than structural representation. Devic et al. (2025) use trace length as an uncertainty signal, relying on coarse heuristics. Zhao et al. (2025) apply graph-based verification to assess reasoning correctness, treating structure as a verification tool rather than a representation for learning reasoning organization. Verification targets internal logical validity, whereas our work uses reasoning structure as a representational signal for learning and prediction. Aggarwal et al. (2025) analyze under-/over-thinking using task-specific heuristics without a general structural abstraction. In contrast, we introduce a structured thought-tree representation and show that the organization of reasoning itself predicts correctness across tasks of controlled compositional complexity. 
+ 6 Conclusion 
+ We present a principled study of frontier reasoning models on coding tasks. To this end, we design an algorithm that automatically generates new coding programs from existing ones. To systematically analyze reasoning traces, we propose thought-trees as a representation for each trace. Training a simple model on thought-trees demonstrates their effectiveness for such analysis and sheds light on the behavior of reasoning models in coding tasks. 
+ References 
+ Aggarwal et al. (2025) 
+Pranjal Aggarwal, Seungone Kim, Jack Lanchantin, Sean Welleck, Jason Weston,
+Ilia Kulikov, and Swarnadeep Saha.
+ OptimalThinkingBench: Evaluating over and underthinking in llms.
+ arXiv preprint arXiv:2508.13141 , 2025.
+ Austin et al. (2021) 
+Jacob Austin, Augustus Odena, Maxwell Nye, Maarten Bosma, Henryk Michalewski,
+David Dohan, Ellen Jiang, Carrie Cai, Michael Terry, Quoc Le, and Charles
+Sutton.
+ Program synthesis with large language models.
+ arXiv preprint arXiv:2108.07732 , 2021.
+ Chen et al. (2021) 
+Mark Chen, Jerry Tworek, Heewoo Jun, Qiming Yuan, Henrique Ponde de Oliveira
+Pinto, Jared Kaplan, Harri Edwards, Yuri Burda, Nicholas Joseph, Greg
+Brockman, et al.
+ Evaluating large language models trained on code.
+ arXiv preprint arXiv:2107.03374 , 2021.
+ Devic et al. (2025) 
+Siddartha Devic, Charlotte Peale, Arwen Bradley, Sinead Williamson, Preetum
+Nakkiran, and Aravind Gollakota.
+ Trace length is a simple uncertainty signal in reasoning models.
+ arXiv preprint arXiv:2510.10409 , 2025.
+ Gong et al. (2024) 
+Linyuan Gong, Sida Wang, Mostafa Elhoushi, and Alvin Cheung.
+ Evaluation of LLMs on syntax-aware code fill-in-the-middle tasks.
+ arXiv preprint arXiv:2403.04814 , 2024.
+ Gu et al. (2024) 
+Alex Gu, Baptiste Rozière, Hugh Leather, Armando Solar-Lezama, Gabriel
+Synnaeve, and Sida Wang.
+ CRUXEval: A benchmark for code reasoning, understanding and
+execution.
+ arXiv preprint arXiv:2401.03065 , 2024.
+ Guo et al. (2025) 
+Daya Guo, Dejian Yang, Haowei Zhang, Junxiao Song, Peiyi Wang, Qihao Zhu,
+et al.
+ DeepSeek-R1 incentivizes reasoning in llms through reinforcement
+learning.
+ Nature , 2025.
+ Hendrycks et al. (2021) 
+Dan Hendrycks, Steven Basart, Saurav Kadavath, Mantas Mazeika, Akul Arora,
+Ethan Guo, Collin Burns, Samir Puranik, Horace He, Dawn Song, et al.
+ Measuring coding challenge competence with APPS.
+ arXiv preprint arXiv:2105.09938 , 2021.
+ Jain et al. (2024) 
+Naman Jain, King Han, Alex Gu, Wen-Ding Li, Fanjia Yan, Tianjun Zhang, Sida
+Wang, Armando Solar-Lezama, Koushik Sen, and Ion Stoica.
+ LiveCodeBench: Holistic and contamination-free evaluation of large
+language models for code.
+ arXiv preprint arXiv:2403.07974 , 2024.
+ OpenAI et al. (2024) 
+OpenAI et al.
+ Openai o1 system card.
+ arXiv preprint arXiv:2412.16720 , 2024.
+ Pan et al. (2024) 
+Rangeet Pan, Ali Reza Ibrahimzada, Rahul Krishna, Divya Sankar, Lambert Pouguem
+Wassi, Michele Merler, Boris Sobolev, Raju Pavuluri, Saurabh Sinha, and
+Reyhaneh Jabbarvand.
+ Lost in translation: A study of bugs introduced by large language
+models while translating code.
+ In Proceedings of the 46th International Conference on Software
+Engineering (ICSE) , 2024.
+ Shojaee et al. (2025) 
+Parshin Shojaee, Iman Mirzadeh, Keivan Alizadeh, Maxwell Horton, Samy Bengio,
+and Mehrdad Farajtabar.
+ The illusion of thinking: Understanding the strengths and limitations
+of reasoning models via the lens of problem complexity.
+ arXiv preprint arXiv:2506.06941 , 2025.
+ Wei et al. (2022) 
+Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Brian Ichter, Fei Xia,
+Ed H. Chi, Quoc V. Le, and Denny Zhou.
+ Chain-of-thought prompting elicits reasoning in large language
+models.
+ In Advances in Neural Information Processing Systems
+(NeurIPS) , 2022.
+ Yang et al. (2025) 
+An Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, et al.
+ Qwen3 technical report.
+ arXiv preprint arXiv:2505.09388 , 2025.
+ Yao et al. (2023) 
+Shunyu Yao, Dian Yu, Jeffrey Zhao, Izhak Shafran, Thomas L. Griffiths, Yuan
+Cao, and Karthik R. Narasimhan.
+ Tree of thoughts: Deliberate problem solving with large language
+models.
+ In Advances in Neural Information Processing Systems
+(NeurIPS) , 2023.
+ Zhao et al. (2025) 
+Zheng Zhao, Yeskendir Koishekenov, Xianjun Yang, Naila Murray, and Nicola
+Cancedda.
+ Verifying chain-of-thought reasoning via its computational graph.
+ arXiv preprint arXiv:2510.09312 , 2025.
+ Appendix A Dataset Description 
+ The datasets are selected to probe ”inner-logic” capabilities. They provide a holistic view of whether a model truly understands the mechanics of code or is simply relying on high-probability pattern matching from its training data. 
+ 1. 
+ CRUXEval   ( Gu et al., 2024 ) is a code execution reasoning benchmark that consists of 800 standalone Python functions. The task is to predict the output of a given function on a specific input. 
+ 2. 
+ SAFIM   ( Gong et al., 2024 ) is a fill-in-the-middle benchmark and includes 17,720 examples from Java, C, C# and Python with tasks designed for the syntax-aware completion of program structures. In this paper, we evaluate the block completion, a task requiring the model to generate an entire code block based on surrounding context and problem background. 
+ 3. 
+ Codelingua   ( Pan et al., 2024 ) involves the translation of 1,700 code samples from three benchmarks and two real-world projects. The task asks a model to read a snippet in a source language and reconstruct it in a target language without altering the underlying logic and final outputs. A number of different programming languages are represented in the source and target. 
+ A.1 CRUXEval Example Problem 
+ def f(nums):
+ output = []
+ for n in nums:
+ output.append((nums.count(n), n))
+ output.sort(reverse=True)
+ return output
+ Input: [1, 1, 3, 1, 3, 1]
+ Output: [(4, 1), (4, 1), (4, 1), (4, 1), (2, 3), (2, 3)] 
+ A.2 Codelingua Example Problem 
+ Source Language: Python
+ Target Language: C 
+def f(nums):
+ output = []
+ for n in nums:
+ output.append((nums.count(n), n))
+ output.sort(reverse=True)
+ return output
+ A.3 SAFIM Example Problem 
+ Fill in the blank code.
+ Description:
+You are given three integers a a , b b , and c c .
+Determine if one of them is the sum of the other two. 
+ Input Specification:
+The first line contains an integer t t ( 1 ≤ t ≤ 9261 1\leq t\leq 9261 ),
+the number of test cases. Each test case contains three integers
+ a a , b b , and c c ( 0 ≤ a , b , c ≤ 20 0\leq a,b,c\leq 20 ). 
+ Output Specification:
+For each test case, output YES if one number is the sum of
+the other two, and NO otherwise. 
+import java.util.*;
+public class A2 {
+ public static void main(String[] args) {
+ Scanner in = new Scanner(System.in);
+ for (int t = in.nextInt(); t > 0; t--) {
+ int a = in.nextInt();
+ int b = in.nextInt();
+ int c = in.nextInt();
+ if (a + b == c || a + c == b || b + c == a) {
+ System.out.println("YES");
+ } else {
+ System.out.println("NO");
+ }
+ }
+ }
+}
+ Ground Truth: 
+int n1 = in.nextInt(), n2 = in.nextInt(), n3 = in.nextInt();
+double sum = n1+n2+n3;
+System.out.println((sum/2 == n1 || sum/2 == n2 || sum/2 == n3) ? "YES" : "NO");
+ Unit Tests: [”input”: ”7 1 4 3 2 5 8 9 11 20 0 0 0 20 20 20 4 12 3 15 7 8”, ”output”: [”YES NO YES YES NO NO YES”]] 
+ Appendix B Partial Dependence Plot 
+ (a) CRUXEval R1 
+ (b) SAFIM R1 
+ (c) CodeLingua R1 
+ (d) CRUXEval QwQ 
+ (e) SAFIM QwQ 
+ (f) CodeLingua QwQ 
+ Figure 8 : Comparative Partial Dependence Plots across benchmarks (columns) and models (rows).
+ Appendix C An “Oracle” Classifier 
+ This ablation study, described in Sec.   4.4.1 , trains a single random forest classifier using 15% of the reasoning traces sampled from each level of CRUXEval, SAFIM, and CodeLingua. The trained model is then evaluated separately on the remaining held-out data from each benchmark. 
+ DeepSeek-R1 
+ QwQ-32B 
+ Dataset 
+ Level 
+ Acc. 
+ W-F1 
+ Inc-F1 
+ Cor-F1 
+ Acc. 
+ W-F1 
+ Inc-F1 
+ Cor-F1 
+ CRUXEval 
+ L1 
+ 0.94 
+ 0.91 
+ 0.00 
+ 0.97 
+ 0.82 
+ 0.76 
+ 0.08 
+ 0.90 
+ L2 
+ 0.79 
+ 0.71 
+ 0.07 
+ 0.88 
+ 0.81 
+ 0.79 
+ 0.51 
+ 0.88 
+ L3 
+ 0.87 
+ 0.85 
+ 0.56 
+ 0.92 
+ 0.78 
+ 0.76 
+ 0.46 
+ 0.86 
+ SAFIM 
+ L1 
+ 0.74 
+ 0.74 
+ 0.57 
+ 0.81 
+ 0.80 
+ 0.80 
+ 0.82 
+ 0.79 
+ L2 
+ 0.82 
+ 0.78 
+ 0.90 
+ 0.22 
+ 0.85 
+ 0.85 
+ 0.91 
+ 0.48 
+ L3 
+ 0.81 
+ 0.76 
+ 0.89 
+ 0.07 
+ 0.88 
+ 0.89 
+ 0.93 
+ 0.47 
+ CodeLingua 
+ L1 
+ 0.73 
+ 0.71 
+ 0.31 
+ 0.83 
+ 0.68 
+ 0.68 
+ 0.55 
+ 0.75 
+ L2 
+ 0.73 
+ 0.75 
+ 0.52 
+ 0.82 
+ 0.76 
+ 0.76 
+ 0.75 
+ 0.77 
+ L3 
+ 0.73 
+ 0.75 
+ 0.58 
+ 0.81 
+ 0.88 
+ 0.88 
+ 0.88 
+ 0.88 
+ Figure 9: Oracle Random Forest classification results across three levels and three datasets, trained and validated on L1, L2, and L3 data for R1 and QwQ. W-F1: Weighted F1; Inc-F1: Incorrect F1; Cor-F1: Correct F1. 
+ Appendix D Feature Correlation 
+ (a) Mental Execution vs. Word Count for CRUXEval Level 1 Reasoning Traces Generated by R1 
+ (b) Code Density vs. Average Segment Length for CodeLingua Level 1 Reasoning Traces Generated by R1 
+ Figure 10 : Feature Correlation 
+ Appendix E Top Features 
+ Fig.   11 lists the features contributing to the top 50% of importance for each random forest classifier. 
+ Feature (R1) 
+ Imp. 
+ Cum. 
+ Feature (QwQ) 
+ Imp. 
+ Cum. 
+ CRUXEval 
+ CRUXEval 
+ total_segments 
+ 8.78% 
+ 8.78% 
+ lex_diversity 
+ 13.72% 
+ 13.72% 
+ log_word_count 
+ 8.55% 
+ 17.33% 
+ log_word_count 
+ 6.99% 
+ 20.71% 
+ mental_execution 
+ 7.79% 
+ 25.12% 
+ log_length 
+ 6.32% 
+ 27.02% 
+ lex_diversity 
+ 7.13% 
+ 32.24% 
+ fw_bt_ratio 
+ 5.94% 
+ 32.96% 
+ internal_nodes 
+ 6.69% 
+ 38.94% 
+ success_words 
+ 4.57% 
+ 37.54% 
+ analysis_rate 
+ 4.55% 
+ 43.49% 
+ question_rate 
+ 4.22% 
+ 41.76% 
+ log_length 
+ 4.05% 
+ 47.53% 
+ total_segments 
+ 4.17% 
+ 45.93% 
+ total_nodes 
+ 3.71% 
+ 51.24% 
+ mental_execution 
+ 3.75% 
+ 49.67% 
+ forward_rate 
+ 3.74% 
+ 53.42% 
+ SAFIM 
+ SAFIM 
+ log_length 
+ 10.41% 
+ 10.41% 
+ log_length 
+ 13.05% 
+ 13.05% 
+ log_word_count 
+ 8.66% 
+ 19.07% 
+ lex_diversity 
+ 10.38% 
+ 23.42% 
+ lex_diversity 
+ 6.90% 
+ 25.97% 
+ log_word_count 
+ 9.46% 
+ 32.89% 
+ total_segments 
+ 4.59% 
+ 30.57% 
+ total_nodes 
+ 5.47% 
+ 38.35% 
+ total_nodes 
+ 4.49% 
+ 35.06% 
+ internal_nodes 
+ 4.46% 
+ 42.82% 
+ internal_nodes 
+ 4.17% 
+ 39.22% 
+ total_segments 
+ 4.33% 
+ 47.15% 
+ internal_per_depth 
+ 3.43% 
+ 42.65% 
+ max_segment_len 
+ 3.75% 
+ 50.90% 
+ sent_len_cv 
+ 3.08% 
+ 45.74% 
+ depth_per_nodes 
+ 2.46% 
+ 48.20% 
+ code_analysis 
+ 2.41% 
+ 50.61% 
+ CodeLingua 
+ CodeLingua 
+ avg_segment_len 
+ 11.53% 
+ 11.53% 
+ depth_per_nodes 
+ 10.95% 
+ 10.95% 
+ code_analysis 
+ 7.16% 
+ 18.69% 
+ total_segments 
+ 7.26% 
+ 18.21% 
+ is_fortran 
+ 6.55% 
+ 25.24% 
+ total_nodes 
+ 7.14% 
+ 25.35% 
+ language_mapping 
+ 5.74% 
+ 30.98% 
+ high_level_plan 
+ 6.72% 
+ 32.06% 
+ depth_per_nodes 
+ 5.41% 
+ 36.39% 
+ code_analysis 
+ 6.69% 
+ 38.76% 
+ code_density 
+ 4.96% 
+ 41.35% 
+ branching_factor 
+ 4.81% 
+ 43.57% 
+ total_segments 
+ 4.60% 
+ 45.95% 
+ internal_per_depth 
+ 3.89% 
+ 47.46% 
+ leaf_nodes 
+ 3.03% 
+ 48.98% 
+ internal_nodes 
+ 3.62% 
+ 51.07% 
+ branching_factor 
+ 2.92% 
+ 51.91% 
+ Figure 11: Top features accounting for > 50 % >50\% of total feature importance across models and datasets. 
+ Appendix F Prompts 
+ We used the following prompts for evaluation for our prediction tasks for the 3 different benchmarks: 
+ F.1 CRUXEval Prompts 
+ 1) Level 1 Prompt 
+ Based on the given Python code, which may contain errors, complete the assert statement with the output when executing the code on the given test case. Do not output any extra information, even if the function is incorrect or incomplete. 
+ {code} 
+ assert f({input}) ==
+ Return the output of the function without any other things 
+ 2) Level 2 Prompt 
+ Based on the given Python code, which may contain errors, complete the assert statement with the output when executing the code on the given test case. Do not output any extra information, even if the function is incorrect or incomplete.
+ # f1
+ {f1_code}
+ # f2
+ {f2_code}
+ assert f2(f1({input})) == 
+ Only return the output of the function without any other information and assert statement. If the output is a string, enclose it in single quotes. 
+ 3) Level 3 Prompt 
+ Based on the given Python code, which may contain errors, complete the assert statement with the output when executing the code on the given test case. Do not output any extra information, even if the function is incorrect or incomplete.
+ # f1
+ {f1_code}
+ # f2
+ {f2_code}
+ # f3
+ {f3_code}
+ assert f3(f2(f1({input}))) == 
+ Only return the output of the function without any other information and assert statement. If the output is a string, enclose it in single quotes. 
+ F.2 SAFIM Prompts 
+ 1) Level 1 Prompt 
+ You will be given code with missing lines or blocks that you must fill in.
+ Output only the missing code so that the program will run correctly.
+Output the missing code as plain text, NOT as markdown code.
+Do NOT output the entire program or any additional information. 
+ {code} 
+ 2) Level 2 Prompt 
+ You will be given program1.py and program2.py with missing lines or blocks that you must fill in.
+ Output only the missing code so that ”python3 program1.py | program2.py” runs correctly.
+ Output the missing code, NOT as markdown code. 
+ Do NOT output the entire program or explanations or any additional information.
+ # Output Format
+ Return json with the following structure:
+ {{“program1”: “completion”, “program2”: “completion”}} 
+ # program1.py
+ {f1 problem description + + code} 
+ # program2.py
+ {f2 problem description + + code} 
+ 3) Level 3 Prompt 
+ You will be given program1.py, program2.py and program3.py with missing lines or blocks that you must fill in.
+ Output only the missing code so that ”python3 program1.py | program2.py | program3.py” runs correctly.
+ Output the missing code, NOT as markdown code. 
+ Do NOT output the entire program or explanations or any additional information.
+ # Output Format
+ Return json with the following structure:
+ {{“program1”: “completion”, “program2”: “completion”, “program3”: “completion”}} 
+ # program1.py
+ {f1 problem description + + code} 
+ # program2.py
+ {f2 problem description + + code} 
+ # program3.py
+ {f3 problem description + + code} 
+ F.3 Codelingua Prompts 
+ 1) Level 1 DeepSeek-R1 Prompt 
+ You are an AI programming assistant, utilizing the DeepSeek Coder model, developed by DeepSeek Company, and you only answer questions related to computer science. For politically sensitive questions, security and privacy issues, and other non-computer science questions, you will refuse to answer.
+ ### Instruction:
+ Translate the following {source_language} code to {target_language}.
+ {source_language}
+ {code}
+ ### Response: 
+ 2) Level 1 QwQ Prompt 
+ Translate the following code from {source_language} to {target_language}: 
+ {code} 
+ 3) Higher Level Prompt 
+ You are given a set of {source_language} programs that are meant to be executed in sequence, where the output of each program is used as the input to the next. 
+ Translate the *entire sequence* into a single {target_language} program that reproduces the same behavior.
+ - Only the first block should handle reading input.
+ - Only the last block should handle producing output.
+ - Intermediate steps should process data *without I/O*.
+ - Do not insert any additional print/read statements in the middle.
+ Ensure that the final {target_lang} program behaves identically to the original chain when run on the same input.
+ {source_code} 
+ F.4 Semantic Labeling Prompt 
+ You are an expert in reasoning trace analysis.
+ Classify the following reasoning segment into one of these strategies:
+ - ”code_analysis”: actively analyzing what the original code does
+ - ”mental_execution”: simulating input/output behavior
+ - ”test_generation”: proposing test cases or edge conditions
+ - ”bug_fixing”: describing or fixing syntax/logic errors
+ - ”language_mapping”: translating code constructs across languages
+ - ”high_level_plan”: outlining the approach or plan without executing it
+ - ”empty”: no meaningful reasoning
+ Only return a JSON like:
+ “‘json
+ {{”type”: ”…”}}
+ Segment:
+ {segment} 
+ F.5 Tree Generation Prompt 
+ You are building a reasoning tree from segments of thought. Each segment expresses a part of a reasoning process.
+ Here are previous thoughts in the structure:
+ {tree_so_far}
+ Now consider this new segment:
+ “‘
+ {new_segment}
+ “‘
+ Decide where to attach this new segment in the tree. You must use one of the three relation types defined below.
+ Relation Categories
+ - Continuation: The new segment directly builds upon the parent’s idea. It can do this by:
+ 1. Adding more details, explanations, or examples.
+ 2. Providing evidence or justification.
+ 3. Refining or clarifying the parent’s point.
+ - Contrast: The new segment proposes a different, alternative, or opposing idea compared to the parent node.
+ - Rephrase: The new segment expresses the exact same core idea as the parent but in different words.
+ Return your answer in this JSON format:
+ “‘json
+ {{
+ ”parent_id”: ”thought_X”, // id of parent thought, or ”root” for top-level
+ ”relation”: ”Continuation” | ”Contrast” | ”Rephrase”
+ }} 
+ F.6 Intervention Prompt 
+ Based on the key predictive features identified in Fig.   8 , we construct a structured prompt that summarizes common failure signals and prepend it to each problem before retry. 
+ Additional guidance: prior analysis of successful runs on this benchmark suggests your reasoning style on similar problems tends to be more compact than on failed attempts. Keep internal reasoning concise: simulate f on the given input in few steps, avoid redundant backtracking, then output only the literal result as instructed.
+ You will be given code with missing lines or blocks that you must fill in.
+ Output only the missing code so that the program will run correctly. Output the missing code as plain text, NOT as markdown code. Do NOT output the entire program or any additional information. 
+ Appendix G Qualitative Examples 
+ G.1 CRUXEval Example 
+ Table 1 : Complete Reasoning Trace of a CRUXEval L2 Example with Segmented Labels 
+ # 
+ Label 
+ Reasoning Segment 
+ 1 
+ empty 
+ We are given two functions: f1 and f2. 
+ 2 
+ mental_execution 
+ We are to compute: assert f2(f1(’M̈akers of a Statement’̈)) == ? 
+ First, let’s compute f1(’M̈akers of a Statement’̈): s = ’M̈akers of a Statement’̈ → \rightarrow s = s.replace(”̈, ”) removes all double quotes, so becomes: ’Makers of a Statement’. lst = list(s) → \rightarrow [’M’,’a’,’k’,’e’,’r’,’s’,’ ’,’o’,’f’,’ ’,’a’,’ ’,’S’,’t’,’a’,’t’,’e’,’m’,’e’,’n’,’t’]. col = 0, count = 1. while col ¡ len(lst) and lst[col] in .:, : at col=0, lst[0] is ’M’ → \rightarrow not in .:, → \rightarrow so the loop condition fails. 
+ 3 
+ mental_execution 
+ Therefore, we break out of the loop without entering. Then return s[col+count:] → \rightarrow s[0+1:] → \rightarrow s[1:] → \rightarrow ’akers of a Statement’. 
+ Now, we call f2 on the result: f2(’akers of a Statement’). In f2: i = 0. while i ¡ len(text) and text[i].isspace(): text[0] is ’a’ → \rightarrow not a space → \rightarrow condition fails. Break loop. i == len(text)? i=0 and len(text)=20 → \rightarrow false. Return ’no’. 
+ Note: f1 has an error: count = ls[col] + 1 . Should be ’lst’. But in this test case, the loop did not run, so the line was never executed. 
+ 4 
+ code_analysis 
+ Therefore, the error did not manifest. Examining f1: The loop condition while col < len(lst) and lst[col] in ".:," skips execution because the first character is ’M’. The result of f1 is ’akers of a Statement’. f2 returns ’no’. 
+ 5 
+ bug_fixing 
+ Note: the problem states Python code may contain errors. In this specific test case, the index error in f1 ( ls vs lst ) is not encountered. 
+ 6 
+ empty 
+ Therefore, the final answer is ’no’. 
+ Continued on next page 
+ G.2 SAFIM Example 
+ Table 2 : Complete Reasoning Trace of a SAFIM L3 Example with Segmented Labels 
+ # 
+ Label 
+ Reasoning Segment 
+ 1 
+ high_level_plan 
+ We are given three programs with missing parts. We must output the missing code for each program in a JSON format. 
+ 2 
+ code_analysis 
+ For program1.py: The problem is about counting the number of valid permutations c c that can be formed by choosing at each index i i either a ​ _ ​ i a\_i or b ​ _ ​ i b\_i , such that c c is a permutation and matches the constraints given by d d . The provided code builds a graph and then tries to traverse cycles. 
+ 3 
+ code_analysis 
+ Approach: We note that the problem can be modeled as a graph where each node (number from 1 to n n ) has an edge to the two numbers that are at the same index in a a and b b ? Actually, the graph is built as: g = { a[i]: [b[i], c[i]] for i in range(n) } . 
+ 4 
+ code_analysis 
+ Because if we choose a ⁡ [ i ] a[i] at this index, then the value a ⁡ [ i ] a[i] must appear and we cannot choose the same value again. But note: the constraint d d (called c c in code) might fix a value. 
+ 5 
+ high_level_plan 
+ The idea is to form a graph where each node (value) has one outgoing edge to the other value that appears at the same index. At index i i , we have values a ⁡ [ i ] a[i] and b ⁡ [ i ] b[i] . The key observation is that the constraints and the choices form cycles. 
+ 6 
+ high_level_plan 
+ In each cycle, we have two choices for the entire cycle (like a circular linked list) unless the cycle is broken by a constraint. 
+ 7 
+ code_analysis 
+ Build a graph where each index i i has an edge from a ⁡ [ i ] a[i] to b ⁡ [ i ] b[i] and stores constraint d ⁡ [ i ] d[i] . Traverse unvisited nodes to find connected components (cycles). The answer is 2 free cycles ( mod 10 9 + 7 ) 2^{\text{free cycles}}\pmod{10^{9}+7} . 
+ 8 
+ mental_execution 
+ However, note: the constraint might be either a ⁡ [ i ] a[i] or b ⁡ [ i ] b[i] . If the constraint is set, then we know which one to choose at that index, and that breaks the cycle into a chain? 
+ 9 
+ code_analysis 
+ Actually, the constraint at one index forces the choice at that index, and then the rest of the cycle is forced? So the entire cycle has only one possibility. Disjoint union of cycles. 
+ 10 
+ code_analysis 
+ However, note: the graph is built for every a ⁡ [ i ] a[i] and we have n n keys. So every node is a key. But what about the constraint? We must check every node in the cycle? 
+ 11 
+ bug_fixing 
+ Actually, in the current code, we are only checking the constraint at the starting node? We must check every node in the cycle. Traverse the entire cycle and set a flag free to True initially. 
+ 12 
+ code_analysis 
+ If we find at least one constraint, then the entire cycle is forced (so free becomes False). The constraint d ⁡ [ i ] d[i] is associated with the index i i , and we are storing it by the value a ⁡ [ i ] a[i] . 
+ 13 
+ code_analysis 
+ However, when we traverse the cycle, we are going from a ⁡ [ i ] a[i] to b ⁡ [ i ] b[i] and then we use b ⁡ [ i ] b[i] as the next key? But the next key is the a ⁡ [ j ] a[j] for the next index j j ? 
+ 14 
+ code_analysis 
+ Actually, the graph is built so that for each a ⁡ [ i ] a[i] we have an edge to b ⁡ [ i ] b[i] . When at node u u , we are at value u u which is the a ⁡ [ i ] a[i] for some index i i . If free and cycle_size ¿ 1, we have 2 choices. 
+ 15 
+ code_analysis 
+ Recall that a permutation is an array consisting of n n distinct integers. So the values in a a are distinct, and the values in b b are distinct. But at the same index, a ​ _ ​ i a\_i and b ​ _ ​ i b\_i could be the same? 
+ 16 
+ mental_execution 
+ If a i = b i a_{i}=b_{i} , the edge is a self-loop. We check if need and cycle_size ¿ 1. For a self-loop, we have no freedom. If any constraint is non-zero, the cycle is not free. 
+ 17 
+ code_analysis 
+ We break the while loop when we hit a visited node. The condition while not visi[g[u][0]] checks the next node. This does not check the constraint at the last node? 
+ 18 
+ bug_fixing 
+ Because when we are at the last node, we set u u to the next (first node) and break because it’s visited. We need to traverse the entire cycle to process every node’s constraint. 
+ 19 
+ code_analysis 
+ This condition is on the next node? But we haven’t visited the next node? If g[current][1] != 0 , then need = False . 
+ 20 
+ code_analysis 
+ The code starts at u u , but we do not mark u u as visited? If we move to the next node and mark it visited, what happens when we start at u u again? Iterate u u from 1 to n n . 
+ 21 
+ mental_execution 
+ Revised plan: start at u u , mark it visited, check constraint at u u . Move to g[u][0] and mark it visited. Process every node in the cycle sequence u 0 → u 1 ​ … → u k − 1 → u 0 u_{0}\rightarrow u_{1}\dots\rightarrow u_{k-1}\rightarrow u_{0} . 
+ 22 
+ mental_execution 
+ We processed it at the first step. But then when we were at u k − 1 u_{k-1} , we set u u to u 0 u_{0} , and then we break? The constraint at u 0 u_{0} was already processed at the first step. 
+ 23 
+ mental_execution 
+ The constraint at u 0 u_{0} is stored at the node u 0 u_{0} , and we processed it when u u was u 0 u_{0} . So we have processed every node? 
+ 24 
+ mental_execution 
+ Starting node u 0 u_{0} is not visited initially? Then enter the loop only if next node is not visited. If cycle length is 1 ( u 0 → u 0 u_{0}\rightarrow u_{0} ), cycle_size remains 1 and we skip. 
+ 25 
+ bug_fixing 
+ We must set need to False if we encounter a constraint at any node. The missing code for program1.py is: if g[u][1] != 0: need = False . 
+ 26 
+ bug_fixing 
+ However, the code has a bug: we start at u u , but do not mark u u as visited? If u u is already visited, we should skip the for loop body. 
+ 27 
+ code_analysis 
+ For loop condition for u in range(1, n+1) : if the next node of u u is not visited, enter. If u u is visited, skip the while loop? 
+ 28 
+ code_analysis 
+ If the next node of u u is not visited, then we enter? But what if u u is visited? Then we skip the while loop? But we haven’t processed u u ? 
+ 29 
+ mental_execution 
+ Alternatively, we can skip visited nodes? We iterate u u from 1 to n n . Mark every node in the cycle as visited. Ensure starting node u u is marked correctly. 
+ 30 
+ bug_fixing 
+ Revised: if visi[u]: continue . Need to process the constraint at the starting node u u . Set cycle_size = 1 because we processed one node. 
+ 31 
+ mental_execution 
+ While True loop: if visi[current] , break. Otherwise, mark visited and check g[current][1] . This traverses the entire component cycle. 
+ 32 
+ code_analysis 
+ In program1.py, the TODO is inside the while loop. We add: if g[u][1] != 0: need = False . Indentation must match the outer block. 
+ 33 
+ code_analysis 
+ Actually, the choice at index i i : if we choose a ​ _ ​ i a\_i , then we use the value a ​ _ ​ i a\_i and then the next node in the cycle is b ​ _ ​ i b\_i ? 
+ 34 
+ code_analysis 
+ if we choose b ​ _ ​ i b\_i , then we use the value b ​ _ ​ i b\_i and then the next node in the cycle is a ​ _ ​ i a\_i ? The graph is built as: from a ​ _ ​ i a\_i we go to b ​ _ ​ i b\_i . 
+ 35 
+ code_analysis 
+ If any constraint is set, the entire cycle is forced. If g[u][1] != 0 , then need = False . If constraint is 0, leave need unchanged. 
+ 36 
+ code_analysis 
+ For program2.py: Remove all occurrences of t t in s s with minimum moves and count optimal sequences. Dynamic programming state d[j][i] for substring s[i:j+1] . 
+ 37 
+ code_analysis 
+ The recurrence: consider removing an occurrence at k k . Split into left part s[i:k-1] and right part s[k+lt:j] . Base case empty substring is [0,1] . 
+ 38 
+ bug_fixing 
+ Total moves = l ⁡ [ 0 ] + r ⁡ [ 0 ] + 1 l[0]+r[0]+1 . Total ways = l ⁡ [ 1 ] × r ⁡ [ 1 ] l[1]\times r[1] . Current code adds only r ⁡ [ 1 ] r[1] and has a suspicious if l[0] == 0 condition. 
+ 39 
+ bug_fixing 
+ The recurrence should apply regardless of l[0] . But we are only allowed to fill the TODO inside the if l[0] == 0 block. 
+ 40 
+ code_analysis 
+ If l[0] == 0 , then l[1] is likely 1. So new_ways = r[1] . The TODO should set tt = [l[0] + r[0] + 1, r[1]] . 
+ 41 
+ high_level_plan 
+ Constraints are small ( | s | ≤ 500 |s|\leq 500 ). We can use prefix DP dp[i] = [min_moves, count] for prefix s[0:i] . 
+ 42 
+ high_level_plan 
+ Alternatively, interpret as contiguous removals? Problem says replace with dots. Dots are placeholders and don’t affect future matches. 
+ 43 
+ code_analysis 
+ If we skip character, dp[i+1] updates from dp[i] . If we remove occurrence ending at i i , update with + 1 +1 move. 
+ 44 
+ code_analysis 
+ Actually, can only remove contiguous? After removal, string is s[0:k] + ’.’*lt + s[k+lt:] . 
+ 45 
+ code_analysis 
+ replace with dots. The dots are not letters, so they cannot form part of a future occurrence. 
+ 46 
+ mental_execution 
+ Try every occurrence ending at i i . This starts at i − l ​ t + 1 i-lt+1 . Non-overlapping occurrences. This is complex but standard interval DP. 
+ 47 
+ code_analysis 
+ Iterate j j and check if s[j:j+lt] == t . If no overlap, update. Missing code for program2.py: tt = [l[0] + r[0] + 1, r[1]] . 
+ 48 
+ bug_fixing 
+ If left substring is non-empty, d[k-1][i] having 0 moves means it was already empty? If l[0]==0 , then l[1]=1 . So TODO is tt = [l[0] + r[0] + 1, r[1]] . 
+ 49 
+ code_analysis 
+ For program3.py: Given array C C , find binary array A A such that ∑ B k = C \sum B_{k}=C , where B k B_{k} is A A with first k k elements sorted. 
+ 50 
+ mental_execution 
+ For k > i k>i : position i i is 1 iff number of ones in first k ≥ k − i k\geq k-i . 
+ 51 
+ mental_execution 
+ Contribution: C i = i ⋅ a i + ∑ k = i + 1 n [ 1  if  P k ≥ k − i  else  0 ] C_{i}=i\cdot a_{i}+\sum_{k=i+1}^{n}[1\text{ if }P_{k}\geq k-i\text{ else }0] . Recover array from left to right. 
+ 52 
+ mental_execution 
+ Total ones T = sum ​ ( C ) / n T=\text{sum}(C)/n . If C n − 1 = = n C_{n-1}==n , then a n − 1 = 1 a_{n-1}=1 , else 0. This works for small n n . 
+ 53 
+ high_level_plan 
+ Given the provided code has an extra 1 at the end and a loop, we do a greedy approach. Initialization: a = [1 if x else 0 for x in c] + [1] . 
+ 54 
+ high_level_plan 
+ Use a Fenwick tree or difference array to track active ones. Constraints are 200,000. C C is a sum of suffix range updates for each k k . 
+ 55 
+ high_level_plan 
+ For a fixed k k , it contributes 1 to every i ≥ i\geq number of zeros in the first k k . C ​ _ ​ i = i ⋅ a ​ _ ​ i + suffix sum of diffs C\_i=i\cdot a\_i+\text{suffix sum of diffs} . 
+ 56 
+ mental_execution 
+ Example: c = [ 2 , 4 , 2 , 4 ] , n = 4 c=[2,4,2,4],n=4 . a = [ 1 , 1 , 0 , 1 ] a=[1,1,0,1] works. a 0 = 1 a_{0}=1 because 2 > 0 2>0 , a 1 = 1 a_{1}=1 because 4 > 1 4>1 , a 2 = 0 a_{2}=0 because 2 > 2 2>2 is false. 
+ 57 
+ mental_execution 
+ ”It is guaranteed that a valid array A A exists”. So T T must be integer. If C = [ 6 , 5 , 2 , 1 , 4 , 3 ] C=[6,5,2,1,4,3] , T = 21 / 6 = 3.5 T=21/6=3.5 (typo in example note). 
+ 58 
+ mental_execution 
+ In the third test case, permutations are c c arrays. Binary array a a is not provided. 
+ 59 
+ test_generation 
+ Input C C contains n n integers. T = 21 / 6 T=21/6 . Mistake in the example note regarding C C values. 
+ 60 
+ mental_execution 
+ In the third test case, permutations c c can be made using the process. These are the result of sorting, not the input binary array. 
+ 61 
+ code_analysis 
+ Input is one array C C . Output is binary array A A . Logic a ⁡ [ i ] = 1 a[i]=1 if c ⁡ [ i ] > i c[i]>i else 0 works for first and fifth test cases. 
+ 62 
+ code_analysis 
+ ”In the third test case, there are 2 distinct permutation”. These are permutations c c . A A is the binary source. 
+ 63 
+ bug_fixing 
+ Missing code for program3.py: if x > i: a[i] = 1 else: a[i] = 0 . The extra 1 at the end of a a is removed by a[:-1] . 
+ 64 
+ mental_execution 
+ Loop sets a ⁡ [ i ] a[i] for i i in range n n . Output a [ : − 1 ] a[:-1] matches length n n . Condition x > i x>i is the simplest valid heuristic. 
+ 65 
+ mental_execution 
+ Final JSON structure: program1 ( need=False ), program2 ( tt assignment), program3 ( a[i] assignment). 
+ Continued on next page 
+ G.3 CodeLingua Example 
+ Table 3 : Complete Reasoning Trace of a CodeLingua L1 Example with Segmented Labels 
+ # 
+ Label 
+ Reasoning Segment 
+ 1 
+ lang_mapping 
+ Okay, so I need to translate this Java code into Fortran. 
+ 2 
+ code_analysis 
+ Let me start by understanding what the Java code does. 
+ 3 
+ code_analysis 
+ The main part seems to be handling a range of integers from 0 to n-1, stored in a TreeSet called ’left’. 
+ 4 
+ high_level_plan 
+ For each query, they take a range [l, r] and a winner ’win’. 
+ 5 
+ code_analysis 
+ Then, they iterate over all elements in ’left’ that are between l and r, remove them, set their answer to ’win’, but then set the winner’s own position back to 0 and add it back to ’left’. 
+ 6 
+ code_analysis 
+ Wait, the Java code has a loop where for each query, they process the current l to r range. They find the ceiling of l in the TreeSet, which is the smallest element ≥ \geq l. Then, while that element is ≤ \leq r, they remove it from the set, set its answer to ’win’. But then, after processing all those elements, they set answer[win-1] to 0 and add win-1 back to the set. 
+ 7 
+ code_analysis 
+ Hmm, so the winner’s position is kept in the set, but others in the range are removed and their answers are set to ’win’. So the TreeSet is being used to keep track of the remaining positions that haven’t been processed yet. 
+ 8 
+ high_level_plan 
+ Each query affects a range, removing those positions (except the winner) and marking their answer as the winner. 
+ 9 
+ high_level_plan 
+ The TreeSet is being used to efficiently find and iterate over elements in a range. 
+ 10 
+ lang_mapping 
+ In Java, ceiling() and higher() methods are used. 
+ 11 
+ high_level_plan 
+ One possible approach is to represent the remaining elements in a sorted list or array. But maintaining a sorted structure efficiently in Fortran could be challenging. 
+ 12 
+ high_level_plan 
+ Alternatively, maybe we can use a binary search approach on an array that’s kept sorted. 
+ 13 
+ high_level_plan 
+ Alternatively, since the initial set is 0 to n-1, and elements are being removed and added back (only the winner’s position is added back each time), perhaps we can track the elements using a boolean array where each index indicates whether it’s present in the ’left’ set. But then, how do we efficiently find the next element ≥ \geq l and ≤ \leq r? 
+ 14 
+ code_analysis 
+ Hmm, maybe a bitmask or an array of flags. But checking each element from l to r each time could be O(n) per query, which might be acceptable if the constraints are small. But the original Java code uses a TreeSet, which is O(log n) per operation. 
+ 15 
+ high_level_plan 
+ The problem statement mentions codeforces_356_A, which I think is a programming competition problem. So perhaps the constraints are tight, and we need an efficient solution. 
+ 16 
+ high_level_plan 
+ Wait, but in Fortran, we don’t have data structures like TreeSet. So perhaps the best approach is to simulate the TreeSet using an array that’s kept sorted, and use binary search to find the required elements. 
+ 17 
+ high_level_plan 
+ Let’s think about how to manage this. 
+ 18 
+ high_level_plan 
+ The initial left set is all integers from 0 to n-1. So we can start with a sorted array. 
+ 19 
+ high_level_plan 
+ For each query, we need to find all elements in [l, r], set their answer to win, remove them from the array, then add back the win-1 position (if it was removed) and set its answer to 0. But how to efficiently find and remove elements in a range [l, r] from a sorted array. 
+ 20 
+ high_level_plan 
+ Let’s see: Suppose the array is sorted. We can find the first index where element ≥ \geq l using binary search. Then, iterate through the elements from that index until we find elements ≤ \leq r. 
+ 21 
+ high_level_plan 
+ All those elements need to be removed. For each such element, set answer[element] = win. Then remove them from the array. 
+ 22 
+ high_level_plan 
+ After that, check if win-1 is in the array. 
+ 23 
+ code_analysis 
+ Wait, no: in the Java code, after removing the elements, they set answer[win-1] to 0 and add it back to the set. So even if win-1 was not in the range [l, r], but perhaps it’s possible. 
+ 24 
+ code_analysis 
+ Wait, in the Java code, during each query, after processing the elements in [l, r], they set answer[win-1] to 0 and add it to the set. So regardless of whether win-1 was in the range, they are adding it back. But wait, maybe the processing in the query’s loop could have removed win-1. 
+ 25 
+ mental_exec 
+ For example, if the [l, r] includes win-1, then during processing, it would have been removed from the set. 
+ 26 
+ code_analysis 
+ Then, after that, setting answer[win-1] to 0 and adding it back. So the Java code ensures that the winner’s position is always in the set after each query. 
+ [… 162 Segments Omitted for Brevity …] 
+ 189 
+ code_analysis 
+ For example, when after processing, the left array is empty. 
+ 190 
+ mental_exec 
+ Then, inserting win_0based would create a new array with one element. 
+ 191 
+ high_level_plan 
+ Also, when removing elements, if the indices are out of bounds, the code should handle that. 
+ 192 
+ code_analysis 
+ Now, in the code for processing the query: [Code snippet involving lower_bound and upper_bound calls]. This part removes the elements from left. 
+ 193 
+ lang_mapping 
+ The code uses array slicing and concatenation. But in Fortran, array slicing is allowed, and array concatenation using the [ … ] syntax is possible. But when left is empty (size 0), the code may have issues. Need to handle that. 
+ 194 
+ high_level_plan 
+ Now, the final step is to print the answer array. 
+ 195 
+ code_analysis 
+ The Java code appends each answer as a string. 
+ 196 
+ code_analysis 
+ In Fortran, we can loop through the answer array and print each element, space-separated. But the Java code’s output is a string with each answer concatenated. Wait, no. [Analysis of StringBuilder and output formatting]. 
+ 197 
+ lang_mapping 
+ In Fortran, this can be done using a format that writes all elements without spaces. For example: [Code snippet using do i = 1, n and write statement with advance=’no’]. 
+ 198 
+ code_analysis 
+ After all elements are written, a new line is printed. 
+ 199 
+ empty 
+ So, the final code would have this part. Putting it all together. 
+ 200 
+ mental_exec 
+ Now, let’s test this code with a small example. [Step-through of n=3, q=1, l=0, r=2, win=2]. 
+ 201 
+ mental_exec 
+ Then, set answer[1] (win-1 is 1) to 0, and add 1 back to left. So answer array is [2, 0, 2]. So output is ”202”. 
+ 202 
+ mental_exec 
+ In Fortran: answer array is 1-based. answer(1) = 2, answer(2) =0, answer(3) =2. So the output would be ”202”. Another test case. [Step-through of 5 2 input]. 
+ 203 
+ mental_exec 
+ Then, after processing, answer[2] is set to 0. Then, second query: l=4-1=3, r=5-1=4. Wait, input is 4 5 5. So l=4-1=3, r=5-1=4. Processing elements ≥ \geq 3 and ≤ \leq 4 in left [2,3,4]. 
+ 204 
+ code_analysis 
+ lower_bound(3) is index 2 (element 3), upper_bound(4) is index 4 
+ 205 
+ code_analysis 
+ (since 4 is in the array, upper_bound finds first element > 4 >4 , which is index 4. So elements from 2 to 3-1=3-1=3 (wait, the code uses idx_end. Let me recheck. 
+ 206 
+ code_analysis 
+ Wait, the code uses: call upper_bound(left, r, idx_end) So for the second query, r is 4. 
+ 207 
+ mental_exec 
+ The left array after first query is [2,3,4]. So upper_bound(4) will find the first element > 4 >4 . Since all elements are ≤ \leq 4, upper_bound returns size(left)+1=4. 
+ 208 
+ mental_exec 
+ In the second query, win_input is 5. So win_0based is 5-1=4. So answer(4+1=5) is set to 0. So after processing the second query: [Step-through of final answer array logic]. 
+ 209 
+ test_gen 
+ Testing the code would be necessary. 
+ 210 
+ empty 
+ Now, this code is quite involved. 
+ 211 
+ lang_mapping 
+ The translation from Java to Fortran required handling the TreeSet with a sorted array and binary search, which increases the code’s complexity. But given the constraints, this is the best approach possible. 
+ 212 
+ mental_exec 
+ Now, let’s test this code with a small example. For example, the sample input: 3 1; 1 3 2. 
+ 213 
+ high_level_plan 
+ So, the final Fortran code should look like this. 
+ Continued on next page 
+ Experimental support, please
+ view the build logs 
+ for errors. Generated by
+ L
+ A 
+ T
+ E 
+ xml 
+ .
+ Instructions for reporting errors 
+ We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+ support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+ methods listed below: 
+ Click the "Report Issue" ( 
+ ) button, located in the page header. 
+ Tip: You can select the relevant text first, to include it in your report. 
+ Our team has already identified the following issues . We appreciate your time reviewing and reporting rendering errors we
+ may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+ should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+ all. 
+ Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a list of packages that need conversion , and welcome developer contributions . 
+ We gratefully acknowledge support from our major funders ,
+ member institutions , ,
+ and all contributors.
+ About · 
+ Help · 
+ Contact · 
+ Subscribe · 
+ Copyright · 
+ Privacy · 
+ Accessibility · 
+ Operational Status (opens in new tab) 

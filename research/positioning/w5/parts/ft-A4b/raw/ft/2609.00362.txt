@@ -1,0 +1,875 @@
+ 
+ Revisiting Feedback-Driven LLM Code Repair: A Replication and Exploratory Java Extension 
+ Skip to main content 
+ Report GitHub Issue 
+ × 
+ Title: 
+ Content selection saved. Describe the issue below: 
+ Description: 
+ Submit without GitHub 
+ Submit in GitHub 
+ Why HTML? 
+ Report Issue 
+ Back to Abstract 
+ Download PDF 
+ Contents 
+ Reading mode 
+ Colour theme 
+ Abstract 
+ I Introduction 
+ II Replication Study 
+ II-A FeedbackEval: Original Study 
+ II-B Study Design 
+ II-C Results 
+ III Extension Study 
+ III-A RQ1: How do feedback types affect LLM-based repair effectiveness in a Java setting? 
+ III-A 1 Motivation 
+ III-A 2 Approach 
+ III-A 3 Results 
+ III-B RQ2: How cost-efficient are different prompting techniques when applied to feedback-driven code repair on Java tasks? 
+ III-B 1 Motivation 
+ III-B 2 Approach 
+ III-B 3 Results 
+ IV Discussion 
+ IV-A Feedback Patterns and Prompting Trade-offs 
+ IV-B Implications for Multilingual Repair Evaluation 
+ IV-C Replication Challenges of LLM-based Studies 
+ V Related Work 
+ VI Threats to Validity 
+ VII Conclusion 
+ References 
+ License: CC BY 4.0
+arXiv:2609.00362v1 [cs.SE] 31 Aug 2026 
+ Revisiting Feedback-Driven LLM Code Repair: A Replication and Exploratory Java Extension 
+ Louis Lalonde, Wassim Keddache,
+Thomas Perron Touchette, Leuson Da Silva, and Foutse Khomh
+ Affiliation:  
+Polytechnique Montréal, Montréal, Canada
+ {louis.lalonde, wassim.keddache, thomas.perron-touchette, leuson-mario-pedro.da-silva, foutse.khomh}@polymtl.ca
+ Abstract 
+ Since the advent of Large Language Models (LLMs), practitioners have increasingly leveraged them to support their software engineering tasks, including automated code repair, showing promising results.
+Yet, concerns regarding reproducibility and generalizability remain largely unexplored.
+To further evaluate these concerns and associated impacts, we partially reproduce and conduct an exploratory Java extension of the FeedbackEval benchmark [ 1 ] , which evaluates how LLMs leverage different feedback types for Python code repair.
+First, we partially replicate the original study on 394 repair tasks using GPT-4o and Claude 3.5 Sonnet, reproducing and observing the main qualitative trends reported in the original work.
+Second, we conduct an exploratory Java extension by constructing 100 erroneous repair instances from 50 Java tasks and evaluating feedback effectiveness.
+Our results show that previous conclusions from Python may be sensitive to benchmark construction, feedback representation, and tooling ecosystem, motivating more controlled multilingual benchmarks.
+Specifically, while test feedback remains the strongest feedback type in our Python replication, the same ranking is not observed in our Java extension, as simple and JUnit-based test feedback do not differ significantly.
+We hypothesize that differences in feedback informativeness and tooling ecosystems, such as the verbosity of test frameworks, may partly explain such a difference.
+Finally, lighter prompts reduce cost without significant differences in repair effectiveness.
+Overall, our findings confirm key trends under a partially controlled replication and highlight the need for more rigorous multilingual evaluation and careful feedback design in LLM-based repair systems. 
+ Index Terms:  LLM, Code repair tasks, Feedback Driven Repair, Python, Java
+ I Introduction 
+ During the lifecycle of software projects, bugs and issues are expected to be reported and addressed by developers  [ 2 ] .
+Fixing these issues is often time-consuming and can negatively impact developer productivity  [ 3 ] .
+To alleviate this burden, researchers have been extensively studying Automated Program Repair (APR), aiming to automatically generate patches for faulty programs  [ 4 , 5 ] .
+Recent advances in Large Language Models (LLMs), with their ability to understand natural language and generate code, have opened new opportunities for APR.
+Prior work has leveraged LLMs for tasks such as bug fixing, vulnerability repair, and integration with static analysis tools  [ 6 , 7 , 8 ] .
+However, LLM-based program repair is inherently an iterative process, where models rely on feedback signals to identify and correct errors [ 9 ] .
+As a result, understanding how different types of feedback influence repair effectiveness has become a key research question. 
+ Specifically for code repair tasks, previous studies have investigated how different feedback types can improve LLM performance [ 10 ] .
+In this context, the FeedbackEval benchmark [ 1 ] demonstrated that, in Python, repair performance varies depending on the feedback type, including unit test execution, static analysis, human feedback, and simple prompts, with test-based feedback achieving the highest CoderEval result for GPT-4o (37.8% Repair@1).
+However, whether these findings apply to other programming languages remains an open question  [ 11 ] . 
+ Programming languages differ fundamentally in their type systems, execution models, and error reporting mechanisms [ 12 ] .
+For instance, statically typed languages such as Java enforce type checking at compilation time and produce structured, location-aware diagnostics before execution, while dynamically typed languages, such as Python, detect many errors only at runtime, often resulting in less precise and less actionable feedback  [ 13 , 14 ] .
+Moreover, Java is supported by a mature ecosystem of tools, like Javac and JUnit , which directly shape how feedback is generated and presented to developers.
+These differences may directly influence how LLMs interpret and utilize feedback during repair tasks.
+Prior work has also shown that LLMs exhibit varying proficiency across programming languages  [ 15 , 16 ] , raising the question of whether feedback-driven repair strategies are efficient across languages with different characteristics.
+In addition, practical deployment of LLM-based repair systems requires considering not only effectiveness but also cost-efficiency [ 17 ] .
+While advanced prompting strategies such as Chain-of-Thought [ 18 ] and Few-shot [ 19 ] learning have been widely explored, their performance-to-cost trade-offs remain unclear in the context of feedback-driven repair across programming languages  [ 20 , 21 ] . 
+ To address these open questions, we first partly replicate the study by Dai et al.  [ 1 ] to assess the reproducibility of its findings in our experimental setup.
+We reproduce their evaluation on the CoderEval [ 22 ] and HumanEval [ 23 ] benchmarks, considering the initial set of evaluated feedback types (test execution, static analysis, human feedback, and simple prompts) and measuring repair performance using Repair@1 .
+Second, we conduct an exploratory extension of FeedbackEval  [ 1 ] to Java.
+Specifically, we investigate two research questions: (RQ1) how feedback-effectiveness patterns observed in Python behave under a Java repair setting with different typing, compilation, and testing characteristics; and (RQ2) how cost-efficient different prompting strategies are for feedback-driven Java code repair.
+For that, we construct a Java dataset of 100 faulty program instances based on 50 CoderEval tasks by injecting both compiler and logical mutations into correct programs.
+We then evaluate LLM-based repair using feedback categories inspired by the original study and evaluate repairs with GPT-4o-mini .
+This design allows us to examine whether the qualitative trends observed in Python are reproduced in our Java extension.
+Finally, we analyze the cost-efficiency of prompting strategies by evaluating multiple prompting variants, including Chain-of-Thought and Few-shot prompting, and measuring repair performance relative to API cost. 
+ Our replication reproduces some qualitative FeedbackEval trends, with test-based feedback achieving the highest repair
+performance in Python. Meanwhile, we observe different results in our exploratory Java extension. For logical tasks, simple feedback achieves the highest observed Repair@1, but does not differ significantly from test feedback.
+For compiler tasks, compiler feedback performs best, but does not differ significantly from simple feedback.
+Finally, lightweight prompting offers more favorable observed cost-effectiveness trade-offs, while Chain-of-Thought increases cost without statistically supported gains. 
+ Overall, our findings offer implications for researchers and practitioners.
+First, they suggest that conclusions drawn from LLM-based repair studies in a single programming language may be sensitive to its surrounding benchmark, tooling, and feedback-generation setup, highlighting the need for more controlled multilingual evaluation.
+Second, our exploratory Java extension results emphasize the role of tooling and feedback quality in shaping LLM behavior, as differences may influence observed repair effectiveness.
+Finally, from a cost-efficiency perspective, our results indicate that increasing prompt complexity does not necessarily improve performance, underscoring the importance of cost-aware design for scalable LLM-based repair systems. 
+ II Replication Study 
+ Fig. 1: Study Design adopted for our Replication and Extension Study. 
+ In this section, we mainly focus on our replication.
+First, we present the original study conducted by Dai et al. [ 1 ] . Then, we present the methodology adopted for our replication, highlighting how we reproduced the experimental setup of the original work and any required adaptations (see Figure 1 , left side).
+Second, we present and discuss the results obtained. 
+ II-A FeedbackEval: Original Study 
+ Dai et al. [ 1 ] investigate how Large Language Models (LLMs) comprehend and use different types of feedback when performing automated code repair tasks.
+While LLMs have demonstrated strong capabilities in different contexts, like code generation and repair, their ability to effectively leverage different feedback types, ranging from structured test outputs to natural language suggestions, remains poorly understood.
+Aiming to address this gap, the authors introduce FeedbackEval, comprising 394 Python coding tasks drawn from two established benchmarks: 230 tasks from CoderEval [ 22 ] and 164 from HumanEval [ 23 ] . 1 1 
+ 1 
+ Our study is based on the first version of the study, available in April, 2025: https://arxiv.org/abs/2504.06939v1 
+To convert code-generation problems into repair tasks, FeedbackEval provides 3,736 erroneous instances produced through rule-based mutations, GPT-4o-mini error injection, and incorrect LLM-generated solutions.
+Each task is paired with one erroneous instance and one of four modalities: test feedback from pytest , compiler feedback from pylint , human feedback simulated by GPT-4o-mini, or simple feedback 
+containing a generic repair request, supporting controlled comparison of feedback-driven repair. 
+ In this context, FeedbackEval is a relevant target for replication because it investigates a timely feedback-driven repair scenario, evaluates multiple feedback strategies, relies on established benchmarks such as CoderEval and HumanEval, and provides reusable artifacts for reproduction.
+Overall, these findings highlight the importance of feedback design in guiding LLM-based repair. 
+ II-B Study Design 
+ For our replication, we follow the experimental protocol defined in the original study.
+In particular, we reuse the original datasets, buggy code snippets, feedback artifacts, and evaluation scripts made available by the authors.
+We aimed to replicate all evaluated research questions; however, an exact replication was not feasible for RQ3.
+In the original work, 100 tasks were randomly selected from the 230 CoderEval tasks to conduct the iterative feedback experiments.
+However, at the time of our replication, the identifiers of these tasks and the corresponding pytest unit tests used for test feedback were not publicly available.
+Reconstructing this subset would require re-randomizing tasks and rewriting tests, which could introduce additional variance and possibly threaten the validity of the comparison.
+Therefore, we exclude RQ3 and replicate the analyses of single-iteration repair across models (RQ1), feedback effectiveness across datasets (RQ2), and prompting techniques (RQ4). 
+ For RQ1 , we execute single-iteration code repair experiments.
+Each of the 394 repair tasks is evaluated across the four feedback types ( test, compiler, human, and simple ).
+Repair success is automatically validated by running the unit tests associated with a given task, and results are reported using the Repair@1 metric, representing the proportion of tasks successfully repaired in a single attempt.
+For RQ2 , we analyze the effectiveness of each feedback modality using the previous execution outputs generated in RQ1.
+Repair success rates are aggregated per feedback type and dataset (HumanEval and CoderEval), allowing us to analyze how different feedback types influence repair performance across models and datasets. 
+ Finally, for RQ4 , we evaluate multiple prompt configurations, including the baseline prompt, Chain-of-Thought prompting, Few-shot examples, and ablation variations, which remove specific prompt components (e.g., docstring, contextual information, or repair guidelines).
+Each prompt variant is executed on the same set of repair tasks while relying on the same model configuration and feedback type.
+Repair success is also evaluated using the Repair@1 metric, enabling direct comparison with the results reported in the original study. 
+ While the original study evaluates five models, our replication focuses on two representative models: GPT-4o and Claude 3.5 Sonnet .
+This decision was primarily motivated by the substantial computational and financial costs associated with large-scale LLM evaluation, which requires thousands of API calls across multiple configurations.
+We selected these models as they represent strong proprietary LLMs from different providers [ 24 , 25 ] , enabling us to assess whether the observed trends hold across strong models.
+We also adopt the same decoding parameters whenever possible (temperature = 0.3). 
+ II-C Results 
+ In this section, we present the results of our replication experiments.
+For each RQ, we report the findings, comparing them with those reported in the original study.
+Tables I , II , and III summarize the Repair@1 scores across models, feedback types, and experimental settings. 
+ RQ1: Single-Iteration Repair Performance 
+ Overall, our results closely relate to the original results (see Table I ).
+For GPT-4o , we observe an average Repair@1 score of 55.55% in our replication, compared to 56.4% reported in the original paper.
+Regarding performance, it is lowest for human feedback and highest for test feedback, while simple feedback remains competitive across models.
+ Claude 3.5 Sonnet reports similar behavior with an average Repair@1 score of 60.2%, which is close to the 60.8% reported in the original study.
+ Test feedback again produces the strongest results, achieving 66.6% Repair@1 in our replication compared to 65.0% in the original paper.
+Overall, these results show that the main qualitative findings are reproducible.
+Particularly, we observe that structured feedback, specifically test feedback, consistently leads to higher repair success rates than less structured feedback types. 
+ TABLE I: Repair@1 results for single-iteration repair (RQ1). 
+ GPT-4o 
+ Claude 3.5 Sonnet 
+ Feedback 
+ Replication 
+ Original 
+ Replication 
+ Original 
+ Human 
+ 50.2 
+ 50.1 
+ 56.0 
+ 55.8 
+ Compiler 
+ 54.1 
+ 55.6 
+ 55.9 
+ 58.9 
+ Simple 
+ 57.5 
+ 58.2 
+ 62.5 
+ 63.5 
+ Test 
+ 60.4 
+ 61.7 
+ 66.6 
+ 65.0 
+ Average 
+ 55.55 
+ 56.4 
+ 60.2 
+ 60.8 
+ RQ2: Feedback Effectiveness Across Datasets 
+ For GPT-4o , our results also follow the performance patterns reported in the original study (see Table II ).
+Repair success is consistently higher on HumanEval than on CoderEval across all feedback types.
+For CoderEval , test feedback achieves the best performance, while on HumanEval , the top results are close, with simple feedback slightly exceeding test feedback in our replication.
+However, we observe some quantitative differences requiring further attention.
+On HumanEval , our average Repair@1 score is 76.83%, slightly lower than the 80.2% reported in the original study.
+On the other hand, CoderEval results are marginally higher (34.27% compared to 32.6%).
+ Claude 3.5 Sonnet exhibits similar dataset-dependent behavior.
+Consistent with the original study, our replication results show that performance is higher on HumanEval than on CoderEval . Meanwhile, test and simple feedback also provide the best results.
+Similar to GPT-4o , when the relative ordering of feedback types is preserved, we observe here minor variations for individual scores, specifically for the compiler feedback.
+Overall, these results confirm that the effectiveness patterns reported in the original study remain largely stable across datasets and models. 
+ TABLE II: Repair@1 results across datasets for GPT-4o (RQ2). 
+ HumanEval 
+ CoderEval 
+ Feedback 
+ Replication 
+ Paper 
+ Replication 
+ Paper 
+ Human 
+ 72.0 
+ 71.6 
+ 28.5 
+ 28.5 
+ Compiler 
+ 77.4 
+ 82.7 
+ 30.8 
+ 28.5 
+ Simple 
+ 79.3 
+ 81.0 
+ 35.7 
+ 35.4 
+ Test 
+ 78.7 
+ 85.6 
+ 42.1 
+ 37.8 
+ Average 
+ 76.83 
+ 80.2 
+ 34.27 
+ 32.6 
+ RQ4: Impact of Prompting Techniques 
+ Once again, our results show overall consistency with the trends reported in the original study (see Table III ).
+We observe that the average Repair@1 score across all prompt configurations
+is 50.83%, closely compared to 50.09% reported in the original
+study.
+However, we also observe some differences across individual prompting techniques.
+For example, Chain-of-Thought reports performance improvements, achieving 53.7% compared to 52.6%.
+Conversely, the baseline and Few-shot configurations perform slightly worse than originally reported.
+Some ablation variants report improved results in our replication.
+For example, removing the docstring or persona components leads to slightly higher
+repair success rates.
+In contrast, removing context information produces nearly identical results in both studies.
+Overall, while quantitative differences are observed across individual prompt configurations, the general conclusion of the original study remains valid: prompt engineering only provides moderate improvements over the baseline configuration in single-iteration repair scenarios. 
+ Summary of Replication. 
+Our replication reproduces the key qualitative findings of the original study with minor quantitative differences.
+While test feedback achieves the highest overall repair success, simple feedback remains competitive across models and datasets.
+Finally, the observed quantitative deviations represent a minor concern, falling within expected variability for LLM-based experiments. 
+ TABLE III: Repair@1 results across prompting techniques (RQ4). 
+ Prompt Variant 
+ Replication 
+ Paper 
+ Baseline 
+ 49.5 
+ 52.6 
+ Chain-of-Thought 
+ 53.7 
+ 52.6 
+ No Persona 
+ 52.6 
+ 50.5 
+ Few-shot Example 
+ 48.4 
+ 50.5 
+ No Docstring 
+ 51.6 
+ 48.5 
+ No Context 
+ 48.4 
+ 48.5 
+ No Guideline 
+ 51.6 
+ 47.4 
+ Average 
+ 50.83 
+ 50.09 
+ III Extension Study 
+ While our previously reported replication confirms the main qualitative trends reported in the original FeedbackEval study [ 1 ] , the target benchmark focuses exclusively on Python repair tasks.
+Such a constraint raises an important question of whether feedback-effectiveness trends observed in Python are reproduced under different programming languages and tooling settings.
+To address this issue, we extend the FeedbackEval benchmark to Java.
+Rather than claiming an isolated language effect, we aim to examine how feedback-driven repair behaves in a Java setting with different compilation, testing, and feedback-generation characteristics.
+For that, we construct a controlled set of Java repair tasks and reproduce the experimental setup used in the original benchmark (see Figure 1 , right side). 
+ III-A RQ1: How do feedback types affect LLM-based repair effectiveness in a Java setting? 
+ III-A 1 Motivation 
+ As previously presented and further validated in our replication, the FeedbackEval benchmark demonstrated that the effectiveness of feedback-driven code repair varies across feedback types in Python.
+However, it remains unclear whether the same feedback-effectiveness ranking is reproduced under different programming languages and their tooling settings.
+Different languages, such as Java, introduce different characteristics, including explicit type declarations, compilation requirements, and structured compiler diagnostics.
+These properties may affect how LLMs interpret and leverage feedback during automated code repair.
+Therefore, our goal is not to isolate programming language as the only explanatory factor, but to examine whether the qualitative feedback trends observed in Python remain applicable in an exploratory Java repair setting. 
+ III-A 2 Approach 
+ To investigate the effects of the different feedback types analyzed, we extend the original study to Java repair tasks.
+For that, we randomly sample 50 Java tasks from the CoderEval benchmark, which includes tasks derived from real-world projects and has been explored in previous studies.
+Based on the reference correct implementations, we filtered out associated tasks that fail to compile with javac or do not pass the original validation checks, ensuring a reliable baseline for mutation injection.
+The validation checks provided in CoderEval are implemented as simple assertion-based scripts rather than full unit test suites executed within a testing framework.
+As a result, failing assertions provide only a binary pass/fail signal and do not expose diagnostic information such as assertion locations, stack traces, or JUnit-style failure reports.
+This limited feedback would provide little guidance for LLM-based repair.
+To address this limitation, we automatically converted the pseudo-unit tests into executable JUnit 4 test suites using GPT-4o-mini .
+The conversion was mainly structural: the original assertion scripts were transformed into JUnit test classes, preserving helper methods, setup code, and boolean conditions, while replacing the final pass/fail print logic with explicit Assert.assertTrue checks.
+We manually inspected all 50 translated JUnit tests and found no semantic inconsistencies with the original assertion scripts.
+To further validate test adequacy, all tasks were evaluated by ensuring that (i) correct implementations pass the translated tests and (ii) injected mutations fail them. 
+ While the original study considers three different mutation sources (tool-based, LLM-based, and incorrect code generation), we rely exclusively on LLM-driven mutation injection.
+This choice was motivated by recent studies reporting that LLMs can generate realistic and semantically meaningful faulty variants, complementing traditional mutation tools, which often rely on predefined syntactic transformations  [ 26 , 27 ] .
+On the other hand, such a design choice limits comparability with the original Python benchmark, as the Java mutations may reflect error patterns that are easier for similar LLMs to recognize and repair.
+Therefore, we do not interpret the Java extension as a direct cross-language comparison with FeedbackEval.
+Instead, we use it as an exploratory setting to examine how feedback types behave for Java repair tasks. 
+ For each task, we generate two mutated variants using LLM-driven mutation injection.
+The first introduces a logical mutation , including incorrect conditions, off-by-one errors, or wrong return values, while the second introduces a compiler mutation that prevents successful compilation.
+This process yields 100 erroneous repair instances, 50 per mutation category.
+We treat these mutation categories separately because they correspond to two fundamentally different repair scenarios.
+Compiler mutations prevent code execution and require correcting syntactic or typing errors before the program can run.
+In contrast, logical mutations require behavioral corrections that can only be detected through test execution.
+Treating these categories independently allows us to analyze model performance across the two main stages of the repair process for Java. 
+ Regarding the feedback types, we consider different approaches depending on the mutation category.
+For logical mutations, we evaluate three feedback modalities, following the categories defined in the original study  [ 1 ] : 
+ • 
+ test feedback , derived from executing JUnit test suites and capturing their failure outputs; 
+ • 
+ human feedback , simulated using GPT-4o-mini to generate expert-like debugging comments, following the terminology adopted by FeedbackEval  [ 1 ] ; and 
+ • 
+ simple feedback (“The code is wrong. Please fix it.”). 
+ For compiler mutations, we evaluate compiler feedback (derived from javac compilation errors captured during execution), along with human and simple feedback .
+All Java experiments are conducted within a controlled Docker environment to ensure consistent compilation and test execution. 
+ Fig. 2: Distribution of logical mutations in the curated 50 Java repair tasks. 
+ Java Erroneous Code Repair Tasks Dataset Characterization: 
+Figure  2 shows the distribution of logical mutations , covering error categories such as boundary condition mistakes , off-by-one errors , incorrect logic , and null handling .
+In contrast, compiler mutations are highly concentrated, with the vast majority corresponding to syntax errors (92%), and a small proportion related to type errors (8%).
+These distributions provide important context for interpreting the Repair@1 results, as different mutation types expose distinct feedback signals.
+In particular, compiler mutations are dominated by syntax errors, which can be effectively addressed using structured compiler diagnostics.
+On the other hand, logical mutations are more diverse and require semantic reasoning, making them more sensitive to the quality and expressiveness of feedback, like test outputs vs. simple prompts.
+Such a distinction helps explain the variation in feedback effectiveness observed across mutation categories. 
+ Metrics and statistical analysis. 
+Repair performance is evaluated using Repair@1 , defined as the percentage of tasks for which the model’s first-generated patch produces a program that successfully compiles, when applicable, and passes the associated test suite.
+For each Repair@1 estimate, we compute Wilson 95% confidence intervals.
+ Because the same tasks are evaluated under all feedback conditions, we treat the observations as paired.
+Within each mutation category, we use Cochran’s Q Q test to evaluate whether repair outcomes differ overall among the three feedback conditions.
+We then conduct pairwise two-sided exact McNemar tests and adjust the three resulting p p -values within each mutation-category family using the Holm procedure. 
+We treat differences with an adjusted p < 0.05 p<0.05 as statistically supported. 
+ III-A 3 Results 
+ TABLE IV: Java Repair@1 results with Wilson 95% confidence intervals. 
+ Mutation 
+ Feedback 
+ Repairs 
+ 95% CI 
+ Logical 
+ Human 
+ 37/50 (74%) 
+ [60.45, 84.13] 
+ Logical 
+ Simple 
+ 43/50 (86%) 
+ [73.81, 93.05] 
+ Logical 
+ Test 
+ 41/50 (82%) 
+ [69.20, 90.23] 
+ Compiler 
+ Human 
+ 39/50 (78%) 
+ [64.76, 87.25] 
+ Compiler 
+ Simple 
+ 46/50 (92%) 
+ [81.16, 96.85] 
+ Compiler 
+ Compiler 
+ 47/50 (94%) 
+ [83.78, 97.94] 
+ Table  IV summarizes the Repair@1 results with Wilson 95% confidence intervals.
+For logical mutations, simple feedback achieves the highest
+observed Repair@1 (86%), followed by test (82%) and human feedback (74%).
+ Although the conditions differ overall ( Q ⁡ ( 2 ) = 8.00 Q(2)=8.00 , p = 0.0183 p=0.0183 ), no pairwise comparison remains significant after Holm correction (all p Holm ≥ 0.0938 p_{\mathrm{Holm}}\geq 0.0938 ).
+In particular, the difference between simple and test feedback is not statistically significant ( p Holm = 0.5000 p_{\mathrm{Holm}}=0.5000 ).
+The comparisons between human and simple feedback ( p Holm = 0.0938 p_{\mathrm{Holm}}=0.0938 ), and between human and test feedback ( p Holm = 0.4375 p_{\mathrm{Holm}}=0.4375 ), are also not statistically significant.
+Therefore, we do not interpret any individual feedback modality as statistically superior for logical mutations.
+Instead, the results provide insufficient evidence that the feedback ranking observed in Python persists in our Java setting. 
+For compiler mutations, compiler feedback achieves the highest observed Repair@1 (94%), followed by simple (92%) and human feedback (78%).
+ The conditions also differ overall ( Q ⁡ ( 2 ) = 12.67 Q(2)=12.67 , p = 0.0018 p=0.0018 ).
+Both compiler ( p Holm = 0.0234 p_{\mathrm{Holm}}=0.0234 ) and simple feedback ( p Holm = 0.0313 p_{\mathrm{Holm}}=0.0313 ) significantly outperform human feedback, but do not differ significantly from each other ( p Holm = 1.0000 p_{\mathrm{Holm}}=1.0000 ). 
+ For logical bug repairs, we also observe that some generated patches introduce compilation errors.
+This indicates that repair outcomes are not always confined to the original error category: a model, when attempting to fix a semantic issue, may introduce syntactic or type-level problems.
+Such an observation suggests that combining multiple feedback signals, such as test feedback followed by compiler validation, may be useful for more robust repair pipelines. 
+ III-B RQ2: How cost-efficient are different prompting techniques when applied to feedback-driven code repair on Java tasks? 
+ III-B 1 Motivation 
+ Advanced prompting strategies such as Chain-of-Thought reasoning and Few-shot learning have been shown to improve reasoning performance in LLMs [ 28 , 29 ] .
+However, these techniques typically increase token consumption and API usage costs [ 30 , 31 ] .
+In real-world software engineering environments, cost efficiency is often as important as repair effectiveness, especially when automated repair systems must operate at scale.
+The original FeedbackEval benchmark reported only marginal improvements from complex prompting strategies for single-iteration Python repair tasks.
+Given Java’s different typing, compilation, and tooling characteristics, it is unclear whether the same trade-offs hold.
+Understanding the effectiveness–cost balance of prompting strategies is therefore essential for practical deployment of LLM-based repair systems. 
+ III-B 2 Approach 
+ Using the 50 logical-mutation Java tasks constructed for RQ1 , we evaluate different prompting variants similar to the original study  [ 1 ] :
+(i) the baseline , containing the full context (task description, guidelines, docstring, and feedback),
+(ii) Chain-of-Thought , encouraging explicit reasoning, and
+(iii) Few-shot , with a fixed example.
+Furthermore, we consider four ablation variants derived from the baseline prompt, each removing a single component:
+(i) No-Docstring (removal of the function description),
+(ii) No-Context (removal of oracle or contextual information such as APIs, variables, and external dependencies),
+(iii) No-Guidelines (removal of the repair instruction block),
+and (iv) No-Persona (removal of the role-based prompt describing the model as a repair assistant). 
+ For each prompting variant, we execute one repair attempt for each of the same 50 tasks using GPT-4o-mini (temperature=0.3) and record the input and output token usage. 
+ Metrics and statistical analysis. 
+To evaluate cost efficiency, we report:
+(i) total API cost,
+(ii) Repair@1 with Wilson 95% confidence intervals,
+(iii) cost per successful repair.
+Cost per successful repair is the total API cost in CAD divided by the number of successful repairs; lower values indicate greater cost efficiency.
+ Since the same 50 tasks are evaluated under all seven prompting conditions, the repair outcomes are paired at the task level.
+We use Cochran’s Q Q test to assess whether repair effectiveness differs across the seven conditions.
+We then conduct six planned pairwise comparisons between the baseline and each prompting variant using two-sided exact McNemar tests.
+We adjust the resulting p p -values using the Holm procedure and treat differences with adjusted p < 0.05 p<0.05 as statistically supported. 
+ III-B 3 Results 
+ TABLE V: Cost efficiency of prompting strategies. Costs are reported in CAD, with cost-per-repair computed from unrounded totals. 
+ Technique 
+ Repairs 
+ 95% CI 
+ Cost 
+ Cost/Repair 
+ Baseline 
+ 43/50 (86%) 
+ [73.81, 93.05] 
+ 0.0102 
+ 0.000236 
+ Chain-of-Thought 
+ 42/50 (84%) 
+ [71.49, 91.66] 
+ 0.0241 
+ 0.000575 
+ Few-shot 
+ 44/50 (88%) 
+ [76.20, 94.38] 
+ 0.0122 
+ 0.000278 
+ No-Context 
+ 42/50 (84%) 
+ [71.49, 91.66] 
+ 0.0090 
+ 0.000215 
+ No-Docstring 
+ 40/50 (80%) 
+ [66.96, 88.76] 
+ 0.0094 
+ 0.000234 
+ No-Guidelines 
+ 41/50 (82%) 
+ [69.20, 90.23] 
+ 0.0090 
+ 0.000220 
+ No-Persona 
+ 44/50 (88%) 
+ [76.20, 94.38] 
+ 0.0099 
+ 0.000224 
+ Table  V summarizes repair performance and cost efficiency across the prompting strategies.
+ Repair@1 ranges from 80% to 88%.
+First, Cochran’s Q Q test does not identify a statistically significant overall difference among the seven prompting conditions ( Q ⁡ ( 6 ) = 5.04 Q(6)=5.04 , p = 0.5392 p=0.5392 ).
+Similarly, none of the six planned comparisons between the baseline and the prompting variants is statistically significant after Holm correction (all p Holm = 1.0000 p_{\mathrm{Holm}}=1.0000 ).
+Thus, we find no statistically supported evidence that any prompting variant changes Repair@1 relative to the baseline.
+However, this lack of significance does not establish equivalence among the prompting conditions. 
+ The prompting strategies nevertheless differ in observed cost.
+ Due to higher token usage, Chain-of-Thought has the highest total and per-repair cost (CAD 0.000575), compared with the baseline (CAD 0.000236) and No-Context (CAD 0.000215), without significantly improving Repair@1.
+The ablation variants cost less than the baseline without significant Repair@1 differences, suggesting a more favorable observed cost-effectiveness trade-off for lightweight prompts. 
+ Summary of Exploratory Extension. 
+Overall, we observe that feedback effectiveness may vary by mutation category.
+For logical mutations, no pairwise difference remains significant after correction; meanwhile, for compiler mutations, compiler and simple feedback outperform simulated human feedback but not each other.
+Finally, prompting variants show no significant Repair@1 differences, while lightweight prompts reduce cost relative to Chain-of-Thought . 
+ IV Discussion 
+ In this section, we further discuss some insights and implications derived from our study replication and its exploratory extension for Java. 
+ IV-A Feedback Patterns and Prompting Trade-offs 
+ Our exploratory Java results reveal mutation-dependent patterns that should be interpreted cautiously.
+Unlike the Python CoderEval results, where test feedback performs best (Table  II ), compiler feedback achieves the highest observed Repair@1 for compiler mutations, although it does not differ significantly from simple feedback.
+The locations, symbols, and type information reported by javac may support localized repairs, while the strong performance of simple feedback suggests that some mutations are repairable from code context alone.
+For logical mutations, simple feedback ranks first, but does not differ significantly from test feedback.
+One possible explanation is that JUnit 4.13.2 provides limited guidance when assertions lack customized messages, making the code and task description more informative than
+the test output. 
+ Prompting strategies differ more clearly in cost than in repair effectiveness.
+Increased prompt and response verbosity raises token usage  [ 32 , 33 ] : Chain-of-Thought is the least cost-efficient strategy, while Few-shot adds input overhead; neither produces a statistically supported Repair@1 gain.
+Conversely, the ablation variants reduce cost while showing no statistically supported Repair@1 differences from the baseline, favoring lighter prompts in this setting. 
+ IV-B Implications for Multilingual Repair Evaluation 
+ Our Java exploratory extension should not be interpreted as a direct Java–Python comparison.
+A rigorous comparison across programming languages requires controlling different dimensions, including the repair model, evaluation metric, source of bugs, mutation strategies, test quality, and feedback format.
+In this study, the Java extension relies on LLM-generated mutations, whereas FeedbackEval combines tool-based mutations, LLM-generated errors, and incorrect code generations.
+Such a mismatch may impact repair difficulty and influence the observed effectiveness of different feedback types. 
+ In our study, the mutation strategy represents an important confound.
+Our focus on LLM-generated mutations is motivated by recent studies showing that LLMs can generate more realistic and semantically meaningful faulty variants, complementing traditional mutation tools that often rely on predefined syntactic transformations  [ 26 , 27 ] .
+However, since the mutations are generated by an LLM, they may reflect error patterns that are more familiar to the same or similar LLMs used during repair.
+As a result, LLM-generated bugs may be easier for the repair model to recognize and fix.
+Future multilingual repair benchmarks should therefore apply consistent mutation strategies across languages, use independent models or rule-based tools for mutation generation, and report mutation-difficulty indicators such as edit distance, changed control-flow structures, affected variables, and failure-triggering test characteristics.
+However, these limitations do not invalidate the Java extension; they rather clarify its role: our extension provides exploratory evidence that feedback effectiveness can vary under a different benchmark, mutation strategy, and programming language ecosystem.
+Furthermore, we also consider a smaller and less capable LLM.
+Finally, these factors motivate and reveal the need for more controlled multilingual benchmarks before drawing strong conclusions about cross-language generalization in LLM-based repair. 
+ IV-C Replication Challenges of LLM-based Studies 
+ Replicating LLM-based studies presents several practical and methodological challenges that differ from traditional software engineering experiments [ 34 ] .
+During our replication of FeedbackEval, we encountered different issues related to API variability, computational cost, missing experimental details, and evolving model availability. 
+ Resource Constraints and Computational Cost. 
+Running the full FeedbackEval benchmark requires a large number of API calls.
+For RQ1 and RQ2 alone, the benchmark requires executing 394 tasks across four feedback modalities and two models, resulting in more than 3,000 API requests.
+Additional prompting experiments further increase this number substantially.
+Each request incurs both financial cost and execution latency, making large-scale replications computationally expensive [ 35 ] .
+These costs create practical constraints for researchers attempting to replicate LLM-based experiments. 
+ Implications for Statistical Reporting. 
+Our experience also highlights the need for stronger statistical reporting in LLM-based replication studies.
+Because Repair@1 values can differ by only a few percentage points across feedback or prompting variants, descriptive percentages alone can lead to overinterpretation.
+In our extension, some apparent differences, such as simple versus test feedback for Java logical mutations, are small and not statistically significant after correction.
+Future replication studies should therefore report confidence intervals, paired or aggregate statistical tests when appropriate, and corrections for multiple comparisons. 
+ Model Deprecation. Another practical challenge concerns the rapid evolution of LLMs [ 36 ] .
+During this study, the model claude-3-5-sonnet-20241022 was officially deprecated. 2 2 
+ 2 
+ https://platform.claude.com/docs/en/about-claude/model-deprecations 
+All replication experiments involving this model were therefore executed before its deprecation date to maintain consistency with the original study.
+This highlights an additional difficulty in reproducing LLM-based studies: the underlying models may change or disappear over time, directly limiting long-term reproducibility [ 37 ] . 
+ V Related Work 
+ Recent advances in LLM-based program repair have explored the role of feedback mechanisms, cross-language transfer, and structured representations for improving repair effectiveness.
+In this section, we position our work regarding prior research, highlighting how our study extends existing findings by focusing on the reproducibility of feedback-driven repair and on how feedback strategies behave in an exploratory Java repair setting. 
+ Prior work has also highlighted the challenges of generalization in APR.
+Zirak and Hemmati [ 38 ] investigate the impact of domain shift in repair tasks, where models trained and evaluated on similar projects exhibit significant performance degradation when applied to new domains.
+To address this issue, the authors propose a new framework that adapts to the target project while improving repair effectiveness.
+Similar to our goal, this work highlights that repair performance is highly sensitive to differences in data distribution and problem characteristics.
+In contrast, our work investigates the reproducibility of feedback-driven repair results and explores how feedback strategies behave in a Java repair setting. 
+ In the context of LLM-based repair, prior work has also explored the ability of LLMs to transfer code repair capabilities across programming languages.
+Baltaci et al.  [ 15 ] show that transfer learning across multiple source and target languages significantly outperforms zero-shot approaches for code repair tasks.
+Similarly, LANTERN  [ 16 ] exploits differences in language-specific model proficiency by translating code into languages where LLMs perform better, improving repair performance.
+While these studies focus on improving repair effectiveness through cross-language transfer or translation, they do not investigate how different feedback modalities behave in a replication and extension setting.
+In contrast, we partially replicate a feedback-driven repair benchmark and conduct an exploratory Java extension to examine how feedback modalities behave under a different programming-language ecosystem. 
+ Several recent approaches have investigated how structured feedback can improve LLM-based program repair.
+DSrepair  [ 39 ] leverages AST-based feedback to localize errors more precisely, achieving improvements in repair performance while reducing token usage.
+Similarly, RePair [ 40 ] introduces reward models that act as virtual compilers to guide iterative repair through feedback signals.
+These approaches demonstrate the potential of structured and iterative feedback mechanisms to improve repair effectiveness.
+However, they primarily focus on specific domains (e.g., data science code) or iterative repair settings.
+In contrast, our study evaluates multiple feedback strategies in a controlled, single-iteration setting and examines their behavior in a Java repair extension.
+This complements prior work by highlighting how feedback representation, tooling, and mutation strategy may shape observed repair outcomes. 
+ Finally, in the context of vulnerability repair tasks [ 41 ] , recent work has explored both feedback integration and feedback representation.
+In this context, Kulsum et al. [ 7 ] present VRpilot , an LLM-based approach combining Chain-of-Thought reasoning with iterative patch validation feedback from external tools like compilers, test suites, and sanitizers for C and Java programs.
+Their results show that integrating reasoning and validation feedback leads to improved repair performance.
+Meanwhile, Zhang et al. [ 42 ] propose VulAdvisor , a framework responsible for generating natural-language repair suggestions to guide vulnerability fixing, rather than directly producing patches.
+Their results show that providing more informative and human-readable feedback can improve repair effectiveness.
+While these studies emphasize the importance of both feedback integration and feedback representation in LLM-based repair, they mainly focus on improving repair performance in specific scenarios and do not systematically compare multiple feedback types in a replication setting or examine how feedback behavior changes under a different repair benchmark and tooling ecosystem. 
+ VI Threats to Validity 
+ Internal Validity. 
+Java mutations were generated exclusively using GPT-4o-mini, whereas the original FeedbackEval Python dataset combines rule-based mutation operators, LLM-generated errors, and incorrect LLM-generated solutions.
+This difference may introduce a confound, as LLM-generated Java mutations may reflect error patterns closer to the model’s training distribution, potentially making them easier for the repair model to fix.
+In contrast, rule-based mutations used in the Python dataset were designed to systematically stress repair capabilities.
+Consequently, the Java repair rates observed in our experiments may partially reflect mutation difficulty and benchmark-construction choices rather than language-intrinsic effects.
+The Java experiments rely on JUnit 4.13.2 for test execution, which typically produces concise assertion failure messages.
+In contrast, the Python benchmark relies on pytest , whose failure output often includes richer diagnostic information.
+This difference may reduce the usefulness of test feedback in Java and partially explain why structured test feedback does not provide a clear advantage over simpler feedback in our Java setting. 
+ Construct Validity. 
+Regarding the translation of test cases, the use of GPT-4o-mini might alter test semantics or introduce inconsistencies, potentially biasing our results.
+To mitigate this threat, we manually inspected all 50 translated JUnit tests and found no semantic inconsistencies with the original assertion scripts.
+We also validated that the reference implementations pass the translated tests and that the injected mutations fail them.
+Repair success is defined as code that compiles and passes the associated test suite.
+This binary definition does not capture other important aspects of software quality, such as readability, maintainability, or the introduction of subtle semantic bugs not covered by the tests.
+Human feedback is simulated using an LLM rather than being collected from human developers.
+Although this allows controlled experiments, simulated feedback may not reflect the priorities, expertise, or contextual knowledge of real developers. 
+ Unlike the original study, our extension relies exclusively on LLM-generated mutations.
+While this design choice enables controlled and consistent mutation generation across tasks, it may introduce bias toward errors that are more representative of the LLM’s training distribution.
+As a result, these mutations may be easier for the same or similar models to repair, potentially inflating Repair@1 scores.
+To partially mitigate this limitation, our dataset includes a diverse distribution of 13 logical mutation types, covering a range of common error patterns, such as incorrect conditions, off-by-one errors, and wrong return values.
+Nevertheless, the mutations remain LLM-generated and may not fully reflect the characteristics of real-world or tool-generated bugs. 
+ External Validity. 
+Our replication evaluates a subset of the models considered in the original study.
+While the evaluated models are strong proprietary LLMs, this choice may limit the generalizability of our findings to other LLMs with different capabilities, architectures, or training data.
+As prior work suggests that LLM behavior can vary across models, the observed feedback effectiveness patterns may not fully transfer to all model families.
+Regarding our extension, our evaluation uses a single model (GPT-4o-mini) on 50 unique CoderEval tasks, resulting in 100 mutated repair instances.
+Overall, we prioritize controlled experimental conditions over scale, enabling focused analysis of feedback modalities across mutation categories. 
+ Although this setup enables controlled analysis within the Java setting, the results may not generalize to other LLMs, larger datasets, or real-world bugs involving multiple files and complex software architectures.
+Additionally, our single-iteration repair setup does not capture iterative debugging workflows commonly used in practical repair systems.
+ Mutation generation, JUnit test construction, simulated human-feedback generation, and repair generation were all performed using the same LLM. 
+This may introduce bias, as the model could generate mutants and tests that reflect patterns within its own training distribution, making them easier to recognize and repair.
+Future work could mitigate this threat by generating mutants and tests using independent models or rule-based mutation frameworks. 
+ Conclusion Validity. 
+For the Java extension, the same tasks are evaluated under each feedback and prompting condition.
+We therefore analyze paired task-level outcomes using Cochran’s Q Q and two-sided exact McNemar tests with Holm correction, alongside Wilson 95% confidence intervals.
+Each condition was executed once; therefore, we do not quantify stochastic variability across repeated generations.
+Comparisons between our Python replication and the published FeedbackEval results remain descriptive.
+Small or non-significant differences should be interpreted cautiously. 
+ VII Conclusion 
+ In this study, we partially replicated and extended the FeedbackEval benchmark [ 1 ] to examine the reproducibility of feedback-driven LLM-based code repair, while exploring how different feedback types behave in a Java repair setting.
+Regarding our replication of the original Python-based study, our results largely confirm the reported trends and findings, particularly the effectiveness of test-based feedback over alternative types, supporting the robustness of the original findings under our experimental setup. 
+ Building on this, we moved forward with our extension to Java, revealing interesting findings.
+ In our Java extension, simple feedback ranks highest for logical mutations, although no pairwise difference remains significant after correction.
+For compiler mutations, compiler and simple feedback outperform simulated human feedback but do not differ significantly from each other. 
+Such a divergence appears to be influenced by differences in feedback types and tooling characteristics, such as the verbosity of test frameworks.
+We must emphasize that our findings should be interpreted considering our experimental design.
+Differences in mutation generation and dataset construction between Python and Java may affect repair difficulty and consequently influence comparisons with prior Python findings.
+Therefore, our results highlight observed behavioral differences under controlled conditions rather than isolating purely language-intrinsic effects.
+ Finally, lightweight prompts show a more favorable observed effectiveness–cost trade-off in our setting. 
+ Overall, our study reinforces the value of replication in LLM-based software engineering research, while highlighting the need for more controlled multilingual repair benchmarks.
+Future work should investigate consistent mutation-generation strategies across languages and different mutation sources, and explore richer feedback representations.
+Finally, extending this study to additional programming languages, models, and real-world repair scenarios would further improve our understanding of feedback-driven LLM-based program repair. 
+ Replication Package and Artifacts 
+ We provide two main artifacts.
+First, the replication package , including scripts, prompts, and datasets for reproducing the original FeedbackEval results, is available online [ 43 ] .
+Second, the extension repository provides the Java tasks, feedback artifacts, and instructions for obtaining the Docker evaluation image  [ 44 ] . 
+ AI-Assisted Content Disclosure 
+ LLMs were used to assist the authors with grammar revision and to support some scripts used in this study. All outputs were reviewed and validated by the authors, who are fully responsible for the content presented in this study. 
+ Acknowledgments 
+ This work was partially supported by the Natural Sciences and Engineering Research Council of Canada, the Canadian Institute for Advanced Research, and the Canada Research Chairs Program. 
+ References 
+ [1] 
+ D. Dai, M. Liu, A. Li, J. Cao, Y. Wang, C. Wang, X. Peng, and Z. Zheng (2025) 
+ FeedbackEval: a benchmark for evaluating large language models in feedback-driven code repair tasks .
+ arXiv preprint arXiv:2504.06939 .
+ Cited by: §I ,
+ §I ,
+ §II-A ,
+ §II ,
+ 2nd item ,
+ §III-A2 ,
+ §III-B2 ,
+ §III ,
+ §VII ,
+ Abstract .
+ [2] 
+ N. Bettenburg, S. Just, A. Schröter, C. Weiss, R. Premraj, and T. Zimmermann (2008) 
+ What makes a good bug report? .
+ In Proceedings of the 16th ACM SIGSOFT International Symposium on Foundations of software engineering ,
+ pp. 308–318 .
+ Cited by: §I .
+ [3] 
+ P. J. Guo, T. Zimmermann, N. Nagappan, and B. Murphy (2011) 
+ ‘Not my bug!’ and other reasons for software bug report reassignments .
+ In Proceedings of the ACM 2011 conference on Computer supported cooperative work ,
+ pp. 395–404 .
+ Cited by: §I .
+ [4] 
+ C. Le Goues, M. Pradel, and A. Roychoudhury (2019) 
+ Automated program repair .
+ Communications of the ACM 62 ( 12 ), pp. 56–65 .
+ Cited by: §I .
+ [5] 
+ Q. Zhang, C. Fang, Y. Ma, W. Sun, and Z. Chen (2023) 
+ A survey of learning-based automated program repair .
+ ACM Transactions on Software Engineering and Methodology 33 ( 2 ), pp. 1–69 .
+ Cited by: §I .
+ [6] 
+ I. Bouzenia, P. Devanbu, and M. Pradel (2025) 
+ Repairagent: an autonomous, llm-based agent for program repair .
+ In 2025 IEEE/ACM 47th International Conference on Software Engineering (ICSE) ,
+ pp. 2188–2200 .
+ Cited by: §I .
+ [7] 
+ U. Kulsum, H. Zhu, B. Xu, and M. d’Amorim (2024) 
+ A case study of llm for automated vulnerability repair: assessing impact of reasoning and patch validation feedback .
+ In Proceedings of the 1st ACM International Conference on AI-Powered Software ,
+ pp. 103–111 .
+ Cited by: §I ,
+ §V .
+ [8] 
+ M. Jin, S. Shahriar, M. Tufano, X. Shi, S. Lu, N. Sundaresan, and A. Svyatkovskiy (2023) 
+ Inferfix: end-to-end program repair with llms .
+ In Proceedings of the 31st ACM joint european software engineering conference and symposium on the foundations of software engineering ,
+ pp. 1646–1656 .
+ Cited by: §I .
+ [9] 
+ Y. Peng, A. D. Gotmare, M. R. Lyu, C. Xiong, S. Savarese, and D. Sahoo (2025) 
+ Perfcodegen: improving performance of llm generated code with execution feedback .
+ In 2025 IEEE/ACM Second International Conference on AI Foundation Models and Software Engineering (Forge) ,
+ pp. 1–13 .
+ Cited by: §I .
+ [10] 
+ S. Blyth, S. A. Licorish, C. Treude, and M. Wagner (2025) 
+ Static analysis as a feedback loop: enhancing llm-generated code beyond correctness .
+ In 2025 IEEE International Conference on Source Code Analysis & Manipulation (SCAM) ,
+ pp. 100–109 .
+ Cited by: §I .
+ [11] 
+ B. Yang, Z. Cai, F. Liu, B. Le, L. Zhang, T. F. Bissyandé, Y. Liu, and H. Tian (2025) 
+ A survey of llm-based automated program repair: taxonomies, design paradigms, and applications .
+ arXiv preprint arXiv:2506.23749 .
+ Cited by: §I .
+ [12] 
+ H. Gu, H. He, and M. Zhou (2023) 
+ Self-admitted library migrations in java, javascript, and python packaging ecosystems: a comparative study .
+ In 2023 IEEE International Conference on Software Analysis, Evolution and Reengineering (SANER) ,
+ pp. 627–638 .
+ Cited by: §I .
+ [13] 
+ W. Oh and H. Oh (2022) 
+ PyTER: effective program repair for python type errors .
+ In Proceedings of the 30th ACM Joint European Software Engineering Conference and Symposium on the Foundations of Software Engineering ,
+ pp. 922–934 .
+ Cited by: §I .
+ [14] 
+ A. Mesbah, A. Rice, E. Johnston, N. Glorioso, and E. Aftandilian (2019) 
+ Deepdelta: learning to repair compilation errors .
+ In Proceedings of the 2019 27th ACM Joint Meeting on European Software Engineering Conference and Symposium on the Foundations of Software Engineering ,
+ pp. 925–936 .
+ Cited by: §I .
+ [15] 
+ R. Baltaji, S. Pujar, M. Hirzel, L. Mandel, L. Buratti, and L. R. Varshney (2025) 
+ Cross-lingual transfer in programming languages: an extensive empirical study .
+ Transactions on Machine Learning Research .
+ Cited by: §I ,
+ §V .
+ [16] 
+ W. Luo, J. W. Keung, B. Yang, J. Klein, T. F. Bissyande, H. Tian, and B. Le (2025) 
+ Unlocking llm repair capabilities through cross-language translation and multi-agent refinement .
+ arXiv preprint arXiv:2503.22512 .
+ Cited by: §I ,
+ §V .
+ [17] 
+ D. Hidvégi, K. Etemadi, S. Bobadilla, and M. Monperrus (2024) 
+ Cigar: cost-efficient program repair with llms .
+ arXiv preprint arXiv:2402.06598 .
+ Cited by: §I .
+ [18] 
+ J. Wei, X. Wang, D. Schuurmans, M. Bosma, F. Xia, E. Chi, Q. V. Le, D. Zhou, et al. (2022) 
+ Chain-of-thought prompting elicits reasoning in large language models .
+ Advances in neural information processing systems 35 , pp. 24824–24837 .
+ Cited by: §I .
+ [19] 
+ Y. Wang, Q. Yao, J. T. Kwok, and L. M. Ni (2020) 
+ Generalizing from a few examples: a survey on few-shot learning .
+ ACM computing surveys (csur) 53 ( 3 ), pp. 1–34 .
+ Cited by: §I .
+ [20] 
+ T. Han, Z. Wang, C. Fang, S. Zhao, S. Ma, and Z. Chen (2025) 
+ Token-budget-aware llm reasoning .
+ In Findings of the Association for Computational Linguistics: ACL 2025 ,
+ pp. 24842–24855 .
+ Cited by: §I .
+ [21] 
+ P. K. Gantayat, T. Kaur, M. Majhi, U. K. Jena, S. Das, et al. (2025) 
+ From efficiency to innovation: llm 5.0 and the future of industry .
+ In 2025 International Conference on Multi-Agent Systems for Collaborative Intelligence (ICMSCI) ,
+ pp. 551–558 .
+ Cited by: §I .
+ [22] 
+ H. Yu, B. Shen, D. Ran, J. Zhang, Q. Zhang, Y. Ma, G. Liang, Y. Li, Q. Wang, and T. Xie (2024) 
+ Codereval: a benchmark of pragmatic code generation with generative pre-trained models .
+ In Proceedings of the 46th IEEE/ACM International Conference on Software Engineering ,
+ pp. 1–12 .
+ Cited by: §I ,
+ §II-A .
+ [23] 
+ M. Chen, J. Tworek, H. Jun, Q. Yuan, H. P. D. O. Pinto, J. Kaplan, H. Edwards, Y. Burda, N. Joseph, G. Brockman, et al. (2021) 
+ Evaluating large language models trained on code .
+ arXiv preprint arXiv:2107.03374 .
+ Cited by: §I ,
+ §II-A .
+ [24] 
+ R. Islam and O. M. Moushi (2025) 
+ Gpt-4o: the cutting-edge advancement in multimodal llm .
+ In Intelligent Computing-Proceedings of the Computing Conference ,
+ pp. 47–60 .
+ Cited by: §II-B .
+ [25] 
+ H. H. Hochmair, L. Juhász, and T. Kemp (2024) 
+ Correctness comparison of chatgpt-4, gemini, claude-3, and copilot for spatial tasks .
+ Transactions in GIS 28 ( 7 ), pp. 2219–2231 .
+ Cited by: §II-B .
+ [26] 
+ F. Tip, J. Bell, and M. Schäfer (2025) 
+ Llmorpheus: mutation testing using large language models .
+ IEEE Transactions on Software Engineering .
+ Cited by: §III-A2 ,
+ §IV-B .
+ [27] 
+ B. Wang, M. Chen, M. Deng, Y. Lin, M. Harman, M. Papadakis, and J. M. Zhang (2026) 
+ A comprehensive study on large language models for mutation testing .
+ ACM Transactions on Software Engineering and Methodology .
+ Cited by: §III-A2 ,
+ §IV-B .
+ [28] 
+ Y. Zhang, X. Wang, L. Wu, and J. Wang (2025) 
+ Enhancing chain of thought prompting in large language models via reasoning patterns .
+ In Proceedings of the AAAI Conference on Artificial Intelligence ,
+ Vol. 39 , pp. 25985–25993 .
+ Cited by: §III-B1 .
+ [29] 
+ Z. Yu, L. He, Z. Wu, X. Dai, and J. Chen (2023) 
+ Towards better chain-of-thought prompting strategies: a survey .
+ arXiv preprint arXiv:2310.04959 .
+ Cited by: §III-B1 .
+ [30] 
+ K. Nobakhtfar, K. Çakılcı, and R. Zilan (2026) 
+ Chain-of-thought vs. few-shot: a comparative study of prompting strategies for code generation .
+ In 2026 5th International Informatics and Software Engineering Conference (IISEC) ,
+ pp. 382–387 .
+ Cited by: §III-B1 .
+ [31] 
+ Z. Li, X. Zhang, S. Lu, H. Deng, H. Tian, and W. Dou (2025) 
+ A cost-aware approach for collaborating large language models and small language models .
+ In Proceedings of the 34th ACM International Conference on Information and Knowledge Management ,
+ pp. 1748–1757 .
+ Cited by: §III-B1 .
+ [32] 
+ M. Renze and E. Guven (2024) 
+ The benefits of a concise chain of thought on problem-solving in large language models .
+ arXiv preprint arXiv:2401.05618 .
+ Cited by: §IV-A .
+ [33] 
+ D. Pan, Z. Sun, C. Zhang, D. Lo, and X. Du (2025) 
+ The hidden cost of readability: how code formatting silently consumes your llm budget .
+ arXiv preprint arXiv:2508.13666 .
+ Cited by: §IV-A .
+ [34] 
+ S. Wagner, M. M. Barón, D. Falessi, and S. Baltes (2025) 
+ Towards evaluation guidelines for empirical studies involving llms .
+ In 2025 IEEE/ACM International Workshop on Methodological Issues with Empirical Studies in Software Engineering (WSESE) ,
+ pp. 24–27 .
+ Cited by: §IV-C .
+ [35] 
+ S. Shekhar, T. Dubey, K. Mukherjee, A. Saxena, A. Tyagi, and N. Kotla (2024) 
+ Towards optimizing the costs of llm usage .
+ arXiv preprint arXiv:2402.01742 .
+ Cited by: §IV-C .
+ [36] 
+ S. Baltes, F. Angermeir, C. Arora, M. M. Barón, C. Chen, L. Böhme, F. Calefato, N. Ernst, D. Falessi, B. Fitzgerald, et al. (2025) 
+ Guidelines for empirical studies in software engineering involving large language models .
+ arXiv preprint arXiv:2508.15503 .
+ Cited by: §IV-C .
+ [37] 
+ Z. Ma, Y. Mei, K. Z. Gajos, and I. Arawjo (2024) 
+ Schrödinger’s update: user perceptions of uncertainties in proprietary large language model updates .
+ In Extended Abstracts of the CHI Conference on Human Factors in Computing Systems ,
+ pp. 1–9 .
+ Cited by: §IV-C .
+ [38] 
+ A. Zirak and H. Hemmati (2024) 
+ Improving automated program repair with domain adaptation .
+ ACM Transactions on Software Engineering and Methodology 33 ( 3 ), pp. 1–43 .
+ Cited by: §V .
+ [39] 
+ S. Ouyang, J. M. Zhang, Z. Sun, and A. M. Penuela (2025) 
+ Knowledge-enhanced program repair for data science code .
+ arXiv preprint arXiv:2502.09771 .
+ Cited by: §V .
+ [40] 
+ Y. Zhao, Z. Huang, Y. Ma, R. Li, K. Zhang, H. Jiang, Q. Liu, L. Zhu, and Y. Su (2024) 
+ RePair: automated program repair with process-based feedback .
+ In Findings of the Association for Computational Linguistics: ACL 2024 ,
+ pp. 16415–16429 .
+ Cited by: §V .
+ [41] 
+ X. Zhou, S. Cao, X. Sun, and D. Lo (2025) 
+ Large language model for vulnerability detection and repair: literature review and the road ahead .
+ ACM Transactions on Software Engineering and Methodology 34 ( 5 ), pp. 1–31 .
+ Cited by: §V .
+ [42] 
+ J. Zhang, C. Wang, A. Li, W. Wang, T. Li, and Y. Liu (2024) 
+ Vuladvisor: natural language suggestion generation for software vulnerability repair .
+ In Proceedings of the 39th IEEE/ACM International Conference on Automated Software Engineering ,
+ pp. 1932–1944 .
+ Cited by: §V .
+ [43] 
+ L. Lalonde, W. Keddache, T. Perron Touchette, L. Da Silva, and F. Khomh (2026) 
+ Replication appendix .
+ Note: https://github.com/LouisLalonde/FeedbackEval 
+ Cited by: Replication Package and Artifacts .
+ [44] 
+ L. Lalonde, W. Keddache, T. Perron Touchette, L. Da Silva, and F. Khomh (2026) 
+ Java extension replication package. .
+ Note: https://github.com/leusonmario/LOG6306-EmpiricalStudy 
+ Cited by: Replication Package and Artifacts .
+ Experimental support, please
+ view the build logs 
+ for errors. Generated by
+ L
+ A 
+ T
+ E 
+ xml 
+ .
+ Instructions for reporting errors 
+ We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+ support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+ methods listed below: 
+ Click the "Report Issue" ( 
+ ) button, located in the page header. 
+ Tip: You can select the relevant text first, to include it in your report. 
+ Our team has already identified the following issues . We appreciate your time reviewing and reporting rendering errors we
+ may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+ should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+ all. 
+ Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a list of packages that need conversion , and welcome developer contributions . 
+ We gratefully acknowledge support from our major funders ,
+ member institutions , ,
+ and all contributors.
+ About · 
+ Help · 
+ Contact · 
+ Subscribe · 
+ Copyright · 
+ Privacy · 
+ Accessibility · 
+ Operational Status (opens in new tab) 

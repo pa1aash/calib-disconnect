@@ -1,0 +1,1262 @@
+ 
+ Does More Thinking Pay Off? Reasoning Cost and Correctness of LLMs in Code Generation and Bug Fixing 
+ Skip to main content 
+ Report GitHub Issue 
+ × 
+ Title: 
+ Content selection saved. Describe the issue below: 
+ Description: 
+ Submit without GitHub 
+ Submit in GitHub 
+ Why HTML? 
+ Report Issue 
+ Back to Abstract 
+ Download PDF 
+ Contents 
+ Reading mode 
+ Colour theme 
+ Abstract. 
+ 1 Introduction 
+ 2 Related Work 
+ 2.1 Reasoning in Large Language Models 
+ 2.2 LLMs for Code Generation and Bug Fixing 
+ 2.3 Qualitative Analysis in Software Engineering 
+ 2.4 Reasoning Efficiency and Reasoning Redundancy 
+ 3 Experiment Setup 
+ 3.1 Tasks and Benchmarks 
+ 3.2 Models 
+ 3.3 Evaluation Metrics 
+ Correctness for code generation. 
+ Correctness for bug fixing. 
+ Thinking token overhead. 
+ Paired comparison metrics. 
+ Stopping metrics. 
+ 3.4 Generation and Evaluation Pipeline 
+ Prompt Construction. 
+ Reasoning Trace Extraction. 
+ RQ1 runs and the source reasoning traces for RQ2 and RQ3. 
+ 3.5 Reasoning Analysis Design 
+ Manual labeling of reasoning behavior. 
+ Truncation configurations. 
+ 4 Results 
+ 4.1 RQ1. How does enabling reasoning affect task correctness and thinking token overhead? 
+ Results. 
+ 4.2 RQ2. What recurring behaviors appear in reasoning traces, and how do they differ between code generation and bug fixing? 
+ Results. 
+ 4.3 RQ3. How much correctness is retained when a new answer is generated from a shorter reasoning prefix? 
+ Results. 
+ 5 Discussion 
+ 5.1 Implications for Developers 
+ 5.2 Implications for Researchers 
+ 6 Threats to Validity 
+ 6.1 Internal Validity 
+ 6.2 External Validity 
+ 6.3 Construct Validity 
+ 7 Conclusion 
+ References 
+ License: arXiv.org perpetual non-exclusive license
+arXiv:2610.36952v1 [cs.SE] 27 Oct 2026 
+ Does More Thinking Pay Off? Reasoning Cost and Correctness of LLMs in Code Generation and Bug Fixing 
+ CCS:  Software and its engineering Software creation and management CCS:  Computing methodologies Artificial intelligence 
+ Yonghui (Andie) Huang
+ Note:  Corresponding authors.
+ email: andie.huang@massey.ac.nz 
+ Affiliation:  Massey University , New Zealand 
+ , 
+ Ying Pang
+ email: ying.pang@sdufe.edu.cn 
+ Affiliation:  Shandong University of Finance and Economics , Jinan , China 
+ , 
+ Qian Zhang
+ email: zhaqi075@student.otago.ac.nz 
+ Affiliation:  University of Otago , New Zealand 
+ , 
+ Yihang Cheng
+ email: cheyi799@student.otago.ac.nz 
+ Affiliation:  University of Otago , New Zealand 
+ and 
+ Lin Ma
+ email: malin@hznu.edu.cn 
+ Affiliation:  Alibaba Research Center for Complexity Sciences, Hangzhou Normal University , Hangzhou , China 
+ © none 
+ Abstract. 
+ Many LLMs now emit an explicit reasoning trace before they write code, but benchmark results for code generation and bug fixing usually report correctness alone.
+It is therefore unclear how much the extra reasoning contributes relative to the tokens it consumes. 
+ We examine this question with 866 Python tasks drawn from HumanEval Pro, MBPP Pro, and BugsInPy under five model settings.
+We look at the accuracy gain and token overhead of reasoning, the behaviors that appear inside reasoning traces, and whether a shortened trace still leads to a correct solution. 
+ Turning reasoning on in Qwen3-32B over five runs improves mean pass@1 on HumanEval Pro from 71.1 % 71.1\% to 76.5 % 76.5\% and mean tests pass on BugsInPy from 3.5 % 3.5\% to 7.9 % 7.9\% .
+On MBPP Pro the improvement from 68.1 % 68.1\% to 69.5 % 69.5\% is not statistically significant, even though the model uses a median of over 2,000 thinking tokens per task.
+Across models, a longer median trace does not reliably mean higher accuracy.
+A qualitative analysis shows that traces mostly choose and check an implementation in code generation, while in bug fixing they mostly locate the fault and plan the repair. 
+ We then truncate stored traces offline and ask Qwen3-32B with reasoning off to produce a solution from what remains.
+Retaining the first half of a trace yields no statistically significant drop in correctness.
+Stopping when the trace becomes repetitive seldom triggers, and stopping once solution code first appears benefits some models but harms others.
+Neither rule beats plain fixed truncation.
+These results suggest that more reasoning is not always better and that studies should report reasoning cost alongside correctness. 
+ Keywords:  Large language models, software engineering, reasoning traces, reasoning efficiency, empirical study
+ 1. Introduction 
+ Large language models (LLMs) are now used across software engineering workflows.
+They appear in code generation and program repair  ( Chen et al., 2021 ; Liu et al., 2023 ; Xia et al., 2023 ) .
+Related work also studies their use in code review and test generation  ( Li et al., 2022 ; Lemieux et al., 2023 ) .
+LLMs with reasoning modes emit intermediate thinking content before the generated solution  ( Sprague et al., 2025 ; Li et al., 2024 ; Tikhonov et al., 2026 ; Jiang et al., 2026 ) .
+This content adds thinking token overhead that standard correctness metrics do not capture.
+We call this content a reasoning trace .
+It is often delimited by <think>...</think> tags.
+In code tasks, the reasoning trace is where the model works toward a solution before it writes the final code.
+We measure this overhead with the Thinking Token Count (TTC), the number of tokens in a reasoning trace. 
+ Reasoning traces matter for software engineering because code tasks require both correctness and efficiency.
+Models such as QwQ and Qwen3 can produce reasoning traces for code generation and bug fixing.
+Existing evaluations usually report only the outcome of the generated solution, such as pass@1 (the fraction of tasks solved by one generated solution) or whether a generated patch passes tests  ( Liu et al., 2023 ; Widyasari et al., 2020 ; Xia et al., 2023 ) .
+These metrics do not show what the reasoning trace contains, whether it changes correctness, or whether the entire reasoning trace is needed. 
+ Figure 1. An actual reasoning trace from Qwen3-32B on HumanEval Pro problem 20. The model generates 7,430 thinking tokens before producing a generated solution with 12 lines and 103 output tokens. The complete function already appears inside the reasoning trace, which then continues for another 211 tokens. 
+ Figure  1 illustrates why solution correctness alone is insufficient for studying reasoning models on code tasks.
+The example is HumanEval Pro problem 20, which asks the model to write a function that returns the two closest numbers in a list.
+Qwen3-32B with reasoning enabled produces a correct generated solution with 12 lines and 103 output tokens, but it first generates 7,430 thinking tokens.
+The largest block is code revision, which takes 2,923 tokens.
+The reasoning trace also spends 1,541 tokens drafting code and 1,496 tokens selecting a method.
+Another 1,175 tokens go to understanding the task.
+Only 84 tokens are spent writing the solution, followed by 211 tokens of solution checking.
+This single example does not mean later reasoning is always unnecessary.
+It does show that correctness hides thinking token overhead and reasoning behavior. 
+ Three gaps motivate this study.
+First, prior studies of chain of thought prompting and reasoning models mostly evaluate math and symbolic benchmarks or broad reasoning benchmarks  ( Wei et al., 2022 ; Kojima et al., 2022 ; Sprague et al., 2025 ) .
+Their results do not show whether reasoning traces improve executable code tasks enough to justify the additional thinking tokens.
+Second, studies of code generation and program repair usually evaluate the correctness of generated solutions  ( Chen et al., 2021 ; Liu et al., 2023 ; Xia et al., 2023 ) .
+They rarely separate the effect of explicit reasoning from differences in model choice or evaluation setup.
+Third, work on reasoning efficiency trains models to produce shorter reasoning, for example with rewards that reduce overthinking or with fine-tuning on compressed reasoning traces  ( Jiang et al., 2026 ; Xia et al., 2025 ; Kang et al., 2025 ) .
+These methods assume that part of a reasoning trace is redundant.
+Analyses that measure how much reasoning is actually needed focus on math, commonsense, and multiple-choice questions  ( Wang et al., 2025 ) .
+For code tasks, a question that comes before designing such methods remains open.
+After a model has produced a long reasoning trace, can the final solution be generated from only an early prefix of that reasoning trace?
+This question matters because reasoning traces can be stored and used after generation.
+For example, a reasoning trace from LLM can be passed to a separate LLM model that writes the final answer  ( Jindal et al., 2025 ) , or compressed into shorter traces for training  ( Kang et al., 2025 ; Xia et al., 2025 ) .
+We answer it on stored traces, so every truncation strategy is applied to the same reasoning and differences between strategies do not come from different generations. 
+ We address these gaps with an empirical study of reasoning efficiency in code generation and bug fixing.
+The study covers code generation and bug fixing tasks from three benchmarks and reasoning traces from four models with reasoning enabled.
+For code generation, we use HumanEval Pro and MBPP Pro, which require a model to solve a base problem and reuse its solution in a more complex problem  ( Yu et al., 2025 ) .
+For bug fixing, we use BugsInPy, which contains real bugs from open-source Python projects  ( Widyasari et al., 2020 ) .
+We compare Qwen3-32B with reasoning enabled and disabled on the same tasks, and repeat this paired comparison over five generation runs to test how enabling reasoning affects correctness.
+We then annotate what the reasoning traces are used for across the two task families.
+Finally, we test whether a model can still generate a correct solution when it receives only an early prefix of a reasoning trace. 
+ Our study asks three research questions. 
+ RQ1 (Correctness and thinking token overhead). 
+How does enabling reasoning affect task correctness and thinking token overhead?
+ RQ2 (Reasoning behavior). 
+What recurring behaviors appear in reasoning traces, and how do they differ between code generation and bug fixing?
+ RQ3 (Reasoning prefix sufficiency). 
+How much correctness is retained when a new answer is generated from a shorter reasoning prefix? 
+ This paper makes three contributions. 
+ (1) 
+ We compare Qwen3-32B with reasoning on and off across five generation runs. Reasoning produces higher mean accuracy on all three benchmarks. We test this gain with the exact McNemar test, which compares paired task outcomes within each run. The gain is significant in four of the five BugsInPy runs and in two of the five HumanEval Pro runs, but in none of the MBPP Pro runs. In our observations across the four models that generate reasoning traces, models with longer median reasoning traces do not consistently achieve higher accuracy. On HumanEval Pro, the accuracy of all four models ranges only from 76.0 % 76.0\% to 77.1 % 77.1\% , and on MBPP Pro, two of them score below Qwen3-32B with reasoning disabled. 
+ (2) 
+ We derive a codebook with six behavior categories and test it on reasoning traces that were not used during development. In code generation, most labeled segments concern planning and checking an implementation. In bug fixing, they concern locating the fault and planning a repair. 
+ (3) 
+ We provide an offline protocol for testing how much of a stored reasoning trace is needed to regenerate a correct solution, and we show that such experiments need a fair baseline. When Qwen3-32B with reasoning disabled writes a new answer from a shortened trace, this extra generation step can itself change correctness, so we compare it with the answer that the same model writes from the full trace. Against this baseline, the paired tests detect no significant correctness difference for any of the four reasoning models or three benchmarks when Fixed Truncation keeps only the first half of each stored reasoning trace. Neither Redundancy-based Stopping (RedStop), which stops when the reasoning text starts to repeat, nor the Necessary Reasoning Prefix (NRP) rule, which stops after solution code first appears, consistently improves on the fixed truncation. 
+ 2. Related Work 
+ 2.1. Reasoning in Large Language Models 
+ Chain-of-thought prompting asks a model to produce intermediate reasoning before the generated solution  ( Wei et al., 2022 ) .
+Zero-shot chain-of-thought, self-consistency, and tree-of-thought methods extend this idea through generic reasoning instructions, multiple sampled reasoning paths, or search over intermediate states  ( Kojima et al., 2022 ; Wang et al., 2023 ; Yao et al., 2023 ) .
+These methods can improve generated solutions in some settings, but their evaluations mainly focus on final answers.
+Models with reasoning modes, such as QwQ and Qwen3, make thinking token overhead observable because thinking content is emitted during normal inference.
+Prior analysis also finds that chain-of-thought benefits vary by task type  ( Sprague et al., 2025 ) .
+Our study focuses on code generation and bug fixing.
+It measures solution correctness together with thinking token overhead and reasoning trace behavior. 
+ 2.2. LLMs for Code Generation and Bug Fixing 
+ LLMs for code generation and bug fixing are usually evaluated by executable correctness.
+Code-generation benchmarks such as HumanEval, MBPP, and their extended-test versions HumanEval+ and MBPP+ test whether one generated solution satisfies hidden or extended tests  ( Chen et al., 2021 ; Liu et al., 2023 ) .
+HumanEval Pro and MBPP Pro pair each HumanEval or MBPP problem with a harder self-invoking problem whose solution must call the solution to the base problem.
+Most evaluated LLMs score lower on these self-invoking problems than on the base HumanEval and MBPP problems  ( Yu et al., 2025 ) .
+Program-repair and issue-resolution benchmarks test whether a generated patch fixes a failure or resolves a reported problem  ( Xia et al., 2023 ; Jimenez et al., 2024 ) .
+Related studies also examine code review, test generation, and failure taxonomies in generated software artifacts  ( Li et al., 2022 ; Lemieux et al., 2023 ; Pan et al., 2024 ) .
+However, they do not reveal whether explicit reasoning changed the result or whether the later part of a reasoning trace contributed to the solution.
+We analyze reasoning traces as an additional generated artifact and connect reasoning trace behavior with executable correctness. 
+ 2.3. Qualitative Analysis in Software Engineering 
+ Empirical software engineering uses qualitative coding to derive categories from textual artifacts  ( Seaman, 1999 ; Cruzes and Dybå, 2011 ; Stol et al., 2016 ; Hoda, 2022 ) .
+These methods support inductive coding, constant comparison, memoing, and boundary-rule refinement when the goal is a descriptive taxonomy.
+Our RQ2 annotation follows this tradition but applies it to model-generated reasoning traces.
+The codebook should be read as a taxonomy of model reasoning trace behavior, not as evidence about human cognition. 
+ 2.4. Reasoning Efficiency and Reasoning Redundancy 
+ Reasoning-efficiency methods aim to reduce how much reasoning a model generates.
+Some train models to produce shorter reasoning, for example with rewards that reduce overthinking or with fine-tuning on compressed reasoning traces  ( Jiang et al., 2026 ; Xia et al., 2025 ; Kang et al., 2025 ) .
+Others use signals such as answer agreement or model confidence to decide how much reasoning to generate  ( Li et al., 2024 ; Tikhonov et al., 2026 ) .
+These methods assume that part of the reasoning is redundant.
+A separate line of analysis measures this redundancy directly.
+Wang et al. find that on multiple-choice questions, models often settle on an answer before their reasoning ends  ( Wang et al., 2025 ) .
+They detect this by asking the model to pick an option after each reasoning step.
+These studies focus on math, commonsense, and multiple-choice reasoning, and it remains unclear whether their findings hold for software engineering tasks such as code generation and program repair, where outputs must pass executable tests. 
+ Our truncation study belongs to the analysis line.
+Given a stored reasoning trace for a code generation or bug fixing task, we test whether a retained prefix is sufficient for regenerating an executable solution.
+In code tasks, the answer is a program rather than a choice, so we regenerate a solution from each reasoning prefix and run it against the benchmark tests.
+We compare three strategies for choosing where to cut each stored reasoning trace.
+Fixed Truncation keeps a fixed fraction of the trace regardless of its content.
+RedStop cuts the trace once later text repeats word sequences that already appeared earlier in the trace.
+NRP cuts the trace shortly after the first piece of code that could serve as the final solution.
+All three strategies are applied to the same stored reasoning traces. 
+ Figure 2. Overview of the experiment and analysis pipeline. 
+ 3. Experiment Setup 
+ This section describes the tasks, models, evaluation measures, and reasoning trace analyses summarized in Figure  2 . 
+ 3.1. Tasks and Benchmarks 
+ We study two software engineering task families.
+Code generation starts from function-level problem statements.
+Bug fixing starts from buggy code and failing tests.
+Table  1 summarizes the benchmarks. 
+ Table 1. Benchmarks and study sets. 
+ Task 
+ Benchmark 
+ Original 
+ Eval set 
+ Metric 
+ Code generation 
+ HumanEval Pro 
+ 164 
+ 164 
+ pass@1 
+ Code generation 
+ MBPP Pro 
+ 378 
+ 374 
+ pass@1 
+ Bug fixing 
+ BugsInPy 
+ 501 
+ 328 
+ tests pass 
+ • 
+ Original : number of tasks in the benchmark. 
+ • 
+ Eval set : after filtering, the number of tasks used for evaluation in our experiment. 
+ For code generation, we use HumanEval Pro and MBPP Pro  ( Yu et al., 2025 ) .
+They extend the original HumanEval and MBPP problems  ( Chen et al., 2021 ; Liu et al., 2023 ) with self-invoking code generation.
+We choose these benchmarks because they are more recent than HumanEval+ and MBPP+  ( Yu et al., 2025 ) .
+We keep all 164 HumanEval Pro tasks.
+We run every MBPP Pro canonical solution against its tests before generation and remove the 4 4 tasks whose canonical solution fails, which leaves 374 374 tasks.
+BugsInPy  ( Widyasari et al., 2020 ) contains 501 501 real bugs from 17 17 open-source Python projects.
+Each bug includes a buggy version, a benchmark fix, affected source file(s), and a test execution command.
+Together, these benchmarks cover standalone function generation and bug fixing in real repositories under executable checks. 
+ For HumanEval Pro and MBPP Pro, we extract the generated Python code and execute it with the benchmark test assertions.
+A generated solution is correct only if every assertion passes.
+For BugsInPy, we build a Docker evaluation image because the benchmark does not provide a ready-made image for generated patches.
+Each BugsInPy evaluation starts from this image.
+The evaluator checks out the buggy version, installs its dependencies, applies the generated solution, and runs the benchmark test command.
+We filter the 501 501 BugsInPy bugs in two steps.
+The first step removes 17 17 bugs that are outside our repair task.
+This group includes bugs whose benchmark patch cannot be cleanly applied or mapped to affected program code, patches that touch more than three files, and patches that only change configuration, tests, or infrastructure.
+We remove patches touching more than three files because they can require source context that does not fit reliably in the model context window.
+We remove configuration, test, and infrastructure patches because our task asks the model to repair localized program behavior, not to change the evaluation setup.
+Second, we test the remaining bugs in Docker before generating model responses.
+We remove 68 68 bugs whose benchmark fix does not pass the tests and 83 83 bugs whose tests time out.
+We also remove one bug whose project does not compile and four bugs whose buggy version already passes the tests.
+These checks leave 328 328 BugsInPy bugs.
+We use the same 328 328 bugs for response generation and correctness evaluation across every model and generation run. 
+ 3.2. Models 
+ We evaluate five model configurations on the same 866 866 tasks.
+Qwen3-32B provides an official switch between reasoning on and off without changing its weights.
+We use this switch for the paired RQ1 comparison.
+QwQ-32B and the R1-Distill models do not provide the same control.
+We evaluate these models only with reasoning enabled because prompting them to suppress reasoning would create a different condition.
+QwQ-32B and R1-Distill-Qwen-32B provide comparisons among three reasoning models at the same nominal 32B scale.
+R1-Distill-Llama-70B provides a supplementary comparison at 70B (Table  2 ).
+We serve all models with vLLM  ( Kwon et al., 2023 ) on one NVIDIA A100 with 80 GB memory.
+Each RQ1 task and model combination is run five times with temperature 0.6 and top- p p 0.95.
+Because generation is stochastic at this temperature, one run may not represent the typical accuracy or reasoning length.
+We evaluate every run and never select the best generated answer.
+We use 4-bit activation-aware weight quantization and a maximum context length of 32,768 tokens for all model settings  ( Lin et al., 2024 ) . 
+ Table 2. Model settings used in this study. 
+ Model 
+ Size 
+ Reasoning 
+ Use 
+ Qwen3-32B (ON) 
+ 32B 
+ Enabled 
+ Paired Qwen3 comparison 
+ Qwen3-32B (OFF) 
+ 32B 
+ Disabled 
+ Baseline without reasoning 
+ QwQ-32B 
+ 32B 
+ Enabled 
+ 32B model comparison 
+ R1-Distill-Qwen-32B 
+ 32B 
+ Enabled 
+ 32B model comparison 
+ R1-Distill-Llama-70B 
+ 70B 
+ Enabled 
+ Supplementary 70B comparison 
+ 3.3. Evaluation Metrics 
+ Correctness for code generation. 
+ For HumanEval Pro and MBPP Pro, pass@1 is the fraction of tasks solved by one generated solution.
+Each model produces one solution for every task and generation run.
+We extract the generated Python code, which must implement both the base function and the self-invoking function.
+We execute this code together with the test assertions released with each benchmark  ( Yu et al., 2025 ) .
+Each execution runs in an isolated subprocess, and a solution is correct only when every assertion passes. 
+ Correctness for bug fixing. 
+ For BugsInPy, tests pass is the fraction of the 328 bugs solved by one generated patch.
+Each model produces one patch for every bug and generation run.
+The Docker evaluator checks out the buggy project version, installs its dependencies, and applies the generated patch to the affected source file.
+It then runs the BugsInPy test command with a 600-second limit.
+A patch is correct only if it can be applied, compiles, and passes all tests within this limit.
+We mark the patch incorrect if patch application fails, compilation fails, any test fails, or the test command reaches the time limit.
+The correctness denominator remains 328 for every model and run. 
+ Thinking token overhead. 
+ For reasoning enabled runs, the text before </think> is the reasoning trace and the remaining text is the generated solution.
+We exclude an opening <think> tag when it is present.
+If the closing </think> tag is absent, we record an empty solution because generation ended during reasoning.
+For reasoning off runs, the reasoning trace is empty and the complete response is the generated solution.
+We define Thinking Token Count (TTC) as the number of tokens in the reasoning trace, measured with the source model’s tokenizer.
+Using the source tokenizer preserves the token count used by that model, although counts across models remain approximate because their tokenizers differ.
+For RQ1, we first calculate the median TTC for each benchmark, model setting, and generation run.
+We then report the mean and sample standard deviation of these five medians. 
+ Paired comparison metrics. 
+ For each Qwen3-32B run, the correctness delta is the accuracy with reasoning on minus the accuracy with reasoning off.
+We report the mean and sample standard deviation across five runs and a 95% confidence interval for the mean delta using Student’s t t distribution with four degrees of freedom.
+The interval describes uncertainty in the mean accuracy difference observed across the five runs.
+Within each run, the exact McNemar test compares the paired binary outcomes and tests whether changes from incorrect to correct balance changes in the opposite direction  ( McNemar, 1947 ) .
+Only tasks whose correctness changes between reasoning off and reasoning on contribute to this test.
+A small p p value indicates that the two directions are not balanced and provides evidence of a difference within that run.
+We report how many runs have p < 0.05 p<0.05 .
+The confidence interval and McNemar test answer different questions.
+The confidence interval summarizes variation in the accuracy difference across runs, while McNemar’s test uses paired task outcomes within one run.
+In RQ3, Qwen3-OFF writes a new answer from each full or truncated reasoning trace, and we repeat this regeneration three times.
+We then run 180 180 paired McNemar tests, one for each combination of five truncation strategies, four reasoning models, three benchmarks, and three regeneration runs.
+If truncation had no effect, about nine of these tests would still reach p < 0.05 p<0.05 by chance.
+We therefore apply the Holm correction  ( Holm, 1979 ) , which adjusts the p p values so that the probability of any false positive across all 180 180 tests stays below 0.05 0.05 . 
+ Stopping metrics. 
+ RQ3 reports regenerated correctness and reasoning prefix reduction.
+Regenerated correctness uses pass@1 for code generation and tests pass for BugsInPy.
+In RQ3, a model writes a new answer from each retained reasoning prefix.
+The baseline is the answer that the same model writes from the full reasoning trace, so the two conditions differ only in how much reasoning is removed.
+Each comparison pairs the two outcomes for the same task in the same regeneration run.
+Reasoning prefix reduction is the average percentage of thinking tokens that a truncation strategy cuts from each stored reasoning trace.
+A value of 50% means that the strategy removes half of the thinking tokens on average.
+To compute it, we first divide the thinking tokens in the retained prefix by the thinking tokens in the full reasoning trace for each task.
+For example, keeping 400 of 1,000 thinking tokens gives a retained fraction of 0.4.
+We average this retained fraction over all tasks and report one minus this average as the reasoning prefix reduction.
+This metric counts only the stored reasoning removed.
+It excludes the solution tokens and generation time of the additional model call. 
+ 3.4. Generation and Evaluation Pipeline 
+ Prompt Construction. 
+ For code generation, we use the base problem and the self-invoking problem provided by HumanEval Pro and MBPP Pro.
+The base problem contains the original function signature, docstring, and examples.
+The self-invoking problem describes the more complex function that must reuse the base function.
+We place both problems under a fixed instruction that states this dependency in the prompt.
+The instruction asks the model to implement both functions in one self-contained Python code block without test cases. 
+ For BugsInPy, we build each repair prompt from bug information available before evaluation.
+The prompt first gives the affected source path and the BugsInPy test command.
+It then gives the buggy function body.
+We extract this body by matching function definitions touched by the benchmark patch against the buggy source file.
+If no matching function is found, the prompt falls back to the buggy version of the source file or files changed by the benchmark patch.
+If this code context is too long for the reserved prompt space, we keep its leading excerpt and mark it as truncated. 
+ When BugsInPy provides source code for a failing test, we add it after the buggy code.
+We include this test source in full when it is shorter than 3000 characters.
+Otherwise, we include its first 2000 characters and mark the field as truncated.
+The prompt asks the model to return only the complete fixed function. 
+ Reasoning Trace Extraction. 
+ Models with reasoning enabled mark the reasoning trace with <think>...</think> tags.
+We store the text inside these tags as the reasoning trace and pass the remaining text to the benchmark evaluator as the generated solution.
+Qwen3-32B with reasoning disabled does not produce these tags, so its reasoning trace is stored as an empty string.
+Each generation run is stored as one JSON record.
+The record contains the task identifier, model configuration, instantiated prompt, extracted reasoning trace, generated solution, TTC, and evaluator outcome. 
+ RQ1 runs and the source reasoning traces for RQ2 and RQ3. 
+ RQ1 repeats every model and task combination with five generation runs.
+The experiment therefore produces 5 × 866 × 5 = 21,650 5\times 866\times 5=21{,}650 JSON records.
+Of these, 17,320 17{,}320 come from reasoning enabled models and 4,330 4{,}330 from Qwen3-OFF where the reasoning is off. 
+ RQ2 and RQ3 analyze one stored reasoning trace from each reasoning enabled model for every task.
+We collect these traces in a separate generation run, independent of the five RQ1 runs.
+This run covers HumanEval Pro, MBPP Pro, and BugsInPy with the same models, decoding settings, and trace extraction as RQ1.
+It yields 4 × 866 = 3,464 4\times 866=3{,}464 stored reasoning traces. 
+ 3.5. Reasoning Analysis Design 
+ After collecting the generated solutions, we annotate reasoning behavior and test regeneration from shortened reasoning prefixes.
+Models receive only the task prompt during the original generation and never receive evaluator feedback. 
+ Manual labeling of reasoning behavior. 
+ Token counts measure the amount of reasoning, but they do not show what the model does within the reasoning trace.
+We therefore label segments of reasoning traces according to their primary behavior.
+We develop the behavior categories inductively.
+The procedure draws on grounded theory and thematic analysis methods used in empirical software engineering  ( Seaman, 1999 ; Cruzes and Dybå, 2011 ; Stol et al., 2016 ; Hoda, 2022 ) . 
+ We sample stored reasoning traces from the four models with reasoning enabled.
+Before labeling, we divide each reasoning trace into segments.
+We split reasoning traces at blank lines, and we further split segments longer than about 220 tokens at common discourse starters such as “Now”, “Wait”, and “Then”.
+Each annotator assigns one primary label to the behavior that best describes each segment.
+Using one label per segment allows us to calculate agreement and compare how often the categories appear. 
+ Four authors annotate three disjoint phases. The annotators do not see correctness outcomes.
+Phase A develops the codebook, Phase B checks agreement and boundary rules, and Phase C applies the final codebook to the main annotation sample.
+Table  3 shows how the reasoning traces are allocated in each phase. 
+ Table 3. RQ2 annotation phases and sample allocation. 
+ Phase 
+ Analysis step and allocation 
+ Reasoning 
+ traces 
+ Segments 
+ A 
+ Develop codebook: 4 4 rounds × \times 12 12 reasoning traces 
+ 48 
+ 2,290 
+ B 
+ Validate agreement: 4 4 code generation + + 4 4 bug fixing reasoning traces 
+ 8 
+ 92 
+ C 
+ Apply codebook: 4 4 models × \times 2 2 task types × \times 13 13 reasoning traces 
+ 104 
+ 3,943 
+ Phase A. Codebook development. 
+ Phase A develops the codebook through four rounds (A1 to A4), each with 12 reasoning traces from one model and task type.
+We include reasoning traces with different TTC values when developing the codebook.
+Prior software engineering guidance recommends selecting cases that cover characteristics relevant to the research question  ( Baltes and Ralph, 2022 ; Easterbrook et al., 2008 ) .
+As an operational rule, we sort each candidate pool by TTC and split it into three equal-sized groups of short, medium, and long reasoning traces.
+Each round samples four reasoning traces from each length group.
+The same 12 reasoning traces contain six correct and six incorrect generated solutions.
+A1 and A2 use code generation reasoning traces from Qwen3-ON and QwQ-32B.
+A3 and A4 use BugsInPy reasoning traces from Qwen3-ON and R1-Distill-Qwen-32B.
+After segmentation, A1 to A4 contain 474, 379, 665, and 772 segments.
+Annotators 1, 2, and 3 perform open coding in A1.
+Annotators 1 and 2 apply and refine the emerging codebook in A2 to A4.
+After A4, the annotators did not find a repeated pattern in the Phase A sample that required a new category or a change to a boundary rule.
+We therefore freeze the codebook with six categories  ( Guest et al., 2006 ; Hennink and Kaiser, 2022 ; Francis et al., 2010 ; Stol et al., 2016 ) . 
+ Phase B. Agreement validation. 
+ Phase B checks whether annotators can apply the Phase A codebook consistently before the main labeling step.
+We sample eight reasoning traces that were not used in Phase A.
+Four come from code generation and four from bug fixing.
+Four have correct generated solutions and four have incorrect generated solutions.
+These reasoning traces contain 92 segments.
+Annotators 1, 2, and 3 label every segment independently before discussing disagreements.
+Fleiss’ κ \kappa is 0.790, with full agreement on 70 of the 92 segments  ( Fleiss, 1971 ) .
+The annotators then resolve disagreements and refine the boundary rules.
+Annotator 4 decides only cases that remain unresolved after this discussion.
+Phase B adds no category. 
+ Table 4. Behavior categories in the final RQ2 codebook. 
+ Category 
+ Primary behavior 
+ Sensemaking 
+ Restates the task, notes assumptions, or clarifies ambiguous prompt details. 
+ Diagnosis and Localization 
+ Explains the likely failure cause or points to the code region to repair. 
+ Strategy Formation 
+ Chooses an implementation or repair plan before writing or changing code. 
+ Verification 
+ Checks a proposed answer with examples, edge cases, or expected test behavior. 
+ Revision and Repair 
+ Updates a previous idea, plan, or code draft after finding a problem. 
+ Closure 
+ States that the answer or patch is ready and prepares to output it. 
+ Phase C. Codebook application. 
+ Phase C applies the fixed codebook to the main RQ2 analysis sample.
+None of its reasoning traces appear in Phase A or Phase B.
+We exclude reasoning traces longer than 3,000 TTC to keep the annotation workload feasible.
+For each model, we sample 13 code generation reasoning traces and 13 bug fixing reasoning traces.
+Each model and task type includes short, medium, and long reasoning traces using the TTC groups defined in Phase A.
+The code generation sample contains HumanEval Pro and MBPP Pro reasoning traces.
+The bug fixing sample covers six to eight BugsInPy projects per model.
+After segmentation, the 104 reasoning traces contain 3,943 segments.
+Annotators 1 and 2 label every segment independently with the codebook finalized after Phase B.
+We calculate Cohen’s κ \kappa from their initial labels  ( Cohen, 1960 ) .
+Annotator 3 reviews their disagreements before adjudication, and the codebook is not revised during Phase C. 
+ Truncation configurations. 
+ RQ3 starts from the 3,464 3{,}464 source reasoning traces described in Section  3.4 .
+Each stored record contains the original task prompt, the full reasoning trace, and the generated solution.
+A truncation strategy selects a position in the reasoning trace.
+We retain the prefix before that position and append it to the original task prompt.
+Qwen3-OFF then generates a new solution from this input.
+Using one answer-writing model for all source models ensures that differences across source models and strategies come from the retained reasoning rather than from the model that writes the answer.
+We use Qwen3-OFF because it writes the solution directly from the given prefix without generating new reasoning that could replace the removed part, whereas QwQ-32B and the R1-Distill models cannot disable reasoning.
+We compare its correctness with a control that uses the full reasoning trace and the same generation model.
+The full reasoning trace is collected before any truncation position is selected.
+RQ3 therefore measures how much stored reasoning is sufficient for regeneration rather than stopping the original generation process. 
+ Fixed Truncation. 
+Fixed Truncation selects the stop point from reasoning trace length without examining its content.
+It retains the first 25%, 50%, or 75% of each reasoning trace and removes the remaining text.
+This baseline tests the same preset reasoning budgets across all models and tasks. 
+ Redundancy-based Stopping (RedStop). 
+RedStop is inspired by observable stopping signals in prior work on reasoning efficiency  ( Li et al., 2024 ; Tikhonov et al., 2026 ) , but we apply it as an offline rule on stored traces rather than reimplementing these methods.
+It uses lexical repetition as its signal.
+RedStop first retains one third of the reasoning trace.
+It then groups the remaining paragraphs in their original order into windows of about 256 tokens.
+For each window, it measures the proportion of 4-grams that have appeared in the preceding reasoning trace content  ( Lin, 2004 ) .
+A window is marked repetitive when this proportion exceeds 35%.
+RedStop selects the start of the second consecutive repetitive window as its stop point.
+It retains the prefix before this position and removes that window and all later content. 
+ Necessary Reasoning Prefix (NRP). 
+Our NRP strategy is inspired by the Necessary Reasoning Prefix proposed by Jiang et al., which denotes the shortest prefix sufficient to derive the correct answer  ( Jiang et al., 2026 ) .
+Because our tasks require executable code, we operationalize this idea as the earliest prefix that contains code that could be submitted as the final answer.
+NRP first retains at least 15% of the reasoning trace and then scans later segments.
+For code generation, the detector looks for a complete function definition with a return statement.
+For bug fixing, the detector uses two rules.
+The first rule matches a segment that contains a modification term such as “fix”, “change”, or “replace”, a Python code construct, and a solution marker such as “final” or “solution”.
+The second rule matches a fenced code block that contains a Python code construct or a compound assignment.
+The first matching segment sets the NRP boundary.
+NRP retains a further 5% of the reasoning trace after this boundary, limited to 64 to 256 tokens.
+If no segment matches, NRP retains the full reasoning trace. 
+ Full reasoning trace regeneration control. 
+For each stored reasoning trace, the control appends the full reasoning trace to the original task prompt and asks Qwen3-OFF to generate a new solution.
+The control and shortened prefix conditions use the same prompt template and generation model.
+The task specification and the stored reasoning traces stay fixed across three regeneration runs.
+We repeat only the answer writing step of Qwen3-OFF three times for both conditions, because Qwen3-OFF samples at temperature 0.6.
+Each comparison pairs the two outcomes for the same task in the same run. 
+ 4. Results 
+ 4.1. RQ1. How does enabling reasoning affect task correctness and thinking token overhead? 
+ Correctness does not capture how many thinking tokens reasoning requires.
+We therefore report accuracy and thinking token overhead from the same five generation runs.
+For Qwen3-32B, reasoning on and off use the same tasks in each run.
+We compare these paired outcomes with an exact McNemar test within each run.
+The remaining models do not provide a reasoning off condition.
+We therefore treat the comparison of their mean accuracy and TTC as an observational analysis, not as an estimate of the effect of reasoning. 
+ Figure 3. RQ1 correctness and thinking token overhead across five generation runs. 
+ • 
+ (a) Paired view. Points show mean accuracy for Qwen3-32B with reasoning off/on. Error bars denote one standard deviation over five runs. Labels report the mean accuracy with reasoning on versus off and the number of runs in which McNemar’s test is significant. 
+ • 
+ (b) Model view. Each point is the mean accuracy, and error bars span one standard deviation across five runs. The boxplot shows the distribution of TTC across all five runs at log scale. 
+ Results. 
+ Finding 1. 
+Qwen3-32B with reasoning improves mean accuracy on all three benchmarks, but the strength of the statistical evidence differs across benchmarks.
+Figure  3 (a) reports the five run results.
+On HumanEval Pro, reasoning improves mean pass@1 from 71.1 % 71.1\% to 76.5 % 76.5\% , and the 95% CI of the paired mean difference ranges from 2.3 2.3 to 8.5 8.5 percentage points.
+Reasoning on is more accurate in all five runs.
+However, in our McNemar test to each of the five runs, the difference is significant ( p < 0.05 p<0.05 ) in two of them. 
+ On MBPP Pro, reasoning improves mean pass@1 only from 68.1 % 68.1\% to 69.5 % 69.5\% .
+The 95% CI of the paired mean difference ranges from − 0.8 -0.8 to 3.6 3.6 percentage points which includes zero.
+One of the five runs shows lower accuracy with reasoning, and McNemar’s test is not significant in any run.
+On BugsInPy, reasoning improves mean tests pass from 3.5 % 3.5\% to 7.9 % 7.9\% , and McNemar’s test reaches p < 0.05 p<0.05 in four of the five runs, although the absolute correctness remains low. 
+ Reasoning also adds substantial thinking token overhead on every benchmark.
+For Qwen3-ON, the median TTC, averaged over the five runs, is 2,221 2{,}221 tokens on MBPP Pro, 3,318 3{,}318 on HumanEval Pro, and 3,469 3{,}469 on BugsInPy.
+On MBPP Pro, Qwen3-ON thus spends a median of more than two thousand thinking tokens per task for a mean gain that the paired tests do not distinguish from zero. 
+ Finding 2. 
+Models with longer median reasoning traces do not consistently achieve higher accuracy.
+Figure  3 (b) shows the five run means for the four models that generate reasoning traces.
+On HumanEval Pro, the accuracy of the four models ranges only from 76.0 % 76.0\% for R1-Distill-Llama-70B to 77.1 % 77.1\% for QwQ-32B.
+Their mean TTC medians differ more.
+QwQ-32B, R1-Distill-Qwen-32B, and R1-Distill-Llama-70B use 2,492 2{,}492 , 2,517 2{,}517 , and 2,410 2{,}410 tokens, while Qwen3-ON uses 3,318 3{,}318 tokens for 76.5 % 76.5\% accuracy.
+On MBPP Pro, Qwen3-ON again has the longest traces, with a mean TTC median of 2,221 2{,}221 tokens and 69.5 % 69.5\% mean accuracy.
+R1-Distill-Qwen-32B reaches 68.8 % 68.8\% with 1,539 1{,}539 tokens.
+QwQ-32B ( 67.5 % 67.5\% ) and R1-Distill-Llama-70B ( 65.7 % 65.7\% ) fall below Qwen3-OFF ( 68.1 % 68.1\% ), although their mean TTC medians are 1,740 1{,}740 and 1,452 1{,}452 tokens.
+The 70B model therefore spends about 1,450 1{,}450 thinking tokens per task and still scores 65.7 % 65.7\% , below the 68.1 % 68.1\% of a 32B model without reasoning. 
+ Finding 3. 
+BugsInPy remains difficult for all models that generate reasoning traces.
+BugsInPy mean correctness across five runs remains below 8.0 % 8.0\% for all four models that generate reasoning traces.
+The means range from 6.0 % 6.0\% for QwQ-32B to 7.9 % 7.9\% for Qwen3-ON.
+BugsInPy requires a patch that applies to a real project and passes its tests, unlike function generation from a self-contained specification  ( Widyasari et al., 2020 ; Campos et al., 2026 ) .
+Our experiment does not isolate which part of this repair process causes the low correctness.
+The result should therefore be read as a limit of the evaluated repair protocol rather than evidence that reasoning cannot help bug fixing in other repair configurations. 
+ Finding  — RQ1 
+ For Qwen3-32B, explicit reasoning does not provide a uniform accuracy benefit across tasks.
+Paired tests show significant gains in four of five BugsInPy runs, in two of five HumanEval Pro runs, and no significant gain on MBPP Pro.
+Reasoning also adds a median of more than two thousand thinking tokens per task on every benchmark.
+In our observations across models, models with longer reasoning traces do not consistently achieve higher accuracy. 
+ 4.2. RQ2. What recurring behaviors appear in reasoning traces, and how do they differ between code generation and bug fixing? 
+ Token counts show how long a reasoning trace is.
+They do not show what the reasoning trace is doing.
+We analyze the reconciled Phase C labels for 104 reasoning traces and 3,943 segments.
+These reasoning traces do not appear in the Phase A development sample or the Phase B validation sample.
+Phase C is designed to test whether the codebook remains usable across unseen models and task families rather than to estimate population proportions. 
+ We report two agreement measures because the number of primary annotators differs between phases.
+Three annotators label the same 92 Phase B validation segments, so we report Fleiss’ κ \kappa .
+The resulting value is 0.790.
+Phase C uses two primary annotators, so we report Cohen’s κ \kappa for their initial label pairs.
+Annotators 1 and 2 assign the same behavior to 2,703 of the 3,943 Phase C segments, giving 68.6% agreement and Cohen’s κ = 0.57 \kappa=0.57 .
+The lower Phase C agreement shows that boundary cases remain common when the finalized codebook is applied beyond its development data.
+For the 1,240 disagreements, Annotator 3 assigns an independent label before adjudication.
+The three annotators then compare their labels with the surrounding reasoning trace and the codebook boundary rules.
+They resolve the final label by discussion and identify no repeated pattern that requires a seventh category. 
+ Figure 4. Final Phase C behavior distributions by task type. 
+ Results. 
+ Finding 1. 
+The six behavior categories remained usable for both task types in the Phase C sample.
+Figure  4 shows the final Phase C labels for code generation and bug fixing.
+During adjudication, the annotators did not identify a repeated segment pattern that required a new category.
+The two task families differ mainly in how often they use each category, as Findings 2 and 3 show.
+This result applies only to the 104 Phase C reasoning traces.
+It does not establish that the six categories exhaust every behavior that may occur in other models, languages, or software engineering tasks. 
+ Finding 2. 
+Code generation spends most labeled segments on moving from the specification to a solution.
+Strategy Formation is the largest category at 43.0 % 43.0\% , followed by Verification at 34.3 % 34.3\% and Sensemaking at 17.1 % 17.1\% .
+Together, these three categories account for 94.4 % 94.4\% of code generation segments.
+HumanEval Pro and MBPP Pro are code generation tasks in which the model receives function specifications and writes implementations.
+They do not provide a failing execution to diagnose, so the Phase C code generation reasoning traces contain no Diagnosis and Localization segment.
+For code generation, the reasoning trace is mostly used to interpret the prompt, choose an implementation, and check candidate behavior. 
+ Finding 3. 
+Bug fixing uses the reasoning trace to locate a failure and decide a repair.
+Diagnosis and Localization is the largest category at 46.1 % 46.1\% of bug fixing segments.
+Strategy Formation follows at 37.1 % 37.1\% .
+Verification accounts for only 4.8 % 4.8\% .
+This is consistent with the BugsInPy prompt setting, where failing-test information often appears as evidence for localization rather than as a check after a proposed fix.
+Thus, a similar amount of reasoning text can correspond to different activities across task families. 
+ Table 5. Transition summary for the final Phase C labels.
+Each row reports a current behavior and its next behavior. 
+ Current behavior 
+ Next behavior 
+ Count / outgoing 
+ Probability 
+ Code generation 
+ Sensemaking 
+ Strategy 
+ 119 / 199 119/199 
+  60% 
+ Strategy 
+ Verification 
+ 123 / 268 123/268 
+  46% 
+ Verification 
+ Strategy 
+ 124 / 205 124/205 
+  60% 
+ Bug fixing 
+ Sensemaking 
+ Diagnosis 
+ 76 / 86 76/86 
+  88% 
+ Diagnosis 
+ Strategy 
+ 193 / 242 193/242 
+  80% 
+ Strategy 
+ Diagnosis 
+ 130 / 220 130/220 
+  59% 
+ Strategy 
+ Closure 
+ 49 / 220 49/220 
+  22% 
+ • 
+ Transitions. Consecutive segments with the same label are collapsed before counting. Self transitions are omitted so the table reports changes between behaviors. 
+ • 
+ Count / outgoing. The transition count is divided by all outgoing transitions from the current behavior. 
+ • 
+ Diagnosis. This label abbreviates Diagnosis and Localization. 
+ Table 6. RQ3 regenerated correctness and reasoning trace reduction from retained prefixes. 
+ Benchmark 
+ Model 
+ Source 
+ Full 
+ Fixed- 25 25 
+ Fixed- 50 50 
+ Fixed- 75 75 
+ RedStop 
+ NRP 
+ ACC (%) 
+ Regen. (%) 
+ ACC 
+ ACC 
+ p p 
+ Red. 
+ ACC 
+ ACC 
+ p p 
+ Red. 
+ ACC 
+ p p 
+ Red. 
+ HumanEval Pro 
+ Qwen3-ON 
+ 76.2 
+ 76.8 
+ 72.0 
+ 74.2 
+ – 
+ 50.5 
+ 76.2 
+ 76.6 
+ – 
+ 4.9 
+ 73.8 
+ – 
+ 39.1 
+ QwQ-32B 
+ 79.3 
+ 79.3 
+ 72.4 
+ 76.2 
+ – 
+ 50.4 
+ 77.4 
+ 78.9 
+ – 
+ 2.2 
+ 77.0 
+ – 
+ 40.8 
+ R1-Distill 
+ 78.7 
+ 78.7 
+ 76.4 
+ 79.1 
+ – 
+ 50.6 
+ 79.1 
+ 79.3 
+ – 
+ 6.4 
+ 78.5 
+ – 
+ 39.4 
+ R1-Llama-70B 
+ 76.8 
+ 77.4 
+ 74.0 
+ 75.8 
+ – 
+ 50.7 
+ 78.0 
+ 78.3 
+ – 
+ 5.3 
+ 76.8 
+ – 
+ 41.3 
+ MBPP Pro 
+ Qwen3-ON 
+ 69.8 
+ 70.1 
+ 67.9 
+ 69.5 
+ – 
+ 50.3 
+ 69.3 
+ 70.0 
+ – 
+ 4.0 
+ 68.7 
+ – 
+ 46.2 
+ QwQ-32B 
+ 67.6 
+ 67.6 
+ 68.2 
+ 66.1 
+ – 
+ 50.3 
+ 67.4 
+ 67.6 
+ – 
+ 2.3 
+ 68.9 
+ – 
+ 42.8 
+ R1-Distill 
+ 69.3 
+ 69.4 
+ 66.4 
+ 68.0 
+ – 
+ 50.5 
+ 68.7 
+ 69.1 
+ – 
+ 4.5 
+ 67.8 
+ – 
+ 36.1 
+ R1-Llama-70B 
+ 65.8 
+ 66.0 
+ 64.9 
+ 65.0 
+ – 
+ 50.5 
+ 66.0 
+ 65.9 
+ – 
+ 2.2 
+ 66.4 
+ – 
+ 30.7 
+ BugsInPy 
+ Qwen3-ON 
+ 7.6 
+ 7.7 
+ 6.8 
+ 7.7 
+ – 
+ 50.1 
+ 8.7 
+ 7.7 
+ – 
+ 4.5 
+ 7.2 
+ – 
+ 17.4 
+ QwQ-32B 
+ 5.8 
+ 6.5 
+ 4.8 
+ 5.2 
+ – 
+ 50.0 
+ 5.8 
+ 6.3 
+ – 
+ 4.9 
+ 6.2 
+ – 
+ 11.5 
+ R1-Distill 
+ 7.9 
+ 8.0 
+ 5.5 
+ 6.8 
+ – 
+ 50.1 
+ 7.2 
+ 7.7 
+ – 
+ 12.1 
+ 7.5 
+ – 
+ 6.8 
+ R1-Llama-70B 
+ 5.8 
+ 6.8 
+ 5.1 
+ 5.7 
+ – 
+ 50.7 
+ 6.2 
+ 6.7 
+ – 
+ 6.3 
+ 6.7 
+ – 
+ 6.3 
+ • 
+ ACC is pass@1 for code generation and tests pass for BugsInPy. Red. is the percentage of the reasoning trace removed. 
+ • 
+ Bold marks correctness ≥ \geq Full Regen. Underlining marks the highest correctness across strategies in each row. 
+ • 
+ Source ACC : correctness of the original model answer whose reasoning trace RQ3 truncates. 
+ • 
+ Full Regen. : mean ACC over three regeneration runs using the full reasoning trace. 
+ • 
+ p p : Holm-adjusted McNemar p p -value, computed separately for each of the three regeneration runs. – denotes that no run reaches p < 0.05 p<0.05 . 
+ Finding 4. 
+The transition summary shows the workflow behind these distributions.
+Table  5 shows that code generation often moves from Sensemaking to Strategy Formation, from Strategy Formation to Verification, and from Verification back to Strategy Formation.
+This pattern is a planning and checking loop.
+Bug fixing follows a different path.
+Sensemaking moves to Diagnosis and Localization in 88 % 88\% of outgoing transitions, Diagnosis and Localization moves to Strategy Formation in 80 % 80\% , and Strategy Formation often returns to Diagnosis and Localization.
+This difference matters for interpreting TTC.
+A long code generation reasoning trace often reflects planning and checking, while a long bug fixing reasoning trace often reflects fault localization and repair planning. 
+ Finding  — RQ2 
+ The focus of reasoning traces differs between the two SE task families we studied.
+Code generation spends most labeled segments on understanding the specification, planning an implementation, and checking candidate behavior.
+Bug fixing spends most labeled segments on diagnosis, localization, and repair planning.
+Token counts alone hide what the reasoning trace is used for. 
+ 4.3. RQ3. How much correctness is retained when a new answer is generated from a shorter reasoning prefix? 
+ RQ3 tests whether a retained reasoning prefix can support solution regeneration.
+All results use the offline protocol in Section  3.5 .
+This protocol applies every strategy to the same stored reasoning traces, so accuracy differences between strategies reflect only where each trace is cut.
+It also matches settings in which a separate model writes the answer from a stored trace.
+The truncation point is selected only after the full reasoning trace has been collected.
+Qwen3-OFF then generates a new solution from the original prompt plus the retained prefix.
+The matched control gives Qwen3-OFF the full reasoning trace for the same task in the same regeneration run. 
+ We evaluate three prefix selection strategies.
+Fixed Truncation retains the first 25 % 25\% , 50 % 50\% , or 75 % 75\% of every reasoning trace (Fixed- 25 25 , Fixed- 50 50 , and Fixed- 75 75 ).
+RedStop looks for repeated text in later reasoning windows.
+NRP stops after the first detected solution code and a short buffer.
+We report regenerated correctness and reasoning prefix reduction.
+Reasoning prefix reduction measures only how much of the stored reasoning trace is removed.
+It excludes the tokens and generation time of the additional model call. 
+ Results. 
+ Table  6 compares each shortened prefix with full reasoning trace regeneration for the same task in the same regeneration run. 
+ Finding 1. 
+Regenerating the answer from the full reasoning trace reproduces the correctness of the reasoning enabled source model.
+On HumanEval Pro and MBPP Pro, the two accuracies differ by at most 0.6 0.6 percentage points (Table  6 ).
+This maximum occurs for Qwen3-ON and R1-Distill-Llama-70B on HumanEval Pro ( 76.2 % 76.2\% versus 76.8 % 76.8\% and 76.8 % 76.8\% versus 77.4 % 77.4\% ).
+On BugsInPy, the two accuracies differ by at most 1.0 1.0 percentage point, for R1-Distill-Llama-70B ( 5.8 % 5.8\% versus 6.8 % 6.8\% ).
+We therefore use full reasoning trace regeneration as the baseline for evaluating the offline truncation strategies. 
+ Finding 2. 
+Fixed- 50 50 removes about half of each reasoning trace without a significant accuracy change.
+It removes 50.3 % 50.3\% to 50.7 % 50.7\% of the reasoning trace on HumanEval Pro and MBPP Pro.
+Across the four reasoning LLMs on HumanEval Pro and MBPP Pro, Fixed- 50 50 is more accurate than full reasoning trace regeneration only for R1-Distill-Qwen-32B on HumanEval Pro ( 79.1 % 79.1\% versus 78.7 % 78.7\% ).
+In all other cases, its accuracy is lower.
+The drop is smallest for Qwen3-ON on MBPP Pro ( 69.5 % 69.5\% versus 70.1 % 70.1\% ) and largest for QwQ-32B on HumanEval Pro ( 76.2 % 76.2\% versus 79.3 % 79.3\% ).
+None of these accuracy differences is significant under McNemar’s test after Holm correction.
+The accuracy differences of Fixed- 25 25 and Fixed- 75 75 are not significant either (Table  6 ).
+Fixed- 50 50 therefore removes about half of the stored reasoning at the cost of a small accuracy drop that is not statistically significant. 
+ Finding 3. 
+We compare the two content based rules (i.e., RedStop and NRP) with Fixed- 50 50 .
+RedStop removes only 2.2 % 2.2\% to 6.4 % 6.4\% of reasoning traces for code generation, so the repetition rule rarely finds an early stopping point.
+Its accuracy therefore stays close to full reasoning trace regeneration, from 78.9 % 78.9\% versus 79.3 % 79.3\% for QwQ-32B on HumanEval Pro to 78.3 % 78.3\% versus 77.4 % 77.4\% for R1-Distill-Llama-70B on HumanEval Pro.
+NRP removes 30.7 % 30.7\% to 46.2 % 46.2\% , but its accuracy varies across reasoning LLMs.
+Compared with full reasoning trace regeneration, NRP loses the most accuracy for Qwen3-ON on HumanEval Pro ( 73.8 % 73.8\% versus 76.8 % 76.8\% ) and gains the most for QwQ-32B on MBPP Pro ( 68.9 % 68.9\% versus 67.6 % 67.6\% ).
+NRP is more accurate than Fixed- 50 50 for QwQ-32B and R1-Distill-Llama-70B on both benchmarks, but less accurate for Qwen3-ON and R1-Distill-Qwen-32B.
+The first appearance of solution code is therefore not a stable stopping point across the evaluated models. 
+ Finding 4. 
+BugsInPy does not support a strong truncation claim.
+All regenerated accuracy values remain at or below 8.7 % 8.7\% , and no shortened prefix consistently outperforms full reasoning trace regeneration across LLMs.
+The BugsInPy results therefore do not show that truncation improves bug fixing. 
+ Finding  — RQ3 
+ Regeneration from the full reasoning trace closely reproduces the accuracy of the original answers on HumanEval Pro and MBPP Pro, so we use it as the baseline for shortened prefixes.
+Against this baseline, Fixed- 50 50 removes about half of the reasoning trace without a significant accuracy change after Holm correction, although its accuracy is slightly lower for every model except R1-Distill-Qwen-32B on HumanEval Pro.
+RedStop rarely triggers, NRP varies across models, and low BugsInPy accuracy limits conclusions for bug fixing. 
+ 5. Discussion 
+ 5.1. Implications for Developers 
+ Reasoning should be treated as a model configuration whose value depends on the task and model.
+A longer reasoning trace does not indicate better problem solving, and an accuracy improvement may leave absolute correctness low for practical use.
+MBPP Pro illustrates the cost side.
+Qwen3-32B spends a median of more than two thousand thinking tokens per task there, yet its mean pass@1 rises only from 68.1 % 68.1\% to 69.5 % 69.5\% and no paired test is significant.
+Developers should evaluate reasoning on their workloads and reserve it for tasks where it provides benefits. 
+ Some inference pipelines pass a reasoning trace from one model to a separate model that writes the final answer  ( Jindal et al., 2025 ) .
+Our truncation setting matches this use, because Qwen3-OFF writes the solution from a stored trace.
+In this setting, keeping the first half of each trace causes no significant accuracy change on HumanEval Pro and MBPP Pro.
+Developers of such systems can therefore store or pass a shorter prefix and reduce the input tokens of later calls.
+They should still count the input tokens, output tokens, and generation time of the additional call when estimating efficiency. 
+ 5.2. Implications for Researchers 
+ Researchers should report paired correctness and thinking token overhead for each benchmark across repeated runs. 
+ Similar thinking token counts can hide different kinds of work.
+In code generation, most labeled segments plan an implementation or check candidate behavior.
+In bug fixing, most labeled segments locate the fault and plan the repair.
+Token counts alone therefore do not show what the reasoning is used for.
+Studies of reasoning efficiency should analyze what reasoning traces contain in addition to how long they are. 
+ Our results also indicate that reasoning models often generate more reasoning than the final solution needs.
+About half of each stored trace can be removed without a significant accuracy change on HumanEval Pro and MBPP Pro.
+Prior work already trains models on compressed reasoning traces  ( Kang et al., 2025 ; Xia et al., 2025 ) .
+Our results suggest that code task traces also contain removable content, so researchers can curate shorter traces for such training or use them to set targets for reasoning efficiency methods. 
+ Offline truncation also offers a low cost way to compare stopping signals.
+All rules are applied to the same stored traces, so differences between rules do not come from different generations.
+In our comparison, repetition rarely appears early enough to trigger a stop, and the first solution code is not a stable stopping point across models.
+Researchers can use this protocol to screen candidate signals at low cost. 
+ When a study shortens a stored reasoning trace, a model must write a new answer from the shorter prefix.
+This extra generation step can change correctness by itself, even when the full trace is kept.
+Comparing the new answer with the original answer would therefore mix two effects, namely removing reasoning and writing the answer again.
+A fair baseline gives the same model the full reasoning trace under the same procedure, so the only difference is how much reasoning is kept.
+Future truncation studies can reuse this baseline. 
+ 6. Threats to Validity 
+ 6.1. Internal Validity 
+ The paired Qwen3 comparison uses the same checkpoint and evaluation procedure for both conditions.
+Qwen3-OFF may still reason implicitly while producing its solution.
+We therefore attribute observed differences to emitted reasoning traces rather than to the presence or absence of all reasoning.
+Temperature 0.6 makes generation stochastic.
+Five runs capture variation across generated outputs, although they cannot cover every possible output. 
+ All five model settings use 4-bit AWQ quantization  ( Lin et al., 2024 ) .
+We use it so that one A100 GPU can serve every model, including the 70B model, with a 32,768 token context.
+Because every setting uses the same quantization, it does not differ between the conditions of any comparison.
+However, quantization may change reasoning length, reasoning behavior, or accuracy.
+We did not compare against higher-precision inference, so absolute accuracy and TTC may differ from unquantized models. 
+ RQ2 also depends on human judgment.
+The annotators first label segments independently without seeing correctness outcomes.
+We calculate agreement from these initial labels and resolve disagreements before analysis.
+The 104 reasoning trace sample characterizes recurring behaviors in the annotated data rather than population proportions  ( Guest et al., 2006 ; Hennink and Kaiser, 2022 ; Stol et al., 2016 ) .
+RQ3 uses a second model call to write a new answer after truncation, and this call can itself change correctness.
+We control for this effect by comparing each shortened trace with the answer written from the full trace.
+RQ3 is also an offline analysis.
+Each cut point is selected after the full reasoning trace has been generated, and Qwen3-OFF rather than the source model writes the new answer.
+The results therefore describe stored traces and may differ when the source model itself writes the answer from a shorter trace. 
+ 6.2. External Validity 
+ Our results cover Python code generation and bug fixing.
+Other programming languages may produce different reasoning traces.
+Code review and test generation also provide different inputs and require different outputs.
+The evaluated models are open and have at most 70B parameters, so the results may not extend to closed or larger models.
+Other decoding parameters may also change the generated reasoning traces.
+The reproducible BugsInPy subset retains bugs compatible with our prompt and Docker evaluator.
+It is not a uniform sample of all BugsInPy bugs. 
+ 6.3. Construct Validity 
+ The RQ2 labels describe what the trace text does, not how the model computes its answer.
+For example, a segment labeled Verification contains text that checks a candidate solution, but this text does not show that the model internally checked the solution. 
+ TTC uses each model’s tokenizer.
+It supports comparisons within a model, while cross-model token counts remain approximate because tokenizers differ.
+RQ3 prefix reduction measures only the fraction of stored reasoning removed.
+It excludes solution tokens and the generation time of the additional call, so it does not measure total inference savings.
+BugsInPy accuracy is at or below 8.7 % 8.7\% in every RQ3 condition, so differences between conditions rest on few bugs.
+We therefore treat the BugsInPy truncation results as weak evidence. 
+ 7. Conclusion 
+ This paper examines whether explicit reasoning improves Python code generation and bug fixing enough to justify its thinking token overhead. Our results show that reasoning does not consistently help, and even when it improves accuracy, its benefit does not grow with trace length. Enabling reasoning in Qwen3-32B yields larger gains on HumanEval Pro and BugsInPy. On MBPP Pro, it adds more than two thousand thinking tokens per task for a gain indistinguishable from chance. Across the four reasoning models, models with longer traces do not reliably achieve higher accuracy, and bug fixing remains far from practical use even with reasoning. 
+ The reasoning traces also show that models use additional thinking differently across tasks. Code generation reasoning traces mostly develop and check implementations. Bug fixing reasoning traces spend more effort locating faults and planning repairs. The six behavior categories cover the held out Phase C sample, but their distributions differ between task families. Token count alone therefore cannot explain how the reasoning is used. 
+ The truncation experiments show that answers written from shortened traces must be compared with answers that the same model writes from the full trace. Against this baseline, Fixed- 50 50 removes about half of the stored reasoning trace without a significant accuracy decrease in the evaluated comparisons. RedStop rarely finds a stopping point, and NRP varies across source models. Future evaluations should report correctness together with thinking token overhead. 
+ References 
+ Baltes and Ralph (2022) 
+ S. Baltes and P. Ralph 
+ Sampling in software engineering research: a critical review and guidelines .
+ Empirical Software Engineering 27 ( 4 ), pp. 94 .
+ External Links: Document 
+ Cited by: §3.5 .
+ Campos et al. (2026) 
+ V. Campos, R. Shariffdeen, A. Ulges, and Y. Noller 
+ Exploring generalizable automated program repair with large language models .
+ IEEE Access .
+ External Links: Document 
+ Cited by: §4.1 .
+ Chen et al. (2021) 
+ M. Chen, J. Tworek, H. Jun, Q. Yuan, H. P. d. O. Pinto, J. Kaplan, H. Edwards, Y. Burda, N. Joseph, G. Brockman, et al. 
+ Evaluating large language models trained on code .
+ arXiv preprint arXiv:2107.03374 .
+ External Links: Document 
+ Cited by: §1 ,
+ §1 ,
+ §2.2 ,
+ §3.1 .
+ Cohen (1960) 
+ J. Cohen 
+ A coefficient of agreement for nominal scales .
+ Educational and Psychological Measurement 20 ( 1 ), pp. 37–46 .
+ Cited by: §3.5 .
+ Cruzes and Dybå (2011) 
+ D. S. Cruzes and T. Dybå 
+ Recommended steps for thematic synthesis in software engineering .
+ In Proceedings of the International Symposium on Empirical Software Engineering and Measurement ,
+ pp. 275–284 .
+ Cited by: §2.3 ,
+ §3.5 .
+ Easterbrook et al. (2008) 
+ S. Easterbrook, J. Singer, M. Storey, and D. Damian 
+ Selecting empirical methods for software engineering research .
+ In Guide to advanced empirical software engineering ,
+ pp. 285–311 .
+ External Links: Document 
+ Cited by: §3.5 .
+ Fleiss (1971) 
+ J. L. Fleiss 
+ Measuring nominal scale agreement among many raters .
+ Psychological Bulletin 76 ( 5 ), pp. 378–382 .
+ Cited by: §3.5 .
+ Francis et al. (2010) 
+ J. J. Francis, M. Johnston, C. Robertson, L. Glidewell, V. Entwistle, M. P. Eccles, and J. M. Grimshaw 
+ What is an adequate sample size? operationalising data saturation for theory-based interview studies .
+ Psychology & Health 25 ( 10 ), pp. 1229–1245 .
+ Cited by: §3.5 .
+ Guest et al. (2006) 
+ G. Guest, A. Bunce, and L. Johnson 
+ How many interviews are enough? an experiment with data saturation and variability .
+ Field Methods 18 ( 1 ), pp. 59–82 .
+ Cited by: §3.5 ,
+ §6.1 .
+ Hennink and Kaiser (2022) 
+ M. Hennink and B. N. Kaiser 
+ Sample sizes for saturation in qualitative research: a systematic review of empirical tests .
+ Social Science & Medicine 292 , pp. 114523 .
+ Cited by: §3.5 ,
+ §6.1 .
+ Hoda (2022) 
+ R. Hoda 
+ Socio-technical grounded theory for software engineering .
+ IEEE Transactions on Software Engineering 48 ( 10 ), pp. 3808–3832 .
+ External Links: Document 
+ Cited by: §2.3 ,
+ §3.5 .
+ Holm (1979) 
+ S. Holm 
+ A simple sequentially rejective multiple test procedure .
+ Scandinavian Journal of Statistics , pp. 65–70 .
+ Cited by: §3.3 .
+ Jiang et al. (2026) 
+ S. Jiang, Y. Liao, Y. Zhang, Y. Wang, and Y. Wang 
+ Overthinking reduction with decoupled rewards and curriculum data scheduling .
+ In The Fourteenth International Conference on Learning Representations ,
+ Cited by: §1 ,
+ §1 ,
+ §2.4 ,
+ §3.5 .
+ Jimenez et al. (2024) 
+ C. E. Jimenez, J. Yang, A. Wettig, S. Yao, K. Pei, O. Press, and K. Narasimhan 
+ SWE-bench: can language models resolve real-world GitHub issues? .
+ In International Conference on Learning Representations ,
+ Cited by: §2.2 .
+ Jindal et al. (2025) 
+ I. Jindal, J. Taneja, B. Chandana, V. Kapur, and S. D. Sharma 
+ Offloaded reasoning: efficient inference for large language models via modular reasoning and refinement .
+ In Findings of the Association for Computational Linguistics: EMNLP 2025 ,
+ Suzhou, China , pp. 7450–7458 .
+ External Links: Document 
+ Cited by: §1 ,
+ §5.1 .
+ Kang et al. (2025) 
+ Y. Kang, X. Sun, L. Chen, and W. Zou 
+ C3oT: generating shorter chain-of-thought without compromising effectiveness .
+ In Proceedings of the AAAI Conference on Artificial Intelligence ,
+ External Links: Document 
+ Cited by: §1 ,
+ §2.4 ,
+ §5.2 .
+ Kojima et al. (2022) 
+ T. Kojima, S. S. Gu, M. Reid, Y. Matsuo, and Y. Iwasawa 
+ Large language models are zero-shot reasoners .
+ In Proceedings of the 36th International Conference on Neural Information Processing Systems ,
+ Vol. 35 , pp. 22199–22213 .
+ Cited by: §1 ,
+ §2.1 .
+ Kwon et al. (2023) 
+ W. Kwon, Z. Li, S. Zhuang, Y. Sheng, L. Zheng, C. H. Yu, J. E. Gonzalez, H. Zhang, and I. Stoica 
+ Efficient memory management for large language model serving with PagedAttention .
+ In Proceedings of the ACM SIGOPS 29th Symposium on Operating Systems Principles ,
+ pp. 611–626 .
+ Cited by: §3.2 .
+ Lemieux et al. (2023) 
+ C. Lemieux, J. P. Inala, S. K. Lahiri, and S. Sen 
+ CodaMosa: escaping coverage plateaus in test generation with pre-trained large language models .
+ In Proceedings of the 45th IEEE/ACM International Conference on Software Engineering ,
+ pp. 919–931 .
+ Cited by: §1 ,
+ §2.2 .
+ Li et al. (2024) 
+ Y. Li, P. Yuan, S. Feng, B. Pan, X. Wang, B. Sun, H. Wang, and K. Li 
+ Escape sky-high cost: early-stopping self-consistency for multi-step reasoning .
+ In International Conference on Learning Representations ,
+ Cited by: §1 ,
+ §2.4 ,
+ §3.5 .
+ Li et al. (2022) 
+ Z. Li, S. Lu, D. Guo, N. Duan, S. Jannu, G. Jenks, D. Majumder, J. Green, A. Svyatkovskiy, S. Fu, and N. Sundaresan 
+ Automating code review activities by large-scale pre-training .
+ In Proceedings of the 30th ACM Joint European Software Engineering Conference and Symposium on the Foundations of Software Engineering ,
+ pp. 1035–1047 .
+ Cited by: §1 ,
+ §2.2 .
+ Lin (2004) 
+ C. Lin 
+ ROUGE: a package for automatic evaluation of summaries .
+ In Text Summarization Branches Out ,
+ pp. 74–81 .
+ Cited by: §3.5 .
+ Lin et al. (2024) 
+ J. Lin, J. Tang, H. Tang, S. Yang, W. Chen, W. Wang, G. Xiao, X. Dang, C. Gan, and S. Han 
+ AWQ: activation-aware weight quantization for on-device LLM compression and acceleration .
+ In Proceedings of Machine Learning and Systems ,
+ Vol. 6 , pp. 87–100 .
+ Cited by: §3.2 ,
+ §6.1 .
+ Liu et al. (2023) 
+ J. Liu, C. S. Xia, Y. Wang, and L. Zhang 
+ Is your code generated by ChatGPT really correct? rigorous evaluation of large language models for code generation .
+ In Advances in Neural Information Processing Systems ,
+ pp. 21558–21572 .
+ Cited by: §1 ,
+ §1 ,
+ §1 ,
+ §2.2 ,
+ §3.1 .
+ McNemar (1947) 
+ Q. McNemar 
+ Note on the sampling error of the difference between correlated proportions or percentages .
+ Psychometrika 12 ( 2 ), pp. 153–157 .
+ Cited by: §3.3 .
+ Pan et al. (2024) 
+ R. Pan, A. R. Ibrahimzada, R. Krishna, D. Sankar, L. P. Wassi, M. Merler, B. Sobolev, R. Pavuluri, S. Sinha, and R. Jabbarvand 
+ Lost in translation: a study of bugs introduced by large language models while translating code .
+ In Proceedings of the IEEE/ACM 46th International Conference on Software Engineering ,
+ pp. 1–13 .
+ Cited by: §2.2 .
+ Seaman (1999) 
+ C. B. Seaman 
+ Qualitative methods in empirical studies of software engineering .
+ IEEE Transactions on Software Engineering 25 ( 4 ), pp. 557–572 .
+ Cited by: §2.3 ,
+ §3.5 .
+ Sprague et al. (2025) 
+ Z. R. Sprague, F. Yin, J. D. Rodriguez, D. Jiang, M. Wadhwa, P. Singhal, X. Zhao, X. Ye, K. Mahowald, and G. Durrett 
+ To cot or not to cot? chain-of-thought helps mainly on math and symbolic reasoning .
+ In International Conference on Learning Representations ,
+ Cited by: §1 ,
+ §1 ,
+ §2.1 .
+ Stol et al. (2016) 
+ K. Stol, P. Ralph, and B. Fitzgerald 
+ Grounded theory in software engineering research: a critical review and guidelines .
+ In Proceedings of the 38th International Conference on Software Engineering ,
+ pp. 120–131 .
+ Cited by: §2.3 ,
+ §3.5 ,
+ §3.5 ,
+ §6.1 .
+ Tikhonov et al. (2026) 
+ P. Tikhonov, I. Oseledets, and E. Tutubalina 
+ Confidence leaps in llm reasoning: early stopping and cross-model transfer .
+ In Proceedings of the 19th Conference of the European Chapter of the Association for Computational Linguistics (Volume 2: Short Papers) ,
+ pp. 602–616 .
+ Cited by: §1 ,
+ §2.4 ,
+ §3.5 .
+ Wang et al. (2023) 
+ X. Wang, J. Wei, D. Schuurmans, Q. V. Le, E. H. Chi, S. Narang, A. Chowdhery, and D. Zhou 
+ Self-consistency improves chain of thought reasoning in language models .
+ In International Conference on Learning Representations ,
+ Cited by: §2.1 .
+ Wang et al. (2025) 
+ Z. Wang, X. Zeng, W. Liu, Y. Wang, L. Li, Y. Wang, L. Shang, X. Jiang, Q. Liu, and K. Wong 
+ Chain-of-probe: examining the necessity and accuracy of CoT step-by-step .
+ In Findings of the Association for Computational Linguistics: NAACL 2025 ,
+ pp. 2586–2606 .
+ External Links: Document 
+ Cited by: §1 ,
+ §2.4 .
+ Wei et al. (2022) 
+ J. Wei, X. Wang, D. Schuurmans, M. Bosma, B. Ichter, F. Xia, E. Chi, Q. Le, and D. Zhou 
+ Chain-of-thought prompting elicits reasoning in large language models .
+ In Advances in Neural Information Processing Systems ,
+ pp. 24824–24837 .
+ Cited by: §1 ,
+ §2.1 .
+ Widyasari et al. (2020) 
+ R. Widyasari, S. Q. Sim, C. Lok, H. Qi, J. Phan, Q. Tay, C. Tan, F. Wee, J. E. Tan, Y. Yieh, B. Goh, F. Thung, H. J. Kang, T. Hoang, D. Lo, and E. L. Ouh 
+ BugsInPy: a database of existing bugs in Python programs to enable controlled testing and debugging studies .
+ In Proceedings of the 28th ACM Joint Meeting on European Software Engineering Conference and Symposium on the Foundations of Software Engineering ,
+ pp. 1556–1560 .
+ Cited by: §1 ,
+ §1 ,
+ §3.1 ,
+ §4.1 .
+ Xia et al. (2023) 
+ C. S. Xia, Y. Wei, and L. Zhang 
+ Automated program repair in the era of large pre-trained language models .
+ In Proceedings of the 45th IEEE/ACM International Conference on Software Engineering ,
+ pp. 1482–1494 .
+ Cited by: §1 ,
+ §1 ,
+ §1 ,
+ §2.2 .
+ Xia et al. (2025) 
+ H. Xia, C. T. Leong, W. Wang, Y. Li, and W. Li 
+ TokenSkip: controllable chain-of-thought compression in LLMs .
+ In Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing ,
+ pp. 3351–3363 .
+ External Links: Document 
+ Cited by: §1 ,
+ §2.4 ,
+ §5.2 .
+ Yao et al. (2023) 
+ S. Yao, D. Yu, J. Zhao, I. Shafran, T. L. Griffiths, Y. Cao, and K. Narasimhan 
+ Tree of thoughts: deliberate problem solving with large language models .
+ In Advances in Neural Information Processing Systems ,
+ Vol. 36 , pp. 11809–11822 .
+ Cited by: §2.1 .
+ Yu et al. (2025) 
+ Z. Yu, Y. Zhao, A. Cohan, and X. Zhang 
+ HumanEval Pro and MBPP Pro: evaluating large language models on self-invoking code generation task .
+ In Findings of the Association for Computational Linguistics: ACL 2025 ,
+ Vienna, Austria , pp. 13253–13279 .
+ External Links: Document 
+ Cited by: §1 ,
+ §2.2 ,
+ §3.1 ,
+ §3.3 .
+ Experimental support, please
+ view the build logs 
+ for errors. Generated by
+ L
+ A 
+ T
+ E 
+ xml 
+ .
+ Instructions for reporting errors 
+ We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+ support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+ methods listed below: 
+ Click the "Report Issue" ( 
+ ) button, located in the page header. 
+ Tip: You can select the relevant text first, to include it in your report. 
+ Our team has already identified the following issues . We appreciate your time reviewing and reporting rendering errors we
+ may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+ should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+ all. 
+ Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a list of packages that need conversion , and welcome developer contributions . 
+ We gratefully acknowledge support from our major funders ,
+ member institutions , ,
+ and all contributors.
+ About · 
+ Help · 
+ Contact · 
+ Subscribe · 
+ Copyright · 
+ Privacy · 
+ Accessibility · 
+ Operational Status (opens in new tab) 

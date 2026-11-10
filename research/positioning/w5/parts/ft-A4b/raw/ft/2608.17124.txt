@@ -1,0 +1,895 @@
+ 
+ A decodability criterion predicts when hidden-state selection beats majority voting in large language models 
+ Report GitHub Issue 
+ × 
+ Title: 
+ Content selection saved. Describe the issue below: 
+ Description: 
+ Submit without GitHub 
+ Submit in GitHub 
+ arXiv is now an independent nonprofit! 
+ Learn more 
+ × 
+ Back to arXiv 
+ Why HTML? 
+ Report Issue 
+ Back to Abstract 
+ Download PDF 
+ Abstract 
+ 1 Introduction 
+ Our contributions 
+ 2 Related work 
+ 2.1 Classifier and decision fusion 
+ 2.2 Decision fusion of stochastic LLM outputs 
+ 2.3 Verifiers and reward models 
+ 2.4 Confidence, calibration and uncertainty 
+ 2.5 Internal-state probing and the geometry of truth 
+ 3 Method 
+ 3.1 Problem formulation 
+ 3.2 Hidden-state extraction 
+ 3.3 Selection gate 
+ 3.4 The decodability diagnostic 
+ 3.5 Baselines and metrics 
+ 4 Analysis: why decodability governs the fusion gain 
+ The law and its threshold 
+ The anti-Condorcet collapse and its remedy ( N N -scaling) 
+ Leakage of the naive probe 
+ Connection to fusion theory 
+ 5 Experimental setup 
+ 6 Results 
+ 6.1 The naive implementation is a leakage artifact 
+ 6.2 Internal fusion beats voting only for knowledge-aligned medical models 
+ 6.3 Single-variable controls isolate aligned latent knowledge 
+ 6.4 A single law predicts when internal fusion helps 
+ 6.5 In the Byzantine regime, fusion improves with N N while voting collapses 
+ 6.6 A shared, transferable correctness axis: usable for selection, not steering 
+ 6.7 Matching a verifier at a fraction of the cost; cross-domain generality 
+ 6.8 CASE outperforms near-free output-space selectors 
+ 7 A deployment recipe from the decodability law 
+ 8 Discussion 
+ 9 Conclusion 
+ References 
+ License: CC BY-NC-ND 4.0
+arXiv:2608.17124v1 [cs.AI] 17 Aug 2026 
+ A decodability criterion predicts when hidden-state selection beats majority voting in large language models 
+ Journal:  Information Fusion 
+ Zhixiang Wang
+ Affiliation:  Northwestern University, Chicago, United States
+ Ziliang Hong
+ Affiliation:  Northwestern University, Chicago, United States
+ Ulas Bagci
+ Email:  ulas.bagci@northwestern.edu 
+ Corresponding author:  Corresponding author.
+ Affiliation:  Northwestern University, Chicago, United States
+ Abstract 
+ Combining the answers a large language model (LLM) samples for a question into one decision is a test-time information fusion problem, usually solved by majority voting. Voting is unreliable on difficult questions, where the sampled answers share correlated errors, so the wrong answer can win and drawing more samples makes the decision worse. Selecting a candidate by reading a correctness signal from the model’s hidden states is a alternative, but its accuracy varies across models and tasks, and no measure indicates when it can be trusted. Therefore, we propose CASE (Correctness-Axis SElection), a dynamic selection combiner that trains a linear gate on the answer-token hidden state and selects the highest-scoring candidate. Its main contribution is decodability , a leakage-free measure of how well the gate ranks a question’s correct candidates above its incorrect ones, which predicts whether hidden-state selection will outperform voting. A conventional probe appears accurate only because of question-identity leakage, which vanishes under question-grouped evaluation. On held-out data, decodability predicts the accuracy gain of selection over voting with a Pearson correlation r = 0.75 r=0.75 and a decision threshold near AUC = 0.60 \mathrm{AUC}=0.60 . Across general and medical LLMs, CASE improves over voting by up to 19 19 points on medium-difficulty questions and 16.8 16.8 points on hard questions. Decodability depends on the aligned knowledge a model must recall, not on its scale, and its prediction transfers to an unseen scientific domain within 3.8 3.8 points. It thus provides a practical criterion, measurable in advance, for choosing between learned selection and majority voting. 
+ Keywords:  
+information fusion , dynamic ensemble selection , large language models , answer selection , test-time compute , hidden-state probing , uncertainty estimation
+ 1 Introduction 
+ Large language models (LLMs) are used where a wrong answer is costly. The standard way to improve reliability at test time is to sample several candidate answers and fuse them into one decision. For LLMs that fusion rule is almost always majority voting over sampled chains of thought (self-consistency [ 1 ] ): draw N N candidates, return the answer that appears most often. It is training-free, it costs nothing beyond the samples, and it works whenever the correct answer is the plurality of the pool. 
+ That condition fails where reliability matters most. On hard questions the model is wrong more often than right, so the correct answer is a minority of the pool and voting returns the dominant wrong option. The failure is structural, not sampling noise. All candidates come from one model and one knowledge state, so their errors are correlated, and a wrong answer accumulates into a stable consensus. This is the Byzantine regime of consensus fusion [ 2 ] , and it worsens with scale: drawing more samples [ 8 , 9 ] puts more mass on the modal answer, so more compute buys a more confident error. Escaping it requires a fusion rule that ranks candidates by something other than how often they appear. 
+ Existing alternatives improve the combiner but do not resolve this tension. One line of work reweights candidates using output-space signals, such as confidence-weighted voting, clustered voting, verbalized confidence [ 15 , 16 ] , and semantic-entropy or uncertainty-based estimators [ 17 , 18 ] . However, these signals are derived from the same generated answers or output distributions and are often imprecise [ 13 , 14 ] . Another line of work relies on external judges, including outcome-reward models, process-reward models, trained verifiers, and generative verifiers [ 10 , 11 , 12 ] . While effective, these approaches require additional supervision and typically incur extra inference cost. A more efficient alternative is to exploit information already encoded in the model. Prior studies suggest that LLM hidden states can linearly encode answer correctness or truthfulness [ 3 , 4 , 5 , 6 , 7 ] and may capture task-relevant information not reflected in the output distribution [ 19 , 20 ] . Because these activations are already computed during generation, such an internal fusion rule would be almost free, provided it can be made reliable. The question is therefore when that information is reliable enough to guide fusion, given that hidden states are already known to contain some correctness signal. 
+ Yet internal-state selection has shown inconsistent and fragile results, and our first step is to explain why. The natural implementation is straightforward: train a linear probe on a late-layer hidden state, validate it with ordinary cross-validation, and select the candidate with the highest predicted correctness score. This procedure appears strong in validation but does not hold under a stricter evaluation. We show that the apparent success is largely caused by question-identity leakage. Under random-split cross-validation, candidates from the same question can appear in both the training and test folds. The probe can therefore learn to recognize the question, whose candidates are often dominated by one correctness label, rather than learning a transferable correctness signal. When we evaluate the same approach with leakage-free, question-grouped splits, the selection signal collapses to chance-level performance: within-question AUC is 0.502 on LogiQA [ 21 ] , with only a + 0.2 +0.2 -point gain over a single agent ( p = 0.66 p=0.66 ). It sharpens the open question: when is correctness internally decodable well enough to yield a useful fusion rule? 
+ It also asks whether a model’s internal state is a more reliable indicator of an answer’s correctness than the answer itself—and, if so, when. An affirmative answer would move “knowing when you are right,” often treated as a property a model simply has or lacks, onto firmer ground: a measurable quantity, present in the activations of some (model, domain) pairs and absent in others, with the difference predictable in advance. It would also place a principled boundary on test-time scaling. Drawing more samples helps precisely when this internal signal exists—additional candidates then convert into reliability—and hurts when it does not, because the samples of a single model share one knowledge state, so without an independent correctness estimate more of them only reinforce the same correlated error. The practical value of “sample more and aggregate” therefore hinges on a property one would like to measure before paying for the samples—which, we show, one can. 
+ We answer this question with a broad, leakage-free study of hidden-state selection, which we name CASE (Correctness-Axis SElection), across general and medical LLMs from 1.5B to 70B parameters and benchmarks spanning reasoning, medicine, mathematics, and graduate-level science. The results center on a single predictive relationship: a measurable, leakage-free quantity—the within-question decodability of correctness—forecasts, before deployment, whether hidden-state selection will beat majority voting. On a held-out calibration-to-deployment split it predicts the deployment-set gain at Pearson r = 0.75 r=0.75 across 13 of the 15 medical model–task settings (two too small to split), above an empirical threshold near AUC ≈ 0.60 \mathrm{AUC}\approx 0.60 ; the far tighter in-sample fit ( r = 0.96 r=0.96 ) we report only as a consistency check, since predictor and outcome are read from the same gate on the same questions. The quantity measures how well a linear gate can rank a question’s own candidates by an internal hidden-state score, so the result is a diagnostic-gated reliability property : a cheap measurement, taken in advance, that says whether reading correctness from activations is worth doing for a given model and domain. Controlled single-variable experiments further suggest that this signal emerges when the model must recall latent knowledge aligned with the target answer, but is much weaker when the answer can be directly extracted from a provided passage or when the required knowledge is absent. The same decodability measure also predicts out-of-sample behavior in a new non-medical domain. When the signal is present, hidden-state fusion addresses a failure mode that majority voting cannot: as the number of candidates increases, voting can deteriorate when the dominant answer is wrong, whereas hidden-state selection continues to improve, yielding a + 16.8 +16.8 -point advantage at N = 16 N=16 on hard questions, rising to + 41.3 +41.3 on the subset where the correct answer is a minority. Hidden-state selection also matches the performance of a generative verifier, in the setting tested, at negligible added cost, reusing activations already computed during generation. Finally, mechanistic analyses suggest that the signal functions as a shared and transferable readout of answer correctness rather than a causal direction for steering model behavior. 
+ A single pre-deployment measurement thus determines whether hidden-state fusion will outperform voting for a given model and domain. Because the diagnostic is cheap and leakage-free, practitioners can measure it on a small labeled set before deployment. For a given model and domain, this provides an estimate of whether internal fusion is likely to outperform majority voting, and by approximately how much, rather than revealing its failure only after deployment. We make this practical contribution concrete as follows. 
+ Our contributions 
+ 1. 
+ The naive late-layer probe fails under leakage-free evaluation; the cause is question-identity leakage in random-split cross-validation. The usable signal lives in the answer-token representation at late layers. 
+ 2. 
+ A single leakage-free quantity—within-question decodability (AUC)—is an a-priori estimate of the per-instance competence that dynamic selection relies on but has typically estimated only post hoc. It predicts the fusion-over-voting gain ( r = 0.96 r=0.96 in-sample, 0.75 0.75 out of sample) with a derived threshold AUC ≈ 0.60 \mathrm{AUC}\approx 0.60 (robust to dropping the whole OpenBioLLM family, r = 0.90 r=0.90 ), and it governs not only our selector but any hidden-state score—the same threshold predicts three output-space selectors. One stylized model derives this law, its anti-Condorcet N N -scaling, and the leakage (Section  4 ). 
+ 3. 
+ Four single-variable controls point to aligned latent knowledge as the likely driver—over domain, scale, or architecture. A same-architecture general model and specialist fall on opposite sides of the threshold, and at a fixed late layer removing the supporting passage (closed- vs. open-book) restores the recall-based decodability that is otherwise absent (Section  6.3 ). 
+ 4. 
+ Where the signal is present, CASE improves with the candidate count while voting collapses ( + 16.8 +16.8 pp on hard questions at N = 16 N=16 ). It matches a generative verifier at negligible cost. 
+ 5. 
+ The correctness signal is a shared, transferable readout direction (cosine up to 0.93), and we report two dissociations: it is decodable yet does not causally steer (a readout, not a lever), and on closed-book recall the internal readout ranks correctness while output confidence anti-correlates with it. 
+ The rest of the paper is organized as follows. Section  2 situates the problem within decision fusion, test-time compute aggregation, verifiers, and internal-state probing. Section  3 formalizes hidden-state selection and the leakage-free decodability diagnostic; Section  4 analyzes why decodability governs the fusion gain, deriving the law, its N N -scaling, and the leakage from one model; Section  5 describes the models and benchmarks. Section  6 presents the main results: the leakage diagnosis ( 6.1 ), when internal fusion beats voting ( 6.2 – 6.3 ), the decodability law ( 6.4 ), Byzantine N N -scaling ( 6.5 ), the mechanism ( 6.6 ), cost and cross-domain generality ( 6.7 ), and a comparison against near-free output-space selectors ( 6.8 ). Section  7 translates the law into a deployment recipe, and Sections  8 – 9 provide the discussion and conclusion. 
+ 2 Related work 
+ 2.1 Classifier and decision fusion 
+ Combining multiple weak decisions into a stronger one is a central problem in information fusion, including majority and weighted voting, stacked generalization [ 34 ] , mixtures of experts [ 35 ] , and a broad family of confidence-based and trainable combiners [ 33 ] .
+Two classical themes frame our problem. First, simple voting is effective mainly when errors are sufficiently independent and unbiased; when correlated bias pushes many base decisions toward the same wrong answer, voting can fail. This is the regime formalized in the Byzantine -fault literature [ 2 ] and also described in ensemble theory as a consequence of low base-learner diversity [ 33 ] . Second, an effective combiner requires a reliable estimate of candidate quality, and the key design question is where this estimate should come from: held-out validation data, external supervision, or the base learners’ own confidence scores. For LLM answer fusion, the base decisions are samples from a single model, so their errors are correlated through the model’s knowledge state, and the natural quality estimate is the model’s own, often miscalibrated, confidence. We study an internal alternative: a correctness estimate read directly from hidden activations, and ask when it is reliable enough to serve as a fusion weight. In the classifier-fusion taxonomy, this places CASE as a trainable, measurement-level combiner of the dynamic-selection type (dynamic classifier/ensemble selection, DCS/DES [ 47 , 48 ] ): rather than combining all candidates, it selects the single one its internal competence estimate ranks highest, approximating the oracle selector that would pick a correct candidate whenever the pool contains one. Where classical DCS/DES estimates this local competence post hoc from a validation neighborhood [ 47 , 48 ] , CASE reads it directly from the model’s own residual stream and, distinctively, can certify its quality before deployment through the decodability diagnostic. The within-question decodability is then precisely an estimate of that per-item competence, and the law states when the estimate is good enough for selection to beat consensus—a leakage-free, a-priori-measurable instance of the classical condition under which a trainable combiner beats a fixed consensus rule. 
+ 2.2 Decision fusion of stochastic LLM outputs 
+ Self-consistency [ 1 ] fuses multiple chains of thought by majority vote and is the standard test-time fusion baseline for LLMs. Repeated sampling and test-time compute scaling [ 8 , 9 ] motivate drawing larger candidate pools, which can improve accuracy on easy inputs but also worsen the Byzantine fault for voting on hard inputs; input-adaptive methods instead learn how much computation each input warrants [ 49 ] , a budgeting question orthogonal to the fusion rule we study; voting accuracy can even be non-monotone in the number of calls [ 40 ] . We show a stronger effect: in the Byzantine regime voting collapses while an internal selector keeps improving (Section  6.5 ). Several refinements reweight or filter candidates, including weighted self-consistency, answer clustering, Borda-count ranked voting over self-certainty scores [ 36 ] , and confidence-weighted aggregation, but their weights are still derived from the output distribution. Our work instead asks when an internal signal, not tied to output frequency, provides a better fusion rule than counting answers, and quantifies when it does. 
+ 2.3 Verifiers and reward models 
+ A second route to better candidate selection is to train an external judge. Outcome- and process-reward models, as well as trained or generative verifiers [ 10 , 11 , 12 ] , rank or reweight candidates and can be effective, but they require labeled outcome or process data and add a full forward pass, often several, per candidate at inference. Generative verifiers [ 12 ] in particular recast verification as next-token prediction and provide a competitive, training-light baseline. We treat a training-free generative self-verifier as our strong baseline and compare both accuracy and inference cost with the near-free hidden-state probe, positioning internal fusion as a low-cost complement to, rather than a replacement for, trained verifiers (Section  6.7 ). 
+ 2.4 Confidence, calibration and uncertainty 
+ Output-level confidence is a natural fusion weight but is systematically miscalibrated [ 13 , 14 ] ; verbalized confidence [ 15 , 16 ] and semantic-entropy / uncertainty methods [ 17 , 18 ] extract better signals from the output distribution and detect hallucinations [ 18 ] . The closest competitor to internal selection is self-certainty [ 36 ] , a near-free best-of- N N selector read from the output distribution that, like our probe, costs almost nothing and improves with the candidate count. The two differ only in what they read—the output distribution versus an internal estimate from the residual stream—and we compare against it and related output-space selectors directly, not only against voting and an expensive verifier (Section  6.8 ). Our decodability diagnostic then provides a per-(model, domain) test for when the internal estimate is trustworthy enough to fuse on. 
+ 2.5 Internal-state probing and the geometry of truth 
+ Linear probes can recover substantial information from intermediate activations [ 19 ] , and prior work shows that LLMs encode truth or falsehood directions that can be found with [ 3 ] or without [ 4 ] supervision, often in an approximately linear form [ 5 , 20 ] . These signals tend to concentrate at answer tokens and late layers [ 6 ] , and related directions have been used for inference-time interventions to elicit more truthful generations [ 7 ] . We connect this readout view to answer fusion. Specifically, we quantify when a correctness direction can serve as a fusion weight, show that it is shared and transferable across benchmarks, and demonstrate that, unlike truthfulness directions used for intervention [ 7 ] , the correctness direction studied here acts as a readout rather than a causal lever. Closest to our method are recent hidden-state readouts for candidate selection: lightweight latent verifiers that score correctness from activations and plug into best-of- N N and self-consistency (LiLaVe [ 43 ] ), token-level hidden-state reward models for best-of- N N (SWIFT [ 44 ] ), latent process-level scorers for reasoning trajectories (TrajSelector [ 45 ] ), and latent-trajectory temporal signals that guide answer selection across sampled generations [ 50 ] ; hidden-state probes have likewise been used to select correct answers from sampled candidates [ 38 ] and to verify a reasoning model’s own intermediate answers [ 39 ] . We contribute the quantity that governs when any such selector helps: a leakage-free decodability score that predicts the downstream fusion-over-voting gain, with a threshold and an out-of-sample test. Two works bear directly on our claims. Cho et al. [ 42 ] map the geometric structure of correctness representations and report both a linear-versus-nonlinear probe comparison and an internal-versus-output-method comparison that parallel our Supplementary Table S9 and Section  6.8 ; they also report a causal-steering result more positive than ours (Section  6.6 ), a discrepancy we attribute to differing intervention protocols (steering norm, layer set, and difficulty targeting) and leave to future work. Seo et al. [ 41 ] show that apparent correctness-prediction gains can be inflated by question-side shortcuts—the effect our leakage audit (Section  6.1 ) isolates. Finally, semantic-entropy probes [ 46 ] are the direct precedent for our efficiency framing—a cheap hidden-state readout that replaces an expensive uncertainty computation—here repurposed from hallucination detection to fusion weighting. Our contribution remains distinct: we link a leakage-free decodability score to the fusion-over-voting gain, establish its threshold, and turn it into an a-priori deployment criterion. 
+ 3 Method 
+ 3.1 Problem formulation 
+ Given a question q q and N N candidates { c 1 , … , c N } \{c_{1},\dots,c_{N}\} sampled from an LLM at temperature τ \tau , an answer-fusion operator returns a single answer. Writing ans ⁡ ( c ) \mathrm{ans}(c) for the surface answer of candidate c c , the three operators we compare—the single-agent baseline, majority voting, and hidden-state selection (CASE)—are 
+ a ^ single \displaystyle\hat{a}_{\text{single}} 
+ = ans ( c 1 ) , a ^ vote = arg ​ max a ∑ i = 1 N [ ans ( c i ) = a ] , \displaystyle=\mathrm{ans}(c_{1}),\qquad\hat{a}_{\text{vote}}=\argmax_{a}\sum_{i=1}^{N}\mathbb{1}\!\left[\mathrm{ans}(c_{i})=a\right], 
+ (1) 
+ a ^ CASE \displaystyle\hat{a}_{\text{CASE}} 
+ = ans ⁡ ( arg ​ max i ⁡ g ​ ( h i ) ) . \displaystyle=\mathrm{ans}\!\left(\argmax_{i}g(h_{i})\right). 
+ where the gate g g maps the internal representation h i h_{i} of candidate c i c_{i} to a correctness score. Voting and CASE use the same candidate pool and differ only in how they fuse it—by surface-answer frequency versus by an internal correctness readout (Fig.  1 )—which isolates the value of the internal signal from the value of sampling itself. 
+ Figure 1: Two ways to fuse N N candidate answers. Majority voting counts surface answers and fails when the correct answer is a minority; hidden-state selection (CASE) reads an internal correctness score from each candidate’s answer-token representation and returns the highest-scoring candidate. 
+ 3.2 Hidden-state extraction 
+ We extract the signal from the answer-token position—the position that produces the final answer (the option letter for multiple-choice tasks, the final answer token for free-response). For each completed candidate we run one teacher-forced forward pass and record, at every layer, the residual-stream activation at that position—the hidden state from which the answer token is predicted. This calibration pass records all layers at once; at deployment the operating-layer activation is already produced during the generation of each candidate, so scoring adds no forward pass. We compared the answer-token position against two natural alternatives—the last-token activation and the mean over the final K K tokens (‘mean- K K ’)—and it carries the correctness signal substantially better than either; mean- K K in particular averages the signal away, leaving every layer at chance on LogiQA. This matches reports that truthfulness concentrates at answer tokens and late layers [ 3 , 6 , 7 ] . We therefore operate at the late layer that maximizes pooled within-question decodability (Section  3.4 ; Section  6.4 verifies that selecting this layer on a strictly held-out split does not change our findings); the operating layer for each of the 15 settings is listed in Supplementary Table S5. 
+ 3.3 Selection gate 
+ The gate g g is a simple linear model: we standardize activations per feature and fit an ℓ 2 \ell_{2} -regularized logistic regression (scikit-learn, C = 1.0 C=1.0 ) on ( h , correctness ) (h,\text{correctness}) pairs, 
+ g ⁡ ( h ) = σ ⁡ ( w ⊤ ​ h + b ) , σ ⁡ ( z ) = 1 1 + e − z . g(h)=\sigma(w^{\top}h+b),\qquad\sigma(z)=\frac{1}{1+e^{-z}}. 
+ (2) 
+ Two design choices matter. First, the gate is deliberately linear. A sweep over discriminators (logistic, MLP-256, RBF-SVM) shows that the limiting factor is the representation—the layer, token position, and model—not classifier capacity; larger discriminators merely overfit the small per-setting data (best Qwen-7B cell: logistic 0.596 ≥ \geq MLP 0.537 ≥ \geq SVM 0.535; Supplementary Table S9). Second, all training and evaluation use 5-fold GroupKFold with the question as the grouping key, so no question appears in both training and test folds; per-feature standardization and the gate are fit on the training folds only. This removes the leakage that inflates the naive random-split implementation. CASE then returns the candidate with the highest out-of-fold gate score. 
+ 3.4 The decodability diagnostic 
+ Our central quantity is the within-question ranking AUC. For each question with both correct and incorrect candidates, we compute the ROC-AUC of the gate score against candidate correctness—equivalently the Mann–Whitney U U statistic, with tied scores counted as 1 2 \tfrac{1}{2} —then average over questions: 
+ AUC q \displaystyle\mathrm{AUC}_{q} 
+ = Pr [ g ( h i ) > g ( h j ) | y i = 1 , y j = 0 ] , i , j ∈ C q , \displaystyle=\Pr\!\big[\,g(h_{i})>g(h_{j})\ \big|\ y_{i}=1,\ y_{j}=0\,\big],\quad i,j\in C_{q}, 
+ (3) 
+ AUC wq \displaystyle\mathrm{AUC}_{\mathrm{wq}} 
+ = 1 | Q ∗ | ​ ∑ q ∈ Q ∗ AUC q , Q ∗ = { q : 0 < y ¯ q < 1 } , \displaystyle=\frac{1}{|Q^{\ast}|}\sum_{q\in Q^{\ast}}\mathrm{AUC}_{q},\qquad Q^{\ast}=\{q:0<\bar{y}_{q}<1\}, 
+ (4) 
+ where y i ∈ { 0 , 1 } y_{i}\in\{0,1\} is candidate correctness and y ¯ q \bar{y}_{q} its per-question mean. This metric has the two properties we need. It is leakage-free by construction: every candidate being ranked belongs to the same question, so question identity cannot help. It also measures exactly what selection requires: whether correctness can be read out well enough to rank one question’s own candidates. This differs from grouped cross-validation accuracy, which still aggregates performance across questions. We report this quantity in two forms that differ only in which questions enter Q ∗ Q^{\ast} . The pooled within-question AUC averages over all mixed-correctness questions and is what we maximize when selecting the operating layer; the medium-bin within-question AUC restricts Q ∗ Q^{\ast} to medium-difficulty questions (the difficulty bins are defined below) and is the axis on which the law of Section  6.4 is fit. Unless qualified, “within-question AUC” denotes the pooled form; the law, its slope, and its threshold are stated on the medium-bin form. Section  6.4 shows that this metric predicts the downstream fusion gain very strongly, supporting its use as a deployment diagnostic. 
+ 3.5 Baselines and metrics 
+ We compare CASE against three baselines: (i) the single agent (return c 1 c_{1} ); (ii) majority voting, with ties broken uniformly at random; and (iii) a zero-training generative self-verifier that prompts the same model “Is answer X correct? Yes/No” and ranks candidates by P ⁡ ( Yes ) P(\text{Yes}) (the P(True) selector [ 13 ] ). Because internal selection is valuable only if near-free, we also compare against equally cheap output-distribution selectors—self-certainty [ 36 ] , sequence log-probability, and predictive entropy—read from the same forward pass (Section  6.8 ); semantic-entropy selection [ 17 ] reduces to majority voting on multiple-choice and is not a separate baseline. We further compare against two recent hidden-state selector designs, reimplemented on our pools: a LiLaVe-style shallow-tree latent verifier [ 43 ] and a SWIFT-style token-pooled linear readout [ 44 ] (Section  6.8 ). We bin difficulty by the per-question accuracy over the candidate pool, 
+ A q = 1 N ​ ∑ i = 1 N 𝟙 ​ [ c i ​  correct ] , bin ⁡ ( q ) = { easy , A q ≥ 0.6 , medium , 0.35 ≤ A q < 0.6 , hard , A q < 0.35 ; A_{q}=\frac{1}{N}\sum_{i=1}^{N}\mathbb{1}[c_{i}\text{ correct}],\qquad\operatorname{bin}(q)=\begin{cases}\text{easy},&A_{q}\geq 0.6,\\
+\text{medium},&0.35\leq A_{q}<0.6,\\
+\text{hard},&A_{q}<0.35;\end{cases} 
+ (5) 
+ to avoid circularity, we verify that estimating difficulty on a held-out split of candidates leaves the bins essentially unchanged. Our main metric is the medium-difficulty selection gain 
+ Δ = acc ⁡ ( a ^ CASE ) − acc ⁡ ( a ^ vote ) on medium-difficulty questions, \Delta=\operatorname{acc}(\hat{a}_{\text{CASE}})-\operatorname{acc}(\hat{a}_{\text{vote}})\quad\text{on medium-difficulty questions,} 
+ (6) 
+ the regime with room to improve, averaged over 200 random N = 4 N=4 draws per question, with 95% bootstrap confidence intervals (3000 resamples over questions) and two-sided p p -values. Because each per-question gain is itself averaged over 200 draws, we checked that resampling those draws matters little: a two-level bootstrap over both questions and draws (four representative settings) changes the interval widths by at most 0.5 0.5 pp and flips no significance verdict, leaving question sampling dominant. The N N -scaling analysis instead draws real candidates without replacement from the pool, on the minority-correct subset, so its curves reflect genuine candidate growth rather than resampling. Because we report many per-setting tests, we treat individual p p -values as descriptive and rest the conclusions on the consistency of the effect across independent settings and on the across-model law (Section  6.4 ). 
+ 4 Analysis: why decodability governs the fusion gain 
+ A single stylized model derives the three central phenomena—the decodability law and its threshold, the Byzantine N N -scaling, and the cross-validation leakage that defeats the naive probe. We state the model once (Definition  1 ) and derive each in turn; full proofs are in Supplementary Section S11. 
+ Definition 1 (stylized correctness-score model) . 
+ For a question whose candidate pool has correct-fraction A A (its per-question accuracy, Section  3.4 ), we model the gate score of a sampled correct candidate as an independent draw from a distribution F 1 F_{1} and of an incorrect candidate from F 0 F_{0} —the randomness is over the sampled candidates, not the deterministic gate—where ( F 0 , F 1 ) (F_{0},F_{1}) form a location family with separation δ ∈ ℝ \delta\in\mathbb{R} . The within-question decodability is the probability that a correct candidate outscores an incorrect one, 
+ a = Pr [ S 1 > S 0 ] , S 1 ∼ F 1 , S 0 ∼ F 0 , a\;=\;\Pr[\,S_{1}>S_{0}\,],\qquad S_{1}\sim F_{1},\ \ S_{0}\sim F_{0}, 
+ (7) 
+ which increases with δ \delta : from a < 1 2 a<\tfrac{1}{2} when δ < 0 \delta<0 , through 1 2 \tfrac{1}{2} at δ = 0 \delta=0 (indistinguishable), to 1 1 as δ → ∞ \delta\to\infty (perfect separation). Candidates may still concentrate on one wrong option—the correlated-error premise that defeats voting—while their gate scores remain conditionally independent given correctness. CASE returns the argmax-score candidate; majority voting returns the plurality answer, correct with a gate-independent probability V V . 
+ Writing M 1 M_{1} and M 0 M_{0} for the largest gate score among the correct and the incorrect candidates, CASE is correct exactly when M 1 > M 0 M_{1}>M_{0} : 
+ Pr ( CASE correct ) = Pr [ M 1 > M 0 ] , M 1 = max i ∈ corr g ( h i ) , M 0 = max j ∈ inc g ( h j ) . \Pr(\text{CASE correct})=\Pr[\,M_{1}>M_{0}\,],\qquad M_{1}=\max_{i\in\text{corr}}g(h_{i}),\quad M_{0}=\max_{j\in\text{inc}}g(h_{j}). 
+ (8) 
+ The law and its threshold 
+ Proposition 1 (monotonicity) . 
+ Under Definition  1 , Pr ⁡ ( CASE correct ) \Pr(\text{CASE correct}) increases monotonically in the decodability a a , from the pool accuracy A A at a = 1 2 a=\tfrac{1}{2} (an uninformative gate ranks the pool at random) to 1 1 as a → 1 a\to 1 (perfect separation surfaces a correct candidate whenever the pool contains one, which holds with probability approaching 1 1 as N N grows): 
+ Pr ( CASE correct ; a = 1 2 ) = A , Pr ( CASE correct ; a → 1 ) → 1 . \Pr(\text{CASE correct};\,a=\tfrac{1}{2})=A,\qquad\Pr(\text{CASE correct};\,a\to 1)\to 1. 
+ (9) 
+ Proposition 2 (decodability threshold) . 
+ The selection gain over voting, 
+ G ⁡ ( a ) = Pr ⁡ ( CASE correct ; a ) − V , G ⁡ ( 1 2 ) = A − V , G(a)=\Pr(\text{CASE correct};a)-V,\qquad G(\tfrac{1}{2})=A-V, 
+ (10) 
+ is increasing in a a and crosses zero at a threshold a ∗ a^{\ast} whose position is set by the sign of V − A V-A : a ∗ > 1 2 a^{\ast}>\tfrac{1}{2} when voting beats a random pick of the pool ( V > A V>A ), and a ∗ < 1 2 a^{\ast}<\tfrac{1}{2} when it does not ( V < A V<A ). 
+ Propositions 1–2 explain the law directly. (i) The gain rises with decodability—the positive, tight relationship of Section  6.4 . (ii) At medium difficulty the sampled wrong answers are spread across options, so voting is only marginally better than a random pick ( V ≳ A V\gtrsim A ) and the threshold sits just above 1 2 \tfrac{1}{2} —matching the empirical AUC ≈ 0.60 \mathrm{AUC}\approx 0.60 . The precise value depends on the difficulty distribution and is measured, not derived (Fig.  5 b). 
+ The threshold applies to medium difficulty; the hard regime requires separate treatment, which the same model provides. Proposition 2 places the crossing at a ∗ < 1 2 a^{\ast}<\tfrac{1}{2} whenever V < A V<A —precisely the Byzantine regime, where sampled errors concentrate on one wrong option and voting does worse than a random pick of the pool. The model therefore predicts that on hard, Byzantine inputs even weakly decodable (sub-threshold) settings should gain, which is what we observe systematically: across the 15 medical settings the hard-bin CASE − - vote gain is positive in every well-powered case ( 14 / 14 14/14 with a hard bin of adequate size; the five settings with archived candidate pools span + 5.1 +5.1 to + 13.4 +13.4 pp, Table S1; full per-setting values in the released per-run logs), essentially independent of the medium-bin AUC that governs the law (the two below-threshold graduate-chemistry settings likewise gain + 6.2 +6.2 and + 7.7 +7.7 pp; Section  6.7 ). The AUC ≈ 0.60 \mathrm{AUC}\approx 0.60 threshold thus governs medium difficulty; the hard/ Byzantine regime has no useful threshold. There, voting has already collapsed, so escaping the plurality (even a single candidate does) already helps almost regardless of decodability, and the internal signal adds beyond this only where a > 1 2 a>\tfrac{1}{2} —a split we carry into the deployment recipe (Section  7 ). 
+ The anti-Condorcet collapse and its remedy ( N N -scaling) 
+ The same model predicts what happens as the candidate count grows. 
+ Proposition 3 ( N N -scaling) . 
+ In the Byzantine regime—the correct answer a minority ( A < 1 2 A<\tfrac{1}{2} ) with a modal wrong option, but decodable ( a > 1 2 a>\tfrac{1}{2} )—and for light-tailed gate scores (the extreme-value regularity of Supplementary Section S11, satisfied e.g. by Gaussian logits), as the candidate count N N grows, Pr ⁡ ( CASE correct ) → 1 \Pr(\text{CASE correct})\to 1 while Pr ⁡ ( vote correct ) → 0 \Pr(\text{vote correct})\to 0 ; the two provably diverge. 
+ The intuition is a contest of extremes: more candidates give CASE more correct candidates from which to take a maximal score, and because correct scores are shifted upward ( a > 1 2 a>\tfrac{1}{2} ) that maximum increasingly wins; voting, by contrast, concentrates ever more mass on the modal—wrong—option. This is the Condorcet jury theorem and its negative branch: when the per-candidate probability of the correct option exceeds that of every wrong option, majority voting converges to certainty as N N grows; but in the Byzantine regime, where a wrong option is modal, the same theorem drives voting toward zero (the anti-Condorcet branch), and only a competence-weighted rule—here the internal correctness readout—can still improve with N N . This is the divergence measured in Section  6.5 (CASE 20.4 → 47.3 % 20.4\to 47.3\% , voting 20.4 → 6.0 % 20.4\to 6.0\% over N = 1 → 16 N=1\to 16 ; Fig.  6 a); finite N N gives the partial recovery observed there rather than the asymptotic limit. Below the threshold ( a < 1 2 a<\tfrac{1}{2} ) the correct maximum no longer wins and no recovery occurs. 
+ Leakage of the naive probe 
+ Proposition 4 (leakage) . 
+ Under random-split cross-validation, a classifier that recognizes the question and predicts its majority label attains accuracy at least 𝔼 q ​ [ max ⁡ ( π q ,  1 − π q ) ] \mathbb{E}_{q}[\max(\pi_{q},\,1-\pi_{q})] using question identity alone, where π q \pi_{q} is the question’s correct-fraction. This exceeds both chance and the within-question ranking AUC whenever the questions are label-imbalanced; grouping the folds by question withholds the test question and removes the term. 
+ This question-identity shortcut is the inflated 0.610 0.610 of Section  6.1 (the split-vs-grouped comparison is Supplementary Table S6); question-grouped evaluation exposes the genuine within-question decodability ( 0.502 0.502 , chance). The leakage gap is thus not noise but a predictable artifact of the split, and AUC wq \mathrm{AUC}_{\mathrm{wq}} —which conditions on the question by construction—is the leakage-free quantity Propositions 1–3 require. 
+ Connection to fusion theory 
+ Corollary 1 (learned combiner vs. consensus) . 
+ By Proposition 2, the internal combiner CASE outperforms majority voting on a given (model, domain) exactly when its within-question decodability exceeds the threshold a ∗ a^{\ast} set by V − A V-A ; below it, consensus fusion is preferable. The decodability AUC therefore plays a role analogous to the classical accuracy–diversity condition, giving a per-(model, domain) test for when a trainable combiner beats consensus fusion (Section  8 ). 
+ 5 Experimental setup 
+ Models. General-purpose: Qwen2.5-{1.5, 3, 7, 14}B-Instruct and Qwen2.5-Math-7B [ 26 ] , and Llama-3-8B-Instruct [ 27 ] . Medical specialists: OpenBioLLM-8B/70B [ 28 ] , BioMistral-7B [ 29 ] , Med42-8B [ 30 ] , MMed-Llama-3-8B [ 32 ] , meditron-7B [ 31 ] . This model panel covers three axes—scale (1.5–70B), specialization (general vs. medical), and alignment strength within the medical group—and includes a general and a specialist model sharing the Llama-3-8B architecture, which supports the controls in Section  6.3 . All models run in fp16; the 70B model is sharded across GPUs via device-map. 
+ Benchmarks. LogiQA (logical reasoning) [ 21 ] ; MedQA (USMLE four-option) [ 22 ] ; MedMCQA [ 23 ] ; PubMedQA [ 24 ] in both open-book (the supporting abstract is provided) and closed-book (the abstract is removed) forms; and MATH-500 (competition mathematics) [ 25 ] and GSM8K (grade-school mathematics) [ 10 ] ; and GPQA (graduate-level physics and chemistry) [ 37 ] as an out-of-domain, non-medical knowledge benchmark (Section  6.7 ). The open-/closed-book pair on identical PubMedQA questions is the single-variable control that isolates latent-knowledge recall. For each question we sample 16–20 candidates by nucleus sampling ( τ = 0.7 \tau=0.7 , top- p = 0.95 p=0.95 , up to 512 new tokens) and extract hidden states as in Section  3 . 
+ Implementation. Candidate generation, extraction, and analysis run on NVIDIA A6000 and A100 GPUs; gates and statistics use scikit-learn with bootstrap resampling. All probe quality and selection metrics are leakage-free (question-grouped). Code, configurations, and per-run logs are available for review (see Code availability). 
+ 6 Results 
+ 6.1 The naive implementation is a leakage artifact 
+ The natural implementation—a linear probe on a late-layer hidden state, validated by ordinary cross-validation—appears to select well, but this apparent strength is a leakage artifact. On Qwen2.5-7B over all 651 LogiQA questions (penultimate layer, mean over final tokens, random-split cross-validation), the single agent scores 51.5%, majority vote 52.7%, and CASE 51.7%—a + 0.2 +0.2 -point change over the single agent ( p = 0.66 p=0.66 ). Random-split 5-fold cross-validation reports 0.610 accuracy, but grouping the folds by question drops this to 0.542, and the within-question ranking AUC—what selection actually requires—is 0.502, i.e. chance (Fig.  2 a). Random splits encourage the probe to identify the question (whose candidates are predominantly correct or predominantly incorrect) rather than judge candidate correctness; that identity signal cannot help choose among a single question’s candidates. This leakage has a computable ceiling: Proposition 4’s pure-question-identity bound 𝔼 q ​ [ max ⁡ ( π q , 1 − π q ) ] \mathbb{E}_{q}[\max(\pi_{q},1-\pi_{q})] evaluates to ≈ 0.87 \approx 0.87 on this pool, so the inflated 0.610 0.610 sits between leakage-free chance ( 0.502 0.502 ) and this identity ceiling—consistent with a random-split probe that recovers question identity only partially, since a question’s candidates are divided across folds. We therefore adopt question-grouped evaluation throughout and, finding the penultimate-layer mean uninformative, switch to the answer-token representation at a late layer (Section  3 ). This leakage is not specific to LogiQA or to the penultimate/mean-token readout that this single-cell demonstration also happens to use: at each setting’s answer-token operating layer, random-split cross-validation still inflates candidate accuracy over question-grouped evaluation in all 15 medical settings (by + 0.04 +0.04 to + 0.39 +0.39 , median ≈ + 0.27 \approx+0.27 ), and a label-permutation null confirms the grouped estimate is leakage-free (it sits at chance in every setting; Supplementary Table S17). 
+ Figure 2: The naive probe’s apparent success is question-identity leakage. (a)  On LogiQA (Qwen2.5-7B, 651 questions), the naive random-split cross-validation looks informative ( 0.610 0.610 ), but grouping folds by question drops it to 0.542 0.542 and the selection-relevant within-question ranking AUC is at chance ( 0.502 0.502 ). (b)  The leakage is not an artifact of that single cell: at each setting’s answer-token operating layer, random-split candidate accuracy (leaked) exceeds the leakage-free question-grouped accuracy in all 15 medical settings (Supplementary Table S17). Exact LogiQA values are in the text. 
+ 6.2 Internal fusion beats voting only for knowledge-aligned medical models 
+ Across models and benchmarks, internal fusion outperforms voting mainly for strongly aligned medical models (Fig.  3 ; Table  1 ; the full medium breakdown for all 15 settings, with hard-bin rows for the archived-pool settings, is Supplementary Table S1). The clearest case is OpenBioLLM-8B, which exceeds voting by + 19.1 +19.1 points on MedMCQA (95% CI [ + 11.1 , + 27.0 ] [+11.1,+27.0] , p < 0.001 p<0.001 ), + 17.0 +17.0 points on closed-book PubMedQA ( [ + 7.3 , + 26.3 ] [+7.3,+26.3] , p = 0.001 p=0.001 ), and + 11.9 +11.9 points on MedQA ( [ + 0.6 , + 23.5 ] [+0.6,+23.5] , p = 0.039 p=0.039 ); its 70B counterpart gives + 10.3 +10.3 ( p = 0.15 p=0.15 at medium) and BioMistral-7B + 8.1 +8.1 ( p = 0.07 p=0.07 ), both positive but not significant at medium difficulty given their small medium bins. Med42-8B is positive but small ( + 1.0 +1.0 to + 1.2 +1.2 ) and not significant. In contrast, internal fusion underperforms voting for general models (Qwen-7B − 4.4 -4.4 , Qwen-14B − 0.4 -0.4 ; Llama-3-8B − 4.2 -4.2 on MedQA, − 1.9 -1.9 on MedMCQA) and for the weakly aligned medical models (meditron-7B − 7.5 -7.5 and MMed-Llama-3-8B − 5.5 -5.5 to − 6.4 -6.4 ); we show in Section  6.7 that these general models can nonetheless succeed on domains where their latent knowledge runs deep, such as graduate physics. Medium-difficulty significance is thus concentrated in OpenBioLLM; the broader evidence for the strong models comes from the hard bin, where OpenBioLLM mitigates voting’s Byzantine failure across all three benchmarks with strong statistical significance ( p < 0.001 p<0.001 ; Table  1 ). That the largest medium-difficulty wins come from one family is a real limitation of this medical panel—among the tested specialists only OpenBioLLM is strongly enough aligned to clear the threshold. The diagnostic, not any single model, is what generalizes: a general model clears the threshold and gains on graduate physics (Section  6.7 ), and the signal is carried by the internal states rather than the calibration labels (a text classifier on the same labels is at chance, Section  6.8 )—so decodability, not the “OpenBioLLM” label, is what predicts the gain. Thus, the label “medical specialist” is not sufficient on its own: meditron is a medical model but still fails. The next subsections identify the conditions under which the internal signal becomes useful. 
+ Table 1: CASE vs. majority vote across models, benchmarks and difficulty (leakage-free; 95% bootstrap CI; two-sided p p ). AUC is the within-question correctness ROC-AUC at the operating layer. cb = = closed-book; ob = = open-book. CASE − - vote is computed from unrounded accuracies and can differ from the displayed vote% and CASE% by ± 0.1 \pm 0.1 pp. 
+ Model 
+ Type 
+ Bench 
+ Diff 
+ n q n_{q} 
+ AUC 
+ vote% 
+ CASE% 
+ CASE − - vote 
+ 95% CI 
+ p p 
+ OpenBioLLM-8B 
+ strong 
+ MedQA 
+ med 
+ 48 
+ 0.702 
+ 51.3 
+ 63.2 
+ + 11.9 +11.9 
+ [ + 0.6 , + 23.5 ] [+0.6,+23.5] 
+ .039 
+ OpenBioLLM-8B 
+ strong 
+ MedQA 
+ hard 
+ 288 
+ 0.606 
+ 3.5 
+ 11.1 
+ + 7.5 +7.5 
+ [ + 5.3 , + 9.8 ] [+5.3,+9.8] 
+ < < .001 
+ OpenBioLLM-8B 
+ strong 
+ MedMCQA 
+ med 
+ 73 
+ 0.794 
+ 50.6 
+ 69.7 
+ + 19.1 +19.1 
+ [ + 11.1 , + 27.0 ] [+11.1,+27.0] 
+ < < .001 
+ OpenBioLLM-8B 
+ strong 
+ MedMCQA 
+ hard 
+ 296 
+ 0.706 
+ 3.9 
+ 13.2 
+ + 9.3 +9.3 
+ [ + 7.1 , + 11.6 ] [+7.1,+11.6] 
+ < < .001 
+ OpenBioLLM-8B 
+ strong 
+ PubMedQA-cb 
+ med 
+ 71 
+ 0.685 
+ 48.3 
+ 65.3 
+ + 17.0 +17.0 
+ [ + 7.3 , + 26.3 ] [+7.3,+26.3] 
+ .001 
+ OpenBioLLM-8B 
+ strong 
+ PubMedQA-cb 
+ hard 
+ 286 
+ 0.694 
+ 4.5 
+ 17.9 
+ + 13.4 +13.4 
+ [ + 10.8 , + 16.4 ] [+10.8,+16.4] 
+ < < .001 
+ OpenBioLLM-8B 
+ strong 
+ PubMedQA-ob 
+ med 
+ 29 
+ 0.650 
+ 53.2 
+ 61.9 
+ + 8.7 +8.7 
+ [ − 6.8 , + 22.7 ] [-6.8,+22.7] 
+ .259 
+ OpenBioLLM-70B 
+ strong 
+ MedQA 
+ med 
+ 21 
+ 0.691 
+ 49.5 
+ 59.8 
+ + 10.3 +10.3 
+ [ − 4.4 , + 24.8 ] [-4.4,+24.8] 
+ .153 
+ Med42-8B 
+ spec 
+ MedQA 
+ med 
+ 48 
+ 0.605 
+ 53.8 
+ 55.0 
+ + 1.2 +1.2 
+ [ − 6.2 , + 8.9 ] [-6.2,+8.9] 
+ .761 
+ Med42-8B 
+ spec 
+ MedMCQA 
+ med 
+ 39 
+ 0.610 
+ 54.2 
+ 55.2 
+ + 1.0 +1.0 
+ [ − 6.8 , + 9.4 ] [-6.8,+9.4] 
+ .843 
+ BioMistral-7B 
+ spec 
+ MedQA 
+ med 
+ 86 
+ 0.645 
+ 47.1 
+ 55.2 
+ + 8.1 +8.1 
+ [ − 0.4 , + 16.3 ] [-0.4,+16.3] 
+ .071 
+ meditron-7B 
+ weak 
+ MedQA 
+ med 
+ 153 
+ 0.518 
+ 54.6 
+ 47.1 
+ − 7.5 -7.5 
+ [ − 10.5 , − 4.7 ] [-10.5,-4.7] 
+ < < .001 
+ MMed-8B 
+ weak 
+ MedQA 
+ med 
+ 58 
+ 0.543 
+ 54.8 
+ 48.4 
+ − 6.4 -6.4 
+ [ − 12.7 , − 0.0 ] [-12.7,-0.0] 
+ .050 
+ MMed-8B 
+ weak 
+ MedMCQA 
+ med 
+ 84 
+ 0.555 
+ 56.2 
+ 50.8 
+ − 5.5 -5.5 
+ [ − 10.4 , − 0.6 ] [-10.4,-0.6] 
+ .033 
+ Qwen2.5-7B 
+ general 
+ MedQA 
+ med 
+ 28 
+ 0.516 
+ 51.5 
+ 47.1 
+ − 4.4 -4.4 
+ [ − 14.0 , + 4.4 ] [-14.0,+4.4] 
+ .341 
+ Qwen2.5-14B 
+ general 
+ MedQA 
+ med 
+ 18 
+ 0.592 
+ 55.6 
+ 55.3 
+ − 0.4 -0.4 
+ [ − 14.1 , + 13.1 ] [-14.1,+13.1] 
+ .959 
+ Llama-3-8B 
+ general 
+ MedQA 
+ med 
+ 49 
+ 0.513 
+ 54.5 
+ 50.3 
+ − 4.2 -4.2 
+ [ − 12.9 , + 4.3 ] [-12.9,+4.3] 
+ .355 
+ Llama-3-8B 
+ general 
+ MedMCQA 
+ med 
+ 64 
+ 0.547 
+ 50.6 
+ 48.8 
+ − 1.9 -1.9 
+ [ − 8.6 , + 4.9 ] [-8.6,+4.9] 
+ .599 
+ Figure 3: CASE minus majority vote (percentage points, medium difficulty) across models and benchmarks. Only knowledge-aligned medical models exceed voting; general and weakly-aligned medical models fall below it. Each row’s within-question decodability (AUC) is shown in parentheses: the gain crosses zero exactly as the AUC crosses the ≈ 0.60 \approx 0.60 threshold, so the decodability law can be read row by row. 
+ To make the mechanism concrete, Table  2 shows three real cases from this regime (OpenBioLLM, MedQA): the correct answer is sampled by only a minority of candidates, so majority voting selects the wrong option, whereas the gate assigns the highest internal correctness score to the rare correct candidate and recovers it. 
+ Table 2: Worked examples (OpenBioLLM-8B, MedQA; N = 16 N=16 sampled candidates; leakage-free question-grouped gate). For each item: the option votes and mean CASE gate g g , the majority-vote pick (wrong, red ), and the CASE pick (correct gold, teal ). 
+ Question (abridged) 
+ Options — votes ⋅ \cdot gate g g 
+ Vote 
+ CASE 
+ Man with an itchy annular abdominal plaque; KOH prep confirms hyphae. Next best step in management? 
+ A. Itraconazole — 6 × ⁣ ⋅ \times\cdot g 0.90 (gold)
+ B. Griseofulvin — 10 × ⁣ ⋅ \times\cdot g 0.31 
+ C. Topical clindamycin — 0 × \times 
+ D. Doxycycline — 0 × \times 
+ B 
+ A 
+ Boy with seizure disorder, apical murmur, calcified retinal lesions. Mutation in which gene? 
+ A. NF1 (chr 17) — 8 × ⁣ ⋅ \times\cdot g 0.71 
+ B. NF2 (chr 22) — 0 × \times 
+ C. TSC1 (chr 9) — 8 × ⁣ ⋅ \times\cdot g 1.00 (gold)
+ D. VHL (chr 3) — 0 × \times 
+ A 
+ C 
+ Drug inhibits phosphate release by the myosin head; which cross-bridge step is blocked? 
+ A. Myosin head cocking — 12 × ⁣ ⋅ \times\cdot g 0.00 
+ B. Exposure of binding sites — 0 × \times 
+ C. Myosin binding to actin — 0 × \times 
+ D. Power stroke — 4 × ⁣ ⋅ \times\cdot g 0.29 (gold) 
+ A 
+ D 
+ 6.3 Single-variable controls isolate aligned latent knowledge 
+ Four single-variable controls identify the likely source of the effect and address several obvious confounds (Fig.  4 ); in each, the condition requiring recall of aligned knowledge moves both the decodability and the gain, and its matched control moves neither. 
+ •   Same architecture. On the same Llama-3-8B backbone, the general Llama-3-8B-Instruct model (MedQA accuracy 0.60) loses to voting ( − 4.2 -4.2 ) while the medically aligned Med42-8B edges above it ( + 1.2 +1.2 on the same task). Neither medium-difficulty gain is individually significant ( p = 0.36 p=0.36 and 0.76 0.76 ), so we rest the comparison on the more stable within-question decodability, which separates the two (0.513 general vs. 0.605 specialist). The general model is more accurate overall, so the effect tracks specialization rather than architecture or raw task accuracy. 
+ •   Closed- vs. open-book, at a fixed layer. On one fixed question set—the 71 closed-book-medium PubMedQA questions scored in both conditions at the same late layer (gold answers align 600/600)—removing the abstract, which forces parametric recall, yields + 26.1 +26.1 over voting while providing it (open-book reading) yields only − 1.1 -1.1 ( + 27.3 +27.3 vs. + 0.8 +0.8 at a second late layer; Fig.  4 row 1, Supplementary Table S16). At a fixed operating layer the correctness signal is thus passage-dependent. Open-book correctness is not undecodable, however: at its own earlier operating layer the open-book representation is itself decodable and beats voting (AUC 0.650, + 8.7 +8.7 ; Table  3 ). Passage removal therefore relocates and strengthens a recall-based correctness signal at the late operating layer, rather than being the only condition under which correctness is decodable. 
+ •   Specialist vs. general on the same task. As shown in Section  6.2 , the specialist setting gives + 11.9 +11.9 on MedQA, whereas the general setting gives − 4.4 -4.4 . 
+ •   Strong vs. weak specialist. Weakly aligned medical models, including meditron (accuracy 0.27, near the floor) and MMed, show chance-level decodability across all layers and underperform voting. Thus, the boundary is not the medical label itself, but the presence of reliable, non-floor domain knowledge. 
+ Together these controls suggest that the late-layer fusion signal reflects recall of aligned domain knowledge: it is present when a well-aligned specialist must retrieve the answer internally, and at that operating layer it is absent when the answer can instead be read from a supplied passage—though, as the open-book point shows, correctness can still be decodable at another layer. 
+ Figure 4: Single-variable controls. Each row changes one variable and holds the rest fixed; in every case the condition that requires the model to recall aligned knowledge it holds (teal) both raises the within-question decodability (AUC) and moves the fusion gain from below voting to above it, while the matched control (grey)—knowledge absent, shallow, or readable off a supplied passage—does neither. The recall row’s gains are the same-question, same-layer closed- vs. open-book comparison (Supplementary Table S16); each point’s AUC is that condition’s own operating-layer decodability (closed-book L24, open-book L20); the others hold the architecture, the task, or the domain fixed. 
+ 6.4 A single law predicts when internal fusion helps 
+ The heterogeneous outcomes of Sections  6.2 – 6.3 are explained by a single predictor, in the form the analysis of Section  4 predicts. Across 15 model–benchmark settings, all evaluated at the pooled-best late operating layer, the leakage-free within-question correctness AUC predicts the CASE-minus-voting gain with Pearson r = 0.96 r=0.96 ( p = 3 × 10 − 8 p=3\times 10^{-8} ; Spearman ρ = 0.92 \rho=0.92 ), with a decision boundary at AUC ≈ 0.60 \mathrm{AUC}\approx 0.60 that separates the success and failure groups with no overlap (success AUC 0.605–0.794; failure 0.513–0.592; Table  3 , Fig.  5 ). The least-squares fit is 
+ Δ ^ ​ ( AUC wq ) = 100.8 ​ AUC wq − 58.5 , r = 0.96 , \widehat{\Delta}(\mathrm{AUC}_{\mathrm{wq}})=100.8\,\mathrm{AUC}_{\mathrm{wq}}-58.5,\qquad r=0.96, 
+ (11) 
+ crossing zero at AUC = 0.58 \mathrm{AUC}=0.58 , inside the empirical success/failure gap. The slope has standard error 8.6 8.6 (OLS 95% CI [ 82,119 ] [82,119] ; a model-cluster bootstrap over the nine model clusters widens it to [ 62,116 ] [62,116] ; an errors-in-variables Deming fit that accounts for measurement error in the AUC predictor gives a similar 105.8 105.8 , so the OLS slope is not appreciably attenuated), and the gain scatters about the line with residual standard deviation 2.7 2.7 pp, so Eq. ( 11 ) should be read as a forecast with a prediction interval of roughly ± 6 \pm 6 pp (a leverage-aware interval widens to ± 6.8 \pm 6.8 pp at the extremes of the AUC range) rather than an exact point estimate. Two cautions temper this in-sample fit. First, the separating threshold is itself uncertain: the same cluster bootstrap places the zero-crossing at 0.58 0.58 with 95% CI [ 0.562 , 0.596 ] [0.562,0.596] , a width ( 0.034 0.034 ) larger than the empirical success/failure gap ( 0.013 0.013 ), so we treat a narrow band around the boundary (roughly AUC ​  0.55 \mathrm{AUC}\,0.55 – 0.65 0.65 ) as indeterminate rather than as a sharp cutoff. Second, because the predictor (within-question AUC) and the outcome (the selection gain) are computed from the same gate on the same questions, part of the tight fit is structural: the residual variance is only about a third of what the gains’ own sampling error would produce on its own (residual s.d. 2.7 2.7 pp vs. sampling s.d. ≈ 4.5 \approx 4.5 pp), so the two quantities’ errors move together. We therefore read r = 0.96 r=0.96 as an internal consistency check and rest the predictive claim on the held-out calibration-to-deployment test below ( r = 0.75 r=0.75 ). Decodability is therefore an a-priori deployment diagnostic: measuring it for a given model–domain pair on a small labeled set, before committing to the fusion operator, estimates whether hidden-state selection is likely to help. It also unifies the specialist/general, closed/open-book, scale, and strong/weak-model effects under a single quantity. The relationship is quantitative and falsifiable, issuing testable point predictions: it predicts the out-of-sample GPQA physics gains to within 3.8 points from the medical fit alone (Section  6.7 ), and it is falsifiable in that, on the leakage-free medium-bin decodability axis, any setting above the threshold that failed to gain, or below it that gained, would break it. We turn this diagnostic into an explicit recipe in Section  7 . 
+ Three checks indicate the law is not driven by a few influential points or by non-independence among settings that share a model. A leave-one-point-out jackknife keeps the correlation in the range r ∈ [ 0.947 , 0.973 ] r\in[0.947,0.973] . A leave-one-model-out analysis—dropping all settings of a given model, nine model clusters in total—gives r ∈ [ 0.941 , 0.959 ] r\in[0.941,0.959] . As the most stringent form of this test, we drop the entire OpenBioLLM family at once—all five settings of the 8B and 70B variants, a third of the panel and its five largest gains: the correlation remains r = 0.90 r=0.90 ( p < 0.001 p<0.001 , n = 10 n=10 ), with the fitted slope (91 vs. 101 gain points per unit AUC) and the implied operating threshold (AUC 0.587 vs. 0.580) essentially unchanged. The law is therefore not an artifact of one model family. A block bootstrap that resamples whole model clusters, accounting for within-model dependence rather than over-counting individual settings, yields a 95% confidence interval of r ∈ [ 0.881 , 0.983 ] r\in[0.881,0.983] . The fit is also insensitive to the difficulty-bin edges: recomputing the law under six alternative medium-bin definitions (from 0.30 0.30 – 0.65 0.65 to 0.40 0.40 – 0.55 0.55 ) keeps r ∈ [ 0.90 , 0.97 ] r\in[0.90,0.97] (Supplementary Table S2). The success/failure separation is complete though the margin is narrow: the highest within-question AUC among the failing settings is 0.592 and the lowest among the succeeding settings is 0.605, so any threshold in this gap (we use its midpoint, 0.60) classifies all 15 settings correctly, with the boundary settings themselves near zero gain (Supplementary Table S2). 
+ As a further check, the diagnostic is not driven by choosing the operating layer on the same data used for scoring. We repeated the analysis with held-out layer selection. For each of three random splits, the operating late layer was selected on one half of the questions, and the within-question AUC and medium-difficulty selection gain were measured on the other, disjoint half. We ran this for four representative above-threshold settings—the three OpenBioLLM settings and BioMistral—each with a 600-candidate pool. For the three OpenBioLLM settings the held-out within-question AUC remains above the threshold (MedQA 0.715 ± 0.014 0.715\pm 0.014 , MedMCQA 0.786 ± 0.025 0.786\pm 0.025 , closed-book PubMedQA 0.654 ± 0.018 0.654\pm 0.018 ; mean ± \pm sd over splits) and the held-out selection gain remains clearly positive ( + 4.8 ± 3.2 +4.8\pm 3.2 , + 13.5 ± 5.6 +13.5\pm 5.6 , + 14.5 ± 6.8 +14.5\pm 6.8 pp; Supplementary Table S3), so the operating point is not an artifact of choosing the layer on the scored data. The gains attenuate from their in-sample values mainly because halving leaves a small medium-difficulty subsample; the AUC, computed over all mixed-correctness questions, is the more stable indicator and does not. The borderline BioMistral setting (in-sample + 8.1 +8.1 , p = 0.07 p=0.07 ) instead falls to a below-threshold held-out AUC ( 0.555 ± 0.019 0.555\pm 0.019 ) and a near-zero held-out gain ( + 0.2 ± 1.8 +0.2\pm 1.8 pp): so close to the threshold, halving the data both weakens the gate and destabilizes the layer choice—the fragility the law anticipates near the boundary. The check therefore confirms the operating point where decodability is high and reproduces the expected marginality where it is low. 
+ Three further audits concern the operating point. First, the three-seed regenerations of the two strongest settings, scored on the law’s own medium-bin AUC axis (rather than a pooled AUC), fall within its ± 6 \pm 6 pp prediction interval—for example MedQA seed 2, AUC 0.810 0.810 , predicts + 23 +23 and gains + 22.2 +22.2 (Supplementary Table S4); the seed spread is thus an independent validation of the law, not a perturbation of it. Second, we audited the late-half layer restriction on the settings that define the success boundary: for Med42 the unconstrained per-layer argmax lies inside the late half on MedQA but one layer below the boundary on MedMCQA (L14, pooled AUC 0.668 0.668 vs. the constrained L16, 0.641 0.641 ; the medium operating-point value in Table  3 is 0.610 0.610 ), so the reported operating-layer AUC is a mild lower bound under the constraint, but the difference does not change any setting’s classification. Third, we extended the held-out layer check to the two settings on the success boundary (Med42-8B and Qwen2.5-14B) and to a below-threshold failing setting (meditron-MedQA): under held-out layer selection the boundary settings reproduce or exceed their operating-layer AUC (Med42-MedMCQA 0.612 ± 0.013 0.612\pm 0.013 , Med42-MedQA 0.669 ± 0.022 0.669\pm 0.022 , Qwen-14B 0.621 ± 0.011 0.621\pm 0.011 ; Supplementary Table S3), while the failing setting stays at chance ( 0.503 ± 0.012 0.503\pm 0.012 ), so a sub-threshold AUC is not itself inflated by the layer search and the success/failure ordering is not an artifact of selection. Finally, a within-question label-permutation null validates the layer search itself: permuting correctness labels within each question and repeating the entire late-layer argmax gives a best-layer AUC near chance (mean 0.51 0.51 – 0.53 0.53 ), so the operating-layer values ( 0.63 0.63 – 0.73 0.73 for the above-threshold and boundary settings) exceed the null layer-search by 0.11 0.11 – 0.22 0.22 AUC (permutation p = 0.01 p=0.01 for the tightest boundary case, Med42-MedMCQA; Supplementary Table S20), whereas the failing meditron-MedQA setting sits only 0.015 0.015 above its null, at chance. 
+ Because the predictor and the outcome are read from the same gate scores, we also verify the relationship out of sample. In a calibration-to-deployment test—decodability measured on one random half of each setting’s questions, and the CASE-minus-voting gain measured on the disjoint other half with a gate trained only on the calibration half—calibration decodability still predicts deployment gain at Pearson r = 0.75 r=0.75 (bootstrap 95% CI [ 0.51 , 0.93 ] [0.51,0.93] ; p = 3 × 10 − 3 p=3\times 10^{-3} ; 13 settings, 10 splits each), and the AUC ≈ 0.60 \mathrm{AUC}\approx 0.60 threshold separates 11 of 13 settings, the two exceptions near zero (Supplementary Fig. S1). Because the in-sample law (Table  3 ) and this held-out test both use the same pooled-best operating-layer recipe—the layer here chosen on the calibration half alone—this is a like-for-like out-of-sample validation: the relationship is predictive, not an artifact of the shared scores. (Two general-model settings are too small to split.) Out of sample the forecast is looser than the in-sample fit, as expected: the medical law’s point prediction covers the held-out deployment gain within its ± 6 \pm 6 pp band for 8 of 13 settings (RMSE 6.4 6.4 pp), so as a deployment forecast it should be read with a wider interval, roughly ± 12 \pm 12 pp. The held-out correlation’s spread is carried mainly by the settings that straddle the threshold; the below-threshold cluster is predicted to gain little and does, so the operative claim—that the diagnostic separates deployable from non-deployable settings—is more robust than the coefficient alone, and its generality rests on the prospective cross-domain test of Section  6.7 rather than on within-medical resampling. 
+ Table 3: The 15 model–benchmark points underlying the decodability → \rightarrow gain law, all at the pooled-best late operating layer (held-out r = 0.75 r=0.75 , Supplementary Fig. S1; in-sample Pearson r = 0.956 r=0.956 as a consistency check, p = 3 × 10 − 8 p=3\times 10^{-8} , Spearman ρ = 0.92 \rho=0.92 ; separating threshold AUC ≈ 0.60 \mathrm{AUC}\approx 0.60 ). The medium column is the medium-difficulty gain that the law predicts (the mechanistic result); uncond. is the difficulty-unconditional gain over the whole candidate pool—the number a deployer who cannot bin questions by difficulty would experience. The unconditional gain is roughly a third of the medium-bin gain (easy questions dominate the pool and CASE does not help there), but near the boundary it scatters within ± 0.4 \pm 0.4 pp of zero (e.g. Med42-8B MedMCQA − 0.1 -0.1 just above threshold, meditron-7B + 0.2 +0.2 just below) and is clearly positive only well above threshold, so the diagnostic predicts the sign of the deployable gain away from the boundary. 
+ Model / benchmark 
+ within-Q AUC 
+ vote % 
+ CASE % 
+ medium (pp) 
+ uncond. (pp) 
+ OpenBioLLM-8B MedMCQA 
+ 0.794 
+ 50.6 
+ 69.7 
+ + 19.1 +19.1 
+ + 6.8 +6.8 
+ OpenBioLLM-8B MedQA 
+ 0.702 
+ 51.3 
+ 63.2 
+ + 11.9 +11.9 
+ + 4.0 +4.0 
+ OpenBioLLM-70B MedQA 
+ 0.691 
+ 49.5 
+ 59.8 
+ + 10.3 +10.3 
+ + 0.7 +0.7 
+ OpenBioLLM-8B PubMedQA-cb 
+ 0.685 
+ 48.3 
+ 65.3 
+ + 17.0 +17.0 
+ + 6.0 +6.0 
+ OpenBioLLM-8B PubMedQA-ob 
+ 0.650 
+ 53.2 
+ 61.9 
+ + 8.7 +8.7 
+ + 1.7 +1.7 
+ BioMistral-7B MedQA 
+ 0.645 
+ 47.1 
+ 55.2 
+ + 8.1 +8.1 
+ + 2.7 +2.7 
+ Med42-8B MedMCQA 
+ 0.610 
+ 54.2 
+ 55.2 
+ + 1.0 +1.0 
+ − 0.1 -0.1 
+ Med42-8B MedQA 
+ 0.605 
+ 53.8 
+ 55.0 
+ + 1.2 +1.2 
+ + 1.6 +1.6 
+ Qwen-14B MedQA 
+ 0.592 
+ 55.6 
+ 55.3 
+ − 0.4 -0.4 
+ + 0.3 +0.3 
+ MMed-8B MedMCQA 
+ 0.555 
+ 56.2 
+ 50.8 
+ − 5.5 -5.5 
+ − 1.0 -1.0 
+ Llama-3-8B MedMCQA 
+ 0.547 
+ 50.6 
+ 48.8 
+ − 1.9 -1.9 
+ + 0.4 +0.4 
+ MMed-8B MedQA 
+ 0.543 
+ 54.8 
+ 48.4 
+ − 6.4 -6.4 
+ − 1.4 -1.4 
+ meditron-7B MedQA 
+ 0.518 
+ 54.6 
+ 47.1 
+ − 7.5 -7.5 
+ + 0.2 +0.2 
+ Qwen-7B MedQA 
+ 0.516 
+ 51.5 
+ 47.1 
+ − 4.4 -4.4 
+ − 1.9 -1.9 
+ Llama-3-8B MedQA 
+ 0.513 
+ 54.5 
+ 50.3 
+ − 4.2 -4.2 
+ − 1.1 -1.1 
+ Figure 5: Within-question decodability predicts the fusion gain. (a)  The empirical law: across 15 medical settings (filled, colored by decodability region) the within-question AUC predicts the CASE-minus-voting gain (Pearson r = 0.96 r=0.96 ; fitted line), with a clean threshold at AUC ≈ 0.60 \mathrm{AUC}\approx 0.60 ; open diamonds are out-of-sample GPQA settings (Section  6.7 ), not used in the fit. Error bars are 95% confidence intervals (horizontal: question-bootstrap of the within-question AUC; vertical: bootstrap of the gain); the AUC is markedly tighter than the gain, consistent with it being the more stable indicator. (b)  The stylized model of Section  4 : predicted selection accuracy rises with decodability from the pool accuracy A A toward 1 1 (Proposition 1) and overtakes the voting level V V at a threshold above 1 2 \tfrac{1}{2} (Proposition 2); the three curves are three correct-fractions A A . (c)  Out-of-sample validation: decodability measured on a calibration half predicts the deployment-half gain on held-out questions ( r = 0.75 r=0.75 ; 13 settings, 10 splits each, mean ± \pm s.d.). 
+ 6.5 In the Byzantine regime, fusion improves with N N while voting collapses 
+ On the subset where the correct answer is a minority (OpenBioLLM, MedQA; 131 questions), the two fusion rules diverge as the candidate count N N increases (Table  4 , Fig.  6 ). Majority-vote accuracy decreases from 20.4% to 6.0% as N N grows from 1 to 16, because voting increasingly selects the wrong majority answer. In contrast, CASE increases from 20.4% to 47.3%, because additional candidates provide more opportunities to identify the rare correct one. The advantage reaches + 41.3 +41.3 points at N = 16 N=16 . Because this subset is defined using ground truth, it is a diagnostic rather than something a deployer can target directly; the same divergence holds on the broader hard bin (288 questions), a difficulty stratum rather than a hand-picked label pattern—though it, too, is gold-defined, so the deployable figure is the unconditional gain of Section  7 , not the per-bin one: as N N grows to 16 majority accuracy collapses from 6.2% to 0.2% while CASE rises to 17.0%, a + 16.8 +16.8 -point advantage (Supplementary Table S11). On the medium bin the correct answer is closer to a plurality, so voting instead recovers with N N and overtakes CASE by N = 16 N=16 ; the Byzantine N N -scaling advantage is thus specific to the hard regime. Consistently, across benchmarks, the selection gain is concentrated in the medium/hard Byzantine regime and largely disappears on easy questions, where voting is already strong (Fig.  8 b). This is the behavior expected from hidden-state selection where the internal signal is available: it converts additional candidates into improved reliability, whereas voting can convert the same candidates into stronger wrong consensus. 
+ Table 4: Byzantine N N -scaling (OpenBioLLM × \times MedQA, minority-correct subset, 131 questions). Real draws without replacement from the candidate pool. CASE − - maj is computed from unrounded accuracies and can differ from the displayed columns by ± 0.1 \pm 0.1 pp. 
+ N N 
+ single% 
+ majority% 
+ CASE% 
+ CASE − - maj 
+ 1 
+ 20.4 
+ 20.4 
+ 20.4 
+ + 0.0 +0.0 
+ 2 
+ 20.7 
+ 20.7 
+ 25.2 
+ + 4.5 +4.5 
+ 4 
+ 20.4 
+ 14.9 
+ 33.8 
+ + 18.9 +18.9 
+ 8 
+ 20.7 
+ 10.0 
+ 42.1 
+ + 32.1 +32.1 
+ 16 
+ 20.8 
+ 6.0 
+ 47.3 
+ + 41.3 +41.3 
+ Figure 6: Byzantine N N -scaling. (a)  On the minority-correct subset, as the candidate count N N grows CASE climbs from 20.4 20.4 to 47.3 % 47.3\% while majority voting collapses from 20.4 20.4 to 6.0 % 6.0\% . (b)  Resolved by difficulty, the CASE-minus-vote gain diverges on the minority-correct and hard bins ( + 41.3 +41.3 and + 16.8 +16.8 pp at N = 16 N=16 ) but reverses on the medium bin ( − 2.0 -2.0 ), where voting recovers—the advantage is specific to the Byzantine hard regime. (c)  The stylized model (Proposition 3, a = 0.70 a=0.70 ) reproduces the divergence: predicted CASE accuracy rises with N N while voting falls. 
+ 6.6 A shared, transferable correctness axis: usable for selection, not steering 
+ The correctness signal lives on a shared, transferable axis. The correctness direction—the difference of class-mean answer-token activations—is nearly identical across medical benchmarks (cosine 0.934 between MedQA and MedMCQA). A gate trained on one benchmark, moreover, selects on another at within-question AUC 0.77 (0.72 in the reverse direction), comparable to within-domain performance (Supplementary Table S8), and the same axis transfers across physics, chemistry, and medicine (Supplementary Table S15). This cross-benchmark and cross-domain transfer points to a shared internal representation rather than a benchmark-specific shortcut or an answer-format cue such as the chosen option letter: a format cue tied to one benchmark’s answer distribution could not transfer this way. A direct within-setting control agrees: on OpenBioLLM/MedQA, once the 11.5 % 11.5\% non-parseable generations are excluded, an option-letter baseline falls to chance (within-question AUC 0.48 0.48 ) while the hidden-state gate stays above it ( 0.60 0.60 ) and CASE still beats voting by + 7.0 +7.0 pp, so the signal is genuine correctness rather than a format prior or mere detection of malformed outputs (Supplementary Section S13, Table S18). When projected onto this single axis, correct and incorrect answer-token states form visibly separated distributions (Fig.  7 ). This direction is a readout, not a causal lever. Across four steering variants (weak fixed-norm, strong norm-scaled, multi-layer, and a medium-difficulty-targeted sweep), adding the correctness direction to the residual stream during generation does not raise accuracy—it slightly lowers it (Fig.  8 c; a representative steering-coefficient sweep is Supplementary Table S10)—and large coefficients collapse generation. The dissociation is two-sided. The direction is not a lever that writes correctness in (adding it does not steer), but it is necessary for reading correctness out: projecting the single mass-mean correctness direction out of the answer-token states collapses the gate from a pooled projection AUC of 0.73 0.73 to well below chance ( 0.13 0.13 on OpenBioLLM/MedQA), so that one direction carries essentially all of the decodable correctness signal. Thus, decodability does not imply causal steerability, in contrast to the truthfulness directions used for inference-time intervention and representation engineering [ 7 ] : the signal is a genuine readout—sufficient and necessary for selection, but not a causal lever for generation. 
+ Two further properties clarify where the signal comes from and connect it to the law (Fig.  8 a). First, for general-purpose models the within-question decodability emerges with scale: on LogiQA the pooled answer-token AUC rises overall from 0.55 at 1.5B to 0.68 at 14B—not monotonically, with a dip at 7B (Supplementary Table S7)—so a small general model sits below the threshold while a large one can approach it. Medical specialization, by contrast, saturates decodability at 8B (OpenBioLLM-8B and -70B give essentially the same AUC, 0.70 vs. 0.69), so specialization, not scale, is the dominant lever in our panel. Second, the bottleneck is the feature, not the classifier: at the best Qwen-7B cell a logistic gate (0.596) matches or beats an MLP-256 (0.537) and an RBF-SVM (0.535), and larger discriminators overfit the small per-setting data. This explains why a simple linear gate suffices and why the diagnostic—an AUC computed from that same linear readout—is a faithful summary of what selection can exploit. 
+ Figure 7: Answer-token hidden states (OpenBioLLM-8B, MedQA, layer 28) projected onto the correctness axis (mass-mean direction). (a) Marginal density of correct (green) vs. incorrect (red) answers; (b) the same states in 2-D, where a ∼ \sim 19% cluster of incorrect answers separates cleanly on the far incorrect side—candidates the gate confidently and correctly scores as wrong, a recognizable error mode—while the harder remaining errors overlap the correct mass on the right. The pooled single-axis projection separates the two classes at AUC = 0.73 =0.73 ; this is the pooled projection AUC at the fixed layer 28, distinct from the within-question operating-layer decodability AUC (0.702) reported in Tables  1 and 3 . 
+ Figure 8: Anatomy of the internal signal. (a) Within-question decodability emerges with scale for general models and is saturated by medical specialization. (b) The selection gain concentrates in the Byzantine (medium/hard) regime. (c) Adding the correctness direction during generation does not improve accuracy—the readout is not a causal lever. 
+ 6.7 Matching a verifier at a fraction of the cost; cross-domain generality 
+ Where it works, hidden-state fusion is inference-cheap. On OpenBioLLM/MedQA medium questions, a training-free generative self-verifier reaches 63.0% ( + 11.1 +11.1 over voting), but it requires on the order of | options | |\text{options}| extra forward passes per question (four on MedQA, cached across draws). CASE reaches 62.0% ( + 10.2 +10.2 ) by reusing activations already computed during generation plus a single matrix–vector product, replacing those verification passes with one matvec per candidate (Table  5 ). This is a match only in the single setting tested: the difference is 1.0 1.0 pp on n = 48 n=48 medium questions, without a paired equivalence test, so it establishes “competitive at far lower inference cost,” not general parity. The cost comparison is also inference-only. Unlike the training-free verifier, CASE carries an offline cost that Table  5 does not price—a labeled calibration set of a few hundred questions per (model, domain), a candidate pool, a late-layer sweep, and a gate fit—so CASE trades this one-time supervision cost for the online saving. Internal fusion is therefore best used as a low-cost complement to trained verifiers: where decodability is high it recovers most of the verifier’s benefit at negligible inference cost, and where it is low the diagnostic flags when a more expensive judge is needed. 
+ Table 5: Generative verifier vs. CASE (OpenBioLLM × \times MedQA, medium difficulty). All four estimates come from the same diagnostic candidate pool and the same draws (best-of- N N , N = 4 N=4 , 200 draws), so the majority-vote baseline (51.8%) is shared. Gains over voting are computed from unrounded accuracies and can differ from the displayed percentages by ± 0.1 \pm 0.1 pp (the verifier’s + 11.1 +11.1 vs. 63.0 − 51.8 63.0-51.8 ). The operating point differs from the medium cell of Table  1 (full-pool selection), so the CASE accuracy there, 63.2%, differs slightly within sampling uncertainty. To quantify the cost gap: the verifier’s | options | |\text{options}| extra forward passes cost on the order of | options | ⋅ 2 ​ N params ​ T ≈ 2 × 10 13 |\text{options}|\cdot 2N_{\text{params}}T\approx 2\times 10^{13} FLOP per question (8B model, T ≈ 300 T\approx 300 prompt tokens), whereas CASE adds one d = 4096 d{=}4096 matrix–vector product per candidate on activations already produced during generation, ≈ 10 5 \approx 10^{5} FLOP per question—about eight orders of magnitude less marginal compute, though both share the upstream candidate-generation cost. This is an estimate from parameter and token counts, not a wall-clock benchmark. 
+ Method 
+ accuracy 
+ vs. vote 
+ extra cost / question 
+ single agent 
+ 46.5% 
+ — 
+ — 
+ majority vote 
+ 51.8% 
+ — 
+ 0 
+ generative verifier 
+ 63.0% 
+ + 11.1 +11.1 
+ ∼ | options | \sim|\text{options}| fwd passes (cached; 4 on MedQA) 
+ CASE 
+ 62.0% 
+ + 10.2 +10.2 
+ ≈ 0 \approx 0 (reuse activations + + 1 matvec) 
+ The relationship extends beyond medicine to mathematics, scored on the law’s own axis (medium-bin within-question AUC and per-bin gains at the operating layer). On MATH-500 both models sit above threshold—medium-bin AUC 0.79 for the specialist Qwen2.5-Math-7B, 0.76 for the general Qwen2.5-7B—and both gain: + 8.1 +8.1 pp at medium difficulty ( p = 0.043 p=0.043 ) and + 6.6 +6.6 pp (not significant, small medium bin) respectively, with a further + 2.5 +2.5 to + 2.6 +2.6 pp on hard questions ( p < 0.001 p<0.001 ; Table  6 ). Mathematics thus obeys the same law. Grade-school arithmetic (GSM8K) is more ceiling-limited: both models solve ∼ \sim 92% of items, leaving too few non-easy questions (7 and 4 at medium difficulty) for a medium-bin estimate, so we report it on the hard subset. There the specialist is decodable (pooled AUC 0.82) and gains ( + 11.9 +11.9 pp, p = 0.001 p=0.001 ), while the general model, whose pooled decodability (0.595) sits at the 0.60 mark, does not ( + 0.3 +0.3 pp, n.s.)—the gain again tracks decodability, and the specialist-over-general ordering holds. GSM8K’s ceiling makes it directional support only; MATH-500, on the law’s axis, is the quantitative test, and it conforms. 
+ Table 6: Mathematics domains, at the operating layer as for the medical settings; p p from the same question-level bootstrap. For MATH-500 the AUC is the medium-bin within-question AUC (the law’s axis, Eq.  11 ), with medium/hard n = 17 / 233 n=17/233 (Qwen2.5-7B) and 27 / 236 27/236 (Qwen2.5-Math-7B). GSM8K is too ceiling-limited for the medium-bin axis (only 7 and 4 medium questions), so it is reported off-axis: pooled within-question AUC ( † \dagger ) and hard-bin gain over n = 15 n=15 and 18 18 . n.s. = = not significant. 
+ Model 
+ Benchmark 
+ within-Q AUC 
+ medium CASE − - vote ( p p ) 
+ hard CASE − - vote ( p p ) 
+ Qwen2.5-Math-7B 
+ MATH-500 
+ 0.789 
+ + 8.1 +8.1 (.043) 
+ + 2.5 +2.5 ( < < .001) 
+ Qwen2.5-7B 
+ MATH-500 
+ 0.763 
+ + 6.6 +6.6 (n.s.) 
+ + 2.6 +2.6 ( < < .001) 
+ Qwen2.5-Math-7B 
+ GSM8K 
+ 0.820 † 0.820^{\dagger} 
+ — 
+ + 11.9 +11.9 (.001) 
+ Qwen2.5-7B 
+ GSM8K 
+ 0.595 † 0.595^{\dagger} 
+ — 
+ + 0.3 +0.3 (n.s.) 
+ Finally, we test the law outside both medicine and mathematics on graduate-level science (GPQA), a hard, knowledge-intensive benchmark on which our general models answer only ∼ \sim 21–23% of questions correctly, so the candidate pool is dominated by the Byzantine hard regime. Here a general model is the natural probe: Qwen2.5-7B and -14B carry substantial latent physics and chemistry knowledge but no domain fine-tuning, letting us ask whether decodable correctness—rather than a specialist label—is what the law requires. Across the four model × \times subfield settings the within-question decodability spans the threshold (medium-bin AUC 0.55–0.68, highest on physics), and hidden-state selection significantly beats voting on the well-powered hard ( Byzantine ) subset in every case ( + 6.2 +6.2 to + 7.9 +7.9 pp, all p < 0.001 p<0.001 ; Table  7 , Supplementary Table S12). The medium-difficulty gains track the law out of sample: the two physics settings, whose decodability is clearly above threshold, fall within 0.7 and 3.8 pp of the gain predicted by the medical regression (the small medium bins, n = 19 n=19 –23, preclude significance there), while the two chemistry settings sit just below the threshold with medium-difficulty gains not significantly different from zero ( − 0.3 -0.3 and − 7.6 -7.6 pp, n = 28 n=28 and 30). A general model can thus possess decodable, fusion-actionable correctness on graduate physics while lacking it on clinical medicine, supporting that the operative variable is decodability itself, not domain, specialization, or scale. Taken together with the mathematics settings, the law transfers across domains in two senses worth distinguishing. Its threshold is domain-general: all six non-medical settings (four GPQA, two MATH-500) are classified correctly by the AUC ≈ 0.60 \mathrm{AUC}\approx 0.60 boundary—above it they gain, below it they do not—and the GPQA gains match the medical point forecast to within RMSE ≈ 3 \approx 3 pp. Its slope is not: the mathematics settings sit well above threshold and do gain, but by less than the medical regression predicts (the two MATH points fall ∼ \sim 12 pp below the medical line), so the gain per unit decodability is calibrated per domain. The deployable question the diagnostic answers—will internal fusion help at all?—therefore generalizes out of sample, while the exact magnitude does not, and should be recalibrated on a small labeled set in each new domain. 
+ Table 7: A non-medical knowledge domain (GPQA, graduate science; general models, late-layer operating point). Decodability spans the threshold (physics above, chemistry just below), and hidden-state selection beats voting on the hard ( Byzantine ) subset in every setting. The hard subset is well-powered (hard-bin n = 133 n=133 – 136 136 ; Qwen-14B physics on its complete 187-question set), whereas the medium bins are small ( n = 19 n=19 – 30 30 ), so the medium gains are mostly not significant (n.s. = = not significant). 
+ medium 
+ hard 
+ Model 
+ Subfield 
+ AUC 
+ vote% 
+ CASE% 
+ Δ \Delta vote 
+ vote% 
+ CASE% 
+ Δ \Delta vote ( p p ) 
+ Qwen2.5-14B 
+ Phys 
+ 0.681 
+ 50.3 
+ 61.1 
+ + 10.8 +10.8 (n.s.) 
+ 3.8 
+ 11.6 
+ + 7.9 +7.9 ( < < .001) 
+ Qwen2.5-7B 
+ Phys 
+ 0.661 
+ 54.0 
+ 58.2 
+ + 4.3 +4.3 (n.s.) 
+ 4.6 
+ 12.0 
+ + 7.4 +7.4 ( < < .001) 
+ Qwen2.5-14B 
+ Chem 
+ 0.576 
+ 49.9 
+ 49.6 
+ − 0.3 -0.3 (n.s.) 
+ 6.3 
+ 12.6 
+ + 6.2 +6.2 ( < < .001) 
+ Qwen2.5-7B 
+ Chem 
+ 0.550 
+ 54.9 
+ 47.4 
+ − 7.6 -7.6 (n.s.) 
+ 6.5 
+ 14.2 
+ + 7.7 +7.7 ( < < .001) 
+ We probe what the gate encodes on GPQA, where the models sit near chance, to confirm it is the same correctness readout as in the medical case rather than a format or self-consistency artifact. Using a single general model (Qwen2.5-7B) across physics, chemistry and medicine, three properties align it with the aligned-knowledge account. First, near-chance accuracy does not preclude decodable knowledge: within-question AUC is evaluated only where correct and incorrect candidates coexist, so low accuracy merely places the correct answer in the minority; consistently, at a single common late layer used for this matched cross-domain probe, the same model is decodable where it holds knowledge (physics, within-question AUC 0.63) but not where it lacks it (clinical medicine, 0.49 ≈ \approx chance); these probe-layer values differ from the operating-point AUCs in Table  7 . Second, the correctness direction is largely domain-general: the mass-mean correct-minus-incorrect directions across the three domains have pairwise cosine 0.52–0.83, and a gate trained on one domain ranks another’s candidates above chance (cross-domain AUC 0.55–0.69; Supplementary Table S15), so it reads a shared correct/incorrect axis rather than a subject-specific format cue. Third, the signal is not self-consistency: the gate score is slightly negatively correlated with a candidate’s agreement with the model’s other samples (within-question correlation − 0.07 -0.07 to − 0.10 -0.10 ), matching its ability to beat majority voting in the Byzantine regime. GPQA is therefore the same phenomenon as the medical case—decodable correctness wherever the model has aligned knowledge to recall—rather than a separate mechanism. 
+ 6.8 CASE outperforms near-free output-space selectors 
+ The appeal of internal selection is that it is almost free, which invites comparison against the equally cheap selectors that read the output distribution, rather than against an expensive verifier: self-certainty [ 36 ] , sequence log-probability (equivalently perplexity), and predictive entropy. We evaluate all of them on the same candidate pools and the same draws as CASE, computing each score from the same forward pass (Section  3 ). Two of the classical output-space signals collapse into baselines we already report: on multiple-choice, semantic-entropy selection groups candidates by answer option, so choosing the largest cluster is exactly majority voting; and P(True) is the generative verifier of Section  6.7 . Table  8 therefore compares CASE against the three genuinely distinct near-free selectors across five settings that span the decodability threshold. 
+ Table 8: CASE vs. near-free output-space selectors at medium difficulty, on a shared candidate pool. The self-cert / seq-logp / pred-ent columns give each selector’s gain over majority voting (pp); CASE advantage is CASE minus the best of the three—a paired comparison, positive whenever CASE beats every near-free selector. within-Q AUC is the pooled within-question ROC-AUC of the CASE gate (over all difficulties on this single seed-7 pool, so it differs slightly from the operating-layer AUC in Tables  1 and 3 ). n.s. = = not significant at α = 0.05 \alpha=0.05 . Selector gains are over majority voting on a shared seed-7 candidate pool (operating layers L22–L27). 
+ Model / benchmark 
+ within-Q AUC 
+ self-cert 
+ seq-logp 
+ pred-ent 
+ CASE 
+ advantage 
+ OpenBioLLM-8B MedMCQA 
+ 0.770 
+ + 4.9 +4.9 n.s. 
+ + 13.3 +13.3 
+ + 13.3 +13.3 
+ + 3.7 +3.7 
+ OpenBioLLM-8B MedQA 
+ 0.759 
+ + 0.9 +0.9 n.s. 
+ + 14.6 +14.6 
+ + 13.4 +13.4 
+ + 9.7 +9.7 
+ OpenBioLLM-8B PubMedQA-cb 
+ 0.707 
+ − 22.1 -22.1 
+ − 4.8 -4.8 n.s. 
+ − 0.1 -0.1 n.s. 
+ + 23.2 +23.2 
+ Qwen2.5-7B MedQA 
+ 0.574 
+ − 3.3 -3.3 n.s. 
+ − 3.8 -3.8 n.s. 
+ − 3.2 -3.2 n.s. 
+ + 4.6 +4.6 
+ meditron-7B MedQA 
+ 0.531 
+ − 14.9 -14.9 
+ − 14.3 -14.3 
+ − 14.4 -14.4 
+ + 7.3 +7.3 
+ Two findings stand out. First, CASE beats every near-free output-space selector in all five settings: against self-certainty the margin is 5 to 45 points at medium difficulty, and CASE leads even the strongest of the three cheap selectors in every case (Table  8 ; the full medium-and-hard breakdown is Supplementary Table S13). The gap is largest exactly where our account predicts the output distribution to be least trustworthy. On closed-book PubMedQA—the pure parametric-recall setting—self-certainty is actively misleading, not just uninformative: its within-question AUC is 0.36 and it selects 22.1 points below voting, because a model that sounds most confident is often the one that has confabulated, whereas the internal readout still separates right from wrong. Second, below the threshold no selector helps at medium difficulty: on Qwen-7B and meditron every method, CASE included, is non-significant or negative against voting there, and every within-question AUC sits near 0.5 (the hard-bin gains in Table  1 reflect the Byzantine -failure floor of Section  6.2 , not medium-difficulty decodability). The decodability diagnostic thus predicts a selector-independent property—whether correctness is recoverable at all—rather than merely CASE’s own success, which is why the same threshold that governs CASE also governs the cheap selectors. A within-question length control confirms the advantage is not a response-length artifact: the CASE score is only weakly correlated with answer length ( ≈ 0.1 \approx 0.1 –0.3, against 1.0 for a pick-the-longest rule), and its hard-bin gain survives residualizing out the length-predictable component in all four settings with response-length variation (Supplementary Table S14; meditron-7B generates to the token limit, leaving no length to control for). Its margin over the cheap selectors is nonetheless largest at medium difficulty, where the length confound is weakest. Among hidden-state selector designs on the shared pool, a LiLaVe-style shallow-tree latent verifier [ 43 ] and CASE’s linear gate perform comparably ( + 10.0 +10.0 vs. + 9.0 +9.0 pp), while a SWIFT-style token-pooled readout [ 44 ] is weaker ( + 4.3 +4.3 pp); within this latent-verifier family the operative choice is the answer-token position rather than the classifier class (Supplementary Section S14). 
+ A final control isolates where the signal lives: whether it is genuinely in the internal representation, or merely in the availability of a few hundred correctness labels. We trained a text classifier (TF-IDF with logistic regression) on the same question-grouped labels using the candidates’ generated text rather than their hidden states, on a freshly generated OpenBioLLM/MedQA pool (150 questions, 2,400 candidates). With identical supervision it ranks correct from incorrect candidates within a question at chance—within-question AUC 0.44 0.44 overall and 0.52 0.52 at medium difficulty—against 0.70 0.70 for the hidden-state gate on the same setting. The within-question correctness signal is therefore carried by the internal representation and is not recoverable from the answer text under the same labels: it is the states, not the labels, that do the work. 
+ 7 A deployment recipe from the decodability law 
+ Figure 9: Deployment nomogram. A practitioner measures the within-question decodability on a small calibration set, locates the AUC on the horizontal axis, and reads the expected CASE − - vote gain and its ± 6 \pm 6 pp band off the law line. The vertical bands are the decision zones: below AUC ​  0.55 \mathrm{AUC}\,0.55 retain voting; in the indeterminate band ( 0.55 0.55 – 0.65 0.65 ) the measurement cannot decide; above 0.65 0.65 deploy CASE. Open circles are the medium-difficulty gains the law is fit on (the mechanistic quantity); filled points are the difficulty-unconditional gains a deployer actually experiences (smaller, but positive exactly in the deploy zone). 
+ The law converts a previously unpredictable heuristic into a procedure a practitioner can follow before committing to internal fusion (Fig.  9 ). Given a target (model, domain) pair, the deployment rule is 
+ use CASE \displaystyle\text{use CASE} 
+ ⇔ AUC wq ≥ a ∗ , a ∗ ≈ 0.60 , \displaystyle\iff\mathrm{AUC}_{\mathrm{wq}}\geq a^{\ast},\qquad a^{\ast}\approx 0.60, 
+ (12) 
+ expected gain: Δ ^ \displaystyle\text{expected gain:}\qquad\widehat{\Delta} 
+ = 100.8 ​ AUC wq − 58.5 . \displaystyle=100.8\,\mathrm{AUC}_{\mathrm{wq}}-58.5. 
+ implemented by the following recipe: 
+ •   Calibrate. On a small labeled set (a few hundred questions suffices, and a learning curve shows the estimate is already stable at ∼ \sim 50: held-out within-question AUC 0.72 ± 0.03 0.72\pm 0.03 at N cal = 50 N_{\text{cal}}=50 vs. 0.70 ± 0.03 0.70\pm 0.03 at 400 400 on OpenBioLLM/MedQA), sample a candidate pool per question, extract answer-token activations across late layers, and fit the leakage-free question-grouped gate (Section  3 ). 
+ •   Measure decodability. Compute the within-question ranking AUC (Section  3.4 ) at the best late layer. This single number is the diagnostic. 
+ •   Decide. The AUC threshold governs medium difficulty (the rule of Eq.  12 ). Clearly above it, deploy hidden-state selection with the expected gain from the law (Eq.  11 , prediction interval ± 6 \pm 6 pp; Fig.  5 ); clearly below it, retain majority voting or fall back to a trained/generative verifier. Because the threshold’s own confidence interval ( [ 0.562 , 0.596 ] [0.562,0.596] ) is wider than the empirical success/failure gap, treat a band around the boundary (roughly AUC ​  0.55 \mathrm{AUC}\,0.55 – 0.65 0.65 ) as indeterminate and report the interval forecast in place of a binary call. Two limits keep this a guide, not a switch. First, hard, Byzantine inputs are exempt from the threshold: where the correct answer is a minority and voting collapses, CASE beats voting even for sub-threshold models (as on graduate chemistry and meditron), exactly as Proposition 2 predicts ( a ∗ < 1 2 a^{\ast}<\tfrac{1}{2} when V < A V<A ), so the operator should be used on the hard regime regardless of the medium-bin AUC—though there the gain comes from avoiding the collapsed vote (any single candidate would), not from the internal signal, which improves on a single candidate only once decodability clears 1 2 \tfrac{1}{2} . Second, because difficulty is defined by the (unknown) correct-fraction, a deployer who cannot bin questions applies CASE to the whole pool and should expect the smaller unconditional gain, which is clearly positive well above the threshold and scatters within ± 0.4 \pm 0.4 pp of zero near it. Fit directly on the same decodability axis, this whole-pool gain follows Δ ^ uncond = 27.6 ​ AUC wq − 15.6 \widehat{\Delta}_{\text{uncond}}=27.6\,\mathrm{AUC}_{\mathrm{wq}}-15.6 ( r = 0.873 r=0.873 ), crossing zero at AUC = 0.565 \mathrm{AUC}=0.565 and giving, for example, + 3.7 +3.7 pp at AUC = 0.70 \mathrm{AUC}=0.70 , so a deployer who cannot bin questions reads the expected gain off this line rather than off Eq. ( 12 ) (the filled points in Fig.  9 ). 
+ •   Operate. At inference, reuse the activations already produced during generation and apply the gate with one matrix–vector product per candidate; switch the operator on only in the difficulty regime where it pays (medium/hard), where the candidate pool is most likely to be Byzantine . 
+ The diagnostic is cheap (it reuses the calibration pool and a linear fit), model-agnostic, and leakage-free. Its classification is robust: a leave-one-out cross-validated threshold correctly classifies 14 of 15 settings (the one error is a boundary setting near zero gain), and a single combined sign test—above/below AUC = 0.60 \mathrm{AUC}=0.60 predicting the sign of the gain—is correct on all 15 (one-sided p = 3 × 10 − 5 p=3\times 10^{-5} , treating settings as independent; the model-cluster block bootstrap of Section  6.4 accounts for the non-independence), so the separation does not rest on any one setting or on a table of individually underpowered comparisons (Table  3 ); under the stricter held-out calibration-to-deployment test it separates eleven of thirteen settings, the two exceptions lying at the threshold with near-zero gains (Section  6.4 ). It also explains failures prospectively—a general model, an open-book task, or a floor-competence specialist will measure below threshold—so a practitioner can avoid deploying internal fusion where it would silently degrade accuracy. 
+ 8 Discussion 
+ Our findings reconcile optimistic claims that LLMs ‘know when they are right’ with the practical fragility of hidden-state selection. Both hold, in different regimes: internal correctness is decodable and can drive a fusion rule robust to voting’s Byzantine failure—but only when the model has aligned latent domain knowledge it must recall. The within-question decodability AUC turns this condition into a single predictive number ( r = 0.96 r=0.96 in-sample, 0.75 0.75 held-out) with a falsifiable threshold, replacing a heuristic with a pre-deployment test. Because CASE selects the argmax of the same gate score whose AUC is the predictor, the in-sample correlation is partly structural, and we do not rest the contribution on its magnitude. The contribution is empirical: which (model, domain) pairs are decodable, why, and that decodability measured on one set of questions predicts the fusion gain on disjoint ones. That is an empirical map from a model’s knowledge state to a deployable property, not a definitional identity—and it is the part that transfers out of sample. 
+ Viewed through classical fusion theory, our result is a statement about where a learned combiner overcomes the accuracy–diversity limits of plain voting. Majority voting is near-optimal only when base errors are weakly correlated [ 33 ] ; LLM candidates violate this because they share one model and one knowledge state, so on hard inputs their errors concentrate on the same wrong answer and voting degrades with the candidate count. A combiner that weights candidates by an internal correctness estimate can escape this regime—but only if the estimate is informative, which is exactly what the within-question decodability AUC measures. The decodability law can thus be read as a quantitative, per-(model, domain) condition for when a trainable combiner is worth using over consensus fusion, connecting a contemporary LLM phenomenon to a long-standing question in information fusion. 
+ Decodability, not scale or specialization, is the operative variable. The controls make this concrete: a general model is decodable on graduate physics yet at chance on clinical medicine, while a medical specialist shows the reverse, and closed-book recall is decodable where open-book extraction from a supplied passage is not. Parameter count and a ‘medical’ label are only proxies—meditron is a medical model that still fails, and a general model succeeds where its latent knowledge runs deep. The practical consequence is that one should not pick a model for fusion by size or domain badge but by measuring, directly, whether it holds the target knowledge decodably. Decodability is a property of the alignment between what the model knows and what the question asks, surfaced at the answer token late in the network, where the model has committed to an answer and the correctness of that commitment is most legible. 
+ Internal decodability is not repackaged output confidence. The two come apart exactly in the recall regime: on closed-book PubMedQA the near-free self-certainty selector points the wrong way (Section  6.8 ), because the most fluent candidate is often the confabulated one, while the internal readout does not. Output-space selectors—self-consistency, predictive entropy, verbalized confidence—inherit the generator’s miscalibration; an internal correctness readout can be a strictly better fusion weight precisely where parametric recall, rather than surface fluency, determines correctness. This marks the regime where cheap output-distribution signals suffice from the one where reading the residual stream is warranted. 
+ A readable direction is not a control lever. Decodability does not imply steerability: across four intervention variants, adding the correctness direction to the residual stream during generation does not raise accuracy and can lower it. A direction can linearly separate correct from incorrect states—a correlate of correctness—without being a causal mediator of the answer the model emits. This cautions the representation-engineering and inference-time-intervention literature against treating any probeable direction as an actuator, and suggests the late-layer correctness signal is a downstream trace of a decision already made rather than an upstream cause of it; whether an earlier, causal correlate exists is open. 
+ What does this say about a model’s self-knowledge? The two dissociations, taken together, sharpen what it can mean for a language model to “know” whether it is right. The correctness signal is one the model can read but not act on (it is decodable, yet adding it back does not steer generation), and one that lives internally even where the model’s own output points the other way (on closed-book recall, fluency and correctness anti-correlate, so the most confident-sounding answer is often the confabulated one). A model can therefore represent that an answer is likely wrong without saying so and without being able to fix it. Self-knowledge here is thus not a monolithic faculty a model possesses or lacks, but a specific, locatable property of its representations: it appears exactly where the model must recall knowledge it genuinely holds, is absent where the knowledge is shallow or supplied externally, and is legible to a simple external read-out even when it is invisible in the model’s words. That gap—between what a model’s states encode and what its outputs reveal—is the opening this paper exploits, and measuring it is what turns an intuition about machine self-awareness into an engineering quantity. 
+ Limitations. The strongest closed-book effects are in the medical domain, where instruction-aligned models are abundant—though our GPQA results (Section  6.7 ) show that the phenomenon and the law extend to a non-medical knowledge domain (graduate science) and to general models. Because the medical benchmarks are public, decodable correctness on them cannot be fully separated from memorized retrieval; the GPQA (deliberately search-resistant) and mathematics results, on newer or less contaminable data, are the cleaner evidence that the signal reflects usable latent knowledge rather than memorized answer keys, and the closed-book PubMedQA construction should be read with this caveat. Some settings have modest medium-difficulty sample sizes, which widen individual confidence intervals, even though the across-model law is tight (15 points, r = 0.96 r=0.96 ; still r = 0.90 r=0.90 with the entire OpenBioLLM family removed, Section  6.4 ) and predicts the out-of-sample GPQA physics gains within 3.8 pp. Our strong baseline is a generative rather than a trained process-reward verifier. The headline gains are nevertheless robust to sampling randomness: re-generating the two strongest settings with three independent seeds replicates them (medium-difficulty CASE − - vote = + 18.1 ± 1.0 =+18.1\pm 1.0 pp on MedMCQA and + 16.2 ± 5.3 +16.2\pm 5.3 pp on MedQA, significant in all six runs; Supplementary Table S4). Given the law’s tightness and its successful out-of-sample test on GPQA, we expect the AUC diagnostic to remain predictive. 
+ 9 Conclusion 
+ We asked when hidden-state selection should replace majority voting, and whether the answer can be known before deployment. We introduced decodability: the leakage-free within-question AUC of a linear gate that ranks a question’s correct candidates above its incorrect ones. On held-out questions it predicts the gain of selection over voting at r = 0.75 r=0.75 , with a decision boundary near AUC = 0.60 \mathrm{AUC}=0.60 . Above that boundary CASE beats voting, and its margin grows with the number of samples on hard questions where voting collapses. Below it, voting is the better rule. Decodability tracks the aligned knowledge a model must recall, not its parameter count, and the same threshold correctly classifies mathematics and graduate-science settings that the fit never saw. 
+ Future directions. Several directions follow. First, our baseline verifier is generative rather than a trained process-reward model; whether a learned verifier widens or closes the cost–accuracy gap, and whether decodability predicts its gain too, is untested. Second, we read correctness at the final answer token on multiple-choice tasks; extending the readout to intermediate reasoning steps and to free-form generation, where ‘the answer token’ is not sharply defined, is the main step toward general test-time fusion. Third, the stylized model predicts the threshold is not universal but set by the difficulty distribution (the sign of V − A V-A ), which invites testing across option counts, answer formats, and task families to map how the operating point moves. Fourth, our evidence that aligned latent knowledge causes decodability is observational (the closed/open-book control, the physics-versus-medicine dissociation, and the necessity of the correctness direction under projection); a direct causal test, injecting domain knowledge into a general model and verifying that decodability emerges with it, is a natural next step, but requires an intervention that demonstrably raises the model’s competence rather than merely shifting its output format. Finally, if correctness is a legible property of a model’s states, it may be one a model can be trained to make more legible, turning decodability from a fixed diagnostic into an optimization target and making fusion-friendliness an explicit design goal. 
+ CRediT authorship contribution statement 
+ Zhixiang Wang: Conceptualization, Methodology, Software,
+Investigation, Formal analysis, Writing – original draft. 
+ Ziliang Hong: Investigation, Data curation, Validation,
+Visualization, Writing – review & editing. 
+ Ulas Bagci: Conceptualization, Supervision, Funding acquisition,
+Writing – review & editing. 
+ Declaration of competing interest 
+ The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper. 
+ Data availability 
+ All benchmarks used (LogiQA, MedQA, MedMCQA, PubMedQA, MATH-500, GSM8K, GPQA) are publicly available, and all models are open-weight and obtained from their public releases. The extracted hidden-state features, per-run logs, and derived result tables will be deposited in a public repository upon acceptance; a link is provided in the code release below. 
+ Code availability 
+ An anonymized repository containing the code to generate candidates, extract answer-token activations, fit the leakage-free gate, compute the within-question decodability diagnostic, and reproduce every figure and table is available for peer review at https://anonymous.4open.science/r/case-decodability-28D1/ ; it will be de-anonymized and released publicly under an open-source license upon acceptance. 
+ Acknowledgments 
+ This study is partially supported by NIH grants R01-HL171376 and U01-CA268808. 
+ References 
+ [1] 
+ X. Wang, et al. Self-Consistency Improves Chain-of-Thought Reasoning in Language Models. ICLR (2023).
+ [2] 
+ L. Lamport, R. Shostak, M. Pease. The Byzantine Generals Problem. ACM TOPLAS 4(3) 382–401 (1982).
+ [3] 
+ A. Azaria, T. Mitchell. The Internal State of an LLM Knows When It’s Lying. Findings of EMNLP (2023).
+ [4] 
+ C. Burns, H. Ye, D. Klein, J. Steinhardt. Discovering Latent Knowledge in Language Models Without Supervision. ICLR (2023).
+ [5] 
+ S. Marks, M. Tegmark. The Geometry of Truth: Emergent Linear Structure in Large Language Model Representations of True/False Datasets. COLM (2024).
+ [6] 
+ H. Orgad, et al. LLMs Know More Than They Show: On the Intrinsic Representation of LLM Hallucinations. ICLR (2025).
+ [7] 
+ K. Li, et al. Inference-Time Intervention: Eliciting Truthful Answers from a Language Model. NeurIPS (2023).
+ [8] 
+ B. Brown, et al. Large Language Monkeys: Scaling Inference Compute with Repeated Sampling. arXiv:2407.21787 (2024).
+ [9] 
+ C. Snell, et al. Scaling LLM Test-Time Compute Optimally can be More Effective than Scaling Model Parameters. arXiv:2408.03314 (2024).
+ [10] 
+ K. Cobbe, et al. Training Verifiers to Solve Math Word Problems. arXiv:2110.14168 (2021).
+ [11] 
+ J. Uesato, et al. Solving Math Word Problems with Process- and Outcome-Based Feedback. arXiv:2211.14275 (2022).
+ [12] 
+ L. Zhang, et al. Generative Verifiers: Reward Modeling as Next-Token Prediction. arXiv:2408.15240 (2024).
+ [13] 
+ S. Kadavath, et al. Language Models (Mostly) Know What They Know. arXiv:2207.05221 (2022).
+ [14] 
+ C. Guo, et al. On Calibration of Modern Neural Networks. ICML (2017).
+ [15] 
+ K. Tian, et al. Just Ask for Calibration: Strong Zero-Shot Confidence Estimates from Language Models. EMNLP (2023).
+ [16] 
+ S. Lin, J. Hilton, O. Evans. Teaching Models to Express Their Uncertainty in Words. TMLR (2022).
+ [17] 
+ L. Kuhn, Y. Gal, S. Farquhar. Semantic Uncertainty: Linguistic Invariances for Uncertainty Estimation in Natural Language Generation. ICLR (2023).
+ [18] 
+ S. Farquhar, et al. Detecting Hallucinations in Large Language Models Using Semantic Entropy. Nature 630 625–630 (2024).
+ [19] 
+ G. Alain, Y. Bengio. Understanding Intermediate Layers Using Linear Classifier Probes. ICLR Workshop (2017).
+ [20] 
+ K. Park, Y. J. Choe, V. Veitch. The Linear Representation Hypothesis and the Geometry of Large Language Models. ICML (2024).
+ [21] 
+ J. Liu, et al. LogiQA: A Challenge Dataset for Machine Reading Comprehension with Logical Reasoning. IJCAI (2020).
+ [22] 
+ D. Jin, et al. What Disease Does This Patient Have? A Large-Scale Open Domain Question Answering Dataset from Medical Exams. Applied Sciences 11(14) 6421 (2021).
+ [23] 
+ A. Pal, L. K. Umapathi, M. Sankarasubbu. MedMCQA: A Large-scale Multi-Subject Multi-Choice Dataset for Medical Domain Question Answering. CHIL (2022).
+ [24] 
+ Q. Jin, et al. PubMedQA: A Dataset for Biomedical Research Question Answering. EMNLP-IJCNLP (2019).
+ [25] 
+ D. Hendrycks, et al. Measuring Mathematical Problem Solving with the MATH Dataset. NeurIPS Datasets and Benchmarks (2021).
+ [26] 
+ Qwen Team. Qwen2.5 Technical Report. arXiv:2412.15115 (2024).
+ [27] 
+ A. Grattafiori, A. Dubey, et al. The Llama 3 Herd of Models. arXiv:2407.21783 (2024).
+ [28] 
+ A. Pal, M. Sankarasubbu. OpenBioLLM: Advancing Open-Source Large Language Models for Healthcare and Life Sciences. Hugging Face (2024).
+ [29] 
+ Y. Labrak, et al. BioMistral: A Collection of Open-Source Pretrained Large Language Models for Medical Domains. Findings of ACL (2024).
+ [30] 
+ C. Christophe, et al. Med42 – Evaluating Fine-Tuning Strategies for Medical LLMs: Full-Parameter vs. Parameter-Efficient Approaches. arXiv:2404.14779 (2024).
+ [31] 
+ Z. Chen, et al. MEDITRON-70B: Scaling Medical Pretraining for Large Language Models. arXiv:2311.16079 (2023).
+ [32] 
+ P. Qiu, et al. Towards Building Multilingual Language Model for Medicine. Nature Communications 15 8384 (2024).
+ [33] 
+ T. G. Dietterich. Ensemble Methods in Machine Learning. Multiple Classifier Systems (MCS), LNCS 1857, 1–15 (2000).
+ [34] 
+ D. H. Wolpert. Stacked Generalization. Neural Networks 5(2) 241–259 (1992).
+ [35] 
+ R. A. Jacobs, M. I. Jordan, S. J. Nowlan, G. E. Hinton. Adaptive Mixtures of Local Experts. Neural Computation 3(1) 79–87 (1991).
+ [36] 
+ Z. Kang, X. Zhao, D. Song. Scalable Best-of-N Selection for Large Language Models via Self-Certainty. arXiv:2502.18581 (2025).
+ [37] 
+ D. Rein, et al. GPQA: A Graduate-Level Google-Proof Q&A Benchmark. COLM (2024).
+ [38] 
+ Y. Bao, X. Zhang, T. Du, X. Zhao, Z. Feng, H. Peng, J. Yin. Probing the Geometry of Truth: Consistency and Generalization of Truth Directions in LLMs Across Logical Transformations and Question Answering Tasks. Findings of ACL (2025).
+ [39] 
+ A. Zhang, Y. Chen, J. Pan, C. Zhao, A. Panda, J. Li, H. He. Reasoning Models Know When They’re Right: Probing Hidden States for Self-Verification. arXiv:2504.05419 (2025).
+ [40] 
+ L. Chen, J. Davis, B. Hanin, P. Bailis, I. Stoica, M. Zaharia, J. Zou. Are More LLM Calls All You Need? Towards the Scaling Properties of Compound AI Systems. NeurIPS (2024).
+ [41] 
+ Y. Seo, D. Lee, J. Yeo. Quantifying Genuine Awareness in Hallucination Prediction Beyond Question-Side Shortcuts. arXiv:2509.15339 (2025).
+ [42] 
+ S. Cho, Z. Wu, K. Da Costa, A. Koshiyama. The Confidence Manifold: Geometric Structure of Correctness Representations in Language Models. arXiv:2602.08159 (2026).
+ [43] 
+ B. Piotrowski, W. Drzewakowski, K. Staniszewski, P. Miłoś. Lightweight Latent Verifiers for Efficient Meta-Generation Strategies. arXiv:2504.16760 (2025).
+ [44] 
+ J. Guo, Z. Wu, H. Yang, P. S. Yu. Mining Intrinsic Rewards from LLM Hidden States for Efficient Best-of- N N Sampling. arXiv:2505.12225 (2025).
+ [45] 
+ B. Yu, X. Wang, S. Lian, H. Li, C. Wu, R. Hu, B. Wang, Y. Wei, K. Chen. TrajSelector: Harnessing Latent Representations for Efficient and Effective Best-of- N N in Large Reasoning Model. arXiv:2510.16449 (2025).
+ [46] 
+ J. Kossen, J. Han, M. Razzak, L. Schut, S. Malik, Y. Gal. Semantic Entropy Probes: Robust and Cheap Hallucination Detection in LLMs. arXiv:2406.15927 (2024).
+ [47] 
+ R. M. O. Cruz, R. Sabourin, G. D. C. Cavalcanti. Dynamic Classifier Selection: Recent Advances and Perspectives. Information Fusion 41 195–216 (2018).
+ [48] 
+ K. Woods, W. P. Kegelmeyer, K. Bowyer. Combination of Multiple Classifiers Using Local Accuracy Estimates. IEEE Transactions on Pattern Analysis and Machine Intelligence 19(4) 405–410 (1997).
+ [49] 
+ M. Damani, I. Shenfeld, A. Peng, A. Bobu, J. Andreas. Learning How Hard to Think: Input-Adaptive Allocation of LM Computation. International Conference on Learning Representations (ICLR) (2025). arXiv:2410.04707.
+ [50] 
+ M. G. Vilas, S. Yousefi, B. Nushi, E. Horvitz, V. Balachandran. Tracing the Traces: Latent Temporal Signals for Efficient and Accurate Reasoning. arXiv:2510.10494 (2025).
+ Experimental support, please
+ view the build logs 
+ for errors. Generated by
+ L
+ A 
+ T
+ E 
+ xml 
+ .
+ Instructions for reporting errors 
+ We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+ support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+ methods listed below: 
+ Click the "Report Issue" ( 
+ ) button, located in the page header. 
+ Tip: You can select the relevant text first, to include it in your report. 
+ Our team has already identified the following issues . We appreciate your time reviewing and reporting rendering errors we
+ may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+ should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+ all. 
+ Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a list of packages that need conversion , and welcome developer contributions . 
+ We gratefully acknowledge support from
+ our major funders ,
+ member institutions , ,
+ and all contributors.
+ About 
+ · 
+ Help 
+ · 
+ Contact 
+ · 
+ Subscribe 
+ · 
+ Copyright 
+ · 
+ Privacy 
+ · 
+ Accessibility 
+ · 
+ Operational Status (opens in new tab) 
+ Major funding support from 

@@ -1,0 +1,860 @@
+ 
+ 1 Introduction 
+ Skip to main content 
+ Report GitHub Issue 
+ × 
+ Title: 
+ Content selection saved. Describe the issue below: 
+ Description: 
+ Submit without GitHub 
+ Submit in GitHub 
+ Why HTML? 
+ Report Issue 
+ Back to Abstract 
+ Download PDF 
+ Contents 
+ Reading mode 
+ Colour theme 
+ Abstract 
+ 1 Introduction 
+ 2 Background and Related Work 
+ What is new here. 
+ 3 Experimental Setup 
+ Model and data. 
+ Prompting and retries. 
+ Measurement. 
+ Evaluation. 
+ 4 Internal Consistency Cannot Detect Most Failures 
+ 4.1 The static detector 
+ 4.2 Results 
+ 4.3 Why does detection stall? 
+ Empirical analysis. 
+ An illustrative example. 
+ Intuitive explanation. 
+ 5 Traces Can Be Tested as Program Hypotheses 
+ 5.1 From trace to program 
+ 5.2 The metamorphic probe 
+ Guards. 
+ 5.3 Results 
+ Does a faithful trace predict its own perturbation? 
+ Support and refutation. 
+ Where the two verifiers differ. 
+ 5.4 Why is refutation weak evidence? 
+ 5.5 What can the probe not detect? 
+ 6 Better Detection Does Not Necessarily Improve Accuracy 
+ 6.1 Results 
+ 6.2 When is a flag worth a retry? 
+ 6.3 Why is the repair rate so low? 
+ Empirical analysis. 
+ Intuitive explanation. 
+ 7 Conclusion and Discussion 
+ Reporting repair and damage rates alongside detectors. 
+ Testing a trace against the model, not only against itself. 
+ Measuring failure composition before building repair. 
+ 8 Limitations 
+ Code availability. 
+ References 
+ A Trace Signals 
+ B Failure Taxonomy 
+ C Probe Guards 
+ D Detector Calibration 
+ E All Policies and Per-Class Tests 
+ F Errors Found and Corrected 
+ A reference-derived feature reached the classifier. 
+ Question-level leakage inflated the type head. 
+ Union scoring is not deployable. 
+ The blend weight. 
+ Typed versus untyped repair at test. 
+ Extraction. 
+ License: CC BY 4.0
+arXiv:2610.30200v1 [cs.SE] 21 Oct 2026 
+ Abstract 
+ When a language model is deployed, no reference solution exists, so the reasoning trace it writes is the only evidence for judging its answer.
+The reference-free substitutes each fail differently: self-assessment degrades the answer it was meant to protect, sampling agreement measures stability rather than correctness, and perturbation studies read the expected answer off a human-written template, grading a model rather than a trace.
+We ask how far a single trace can be verified with no reference solution, no judge model and no weight update, and find, for a frozen LLaMA-2-7B-chat on GSM8K, that detection is not what limits such a pipeline.
+Checking a trace against itself reaches an AUROC of 0.741 and stops there for a structural reason: two thirds of wrong traces state no false equation, having executed a mistaken plan correctly, and on wrong-plan failures the detector flags a wrong trace less often than a right one.
+A candidate-derived metamorphic probe exposes many of these failures: we abstract the trace into a program over the question’s quantities, perturb one quantity, execute the program, and ask the model the rewritten question once, so every trace supplies its own test.
+Valid perturbations exist for 937 of 1,319 test questions (71.0%); among the 847 that also have a parseable first trace, supported traces are correct 60.6% of the time against a 31.6% base rate, although the probe also refutes 45.5% of correct traces.
+No tested policy yields a statistically significant improvement in accuracy.
+A flag earns its retry only when detector precision exceeds D / ( R + D ) D/(R+D) , where R R and D D are the rates at which a retry repairs a wrong trace and damages a correct one; our repair rate is so low that, at the same retry budget, even a perfect detector would recover an estimated 66 of 1,319 questions.
+Repair, not detection, is the open problem. 
+ 1  Introduction 
+ Large language models now solve multi-step mathematical problems by writing out their reasoning before they answer [ 22 ] .
+Whether that reasoning can be trusted is usually decided with labelled solutions, used either to train a verifier on final answers [ 5 ] or to supervise individual steps [ 20 , 10 ] .
+At deployment those labels are absent, and the trace is often the only evidence available for judging the answer it accompanies. 
+ Figure 1: Overview of the pipeline. A frozen model answers a question with a trace, which is parsed into a chain of arithmetic claims. The static detector (orange) decides from the trace alone whether to spend a retry. The metamorphic probe (blue) reads the trace as a program, predicts the answer to a perturbed question, and compares that prediction with the model’s own answer. No component uses a reference answer or a judge model. 
+ Label-free substitutes exist, but each has a known weakness.
+Asking a model to critique and revise its own answer without external feedback lowers GSM8K accuracy below the first attempt [ 7 , 8 ] , and small models need a strong external verifier before self-correction helps at all [ 24 ] .
+Agreement across samples [ 21 ] measures the stability of an answer rather than its correctness, and a model that misreads a question tends to misread it the same way every time.
+Internal-consistency verification instead judges a trace by whether its own arithmetic and dependencies hold together [ 25 ] , and rests on the assumption that a wrong trace will, somewhere, look wrong.
+We ask how far a single trace can be verified with no reference solution, no judge model and no weight update, and what the answer implies for a system that uses a verifier to decide when to try again. 
+ We study this question on a frozen LLaMA-2-7B-chat [ 18 ] on GSM8K [ 5 ] , instrumented so that every measurement is made by regular expressions and a computer algebra system ( Fig.   1 ).
+We first check traces against themselves: a static detector built from the equations a trace states reaches an AUROC of 0.741 on test, and its limit lies in the traces, since 67.1% of failures contain no false equation.
+We then check traces against the model: we read the trace as a program over the question’s quantities, change one quantity, execute the program to predict the new answer, and ask the model the changed question once.
+Unlike perturbation benchmarks [ 13 , 26 , 27 ] , which take the expected answer from a hand-written template and grade a model, this probe derives its expected answer from the candidate and grades a single trace. A valid perturbation exists for 71.0% of test questions, and our probe statistics are computed on the 847 of these that also have a parseable first trace.
+Finally, we ask why better detection does not improve accuracy, and show that a flag is worth a retry only when detector precision exceeds D / ( R + D ) D/(R+D) , where R R and D D are the rates at which a retry repairs a wrong answer and damages a correct one. 
+ Table   1 summarises the findings.
+The probe exposes many of the failures that self-checking misses, but for this model the binding constraint is repair: most failures contain no correct prefix to preserve, so a retry is little more than a fresh attempt at a question the model has just failed.
+We therefore argue that reference-free verifiers should be evaluated by the repair and damage rates of the action they trigger, not by detection metrics alone.
+All measurements come from one model, one dataset and one prompting setup, and the model is weak by current standards; Section   8 separates the conclusions we expect to transfer from those we do not. 
+ Table 1: Summary of findings. 
+ question 
+ finding 
+ section 
+ How far does checking a trace against itself go? 
+ It stalls at AUROC 0.741 because 67.1% of failures contain no false equation; on wrong-plan failures the detector fires less often than on correct traces. 
+ § 4 
+ Can the missing evidence be obtained without a judge? 
+ Partly. 937 of 1,319 questions (71.0%) admit a valid probe. On the 847 of these with a parseable first trace, the probe refutes 81.4% of wrong-plan and misread-question failures, and supported traces are correct 60.6% of the time against 31.6% in that subset. 
+ § 5 
+ Does better detection improve accuracy? 
+ Not in our tests: no policy improves accuracy significantly. A flag pays only above precision D / ( R + D ) D/(R+D) , and at the measured repair rate of 12.3% a perfect detector on the same budget would gain an estimated five points. 
+ § 6 
+ 2  Background and Related Work 
+ Verifying a reasoning trace means deciding, from the trace and possibly further computation, whether the answer it reaches is correct.
+The literature uses the term for settings that differ in what the verifier may consult, which makes results difficult to compare.
+We therefore fix the setting first and then place prior work within it. 
+ Definition 1 (Reference-free verifier) . 
+ A reference-free verifier is a function of the question Q Q , a trace τ \tau produced by a frozen model M M , and possibly further calls to the same M M , that uses neither the reference answer, a separately trained judge language model, nor any update to the weights of M M .
+Throughout this paper, reference-free refers to inference-time verification: the deployed procedure does not consult a reference answer for the test question. The static detector is trained using labelled training traces, whereas the metamorphic probe derives its verdict without reference-answer supervision. 
+ Under this definition, a verifier is useful only through what it causes.
+We study the most common use, a detect-then-retry policy, which flags a trace when the verifier’s score passes a threshold, generates a second trace for each flagged question, and either returns the second answer ( replace ) or lets a reference-free selector choose between the two ( select ). 
+ Table   2 collects the notation used in the rest of the paper. 
+ Table 2: Notation. 
+ symbol 
+ meaning 
+ Q Q , 𝒒 = ( q 0 , … , q k ) \bm{q}=(q_{0},\dots,q_{k}) 
+ question and its numeric quantities 
+ M M , τ = M ⁡ ( Q ) \tau=M(Q) , y ^ ​ ( τ ) \hat{y}(\tau) 
+ frozen model, its trace, the trace’s final answer 
+ ℰ ⁡ ( τ ) = ( e 1 , … , e m ) \mathcal{E}(\tau)=(e_{1},\dots,e_{m}) 
+ equation chain; each claim e j e_{j} is ℓ j = c j \ell_{j}=c_{j} 
+ α \alpha , P τ P_{\tau} 
+ abstraction map and the program it extracts ( Definition   2 ) 
+ Q ′ Q^{\prime} , 𝒒 ′ \bm{q}^{\prime} 
+ perturbed question and its quantities 
+ p wrong ​ ( τ ) p_{\mathrm{wrong}}(\tau) 
+ static detector’s estimate that τ \tau is wrong 
+ N flag N_{\mathrm{flag}} , π \pi 
+ number of flagged questions, and the fraction of them that are wrong 
+ R R , D D 
+ repair rate on flagged wrong traces, damage rate on flagged correct traces 
+ π ∗ = D / ( R + D ) \pi^{\ast}=D/(R+D) 
+ break-even precision ( Proposition   1 ) 
+ Learned verifiers rank solutions by a model trained on final-answer labels [ 5 ] or step-level labels [ 20 , 10 ] ; they require annotation and a verifier model, and fall outside our setting.
+Self-correction asks the model to critique and refine its own output [ 12 ] , and has been shown not to improve reasoning when nothing external indicates which answers need revising [ 7 , 8 ] ; the model acts as its own judge.
+Self-consistency [ 21 ] estimates reliability through repeated answers to the same question.
+Other reference-free approaches examine consistency between a model’s direct answer and the answer obtained by composing a stated decomposition [ 1 ] , or combine step validity, support of the answer by the reasoning, and counterfactual sensitivity into a broader diagnostic [ 17 ] .
+These approaches differ in the evidence they use and in the aspects of reasoning they test.
+Internal-consistency verification judges the trace directly; VeryTrace [ 25 ] compiles a trace into a structured formalism, checks its calculations, dependencies and conclusion, and delegates the rest to a second model.
+Our first question is what remains when that second model is removed. 
+ Metamorphic testing validates software without an oracle by checking relations between outputs on related inputs [ 2 , 16 , 3 ] , and behavioural testing brought predefined perturbations to NLP [ 14 ] .
+For mathematical reasoning, GSM-Symbolic [ 13 ] regenerates GSM8K from templates and finds that accuracy drops when values change, MathCheck [ 26 ] and related diagnostics [ 15 ] report similar fragility, and LGMT [ 27 ] counts self-contradictions across semantically equivalent rewrites.
+Each of these characterises a model: the relation is written by a person and the expected answer comes from the template.
+Self-verification [ 23 ] derives its test from the candidate, as we do, but asks a further generation for the verdict.
+Finally, a trace need not describe the computation that produced its answer [ 19 , 9 , 11 ] ; the probe we introduce can be read as a behavioural test of a weak form of this faithfulness.
+ Table   3 places these approaches against our definition. 
+ Table 3: Verification approaches for a single deployed answer. ✓ \checkmark  yes, × \times  no, ∼ \sim  partly. “No reference” means the expected answer comes from neither a label nor a template; “one trace” means the verdict concerns the specific trace rather than the model or an answer distribution. The table compares properties, not performance. 
+ approach 
+ no 
+ reference 
+ no trained 
+ verifier 
+ no judge 
+ LM 
+ one 
+ trace 
+ extra 
+ generations 
+ Outcome / process verifiers [ 5 , 10 ] 
+ ✓ \checkmark 
+ × \times 
+ × \times 
+ ✓ \checkmark 
+ 0 
+ Self-correction [ 7 , 12 ] 
+ ✓ \checkmark 
+ ✓ \checkmark 
+ × \times 
+ ✓ \checkmark 
+ ≥ 1 \geq 1 
+ Self-consistency [ 21 ] 
+ ✓ \checkmark 
+ ✓ \checkmark 
+ ✓ \checkmark 
+ × \times 
+ k k 
+ Template perturbation [ 13 , 27 ] 
+ × \times 
+ ✓ \checkmark 
+ ✓ \checkmark 
+ × \times 
+ many 
+ Self-verification [ 23 ] 
+ ✓ \checkmark 
+ ✓ \checkmark 
+ × \times 
+ ✓ \checkmark 
+ ≥ 1 \geq 1 
+ VeryTrace [ 25 ] 
+ ✓ \checkmark 
+ ✓ \checkmark 
+ ∼ \sim 
+ ✓ \checkmark 
+ ≥ 1 \geq 1 
+ Static detector (§ 4 ) 
+ ✓ \checkmark 
+ ∼ \sim 
+ ✓ \checkmark 
+ ✓ \checkmark 
+ 0 
+ Metamorphic probe (§ 5 ) 
+ ✓ \checkmark 
+ ✓ \checkmark 
+ ✓ \checkmark 
+ ✓ \checkmark 
+ ≈ 1 \approx 1 
+ What is new here. 
+ The closest prior work either verifies a trace from the inside [ 25 ] , derives a check from the candidate but asks another generation for the verdict [ 23 ] , perturbs questions to evaluate a model against a template answer [ 13 , 27 ] , compares a direct answer with a composed one [ 1 ] , or includes counterfactual sensitivity as one component of an aggregate trace score [ 17 ] .
+Our mechanism combines elements of these in a specific way: we extract a program from the trace , execute it on a perturbed version of the question to obtain the answer the trace itself predicts, and test that prediction against the same model’s answer to the perturbed question.
+The expected answer therefore comes neither from a label nor from a template, and the verdict comes neither from a judge nor from agreement among samples.
+Operadic consistency [ 1 ] also uses the model’s own decomposition, but it asks whether two routes to the same question agree; our test changes the question and asks whether the trace’s procedure, executed symbolically, predicts what the model does on the new one.
+RAFS [ 17 ] treats counterfactual sensitivity as one signal among several; in our probe the counterfactual is an executable numerical prediction with a single expected value, obtained by running the program extracted from the candidate, and the probe is studied on its own so that its effect on each failure class can be isolated.
+This also distinguishes the probe from self-consistency: self-consistency compares answers to the same question and rewards an answer that is stable whether or not it is right, whereas the probe compares a prediction about a different question with the model’s behaviour on it, and so tests whether the stated procedure is the one the model follows.
+We do not claim that perturbation testing or program extraction is new in itself.
+Our contribution is this candidate-derived counterfactual test, together with two analyses that go beyond the mechanism: which failure classes it exposes that internal consistency cannot, and why improved detection need not improve final accuracy. 
+ In the following sections we evaluate both kinds of reference-free verification and the pipeline they drive.
+ Section   4 shows that checking a trace against itself cannot detect most failures.
+ Section   5 shows that testing the trace against the model’s behaviour reaches those failures.
+ Section   6 shows that neither yields a significant improvement in accuracy, and explains why. 
+ 3  Experimental Setup 
+ Model and data. 
+ All experiments use a frozen LLaMA-2-7B-chat [ 18 ] on GSM8K [ 5 ] .
+We chose this model because it has open weights, can be run frozen and fully instrumented on a single GPU, and fails often enough (on 72% of test questions at the first attempt) to provide large samples of every failure type; the cost of this choice is representativeness, which we discuss in Section   8 .
+We report all headline numbers on the 1,319 test questions.
+The training split supplies labelled traces for fitting the static detector (2,568 traces, comprising first attempts and retries), the 1,068 first-attempt failures used for the failure taxonomy and for measuring repair rates, and a development set of 400 further questions held out from fitting.
+Reference answers label traces on the training split only and never enter a context the model sees. 
+ Prompting and retries. 
+ Both attempts draw few-shot exemplars from a pool of the model’s own correct traces, which grows during the training run and is frozen before any test question is seen.
+The first attempt, which we call pass-1 , retrieves exemplars by the question alone and solves 27.8% (367 of 1,319) of test questions.
+A retry additionally conditions its retrieval on a symbolic diagnosis of how the first attempt failed ( Appendix   B ), so it is not a plain resample. 
+ Measurement. 
+ We parse each trace into its equation chain ℰ ⁡ ( τ ) = ( e 1 , … , e m ) \mathcal{E}(\tau)=(e_{1},\dots,e_{m}) , the ordered list of arithmetic claims e j : ℓ j = c j e_{j}:\ell_{j}=c_{j} it states, and sympy marks each claim true or false.
+No language model acts as a grader anywhere in scoring, diagnosis or verification. 
+ Evaluation. 
+ Classifiers are evaluated with GroupKFold using the question as the group, so that a question’s first attempt and its retry never fall on opposite sides of a split, and an assertion rejects any feature derived from the reference solution; both safeguards were added after we found the problems they prevent ( Appendix   F ).
+Paired accuracy comparisons use exact McNemar tests on the same 1,319 questions, and contingency comparisons use Fisher’s exact test.
+Every accuracy we report is what a deployed system would return: we never count a question as solved because one of two candidates was right, since choosing between them would require the reference answer.
+ Figure   1 shows the full pipeline. 
+ 4  Internal Consistency Cannot Detect Most Failures 
+ In this section we build a static detector that checks a trace against itself, measure how well it works, and examine why it stops where it does. 
+ 4.1  The static detector 
+ From the equation chain and the question we compute four signals, none of which reads a reference answer ( Appendix   A ).
+ Equation validity is the fraction of stated equations that sympy confirms; value overlap compares the numbers the question gives with those the trace uses; goal engagement records whether the trace ever computes the quantity the question asks for; and coherence checks that every step refers only to values that were given or previously derived.
+We concatenate these signals with TF–IDF features of the trace text and blend a logistic regression on the sparse features with a gradient-boosted model on the dense ones.
+The training target is whether the final answer is wrong, and a second head predicts the type of failure. 
+ 4.2  Results 
+ Table 4: Results of the static detector. Out-of-fold estimates use GroupKFold by question on the training split. 
+ out of fold 
+ development (400) 
+ test (1,319) 
+ detection AUROC 
+ 0.781 
+ 0.770 
+ 0.741 
+ type-head accuracy 
+ 0.598 
+ – 
+ 0.590 
+ Table   4 reports the detector’s performance.
+It reaches an AUROC of 0.781 out of fold, 0.770 on the development set and 0.741 on test, and its type head reaches 0.590 on test against 0.598 estimated.
+At its operating cut of p wrong ≥ 0.683 p_{\mathrm{wrong}}\geq 0.683 it flags 540 test questions (40.9%) with 87.6% precision.
+Detection AUROC is 0.04 lower on test than out of fold, while the type head is within one point of its out-of-fold estimate; Section   4.3 examines why detection stops at this level. 
+ 4.3  Why does detection stall? 
+ Empirical analysis. 
+ Only 32.9% of pass-1 failures contain a locatable false equation; in the remaining 67.1%, every equation the trace states is true.
+ Figure   2 shows where these failures come from.
+The two largest classes, a wrong plan executed correctly ( WP ) and a misread question solved correctly ( SM ), account for 47.5% of training failures, and both have sound arithmetic.
+On test, the detector flags 12% of WP failures, which is below the 18.3% of correct traces it flags ( Fig.   5 ); on this class its signal points in the wrong direction. 
+ Figure 2: Distribution of failure types over the 1,068 training-split pass-1 failures. The two largest classes (red) have sound arithmetic and leave no symbolic sign of the error. Definitions and per-class recall of the type head are in Table   8 . 
+ An illustrative example. 
+ Figure   3 shows a test question the detector cleared.
+The trace multiplies the 16 eggs by the 3 eaten at breakfast, a step the problem never calls for, and then proceeds without error.
+All four equations hold, every quantity in the question is used, each step consumes a value that was given or derived earlier, and the trace ends by computing an amount of money as asked.
+The detector has nothing to object to and scores the trace p wrong = 0.581 p_{\mathrm{wrong}}=0.581 , below its cut, so no retry is spent. 
+ Intuitive explanation. 
+ A check of a trace against itself can detect an error only if the error leaves a mark inside the trace, such as a false equation, an unused quantity or an unexplained number.
+A wrong plan executed correctly leaves no such mark, because its error lies in which arithmetic was chosen rather than in how it was carried out.
+For the structural signals and classifiers we evaluated, a richer model over the same evidence would therefore have little to work with on these failures.
+This is a limitation of the evidence we extract, not an impossibility result for all reference-free verification, but it suggests that the information separating such a trace from a correct one is most readily found outside the trace. 
+ Question. Janet’s ducks lay 16 eggs per day. She eats three for breakfast and bakes muffins with four. She sells the remainder at $2 per egg. How much does she make? (reference: 18)
+ Pass-1 trace. 16 × 3 = 48 16\times 3=48 ; 48 − 3 = 45 48-3=45 ; 45 − 4 = 41 45-4=41 ; 2 × 41 = 82 2\times 41=82 . The answer is 82. incorrect 
+ question asked 
+ program predicts 
+ model answers 
+ true answer 
+ verdict 
+ original ( q 0 = 2 q_{0}{=}2 , q 3 = 16 q_{3}{=}16 ) 
+ 82 
+ 82 
+ 18 
+ – 
+ price $2 → \to $5 ( q 0 q_{0} ) 
+ 205 
+ 450 
+ 45 
+ refute 
+ eggs 16 → \to 32 ( q 3 q_{3} ) 
+ 178 
+ 72 
+ 50 
+ refute 
+ Figure 3: A wrong-plan failure from the GSM8K test set. Every equation in the trace is true, so the static detector clears it ( p wrong = 0.581 p_{\mathrm{wrong}}=0.581 , below the cut of 0.683). The abstraction of Section   5.1 turns the trace into the program shown, with question slots q 0 = 2 q_{0}{=}2 , q 1 = 3 q_{1}{=}3 , q 2 = 4 q_{2}{=}4 , q 3 = 16 q_{3}{=}16 in the parser’s ordering; the first step, multiplying the eggs by the number eaten, is the wrong plan. Under both perturbations the answer the program predicts differs from the model’s answer, so both probes refute the trace. The true answers are shown for illustration only; the probe never uses them. 
+ 5  Traces Can Be Tested as Program Hypotheses 
+ A failure with sound arithmetic contains no evidence of its own error, but the trace that states it also makes a claim about what the model did.
+In this section we read that claim as a program and test it from outside the trace, which is metamorphic testing [ 2 ] with the relation supplied by the candidate. 
+ 5.1  From trace to program 
+ Definition 2 (Abstraction) . 
+ Given the chain ( e 1 , … , e m ) (e_{1},\dots,e_{m}) with e j : ℓ j = c j e_{j}:\ell_{j}=c_{j} , the abstraction α \alpha rewrites every numeric literal x x in ℓ j \ell_{j} as 
+ α ⁡ ( x ) = { q i if  ​ x ​  equals question quantity  ​ q i , r j ′ if  ​ x = c j ′ ​  for an earlier step  ​ j ′ < j , x otherwise , \alpha(x)=\begin{cases}q_{i}&\text{if }x\text{ equals question quantity }q_{i},\\
+r_{j^{\prime}}&\text{if }x=c_{j^{\prime}}\text{ for an earlier step }j^{\prime}<j,\\
+x&\text{otherwise},\end{cases} 
+ and binds r j := α ⁡ ( ℓ j ) r_{j}:=\alpha(\ell_{j}) . The program P τ P_{\tau} is the resulting straight-line code, whose output is the variable bound to the trace’s final answer. 
+ For the trace in Fig.   3 , the abstraction yields r 0 = q 3 ​ q 1 r_{0}=q_{3}q_{1} , r 1 = r 0 − q 1 r_{1}=r_{0}-q_{1} , r 2 = r 1 − q 2 r_{2}=r_{1}-q_{2} and y ^ = q 0 ​ r 2 \hat{y}=q_{0}r_{2} .
+We regard P τ P_{\tau} as a hypothesis about the procedure the trace describes, not as a claim about the model’s internal computation. 
+ 5.2  The metamorphic probe 
+ Algorithm 1 Metamorphic probe of a single trace. No step reads a reference answer. 
+ 1: 
+ question Q Q with quantities 𝒒 \bm{q} , trace τ \tau , frozen model M M 
+ 2: 
+ ℰ ← ParseChain ​ ( τ ) \mathcal{E}\leftarrow\textsc{ParseChain}(\tau) ; P τ ← α ⁡ ( ℰ ) P_{\tau}\leftarrow\alpha(\mathcal{E}) 
+ 3: 
+ choose q i q_{i} and a replacement q i ′ q_{i}^{\prime} that satisfy all guards; if none exists return abstain 
+ 4: 
+ Q ′ ← Q Q^{\prime}\leftarrow Q with its single occurrence of q i q_{i} rewritten to q i ′ q_{i}^{\prime} 
+ 5: 
+ y ^ ′ ← P τ ​ ( 𝒒 ′ ) \hat{y}^{\prime}\leftarrow P_{\tau}(\bm{q}^{\prime}) ⊳ \triangleright symbolic execution; changes propagate downstream
+ 6: 
+ y ′ ← y ^ ​ ( M ⁡ ( Q ′ ) ) y^{\prime}\leftarrow\hat{y}(M(Q^{\prime})) ⊳ \triangleright one generation
+ 7: 
+ return support if y ′ = y ^ ′ y^{\prime}=\hat{y}^{\prime} , otherwise refute 
+ Algorithm   1 gives the procedure.
+The probe rewrites one quantity in the question, executes the program under that substitution to obtain the answer the trace predicts, and asks the frozen model the rewritten question once.
+Agreement supports the hypothesis that the trace describes a procedure consistent with the model’s behaviour on the perturbed question. Disagreement indicates a mismatch, but does not by itself establish that the trace is unfaithful, since the model may answer the perturbed question incorrectly.
+For the example in Fig.   3 , raising the price from $2 to $5 makes the program predict 205 while the model answers 450, and raising the eggs from 16 to 32 makes it predict 178 while the model answers 72, so both probes refute the trace.
+Because the expected answer comes from the candidate’s own chain, the probe needs no reference answer at test time, which distinguishes it from template-based perturbation, where the expected answer is the template’s. 
+ Guards. 
+ A probe is worth a generation only if it can discriminate.
+The most important guard requires the perturbed quantity to be load-bearing , meaning that some candidate’s chain consumes it; changing an unused number should leave the answer unchanged whatever the trace says, so good and bad traces would appear equally consistent.
+Four further guards ( Appendix   C ) require the quantity to occur exactly once in the question, the replacement not to collide with another number, integrality and sign to be preserved, and at least one candidate’s prediction to move.
+Under these guards, 937 of the 1,319 test questions (71.0%) admit a probe and the remainder abstain ( Fig.   4 ).
+Of the 937, 847 also have a parseable pass-1 answer, and all detection results in this section are computed on these 847.
+The run used 988 probes in total: 886 of the 937 testable questions received one probe and 51 received two.
+Traces that never engage with the question ( NR ) consume none of its quantities, and, as the load-bearing guard implies, none of them is among the testable traces. 
+ Figure 4: Coverage of the metamorphic probe on the test set, and its verdicts. Detection results use the 847 testable questions with a parseable pass-1 answer; accuracy results use all 1,319 questions, with abstentions falling back to the non-probe policy. 
+ 5.3  Results 
+ Does a faithful trace predict its own perturbation? 
+ The probe is meaningful only if a trace that describes the right procedure also predicts the right answer to the perturbed question.
+We check this offline on 1,500 training traces, using the inline calculator annotations in GSM8K to compute the true perturbed answer; this check is a diagnostic and plays no part at inference.
+Correct traces predict the true perturbed answer 77.9% of the time and wrong traces 7.2%.
+For this model, then, a trace that reaches the right answer usually also states how it got there, which chain-of-thought does not guarantee in general [ 19 , 9 ] . 
+ Table 5: Results of the metamorphic probe on the 847 testable pass-1 traces. Left: verdicts by correctness. Right: the verdicts read as diagnostic tests. 
+ verdict 
+ correct 
+ wrong 
+ total 
+ P ⁡ ( correct ) P(\text{correct})     
+ diagnostic 
+ value 
+ supported 
+ 146 
+ 95 
+ 241 
+ 60.6%    
+ refutation rate, wrong traces 
+ 83.6% 
+ refuted 
+ 122 
+ 484 
+ 606 
+ 20.1%    
+ refutation rate, correct traces 
+ 45.5% 
+ all 
+ 268 
+ 579 
+ 847 
+ 31.6%    
+ likelihood ratio, support 
+ 3.32 
+ likelihood ratio, refutation 
+ 1.84 
+ odds ratio (Fisher p = 5.6 × 10 − 29 p=5.6\times 10^{-29} ) 
+ 6.1 
+ Support and refutation. 
+ Table   5 reports the verdicts.
+A single supporting probe nearly doubles the probability that a trace is correct, from a base rate of 31.6% to 60.6% (odds ratio 6.1, Fisher p = 5.6 × 10 − 29 p=5.6\times 10^{-29} ).
+Refutation catches 83.6% of wrong traces but also refutes 45.5% of correct ones, so on its own it is weak evidence, with a likelihood ratio of 1.84 against 3.32 for support.
+In an exploratory analysis, combining the probe score with the static score at equal weights raises detection AUROC on these 847 questions from 0.740 to 0.773, and across blend weights from 0.1 to 0.9 the blended AUROC ranges from 0.769 to 0.778, so the improvement does not depend on the choice of weight. Because the weight grid was first examined on the test set ( Appendix   F ), this is not a clean held-out estimate. 
+ Figure 5: Rate at which each verifier calls a trace wrong, by failure type, on the 579 wrong testable traces. Dashed lines give each verifier’s rate on the 268 correct traces; a verifier is informative on a class only where its bar rises above its own line. The probe does so on every class (all per-class Fisher p < 0.002 p<0.002 , Appendix   E ); the static detector falls below its line on WP . 
+ Where the two verifiers differ. 
+ Figure   5 breaks the verdicts down by failure type.
+Because each verifier pays its own false-positive rate on correct traces, what matters is how far each rises above its own baseline on each class.
+On the structural classes, such as computation errors and unsolved algebra, the static detector is strong, because these failures leave a symbolic mark.
+On the semantic classes it is weak or inverted, flagging 28% of SM and 12% of WP failures against 18.3% of correct traces.
+The probe refutes 157 of 185 SM failures and 140 of 180 WP failures, 81.4% of the two classes together against 45.5% of correct traces ( p = 4.2 × 10 − 21 p=4.2\times 10^{-21} ).
+In short, the static detector sees errors in the arithmetic, while the probe sees errors in the choice of arithmetic. 
+ 5.4  Why is refutation weak evidence? 
+ The model answers perturbed questions no more reliably than original ones (28.6% against 27.8%).
+Support therefore requires two things at once, a faithful program and a matching answer to Q ′ Q^{\prime} , whereas refutation can arise from either an unfaithful program or an unreliable answer.
+The example in Fig.   3 shows the second case: neither of the model’s perturbed answers is correct (the true values are 45 and 50), so the refutations there reflect the model’s unreliability as much as the trace’s.
+Treating the two conditions as independent gives a per-probe support rate of roughly 0.779 × 0.286 ≈ 0.22 0.779\times 0.286\approx 0.22 for a correct trace and 0.072 × 0.286 ≈ 0.02 0.072\times 0.286\approx 0.02 for a wrong one.
+The observed rates are higher in both groups (54.5% and 16.4%) because correctness on Q ′ Q^{\prime} is correlated with correctness on Q Q , but the shape is the same: support is far more likely for a correct trace, while refutation is common for both.
+We therefore allow support to promote a candidate and never allow refutation to demote one.
+For the same reason we do not use refutation to trigger retries: with a likelihood ratio of 1.84 it would flag many correct traces, and at a damage rate of 74.6% each such flag is costly ( Section   6 ).
+For the same reason, a marginal AUROC understates the probe, whose value lies in the precision it adds to the traces it supports.
+ Section   6 shows that precision is the quantity on which the usefulness of a verifier turns. 
+ 5.5  What can the probe not detect? 
+ The probe tests whether a trace’s procedure is consistent with the model’s behaviour on a perturbed question, not whether that procedure is right.
+This distinction defines its blind spot.
+If the model applies the same wrong procedure to the perturbed question that it applied to the original, the program extracted from the trace predicts exactly what the model answers, and the probe returns support for a wrong trace.
+A misreading that the model repeats under every rewording, which defeats self-consistency, can therefore defeat the probe as well.
+The probe is useful on this model because wrong traces are rarely stable in this sense: only 7.2% of wrong traces predict the true perturbed answer, against 77.9% of correct ones ( Section   5.3 ), and only 95 of the 579 wrong testable traces (16.4%) were supported.
+Those 95 traces are the probe’s misses, and they are concentrated where we would expect: among WP failures, 40 of 180 were not refuted, the highest miss rate of any class ( Fig.   5 ).
+A model whose errors are more systematic than this one’s would give the probe less to work with, and the separation in Table   5 should not be assumed to carry over without measurement.
+Two further blind spots are structural.
+Questions in which no load-bearing quantity can be perturbed safely receive no probe at all (29% of the test set), and a trace whose chain cannot be parsed yields no program. 
+ 6  Better Detection Does Not Necessarily Improve Accuracy 
+ In this section we measure the accuracy of every policy built on the two verifiers, derive the condition under which a verifier can improve accuracy at all, and explain why that condition is hard to meet for this model. 
+ 6.1  Results 
+ Table 6: End-to-end accuracy of every policy on the 1,319 test questions, with exact McNemar tests against pass-1. 
+ policy 
+ correct 
+ accuracy 
+ p p 
+ pass-1 
+ 367 
+ 27.82% 
+ – 
+ replace flagged 
+ 375 
+ 28.43% 
+ 0.50 
+ replace flagged, with metamorphic veto 
+ 374 
+ 28.35% 
+ 0.55 
+ select, symbolic 
+ 379 
+ 28.73% 
+ 0.21 
+ select, metamorphic 
+ 382 
+ 28.96% 
+ 0.091 
+ select, metamorphic + back-substitution 
+ 382 
+ 28.96% 
+ 0.096 
+ Table   6 reports the results.
+Replacing every flagged answer gains 8 questions, and letting metamorphic evidence choose between the two candidates gains 15, reaching 28.96% against 27.82%.
+No policy differs significantly from pass-1; the best has p = 0.091 p=0.091 .
+Probe evidence decided only 90 of the 1,319 questions, because support is rare where it would matter.
+On the development set, retrying the questions the detector flagged gained 4.8 points while retrying a random set of the same size lost 2.7; this comparison was not repeated on test, and the development set also informed calibration, so we treat it as supporting evidence only. 
+ 6.2  When is a flag worth a retry? 
+ A second attempt can repair a wrong answer, but it can also break a correct one.
+Suppose a detector flags N flag N_{\mathrm{flag}} questions with precision π \pi , and let R R be the fraction of flagged wrong traces whose retry is correct and D D the fraction of flagged correct traces whose retry is wrong. 
+ Proposition 1 . 
+ If every flagged answer is replaced by its retry, the number of correctly answered questions changes by 
+ Δ = N flag ​ ( π ​ R − ( 1 − π ) ​ D ) , \Delta=N_{\mathrm{flag}}\bigl(\pi R-(1-\pi)D\bigr), 
+ (1) 
+ which is positive if and only if 
+ π > π ∗ = D R + D . \pi>\pi^{\ast}=\frac{D}{R+D}. 
+ (2) 
+ Proof. 
+ Unflagged questions are unaffected. Flagged wrong traces become correct at rate R R , contributing π ​ N flag ​ R \pi N_{\mathrm{flag}}R , and flagged correct traces become wrong at rate D D , contributing − ( 1 − π ) ​ N flag ​ D -(1-\pi)N_{\mathrm{flag}}D . Rearranging π ​ R > ( 1 − π ) ​ D \pi R>(1-\pi)D gives ( 2 ).
+∎ 
+ When R R and D D are measured on the flagged set itself, ( 1 ) is an exact count rather than a model.
+On test, the detector flags 540 questions, of which 473 are wrong and 67 correct; retries repair 58 of the former ( R = 12.3 % R=12.3\% ) and damage 50 of the latter ( D = 74.6 % D=74.6\% ), giving Δ = 58 − 50 = + 8 \Delta=58-50=+8 , the observed change.
+The break-even precision is therefore π ∗ = 85.9 % \pi^{\ast}=85.9\% , which the detector’s 87.6% exceeds by 1.7 points.
+On the training split, the calibration ( Table   9 ) uses repair and damage rates of R = 16.1 % R=16.1\% and D = 76.5 % D=76.5\% from the training run, a break-even of 82.6%.
+The difference lies in repair: on the training split the diagnosis that conditions a retry comes from a symbolic cascade and is essentially always right, whereas on test it comes from the type head, which is right 59% of the time. 
+ Using ( 1 ) counterfactually, to ask what a different detector would achieve, requires holding R R and D D fixed, which assumes that repairability does not depend on which wrong traces are flagged.
+This is a real assumption, since a better detector would newly flag the kinds of failures the current one misses, and the estimates below should be read as first-order.
+With that caveat, and holding the budget at 540 retries and the repair rate at its measured value, a perfect detector would gain an estimated 540 × 0.123 ≈ 66 540\times 0.123\approx 66 questions (+5.0 points), and one allowed to flag all 952 failures would gain about 117 (+8.9 points).
+The two partial derivatives of ( 1 ) are similar, ∂ Δ / ∂ π = N flag ​ ( R + D ) ≈ 469 \partial\Delta/\partial\pi=N_{\mathrm{flag}}(R+D)\approx 469 and ∂ Δ / ∂ R = N flag ​ π ≈ 473 \partial\Delta/\partial R=N_{\mathrm{flag}}\pi\approx 473 , so detection and repair are equally effective at the margin.
+What differs is the room each has.
+Precision can rise by at most 12.4 points, worth at most 58 questions, whereas the repair rate can rise by up to 87.7 points, worth about 415 questions at the current precision.
+Doubling R R alone would gain as much as a perfect detector ( Fig.   6 , Table   7 ). 
+ Figure 6: The break-even condition. (a) Precision a detector needs before retries help, as a function of the repair rate, at the measured damage rates. (b) Net gain on the 540-flag test budget for three repair rates. Moving from the observed operating point to perfect precision gains 58 questions; doubling R R at the current precision gains about the same. 
+ Table 7: Counterfactual gains on the 540-flag test budget from ( 1 ), with all other quantities at their measured values. These are first-order estimates, not experiments. 
+ change 
+ Δ \Delta (questions) 
+ accuracy (points) 
+ none (observed) 
+ + 8 +8 
+ + 0.6 +0.6 
+ no damage ( D = 0 D=0 ) 
+ + 58 +58 
+ + 4.4 +4.4 
+ perfect detector ( π = 1 \pi=1 ) 
+ + 66 +66 
+ + 5.0 +5.0 
+ doubled repair rate ( R = 24.5 % R=24.5\% ) 
+ + 66 +66 
+ + 5.0 +5.0 
+ repair rate R = 50 % R=50\% 
+ + 187 +187 
+ + 14.1 +14.1 
+ perfect detector, unlimited budget 
+ + 117 +117 
+ + 8.9 +8.9 
+ 6.3  Why is the repair rate so low? 
+ Empirical analysis. 
+ The low repair rate is not a matter of a careless retry.
+Paired on the 1,068 training failures, the diagnosis-conditioned retry recovers 18.5% against 15.1% for an untyped retry (exact McNemar p = 0.010 p=0.010 ); it is the best repair we built, and on test it still reaches only 12.3%.
+Only 32.9% of failures contain a locatable false equation, and in 51.6% of those the false equation is the first step.
+At most 0.329 × ( 1 − 0.516 ) ≈ 16 % 0.329\times(1-0.516)\approx 16\% of failures therefore contain a correct prefix before their first error ( Fig.   7 ). 
+ Figure 7: Where the first error lies in pass-1 failures. Only failures whose first false equation comes after the first step (green) contain a correct prefix that a repair could preserve. The 17.0% and 15.9% split the 32.9% of failures with a locatable false equation by whether that equation is the first step (51.6%). 
+ Intuitive explanation. 
+ Repair in the ordinary sense keeps a mostly correct derivation and fixes a localised fault.
+For the remaining 84% of failures there is nothing to keep, either because the trace contains no false equation at all or because it goes wrong at the first step, and a repair becomes a new attempt at the whole problem.
+That attempt is also made on exactly the questions the model has just failed, where its accuracy is far below its 27.8% average.
+For a model whose failures are rarely localised, repairing a trace and producing a correct trace from scratch are the same problem; a verifier, however precise, can only route questions to that problem and cannot make it easier. 
+ 7  Conclusion and Discussion 
+ Our work shows that, for the model we study, checking a trace against itself cannot detect most failures: two thirds of them contain no false equation, so the internal-consistency signals we evaluated reach a ceiling that a better classifier over the same signals is unlikely to lift.
+Testing the trace as a program hypothesis against the model’s own behaviour reaches those failures without a reference solution, a judge or a template, yet better detection does not improve accuracy, because a retry rarely repairs what it is sent to fix.
+We draw three recommendations from these results. 
+ Reporting repair and damage rates alongside detectors. 
+ AUROC alone does not determine whether a verifier improves outcomes.
+ Equation   2 shows that a detector helps only when its precision exceeds a threshold set entirely by the action it triggers.
+We encourage work on reference-free verification to report the repair and damage rates of that action, whether it is a retry, an escalation to a larger model, a tool call or a human review. 
+ Testing a trace against the model, not only against itself. 
+ The two verifiers fail in complementary places, and in an exploratory analysis their combination detected failures better than either alone.
+Checks of a trace against itself catch local errors in the arithmetic; tests of the trace against the model’s behaviour under intervention catch errors in the choice of arithmetic.
+Because support is strong evidence and refutation is weak, such tests are best used to raise precision, by confirming or vetoing a candidate, rather than to trigger retries. 
+ Measuring failure composition before building repair. 
+ Whether detection or repair is the bottleneck depends on how a model fails.
+A model whose failures are mostly localised slips sits in a very different region of Fig.   6 from the one studied here.
+Measuring the share of failures with no false equation, and the position of the first error, is cheap, needs no retry machinery, and indicates in advance whether a better detector can help. 
+ 8  Limitations 
+ Although our measurements are fully instrumented, they come from one model, one dataset and one prompting setup, and LLaMA-2-7B-chat, at 27.8% pass-1 accuracy, is weak by current standards.
+The accounting identity, the argument that self-checking cannot see errors of plan, and the mechanism by which a candidate-derived relation exposes them do not depend on the model; the share of failures without a false equation, the repair and damage rates, and therefore the conclusion that repair is the bottleneck may not transfer.
+The probe refutes 45.5% of correct traces, which follows from the model’s 28.6% accuracy on perturbed questions; we expect fewer false refutations from a stronger model but have not measured this.
+Our parser does not distinguish asserted equations from hypothetical or retracted ones (“suppose x = 5 x=5 ”, “ 12 × 4 = 46 12\times 4=46 … no, 48”): a retracted false equation lowers equation validity, while the abstraction, which binds later steps to earlier results by value, turns a retracted result that is never reused into dead code. We did not measure how often these patterns occur, and models that self-correct frequently would require a retraction-aware parser.
+The probe applies to 71% of test questions and requires numeric quantities that the trace uses, so it does not reach proof-style reasoning.
+Finally, we compare the probe with the static detector, but not empirically with self-consistency, an LLM judge or a trained process verifier; Table   3 compares properties only. 
+ Reproducibility Statement 
+ All experiments use the publicly available LLaMA-2-7B-chat with frozen weights and the public GSM8K benchmark.
+Every measurement is a deterministic function of the generated traces, computed with regular expressions and sympy.
+ Appendices   A , B , C , D and  E give the signal definitions, failure taxonomy, probe guards, detector calibration and all policy results, and Appendix   F lists every error we found and corrected during the project together with its effect on the reported numbers.
+The 988 probes behind the test results cost about 4.3 GPU-hours on a single NVIDIA T4. 
+ Code availability. 
+ The code, the notebooks used to run each stage, and the stored test-set outputs needed to recompute the reported test-set numbers on a CPU are available at https://github.com/S2V3/Detection-is-not-enough . The raw outputs of every run are archived at https://github.com/S2V3/fade/tree/results . 
+ References 
+ [1] 
+N. Bottman, Y. Liu, and K. Richardson.
+ Operadic consistency: a label-free signal for compositional reasoning failures in LLMs.
+ arXiv:2606.13649 , 2026.
+ [2] 
+T. Y. Chen, S. C. Cheung, and S. M. Yiu.
+ Metamorphic testing: a new approach for generating next test cases.
+ Technical Report HKUST-CS98-01, Hong Kong University of Science and Technology, 1998.
+ [3] 
+T. Y. Chen, F.-C. Kuo, H. Liu, P.-L. Poon, D. Towey, T. H. Tse, and Z. Q. Zhou.
+ Metamorphic testing: a review of challenges and opportunities.
+ ACM Computing Surveys , 51(1), 2018.
+ [4] 
+W. Chen, X. Ma, X. Wang, and W. W. Cohen.
+ Program of thoughts prompting: disentangling computation from reasoning for numerical reasoning tasks.
+ Transactions on Machine Learning Research , 2023.
+ [5] 
+K. Cobbe, V. Kosaraju, M. Bavarian, M. Chen, H. Jun, L. Kaiser, M. Plappert, J. Tworek, J. Hilton, R. Nakano, C. Hesse, and J. Schulman.
+ Training verifiers to solve math word problems.
+ arXiv:2110.14168 , 2021.
+ [6] 
+L. Gao, A. Madaan, S. Zhou, U. Alon, P. Liu, Y. Yang, J. Callan, and G. Neubig.
+ PAL: Program-aided language models.
+ In International Conference on Machine Learning , 2023.
+ [7] 
+J. Huang, X. Chen, S. Mishra, H. S. Zheng, A. W. Yu, X. Song, and D. Zhou.
+ Large language models cannot self-correct reasoning yet.
+ In International Conference on Learning Representations , 2024.
+ [8] 
+R. Kamoi, Y. Zhang, N. Zhang, J. Han, and R. Zhang.
+ When can LLMs actually correct their own mistakes? A critical survey of self-correction of LLMs.
+ Transactions of the Association for Computational Linguistics , 12, 2024.
+ [9] 
+T. Lanham, A. Chen, A. Radhakrishnan, B. Steiner, C. Denison, D. Hernandez, D. Li, E. Durmus, E. Hubinger, J. Kernion, et al.
+ Measuring faithfulness in chain-of-thought reasoning.
+ arXiv:2307.13702 , 2023.
+ [10] 
+H. Lightman, V. Kosaraju, Y. Burda, H. Edwards, B. Baker, T. Lee, J. Leike, J. Schulman, I. Sutskever, and K. Cobbe.
+ Let’s verify step by step.
+ arXiv:2305.20050 , 2023.
+ [11] 
+Q. Lyu, S. Havaldar, A. Stein, L. Zhang, D. Rao, E. Wong, M. Apidianaki, and C. Callison-Burch.
+ Faithful chain-of-thought reasoning.
+ In Proceedings of IJCNLP-AACL , 2023.
+ [12] 
+A. Madaan, N. Tandon, P. Gupta, S. Hallinan, L. Gao, S. Wiegreffe, U. Alon, N. Dziri, S. Prabhumoye, Y. Yang, et al.
+ Self-Refine: iterative refinement with self-feedback.
+ In Advances in Neural Information Processing Systems , 2023.
+ [13] 
+I. Mirzadeh, K. Alizadeh, H. Shahrokhi, O. Tuzel, S. Bengio, and M. Farajtabar.
+ GSM-Symbolic: Understanding the limitations of mathematical reasoning in large language models.
+ arXiv:2410.05229 , 2024.
+ [14] 
+M. T. Ribeiro, T. Wu, C. Guestrin, and S. Singh.
+ Beyond accuracy: behavioral testing of NLP models with CheckList.
+ In Proceedings of ACL , 2020.
+ [15] 
+S. Sahoo, V. Jain, S. Vats, S. Mohapatra, R. Min, A. Chadha, and D. Chaudhary.
+ Catch me if you can: How smaller reasoning models pretend to reason with mathematical fidelity.
+ arXiv:2512.00552 , 2025.
+ [16] 
+S. Segura, G. Fraser, A. B. Sanchez, and A. Ruiz-Cortés.
+ A survey on metamorphic testing.
+ IEEE Transactions on Software Engineering , 42(9), 2016.
+ [17] 
+V. Shukla, V. Shukla, Atul, D. Mishra, and M. K. Das.
+ A reference-free score for detecting silent reasoning failures in large language models.
+ arXiv:2607.26102 , 2026.
+ [18] 
+H. Touvron, L. Martin, K. Stone, P. Albert, A. Almahairi, Y. Babaei, N. Bashlykov, S. Batra, P. Bhargava, S. Bhosale, et al.
+ Llama 2: open foundation and fine-tuned chat models.
+ arXiv:2307.09288 , 2023.
+ [19] 
+M. Turpin, J. Michael, E. Perez, and S. R. Bowman.
+ Language models don’t always say what they think: unfaithful explanations in chain-of-thought prompting.
+ In Advances in Neural Information Processing Systems , 2023.
+ [20] 
+J. Uesato, N. Kushman, R. Kumar, F. Song, N. Siegel, L. Wang, A. Creswell, G. Irving, and I. Higgins.
+ Solving math word problems with process- and outcome-based feedback.
+ arXiv:2211.14275 , 2022.
+ [21] 
+X. Wang, J. Wei, D. Schuurmans, Q. Le, E. Chi, S. Narang, A. Chowdhery, and D. Zhou.
+ Self-consistency improves chain of thought reasoning in language models.
+ In International Conference on Learning Representations , 2023.
+ [22] 
+J. Wei, X. Wang, D. Schuurmans, M. Bosma, B. Ichter, F. Xia, E. Chi, Q. Le, and D. Zhou.
+ Chain-of-thought prompting elicits reasoning in large language models.
+ In Advances in Neural Information Processing Systems , 2022.
+ [23] 
+Y. Weng, M. Zhu, F. Xia, B. Li, S. He, S. Liu, B. Sun, K. Liu, and J. Zhao.
+ Large language models are better reasoners with self-verification.
+ In Findings of the Association for Computational Linguistics: EMNLP 2023 , 2023.
+ [24] 
+Y. Zhang, M. Khalifa, L. Logeswaran, J. Kim, M. Lee, H. Lee, and L. Wang.
+ Small language models need strong verifiers to self-correct reasoning.
+ In Findings of the Association for Computational Linguistics: ACL 2024 , 2024.
+ [25] 
+N. Zhong, A. E. Tanriverdi, K. Kale, and S. Vishwanath.
+ VeryTrace: Verifying reasoning traces through compilable formalism and structured verification.
+ In LM4Plan Workshop at ICML , 2026.
+ [26] 
+Z. Zhou, S. Liu, M. Ning, W. Liu, J. Wang, D. F. Wong, X. Huang, Q. Wang, and K. Huang.
+ Is your model really a good math reasoner? Evaluating mathematical reasoning with checklist.
+ In International Conference on Learning Representations , 2025.
+ [27] 
+Z. Zhou, M. Li, X. Fang, X. Zhou, W. Lin, and Z. Zheng.
+ LGMT: Logic-grounded metamorphic testing for evaluating the reasoning reliability of LLMs.
+ arXiv:2605.23965 , 2026.
+ Appendix A Trace Signals 
+ All four signals are computed from the equation chain and the question, and none reads a reference answer.
+ Equation validity is the fraction of stated equations that the algebra system confirms; a trace that writes 48 − 3 = 44 48-3=44 loses here even when its plan is right.
+ Value overlap compares the numbers the question gives with those the trace uses; a trace that ignores a given quantity, or introduces one that appears nowhere in the question, separates from a correct trace on this signal, and percentages are first normalised to a single convention.
+ Goal engagement asks whether the trace ever computes the quantity the question asks for, matched on units and on the wording of the final question sentence, which catches a trace that solves a related quantity and stops.
+ Coherence checks that every step refers to a value the question gave or an earlier step produced, rather than a number from nowhere.
+A fifth signal, redundancy , was built and then dropped: it showed no separation between correct and wrong traces, and at its threshold it flagged legitimately parallel steps as duplicates.
+It is logged as a diagnostic and never enters a decision. 
+ Appendix B Failure Taxonomy 
+ The diagnosis is symbolic.
+A cascade of rules reads the equation chain, the question’s numbers and the trace’s structure, and abstains when no rule fires with enough evidence.
+ Table   8 lists the eight types.
+Structural failures have clear signatures and semantic ones do not: SM and CE are recognised with low recall (38.2% and 42.5%) and are two of the three largest classes, so more than half of those failures receive a mismatched diagnosis.
+This caps the benefit of typed repair, and it is why the deployed pipeline falls back to an untyped retry below a confidence gate. 
+ Table 8: Failure types over the 1,068 training-split pass-1 failures, with the type head’s out-of-fold recall (GroupKFold by question, 2,568 traces) and the count of each type among the 579 wrong testable test traces of Fig.   5 . 
+ type 
+ what went wrong 
+ train n n 
+ share 
+ recall 
+ test n n 
+ WP 
+ wrong plan, sound arithmetic 
+ 254 
+ 23.8% 
+ 69.2% 
+ 180 
+ SM 
+ misread the question, solved a different problem 
+ 253 
+ 23.7% 
+ 38.2% 
+ 185 
+ CE 
+ computation error inside a good plan 
+ 136 
+ 12.7% 
+ 42.5% 
+ 83 
+ ST 
+ a needed intermediate never computed 
+ 114 
+ 10.7% 
+ 62.8% 
+ 56 
+ AL 
+ sets up symbols, never solves them 
+ 94 
+ 8.8% 
+ 87.1% 
+ 28 
+ UNCL 
+ no rule fired confidently 
+ 88 
+ 8.2% 
+ 51.7% 
+ 35 
+ NR 
+ never engaged with the question 
+ 73 
+ 6.8% 
+ 95.3% 
+ 0 
+ TR 
+ truncated generation 
+ 56 
+ 5.2% 
+ 98.9% 
+ 12 
+ Appendix C Probe Guards 
+ A probe is generated only when all five of the following conditions hold. 
+ 1. 
+ Load-bearing. Some candidate’s chain consumes the perturbed number. Changing an unused number should not move the answer, so good and bad traces would appear equally consistent. 
+ 2. 
+ Unique occurrence. The number occurs exactly once in the question, so the rewrite is unambiguous. 
+ 3. 
+ No collision. The replacement does not equal another number in the question, which could make the abstraction bind the wrong slot. 
+ 4. 
+ Sensible question. Integrality and sign survive the change, so the rewritten question remains a valid word problem. 
+ 5. 
+ Discriminative. At least one candidate’s prediction moves under the substitution; otherwise the probe cannot distinguish candidates whatever the model answers. 
+ Each probe takes 15.8 s on a T4.
+Probe order is deterministic but depends on the target-preference rules, so resumption is keyed on the perturbation itself, the pair of original and replacement values, rather than on a probe index.
+This also allows a one-probe run to be extended to two without regenerating anything; probe 0 is chosen identically either way, which we verified on 400 test rows with no mismatches. 
+ Appendix D Detector Calibration 
+ A budget quantile needs the whole score distribution, which a pipeline answering one question at a time does not have.
+The mapping from budget to threshold is therefore measured out of fold and stored with the model, so that each question can be judged on its own. 
+ Table 9: Budget-to-threshold calibration, measured out of fold on the 1,500 training-split pass-1 traces, as recorded in the calibration log. Expected net is TP ⋅ R − FP ⋅ D \mathrm{TP}\cdot R-\mathrm{FP}\cdot D with the training-run rates R = 16.1 % R=16.1\% and D = 76.5 % D=76.5\% . 
+ budget 
+ flagged 
+ p wrong p_{\mathrm{wrong}} cut 
+ precision 
+ expected net 
+ 10% 
+ 150 
+ 0.90 
+ 97.3% 
+ + 20.4 +20.4 
+ 20% 
+ 300 
+ 0.83 
+ 95.7% 
+ + 36.3 +36.3 
+ 40% 
+ 600 
+ 0.683 
+ 90.7% 
+ + 44.7 +44.7 
+ 50% 
+ 750 
+ 0.60 
+ 88.0% 
+ + 37.4 +37.4 
+ 70% 
+ 1,050 
+ 0.48 
+ 82.1% 
+ − 5.0 -5.0 
+ 100% 
+ 1,500 
+ 0.13 
+ 71.2% 
+ − 158.5 -158.5 
+ Each row’s expected net is computed from the flagged set at that budget as TP ⋅ R − FP ⋅ D \mathrm{TP}\cdot R-\mathrm{FP}\cdot D , where TP and FP are the numbers of wrong and correct traces flagged and R = 16.1 % R=16.1\% and D = 76.5 % D=76.5\% are the repair and damage rates from the training run that the calibration uses.
+For example, the 40% budget flags 600 traces, of which 544 are wrong (90.7%), giving 544 × 0.161 − 56 × 0.765 = + 44.7 544\times 0.161-56\times 0.765=+44.7 ; every row of Table   9 is reproduced in the same way.
+The resulting break-even precision, D / ( R + D ) = 82.6 % D/(R+D)=82.6\% , falls between the 50% and 70% budgets, and the expected net is largest at 40%.
+The test pipeline uses the 40% cut of 0.683.
+ Figure   8 plots the calibration against both break-even points: on the training split the detector stays profitable up to a budget between 50% and 70%, whereas on test the lower repair rate moves the break-even up to 85.9%, which the test operating point clears by a small margin. 
+ Figure 8: Precision of the static detector’s flags as a function of the flag budget. Below its break-even line, retrying flagged answers loses more correct answers than it repairs. 
+ Appendix E All Policies and Per-Class Tests 
+ The veto policy cancels a retry when the probe supports the first trace.
+It should help in principle, since removing false positives raises precision, but it rescued only 3 of the 67 false positives, because flagged traces are overwhelmingly wrong and wrong traces are rarely supported.
+ Back-substitution adds the model’s answer to Q ′ Q^{\prime} , mapped back to the original numbers through the program, as an extra candidate at no extra cost; it changed no decision.
+Fisher exact tests of each class’s refutation rate against the 45.5% rate on correct traces (122 of 268) give
+ WP 140/180, p = 5.5 × 10 − 12 p=5.5\times 10^{-12} ;
+ SM 157/185, p = 3.3 × 10 − 18 p=3.3\times 10^{-18} ;
+ CE 69/83, p = 6.6 × 10 − 10 p=6.6\times 10^{-10} ;
+ ST 47/56, p = 1.1 × 10 − 7 p=1.1\times 10^{-7} ;
+ AL 27/28, p = 6.5 × 10 − 8 p=6.5\times 10^{-8} ;
+ UNCL 33/35, p = 8.6 × 10 − 9 p=8.6\times 10^{-9} ;
+ TR 11/12, p = 1.9 × 10 − 3 p=1.9\times 10^{-3} .
+These sum to 484 refuted wrong traces, which together with the 122 refuted correct traces give the 606 refutations in Table   5 . 
+ Appendix F Errors Found and Corrected 
+ We list every error we found that could have affected a reported number, with its effect and its correction.
+The numbers in this appendix were measured on the intermediate version of the pipeline in which each problem was found, before the later corrections had been made.
+They quantify the size of each correction at the time it was made and are not directly comparable with one another or with Table   4 , which reports the final detector evaluated with every correction below in place. 
+ A reference-derived feature reached the classifier. 
+ The number of annotated solution steps comes from the reference solution and had entered the feature set, lifting out-of-fold detection AUROC in that version from 0.717 to 0.791.
+It cannot be computed where no annotation exists, so we removed it and added an assertion that rejects such features. 
+ Question-level leakage inflated the type head. 
+ Each question contributes a first attempt and a retry.
+StratifiedKFold split on traces, so a question’s first attempt could sit in training while its retry sat in test, letting the model recognise the question instead of reading the trace.
+In the version where this was found, switching to GroupKFold left the detection head essentially unchanged (AUROC 0.752 to 0.753) and lowered the type head by 4.4 points (0.657 to 0.613). These figures are computed over all 2,568 training traces, first attempts and retries together; Table   4 reports first attempts only, the population the deployed detector sees, and the two populations differ in how legible their errors are.
+The cause was a question-level TF–IDF feature, and all reported numbers use GroupKFold. 
+ Union scoring is not deployable. 
+ Counting a question as solved when either the first answer or the retry is correct requires a reference answer to choose between them, and a deployed system that replaced its first answer cannot fall back on the answer it rejected.
+Every accuracy in this paper is what a deployed system would return. 
+ The blend weight. 
+ An earlier version chose the detection blend weight by maximising AUROC on the test set, which gave 0.778 at a weight of 0.25 on the probe score. We now report the equal-weight value, 0.773, together with the range over weights from 0.1 to 0.9 (0.769 to 0.778). Because the weight grid was first examined on the test set, we treat the blended result as exploratory. 
+ Typed versus untyped repair at test. 
+ On the training split the diagnosis comes from the symbolic cascade and is essentially always right, while at test it comes from the classifier, which is right 59% of the time, and 28% of retries fall back to the untyped arm.
+The test-time comparison is therefore underpowered rather than negative: with 94 paired retries, a true five-point difference would be detected 14% of the time and an eight-point difference 33% of the time. 
+ Extraction. 
+ Two parser defects were found and corrected.
+Percentages were emitted in both conventions, which inflated value overlap for any trace that mentioned one.
+Binary minus was read as a sign, so “60-20” was tokenised as two numbers and the equation silently dropped; this affected 14 lines across 13 traces (0.9% of the training run), all of them subtractions, which is why it was hard to notice. 
+ Experimental support, please
+ view the build logs 
+ for errors. Generated by
+ L
+ A 
+ T
+ E 
+ xml 
+ .
+ Instructions for reporting errors 
+ We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+ support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+ methods listed below: 
+ Click the "Report Issue" ( 
+ ) button, located in the page header. 
+ Tip: You can select the relevant text first, to include it in your report. 
+ Our team has already identified the following issues . We appreciate your time reviewing and reporting rendering errors we
+ may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+ should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+ all. 
+ Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a list of packages that need conversion , and welcome developer contributions . 
+ We gratefully acknowledge support from our major funders ,
+ member institutions , ,
+ and all contributors.
+ About · 
+ Help · 
+ Contact · 
+ Subscribe · 
+ Copyright · 
+ Privacy · 
+ Accessibility · 
+ Operational Status (opens in new tab) 

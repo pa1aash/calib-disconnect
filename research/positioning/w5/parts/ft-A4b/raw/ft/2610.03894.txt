@@ -1,0 +1,1449 @@
+ 
+ Proxy Confidence: Auditing Black-Box LLM Agents with a Surrogate’s Log-Probabilities 
+ Skip to main content 
+ Report GitHub Issue 
+ × 
+ Title: 
+ Content selection saved. Describe the issue below: 
+ Description: 
+ Submit without GitHub 
+ Submit in GitHub 
+ Why HTML? 
+ Report Issue 
+ Back to Abstract 
+ Download PDF 
+ Contents 
+ Reading mode 
+ Colour theme 
+ Abstract 
+ 1 Introduction 
+ 2 Background and related work 
+ 3 The proxy-confidence sidecar 
+ Two primitives. 
+ Metric and reporting. 
+ 4 The sidecar beats the deployer’s two baselines 
+ 5 The signal family and its failure-mode map 
+ Verdict—holistic correctness (the default). 
+ Teacher forcing / request-PMI—when argument values carry the risk. 
+ Fusion—additive when signals are complementary, and orientation is mandatory. 
+ 6 Which readout, how cheap, and when to specialize 
+ 7 From confidence to action: two deployment modes 
+ 8 Deploying the sidecar: cost, latency, and the safe default 
+ Why the sidecar is cheap: the scorer’s work is a prefill. 
+ Oriented fusion is the regime-agnostic safe default. 
+ Fusion or a single signal? A practitioner’s rule. 
+ 9 Limitations and scope 
+ References 
+ A Mechanism ladder: access, not scale 
+ B Worst-case regret of fixed signal policies 
+ C Selective prediction: per-dataset results 
+ D Coverage vs. the combiner (battery detail) 
+ E Actor self-consistency: detail 
+ F Actor × \times scorer robustness grid 
+ G Experimental coverage matrix 
+ H Capability-axis table (14B vs. 32B) 
+ I Sidecar latency measurement 
+ J Feeding the signal back to the actor (self-review detail) 
+ K Signals beyond the single-pass family, and the judge-free anchor 
+ License: arXiv.org perpetual non-exclusive license
+arXiv:2610.03894v1 [cs.AI] 02 Oct 2026 
+ \workshoptitle 
+ Interpreting Agent Behavior (IAB) 
+ Proxy Confidence: Auditing Black-Box LLM Agents with a Surrogate’s Log-Probabilities 
+ Yikai Zhao
+ Affiliation:  Amazon
+ Email:  yikai@amazon.com 
+ Saurabh Pandey
+ Affiliation:  Amazon
+ Email:  saurabpd@amazon.com 
+ Pradeep Kumar Misra
+ Affiliation:  Amazon
+ Email:  pkmisra@amazon.com 
+ Abstract 
+ A deployed LLM agent emits tool calls, queries, and code that can be silently wrong—and by the time the
+error surfaces, the action has already run. The frontier chat APIs these agents run on offer no reliable way
+to tell which calls to trust. They hide the model’s own token probabilities. The agent’s stated confidence
+barely beats chance on the mistakes that matter. And resampling does not help either, since frontier
+models are now known to be highly repetitive, reproducing the same call across samples. 
+ We recover the missing signal from a low-cost open-weight surrogate run in parallel. It reads the
+same context, schema, and proposed action as the agent, then scores the call from its own 
+log-probabilities through a family of complementary readouts. Teacher forcing and request-PMI 
+(pointwise mutual information) weigh the likelihood of each argument value; a discriminative verdict 
+judges the call as a whole; tool-choice competition tests the function against its siblings. One principle
+tells an operator which to trust: a generative likelihood localizes wrong argument values , while the
+verdict catches holistically wrong calls. When the error type is unknown, an ensemble over the family is the
+low-regret default—a light logistic combiner, matched by a simple orientation-corrected average. The whole
+readout is training-free, needs no access to the agent’s internals, and costs one prefill pass in parallel
+with the tool call. 
+ This proxy ranks correct calls above wrong ones more reliably than either signal a black-box operator
+has today. Its edge over an agent’s stated confidence is largest exactly where it matters most: on
+confident mistakes. On difficult coding tasks it reaches AUROC 0.825 0.825 where the actor’s own stated
+confidence is near chance ( 0.598 0.598 ), and the generative readouts improve on stated confidence by + 0.07 +0.07 to
+ + 0.28 +0.28 across the three additional actors we audit. Against self-consistency it gains + 0.14 +0.14 to + 0.19 +0.19 on
+near-deterministic actors, at 1 / K 1/K the cost of resampling. The signal then drives two deployment modes. A real-time
+gate escalates an agent’s least-trustworthy calls for human review ( + 0.05 +0.05 to + 0.30 +0.30 accepted-action
+accuracy at 50 % 50\% coverage). And confidence feedback returns the tool result together with the
+score, so the agent adjusts its own next step; this lifts end-to-end task success on live-execution
+benchmarks ( + 0.119 +0.119 and + 0.137 +0.137 , both p ≤ 10 − 4 p{\leq}10^{-4} ) and beats a random-value control where step
+errors are silent ( + 0.078 +0.078 , p = 0.003 p{=}0.003 ). 
+ 1 Introduction 
+ Consider a customer-service or data agent running on a frontier chat API. It issues a refund tool call, a
+database query, or a block of Python. If that action is silently wrong, the cost lands downstream, after
+execution. The operator would like a confidence signal to gate the action—but in this, the common 
+deployment setting, the two signals a deployer would reach for are both unavailable. (i) The most direct
+signal, the actor’s own token log-probabilities, is hidden by the frontier chat APIs agents run on. (ii) The
+standard black-box substitute is self-consistency : resample the actor K K times and measure
+agreement. It collapses here, because frontier agents are near-deterministic . The actor re-emits the
+identical call on the overwhelming majority of inputs, leaving almost no sample variance to read—and it
+costs K K frontier generations to find that out (§ 4 ). The actor’s own verbalized
+self-assessment, meanwhile, is least reliable exactly on its confident mistakes. If we cannot read the actor’s
+probabilities and it cannot detect its own errors, where should a confidence signal come from? 
+ Our answer is a proxy log-probability. A small, open-weight, log-probability-capable model runs as
+a training-free sidecar (Figure  1 ): it reads the same ( context , schema , proposed action ) (\text{context},\text{schema},\text{proposed action}) the actor conditioned on—no gradient access, no fine-tuning, no actor internals,
+no shared weights—and emits a scalar confidence. That confidence ranks action correctness
+better than either black-box baseline (§ 4 ). Its edge over the actor’s self-assessment is
+largest exactly on the actor’s confident mistakes, such as hard code it cannot self-verify. And it
+significantly beats self-consistency in the near-deterministic regime deployed agents occupy, at 1 / K 1/K the
+cost of resampling a frontier model. Because the auditor is a smaller open model its work is a
+ prefill —one forward pass over the already-known action, no autoregressive decode—making it a
+lightweight, actor-agnostic plug-in for any framework. Cost, latency, and the fail-open guarantee are in
+§ 8 . 
+ The signal is not monolithic. Which readout to trust has predictable structure , and that structure is
+what makes the sidecar both cheap and targetable. Every proxy readout is one of two types: a
+ generative likelihood (teacher forcing, or request-PMI, which discounts values the scorer finds likely
+ regardless of the request) or a discriminative decision (a YES/NO verdict, tool-choice
+competition). This one distinction predicts two things. (a)  Which failure mode a readout catches : a
+generative likelihood reads wrong argument values , tracking judge-free per-parameter accuracy where
+the verdict is blind to it, while the verdict reads holistic wrongness (§ 5 ).
+(b)  Whether a small scorer suffices : teacher forcing is access -bound, equivalence-tested
+against a scorer twice its size, whereas the verdict is capability -bound and improves with scale
+(§ 6 ). Because the readout type localizes the error, inspecting which readout fires does
+more than rank reliability—it tells an operator what to look at, turning a scalar into a first diagnosis of
+the likely failure mode. Even the safe-default fusion can be decomposed into its per-type readouts for that
+diagnosis. We study function-calling and code agents: their actions are the consequential, error-prone
+decisions in deployed systems, and their correctness is checkable from the call, context, and schema. 
+ We show that such a sidecar beats the two baselines a black-box deployer would otherwise reach for
+(§ 4 ). Read as a reliability ranking , a small open-weight auditor’s log-probability
+out-predicts both the actor’s verbalized self-assessment and its self-consistency, and it does so across
+three actor families. The beats-self margin is regime-graded: the verdict wins in the holistic
+regime, the generative TF/PMI in argument-value regimes. We then put
+the readout-type framework to work (§ 5 , 6 ). Because which single readout wins
+depends on the call’s error locus, an orientation-corrected fusion of the family is the lowest-regret default
+when that locus is unknown—as it is in deployment. A learned combiner does no better than a simple oriented
+average. 
+ Finally, we evidence two deployment modes end-to-end (§ 7 ). The ranking drives selective
+prediction on every dataset, needing only an escalation channel. And returning the score to the agent
+alongside the tool result lifts end-to-end task success on two live-execution benchmarks, beating a
+random-value control where step errors are silent—a distinction an unannotated control alone would have
+missed. Throughout, claims are regime-graded and scoped to that class of actions. 
+ 2 Background and related work 
+ Confidence estimation for LLMs differs mainly in the source of the signal. Every existing
+source is unavailable or unreliable once the actor is a deployed, black-box, near-deterministic agent.
+ Actor-internal probabilities. P(True)/self-evaluation reads the model’s probability on its
+ own answer  ( Kadavath et al., 2022 ) —intra-model, and inaccessible behind a frontier chat API.
+ Actor verbalized confidence asks the model to state a number  ( Lin et al., 2022 ; Tian et al., 2023 ; Xiong et al., 2024 ) ; it is reliable only where the model is well-calibrated, and least reliable
+exactly on its confident errors. Actor sampling/agreement —self-consistency  ( Wang et al., 2023 ) ,
+SelfCheckGPT  ( Manakul et al., 2023 ) , semantic entropy  ( Kuhn et al., 2023 ; Farquhar et al., 2024 ) —needs multiple actor samples and collapses under the near-determinism of deployed frontier agents
+(§ 4 ). All three read the actor ; none survives the black-box, near-deterministic regime. 
+ A second model as the signal source. LLM-as-judge  ( Zheng et al., 2023 ) and
+cross-examination  ( Cohen et al., 2023 ) bring in another model but read its words —a verbalized
+verdict; weak-to-strong generalization  ( Burns et al., 2024 ) and learned process/outcome
+verifiers  ( Lightman et al., 2024 ) require a training step; guardrail
+classifiers  ( Inan et al., 2023 ) screen content, not action correctness.
+ Cross-model likelihood as a metric. Scoring text by a second model’s token
+log-probabilities is established in generation metrics: BARTScore casts evaluation as generation and
+reads a scorer model’s likelihood  ( Yuan et al., 2021 ) , GPTScore steers the same quantity by a
+natural-language instruction  ( Fu et al., 2024 ) , while learned MT metrics instead regress on human
+judgments  ( Rei et al., 2020 ) ; probability-curvature tests read likelihood geometry to detect
+machine-generated text  ( Mitchell et al., 2023 ; Bao et al., 2024 ) . All of these score
+ prose —its fluency, factuality, or provenance—never whether a tool call will execute
+correctly . And none is organized by which failure mode the readout catches. Our request-PMI readout follows the
+domain-conditional-PMI correction introduced against surface-form competition in answer
+scoring  ( Holtzman et al., 2021 ) , reweighting a likelihood by its context-free prior. Calibration and oversight. Post-hoc calibration sharpens
+a classifier’s own probabilities  ( Guo et al., 2017 ) , presuming the access we lack; monitoring an
+untrusted model with a weaker trusted one is the control-protocol setting  ( Greenblatt et al., 2024 ) , to
+which we contribute a concrete training-free monitor signal.
+We build on standard deployment machinery rather than claim it: accept-if-passes execution-feedback
+repair  ( Chen et al., 2024b ; Chen et al., 2023 ; Ni et al., 2023 ) (self-correction has known limits without an
+external check  ( Huang et al., 2024 ) ), selective prediction /
+risk–coverage  ( El-Yaniv and Wiener, 2010 ; Geifman and El-Yaniv, 2017 ) , and cost-driven
+cascades  ( Chen et al., 2024a ) , which our two deployment modes instantiate.
+ The gap we fill: inference-time, training-free, black-box-compatible action verification
+from a second model’s log-probabilities—not its words, not the actor’s own—organized by a failure-mode
+map over generative/discriminative readout types. 
+ 3 The proxy-confidence sidecar 
+ Figure 1: The proxy-confidence sidecar: a training-free plug-in hook. The sidecar (dashed) taps the
+agent’s tool-call hook, reads only ( context , schema , action ) (\text{context},\text{schema},\text{action}) —no logits, weights, or
+fine-tuning—and emits a confidence c c , scored in parallel with tool execution. Drawn here are the two
+in-loop modes: a real-time oversight gate (Mode A: high c c commit, low c c escalate to a human) and
+ confidence feedback (Mode B: return the tool result together with c c to the actor, which chooses its
+next move). Details in § 7 –§ 8 . 
+ A black-box actor 𝒜 \mathcal{A} emits an action o o and exposes no log-probabilities. A log-probability-capable auditor 𝒮 \mathcal{S} (equivalently, the
+ scorer ) reads only ( context , tool schema , o ) (\text{context},\text{tool schema},o) — the same information the actor
+conditioned on —and computes a scalar confidence (Table  1 ) at temperature  0 0 . Our primary
+auditor is a small, open-weight model (Qwen3-32B or 14B, or Gemma-3-27B); this is the cheap-sidecar
+setting the cost argument (§ 8 ) rests on. For the one hard-code case we instead score with a
+large open-weight model of different lineage than the actor, to rule out same-family self-preference bias;
+we write 𝒮 L \mathcal{S}_{\text{L}} for that scorer and flag it explicitly at that result (§ 4 ).
+ Actors are de-identified. 1 1 
+ 1 
+ This paper studies a property of the black-box deployment
+setting —that an actor’s stated confidence is uninformative about its own confident errors—not the
+standing of any particular vendor’s model. Per-model reliability figures are therefore reported under
+neutral, de-identified labels, and we make no comparative claim about any provider. All actors are recent
+instruction-tuned models scored by the same readouts under identical prompts and labels. No claim here needs
+an actor’s identity to check: each is either within-actor or holds across all actors. 
+We study five actors across three families: A1 and A2 , two sizes of a widely deployed
+closed frontier family; B , a frontier open-weight model; and C-120b / C-20b , two
+sizes of a second open-weight family. Most analyses use A1 and A2 and add the others to test cross-family
+generalization (§ 4 ); 𝒮 L \mathcal{S}_{\text{L}} is of the same lineage as actor B, so for that
+one result the scorer and an actor share a family, which is why it is never used to score B. The baseline a black-box
+deployer would otherwise use is 𝒜 \mathcal{A} ’s own verbalized self-assessment (and, in § 4 ,
+its self-consistency). Dataset selection. We fix a single a-priori inclusion rule: a benchmark
+qualifies iff action correctness is checkable by execution/AST/gold-match without an LLM judge . We
+then take the most widely-used qualifying benchmark in each action category, spanning three model families:
+function-calling (BFCL  ( Patil et al., 2025 ; Patil et al., 2024 ) , xLAM/APIGen  ( Liu et al., 2024 ) ,
+NESTFUL  ( Basu et al., 2025 ) ), interactive coding (AppWorld  ( Trivedi et al., 2024 ) , InterCode
+ nl2bash   ( Yang et al., 2023 ) ), code generation
+(LiveCodeBench  ( Jain et al., 2025 ) , APPS  ( Hendrycks et al., 2021 ) ,
+CodeContests  ( Li et al., 2022 ) ), and text-to-SQL (BIRD  ( Li et al., 2023 ) ). We report on every 
+qualifying benchmark we ran rather than omitting any, including the one regime where the method
+ fails —tau2-bench  ( Yao et al., 2025 ) , which is omission-dominated and retained as a scope note
+(§ 9 ). Labels are execution/AST/gold-match based per dataset
+(AppWorld unit tests; BFCL state/response checkers and AST-match; NESTFUL/xLAM gold-call matching; public
+tests for code; shell-state and file-match for InterCode)—never LLM-judged. 
+ Two primitives. 
+ Every readout is one of two types, and this distinction organizes the paper. A
+ generative readout scores the likelihood the auditor assigns to the action, either raw (teacher
+forcing, TF) or request-contrasted (request pointwise mutual information, request-PMI). The contrast matters
+because raw likelihood rewards generic argument values: PMI subtracts the same value’s log-probability with
+the request withheld , keeping only the evidence the request supplies. A
+ discriminative readout is instead the auditor’s
+ posterior over a discrete label set —over correctness (the verdict) or over function identity
+(tool-choice competition). The type predicts both the failure mode a signal catches (§ 5 )
+and whether a small scorer suffices (§ 6 ); Table  1 lists the four instances.
+The verdict needs only generated-token log-probabilities (any chat API that exposes them), whereas TF/PMI
+require prefill/echo access. We elicit the verdict two ways and report which throughout.
+ Generated-token elicitation reads the log-probability of the scorer’s own next token after the “is
+this correct?” prompt. Matched elicitation instead forces YES and NO and renormalizes over the pair;
+because that is the same mechanism as teacher forcing, it is confound-free when we compare the verdict
+against the generative signals. The two mostly agree, diverging where free-form generation carries
+formatting cues the forced pair strips out. The divergence is sharpest on xLAM: there the generated-token
+verdict ties the actor while the matched verdict is near-chance, so the xLAM claim rests on TF/PMI rather
+than the verdict. 
+ Metric and reporting. 
+ The metric is AUROC for predicting action correctness; significance
+statements use paired bootstrap over items. We report two quantities and mark them by case: uppercase
+“ P P ” is a paired-bootstrap exceedance probability (the fraction of bootstrap resamples in which the proxy
+signal out-predicts the baseline), and lowercase “ p p ” is a frequentist test p p -value. 2 2 
+ 2 
+ The
+frequentist test is matched to the contrast: paired-McNemar for a change in end-to-end accuracy over the
+same items (Mode B, Table  10 ); Holm-corrected across arms for the multi-arm self-review
+family (Table  11 ); and a paired-bootstrap TOST for equivalence claims (§ 6 ). 
+Signals are
+ definable on different action types: value-token TF/PMI need a single forced call with JSON arguments,
+while the verdict applies to any action. Each table therefore reports the
+datasets/actors/scorers for which its signal is defined and relevant (full coverage matrix,
+App.  G , Table  7 ). Cross-dataset heterogeneity is high ( I 2 = 90 % I^{2}{=}90\% ), so we report
+ per-dataset AUROC and never pool absolute AUROC. The only pooled numbers are paired 
+contrasts—a within-item sign test of whether the proxy signal out-predicts the same-item baseline—for
+which level differences cancel. tau2-bench is used only as a scope note, not a per-call benchmark
+(§ 9 ). 
+ Table 1: The four proxy readouts and the failure mode each targets. 
+ Signal 
+ Readout 
+ Targets 
+ Verdict 
+ P ⁡ ( YES ) P(\text{YES}) on “is this correct?”, renormalized over YES/NO 
+ coarse
+tool/code correctness 
+ Teacher forcing 
+ per-token log ⁡ P \log P of 𝒜 \mathcal{A} ’s exact call, localized to argument
+ value tokens 
+ wrong argument values 
+ Request-PMI 
+ log ⁡ P ⁡ ( o ∣ full ) \log P(o\mid\text{full}) − log ⁡ P ⁡ ( o ∣ req. withheld ) {-}\log P(o\mid\text{req.\ withheld}) , on value tokens 
+ groundedness of args in request 
+ Tool-choice competition 
+ does 𝒮 \mathcal{S} prefer 𝒜 \mathcal{A} ’s function over k k siblings? 
+ wrong function choice 
+ 4 The sidecar beats the deployer’s two baselines 
+ The deployer’s two black-box options both fail in the deployment regime, and the proxy signal beats each.
+ (1) vs. the actor’s self-assessment. Every proxy readout (§ 3 ) reads the scorer’s
+log-probabilities rather than its words. A within-model mechanism ladder (Figure  2 )
+confirms this is where the signal comes from, and quantifies the payoff. On the same Qwen3-32B we change only the readout—from a
+verbalized 0 0 – 100 100 confidence to the verdict token’s log-probability, identical model and prompt
+content—and AUROC rises + 0.09 +0.09 to + 0.18 +0.18 on 5 / 6 5/6 datasets (exceedance > 0.99 >0.99 ; miss_param, verdict-blind
+by construction, is the exception at + 0.02 +0.02 ). Capability is held exactly constant, so the gain is
+attributable to access , not scale. The intuition is that a verbalized number is a lossy projection of a
+model’s internal uncertainty onto a few output tokens, and it is lossy at any scale. Direct
+log-probability access therefore recovers signal that added capability in the actor cannot—which is why an
+auditor smaller than the actor can still out-predict its self-report. The payoff follows. Pooled over the five clean datasets where actor self-assessment
+was logged (AppWorld, BFCL base/long, miss_func, xLAM; n = 2439 n{=}2439 ; the verdict-blind miss_param is
+excluded), the smaller instrumented scorer’s verdict out-predicts the frontier actor’s own self-assessment
+(pooled paired contrast + 0.022 +0.022 AUROC, CI 95 [ + 0.002 , + 0.043 ] [{+}0.002,{+}0.043] , P = 0.98 P{=}0.98 —a within-item
+sign test of direction, not a pooled absolute AUROC). That edge is small but significant overall, and
+much larger on the individual regimes where the actor is most overconfident. The starkest such regime is
+hard code, which we show as a
+separate cross-model judge-solve asymmetry (here the domain-agnostic neutral-verdict scorer
+ 𝒮 L \mathcal{S}_{\text{L}} , not the sub-frontier Qwen, scoring actor A1’s LiveCodeBench solutions, n = 139 n{=}139 ):
+the proxy verdict reaches 0.825 \mathbf{0.825} while the actor’s own stated confidence is near chance at 0.598 0.598 
+(paired Δ + 0.213 \Delta{+}0.213 , CI 95 [ + 0.13 , + 0.33 ] [{+}0.13,{+}0.33] , P = 1.0 P{=}1.0 ). Judging code is easier than writing it
+and a stated number does not recover that asymmetry: a competent actor can still be an uninformative reporter
+on its own hardest outputs—the silent-failure regime a guardrail is for, and a property of
+ self-report as a signal source rather than of any one model.
+That ranking transfers : a calibrator fit on other datasets and evaluated leave-one-dataset-out on
+held-out LiveCodeBench still scores 0.836 0.836 and beats the actor by + 0.222 +0.222 , so the gap is not an
+overfit artifact (App.  E reconciles the three LiveCodeBench verdict figures). 
+ (2) vs. self-consistency—and why the deployment regime is where proxy scoring wins. The other
+black-box baseline is actor self-consistency (SC): sample the actor K = 5 K{=}5 times and use output
+agreement, at K × K{\times} the actor’s cost. SC’s AUROC is governed by the actor’s own sample entropy, so
+proxy-vs-SC is partly a comparison of actors—which is precisely why proxy scoring wins where agents are
+deployed. On the near-deterministic actors that dominate deployment (family A, 94 94 – 96 % 96\% of
+resampled calls identical) SC has almost no variance to read and falls to 0.57 0.57 – 0.62 0.62 , while the
+proxy generative signal holds 0.72 0.72 – 0.77 0.77 (paired PMI − - SC = + 0.19 =+0.19 A1, + 0.14 +0.14 A2, both
+CI 95 excluding 0 0 ; SC’s AUROC decays with sample unanimity at r = − 0.96 r{=}{-}0.96 across five actors,
+App.  E ). Near-determinism is a precondition SC needs absent , not an actor defect.
+We do not claim a blanket win. On higher-entropy actors (family C) SC
+is competitive ( 0.76 0.76 – 0.81 0.81 ), and there neither the best single readout nor a fusion of the applicable
+readouts (oriented fusion, § 5 ) cleanly beats it. What is unconfounded and universal is the cost asymmetry—one auditor pass vs. K K frontier
+generations—plus the significant AUROC win in that regime. (On code, cluster-agreement of the samples on the public tests scores 0.72 0.72 – 0.84 0.84 , but
+that runs the test oracle the auditor never sees. Made execution-free to match the auditor’s no-test access
+it drops to 0.52 0.52 – 0.64 0.64 , and the proxy verdict beats it—LiveCodeBench 0.851 0.851 vs. 0.623 0.623 ;
+App.  E .) 
+ Auditing generalizes across families; the beats-self margin is regime-graded. We add the three
+actors outside family A on BFCL (B; C-120b/C-20b), scored by the same Qwen/Gemma auditors—a fully
+cross-family pairing with no shared weights. The proxy verdict predicts every actor’s turn correctness
+at AUROC 0.64 0.64 – 0.77 0.77 , and is cross-scorer-stable (Qwen ≈ {\approx} Gemma within ≈ 0.02 {\approx}0.02 ; Table  6 ).
+So auditing generalizes. The beats-self edge is regime-graded, and the two readout types split
+it cleanly along the failure-mode map we develop next (§ 5 ). The discriminative
+verdict beats self on family A’s holistic BFCL regime, but only ties on B and C, which
+self-assess well there ( 0.66 0.66 – 0.77 0.77 ). The generative TF/PMI beats self on the
+argument-value regime for all three of the remaining actors: teacher-forcing
+each of their xLAM calls through the proxy Qwen3-32B, request-PMI predicts correctness at
+ 0.72 0.72 – 0.79 0.79 and improves on the actor’s own stated confidence by + 0.07 +0.07 to + 0.28 +0.28 , all significant
+(Table  2 ). The margin is large where the actor states confidence near chance
+( 0.51 0.51 – 0.53 0.53 ), and smaller but still significant where the actor self-assesses well at 0.65 0.65 
+yet still loses to PMI. Whether the proxy signal beats an actor’s verbalized self-assessment
+thus depends on the actor’s self-calibration and on the regime. We report that as a family/regime-graded
+effect rather than universal dominance. Because the auditor is open, it also admits an epistemic readout a
+black-box pipeline cannot: ensemble disagreement between two different-lineage scorers ( 0.70 0.70 – 0.80 0.80 ,
+near-free; App.  K ). 
+ Taken together: auditing generalizes. A proxy log-probability ranks correctness across three
+unrelated actor families with no shared weights, and across action types (tool calls and code;
+§ 4 , § 7 ). Beating the actor’s own confidence, by contrast, is
+regime-graded—strongest exactly where the actor is blind to its own errors. The sidecar is not a universal
+oracle. It is a guardrail whose edge grows with the actor’s error rate, scoped to actions whose correctness
+is decidable by reading them (§ 9 )—precisely the regime a deployer cares about. 
+ Table 2: PMI improves on stated confidence for all three actors outside family A. Proxy signals
+scoring each actor’s xLAM calls through Qwen3-32B; best proxy in bold. Actors are de-identified
+(§ 3 ); the comparison of interest is proxy-vs-self within each row, not between rows. 
+ Actor (family; n n ) 
+ TF 
+ PMI 
+ verd. 
+ self 
+ PMI − - self 
+ C-120b (family C; 775) 
+ 0.735 
+ 0.794 
+ 0.526 
+ 0.515 
+ + 0.279 +0.279 
+ C-20b (family C; 771) 
+ 0.743 
+ 0.793 
+ 0.552 
+ 0.534 
+ + 0.255 +0.255 
+ B (family B; 1261) 
+ 0.636 
+ 0.721 
+ 0.546 
+ 0.648 
+ + 0.071 +0.071 
+ PMI − - self CI 95 : C-120b [ + .222 , + .338 ] [{+}.222,{+}.338] , C-20b
+ [ + .197 , + .314 ] [{+}.197,{+}.314] , B [ + .021 , + .121 ] [{+}.021,{+}.121] . 
+ 5 The signal family and its failure-mode map 
+ Log-probability access buys more than one signal. We state a failure-mode map a priori —which
+readout should win on which action type—and then test it (Table  3 ; the same matrix as a
+heatmap is in App.  K , Fig.  5 ). The champion signal marches predictably from the
+ verdict on coarse holistic regimes to teacher forcing on argument-heavy ones to
+ tool-choice competition on wrong-function risk. 
+ Table 3: The champion signal tracks the error locus. Per-signal AUROC (32B scorer) vs. the
+actor’s self-assessment, best single signal in bold. 
+ Dataset 
+ locus 
+ verd. 
+ TF 
+ PMI 
+ actor 
+ fuse 
+ P ⋆ P^{\star} 
+ AppWorld 
+ holistic 
+ 0.894 
+ n/a 
+ n/a 
+ 0.788 
+ n/a 
+ .996 
+ BFCL base 
+ holistic 
+ 0.733 
+ 0.633 
+ n/a 
+ 0.703 
+ 0.720 
+ .945 
+ BFCL long 
+ holistic 
+ 0.719 
+ 0.640 
+ n/a 
+ 0.682 
+ 0.700 
+ .968 
+ BFCL v3 
+ args 
+ 0.711 
+ 0.549 
+ 0.714 
+ 0.636 
+ 0.700 
+ .950 
+ parallel 
+ args 
+ 0.661 
+ 0.653 
+ 0.662 
+ 0.577 
+ 0.695 
+ .980 
+ NESTFUL 
+ args 
+ 0.594 
+ 0.643 
+ 0.554 
+ 0.620 
+ 0.655 
+ .840 .840 
+ miss_param 
+ args 
+ 0.517 
+ 0.573 
+ n/a 
+ 0.528 
+ 0.697 ¶ 
+ .950 
+ miss_func 
+ function 
+ 0.592 
+ n/a 
+ n/a 
+ 0.624 
+ 0.681 ∥ 
+ — 
+ xLAM ♮ 
+ easy 
+ 0.720 
+ 0.750 
+ 0.760 
+ 0.710 
+ n/a 
+ — 
+ fuse : oriented rank-average of verdict + + TF; P ⋆ P^{\star} : paired-bootstrap exceedance
+(best single vs. actor); n/a: signal undefined for that action type, not a skipped run.
+ ∥ tool-choice competition (not verdict + + TF). ¶ learned fusion, argument-bearing subset
+( n = 565 n{=}565 ). ♮ xLAM verdict ties the actor only under generated-token elicitation; under matched
+elicitation it is near-chance, so the xLAM claim rests on TF/PMI (App.  H ). 
+ Verdict—holistic correctness (the default). 
+ Where correctness is adjudicable on-face, the
+one-token verdict is cheapest and best (AppWorld 0.894 0.894 vs. actor 0.788 0.788 , P = .996 P{=}.996 ; BFCL base/long),
+and on AppWorld beats a trajectory-length baseline the actor’s self-report does not—diagnostic, not a
+length proxy. 
+ Teacher forcing / request-PMI—when argument values carry the risk. 
+ Here the holistic
+verdict is too coarse. On NESTFUL, TF ( 0.643 0.643 ) beats the verdict ( 0.594 0.594 , P = .98 P{=}.98 ). On
+miss_param (a required argument withheld) the verdict is at chance ( 0.517 0.517 ) while TF recovers
+ 0.573 0.573 and beats the actor, and the ranking is actor-invariant (A2: TF 0.604 > 0.604> verdict 0.552 > 0.552> self
+ 0.594 0.594 ). A judge-free anchor confirms the mechanism: against deterministic per-parameter accuracy, TF’s
+correlation rises to ρ = 0.41 \rho{=}0.41 as the target sharpens to argument values, while the verdict collapses to
+ ρ = 0.02 \rho{=}0.02 —for both actors (App.  K , Fig.  6 ). On short structured calls
+(BFCL v3) request-PMI ( 0.714 0.714 ) ties the verdict. And for wrong- function risk (miss_func) a
+counterfactual over k = 4 k{=}4 sibling tools reaches 0.681 0.681 where the verdict is weak ( 0.592 0.592 ). 
+ Fusion—additive when signals are complementary, and orientation is mandatory. 
+ We
+write oriented fusion for the orientation-corrected rank-average of whichever readouts are defined on
+a given call—in practice verdict + + TF, plus PMI or tool-choice where they apply. (A larger
+ full-battery fusion of all 16 single-pass readouts is an appendix probe, App.  D .) Verdict and TF
+are nearly orthogonal ( ρ ≤ 0.36 \rho{\leq}0.36 ), so rank-averaging helps most where they catch different 
+errors: miss_param ( 0.517 / 0.573 → 0.697 0.517/0.573{\to}0.697 learned, ≈ 0.62 {\approx}0.62 plain rank-average, beating either and
+the actor), parallel ( 0.695 0.695 ), NESTFUL ( 0.655 0.655 ). It is not free: where signals share errors it does not
+exceed the best single readout, and PMI on top of verdict + + TF hurts on nested args
+( 0.655 → 0.625 0.655{\to}0.625 ). Two rules govern it. First, the combiner barely matters—a learned logistic is
+indistinguishable from an orientation-corrected rank-average, so we claim no trained combiner
+(App.  D ). Second, orientation is essential, and free: some TF signals are
+ anti -correlated with correctness in a regime. This happens when the fluent, high-likelihood
+completion is the wrong one—the scorer finds a generic or default-valued call likelier than a correct call
+needing an unusual argument, so higher TF flags the easy-but-wrong action. A naïve average that fails to
+flip such a signal can fall below chance, so we fit each sign on a held-out fold. 
+ Which signal to trust is therefore not a mystery. The failure-mode map makes it predictable from where the
+error can live—generative for argument values, discriminative for holistic wrongness. Two
+operational questions follow, and the same generative/discriminative split answers both: does the sidecar
+need a large scorer, and can it run cheaply? 
+ 6 Which readout, how cheap, and when to specialize 
+ The generative/discriminative type answers the first of the two questions § 5 closed on, and
+the answer makes the sidecar cheap. 
+ Teacher forcing = = access-bound: a 14B suffices (equivalence-tested). We re-score every dataset with
+Qwen3-14B (bf16)—half the 32B’s parameters, every signal through the identical prefill on
+both scorers. The teacher-forcing readout is capability-invariant : on all six matched cells the 14B
+tracks the 32B within | Δ | ≤ 0.015 |\Delta|{\leq}0.015 AUROC (on xLAM the 14B is fractionally ahead), and a
+paired-bootstrap TOST equivalence test ( δ = 0.05 \delta{=}0.05 ) passes on all 6 6 (App.  H ,
+Fig.  4 ). Reading an action’s raw likelihood needs log-probability access , not scale: the
+quantity is intrinsic to the forward pass over low-entropy value tokens. Request-PMI contrasts two
+prefills and is more scale-sensitive than raw TF ( − 0.04 -0.04 – 0.05 0.05 at 14B on the two cells we test), so we treat
+the 14B-suffices claim as specific to teacher forcing. Discriminative = = 
+capability-sensitive: the verdict falls on the other side. Elicited the same way on both scorers
+(confound-free), the 32B verdict significantly beats the 14B on 6 6 of 9 9 matched dataset × \times actor cells
+(90% CI excludes 0; none favor the 14B). The three exceptions are the two NESTFUL cells and AppWorld, where
+trajectory correctness is legible even to the small scorer; Table  8 shows representative cells. The mechanism is a difference in kind: a generative likelihood is intrinsic to the forward pass, whereas the
+verdict must instantiate a learned decision boundary over an abstract correctness latent—a
+meta-competence that scales with capability. With n = 2 n{=}2 sizes we report this as a capability trend ,
+not an invariance law. Deployment consequence: provision a 14 14 B scorer for access-bound
+teacher forcing, and add the 32 32 B when the verdict, request-PMI, or a fusion including them carries
+weight. 
+ Robustness: not one pairing. A 2 × 2 × 3 2{\times}2{\times}3 grid (A1/A2 × \times 
+Qwen3-32B/Gemma-3-27B × \times AppWorld/BFCL base/long; Table  6 ) shows the verdict is
+not a Qwen artifact. The two different-lineage scorers agree within ≈ 0.02 {\approx}0.02 AUROC on BFCL (and
+ ≈ 0.06 {\approx}0.06 on AppWorld), and both beat both actors’ self-assessment (exceedance > 0.99 >0.99 against the
+stronger A2). The lone exception is AppWorld × \times A2, a strong self-assessor on its own long code
+trajectory. The cross-family evidence for families B and C (Tables  2 ,  6 ) was presented
+in § 4 . 
+ 7 From confidence to action: two deployment modes 
+ The ranking is directly useful in two modes (Figure  1 ). Mode A—selective
+prediction—is the uniform, always-available use. Ranking calls by proxy confidence and
+ accepting only the most-confident fraction (abstaining/escalating the rest) improves accepted-action
+accuracy on every dataset—a direct consequence of AUROC > 0.5 {>}0.5 (per-dataset numbers in
+Table  5 , App.  C ). At
+ 50 % 50\% coverage on natural errors, accepted accuracy rises + 0.05 +0.05 (BFCL), + 0.16 +0.16 (xLAM), and + 0.095 +0.095 
+on tau2 (scored at the trajectory level against end-to-end task success, not per call). On
+the injected-error needle construction—which corrupts exactly one call per trajectory and asks the
+signal to localize it—accuracy rises + 0.22 +0.22 – 0.30 0.30 . The risk–coverage area is far below random
+abstention everywhere. Needing only an abstain/escalate channel and no self-repairing actor, Mode A is the
+one use that works on any black-box agent. It can also buy efficiency rather than accuracy: at a fixed audit
+budget of one call per trajectory, ranking by proxy confidence repairs the injected error 0.92 0.92 of the time
+on xLAM and 0.65 0.65 on NESTFUL, versus 0.42 0.42 / 0.40 0.40 for a random-call budget ( p < 10 − 4 p{<}10^{-4} , p = 0.008 p{=}0.008 ), so
+it decides where to spend review even where blanket review saturates. (Handing the actor its own
+confidence post hoc to self-correct helps only where it cannot otherwise self-verify the call;
+App.  J . tau2 probes an orthogonal omission -dominated regime and is a scope note,
+§ 9 .) 
+ Mode B—confidence feedback: return ( result , c ) (\text{result},c) and let the actor act. The most direct use
+of the hook is the one Figure  1 draws: append the confidence to the tool result the actor reads
+next, and let it choose its own next move—no gate, no human. With an A2 actor, oriented fusion raises
+end-to-end task success on both live-execution benchmarks:
+ nl2bash   ( Yang et al., 2023 ) 0.399 → 0.518 0.399{\rightarrow}0.518 ( + 0.119 +0.119 ; 29 29 tasks rescued vs. 6 6 
+broken, exact p = 10 − 4 p{=}10^{-4} ; n = 193 n{=}193 ) and AppWorld test_challenge 0.595 → 0.731 0.595{\rightarrow}0.731 
+( + 0.137 +0.137 ; 100 / 43 100/43 , p < 10 − 4 p{<}10^{-4} ; n = 417 n{=}417 ). 
+ Two controls then separate the benchmarks, and that split is the point. Announcing an audit while
+withholding the number does nothing ( nl2bash − 0.010 -0.010 , p = 0.87 p{=}0.87 ); an independent U ⁡ ( 0 , 1 ) U(0,1) draw is
+likewise flat ( + 0.041 +0.041 , p = 0.28 p{=}0.28 ), and fusion beats that draw by + 0.078 +0.078 ( 19 / 4 19/4 , p = 0.003 p{=}0.003 )—so here
+the annotation’s content matters, not merely its presence. AppWorld inverts this: the random stream
+matches fusion ( + 0.005 +0.005 , 46 / 44 46/44 , p = 0.92 p{=}0.92 ) and the displayed signal sits at chance (AUROC
+ 0.39 0.39 – 0.47 0.47 vs. 0.64 0.64 ). The reason is diagnostic—AppWorld’s Python failures mostly raise , so the
+traceback already carries the diagnosis, whereas on nl2bash half of all wrong steps emit no error
+text at all. Mode B
+therefore earns its keep only where step errors are silent—and a random-value arm is what tells an operator
+which of the two regimes they are in (App.  J ). 
+ 8 Deploying the sidecar: cost, latency, and the safe default 
+ Why the sidecar is cheap: the scorer’s work is a prefill. 
+ The confidence readouts are dominated
+by prefill , not autoregressive decode. Teacher-forcing the actor’s already-known action needs
+one forward pass over known tokens with zero generation; request-PMI needs two; the verdict needs one
+prefill plus a single token. The scorer never pays the long decode the actor already paid, so a 14 14 B pass
+over the shared context is cheaper than the actor’s own generation—and than the K K frontier generations SC
+needs. “Lightweight” here means per-call compute; the sidecar is still a second model to host. A
+generative-only deployment is cheapest, since a 14 14 B suffices for the access-bound signals, while a
+verdict/fusion gate provisions the 32 32 B (§ 6 ).
+ Measured on the deployed 14 14 B fp8 sidecar at realistic full-context length (one L40S GPU,
+Table  9 ), a scored call takes 123 123 – 159 159  ms at the median ( p ​ 99 ≤ 179 p99{\leq}179  ms). That is a
+single-digit-percent addition to the
+ 100 100 s-of-ms a real tool call (DB query, API round-trip) already costs, and it is hidden entirely when the
+scorer runs concurrently with execution. Scoring is triggered by the framework’s pre-execution tool-call hook,
+which already holds the ( context , schema , action ) (\text{context},\text{schema},\text{action}) tuple, so it needs no extra actor
+calls , adds ≈ 0 {\approx}0 to the Mode A critical path, and fails open on timeout so the guardrail can never
+stall the agent. Because the hook fires per call, scoring can be restricted to high-stakes calls: as a design
+policy (not a measured cost-saving) a static allowlist of writes/refunds/deletes plus a free-form-argument
+heuristic routes argument-bearing calls to TF/PMI. The evidenced selectivity is that the signal tells
+you where to spend a fixed review budget once calls are scored (§ 7 ). 
+ Oriented fusion is the regime-agnostic safe default. 
+ The failure-mode map
+(§ 5 ) says which single signal wins in each regime. But exploiting it requires
+knowing the error locus a priori , which is exactly the deployment knowledge a black-box operator
+usually lacks. Worse, every single signal has a catastrophic regime . The verdict is near-blind
+where a required argument is withheld (miss_param 0.517 0.517 , at chance), and teacher forcing is weak on the
+coarse holistic calls the verdict handles best (BFCL v3 0.549 0.549 vs. the 0.714 0.714 optimum there). Committing
+to either one blind therefore risks a large loss. We quantify this as worst-case regret : the AUROC
+gap between a fixed policy and the best-achievable signal in each regime. Reading the oriented fusion caps
+worst-case regret at 0.019 \mathbf{0.019} AUROC (mean
+ 0.007 0.007 ), versus ≈ 0.17 \approx 0.17 – 0.18 0.18 for either single-signal policy (breakdown in
+Table  4 , App.  B ). 
+ Fusion or a single signal? A practitioner’s rule. 
+ The choice is risk management , not
+performance maximization: default to oriented fusion whenever you cannot predict, per call, where the error
+will be—the common black-box case. Fusion is not the highest- ceiling readout in any regime but the
+lowest- floor one, the only choice independent of the call pattern. Drop to a single signal only when you know the error locus a
+priori: a verdict for holistic correctness, teacher-forcing / request-PMI when argument
+ values carry the risk, tool-choice competition for wrong- function routing. Each is
+cheaper, and ties or edges fusion where you are right about the locus. The deployable edge
+tracks the actor’s error rate. It is largest on error-prone tool/code regimes (AppWorld + 0.11 +0.11 , BFCL,
+NESTFUL, miss_param), and slightly negative only for the verdict on easy xLAM ( − 0.06 -0.06 , where TF/PMI still
+lead)—exactly the calls the actor already gets right, which least need a guardrail. 
+ 9 Limitations and scope 
+ Our claims are scoped to actions whose correctness is decidable by reading them—for a tool call,
+whether it matches the request and schema. Where the deciding evidence is an external fact absent from the
+context, we claim nothing. One hazard carries into deployment: a readout’s sign is regime-dependent.
+Teacher forcing anti-correlates with correctness wherever the fluent completion is the wrong one
+(§ 5 ), so orientation must be fit on held-out labels per regime and never ported; an
+unvalidated sign gives an anti-correlated gate, not merely a weak one. The beats-self edge is
+regime/family-graded, not universal—on BFCL outside family A
+the verdict only ties (§ 4 )—and a second strong closed frontier family is
+untested. The cost claim rests on a 1 / K 1/K -generations plus smaller-model argument and single-GPU latency
+(Table  9 ); multi-tenant serving is unprofiled and scorer size spans only a 2 × 2\times ratio
+( ≤ \leq 8B untested). Learned fusion does
+ not beat an orientation-corrected rank-average (App.  D ), so we claim no trained
+calibrator. Finally, Mode B is regime-dependent: it beats a random-value control only where step errors are
+silent (§ 7 ), so it warrants a scorer-validity check Mode A does not. 
+ References 
+ Bao et al. [2024] 
+Guangsheng Bao, Yanbin Zhao, Zhiyang Teng, Linyi Yang, and Yue Zhang.
+ Fast-DetectGPT: Efficient zero-shot detection of machine-generated
+text via conditional probability curvature.
+ In International Conference on Learning Representations
+(ICLR) , 2024.
+ Basu et al. [2025] 
+Kinjal Basu, Ibrahim Abdelaziz, Kiran Kate, Mayank Agarwal, Maxwell Crouse,
+Yara Rizk, Kelsey Bradford, Asim Munawar, Sadhana Kumaravel, Saurabh Goyal,
+Xin Wang, Luis A. Lastras, and Pavan Kapanipathi.
+ NESTFUL: A benchmark for evaluating LLMs on nested sequences of
+API calls.
+ In Proceedings of the 2025 Conference on Empirical Methods in
+Natural Language Processing (EMNLP) , 2025.
+ Burns et al. [2024] 
+Collin Burns, Pavel Izmailov, Jan Hendrik Kirchner, Bowen Baker, Leo Gao,
+Leopold Aschenbrenner, Yining Chen, Adrien Ecoffet, Manas Joglekar, Jan
+Leike, Ilya Sutskever, and Jeff Wu.
+ Weak-to-strong generalization: Eliciting strong capabilities with
+weak supervision.
+ In International Conference on Machine Learning (ICML) , 2024.
+ Chen et al. [2023] 
+Bei Chen, Fengji Zhang, Anh Nguyen, Daoguang Zan, Zeqi Lin, Jian-Guang Lou, and
+Weizhu Chen.
+ CodeT: Code generation with generated tests.
+ In International Conference on Learning Representations
+(ICLR) , 2023.
+ Chen et al. [2024a] 
+Lingjiao Chen, Matei Zaharia, and James Zou.
+ FrugalGPT: How to use large language models while reducing cost and
+improving performance.
+ Transactions on Machine Learning Research (TMLR) ,
+2024a.
+ Chen et al. [2024b] 
+Xinyun Chen, Maxwell Lin, Nathanael Schärli, and Denny Zhou.
+ Teaching large language models to self-debug.
+ In International Conference on Learning Representations
+(ICLR) , 2024b.
+ Cohen et al. [2023] 
+Roi Cohen, May Hamri, Mor Geva, and Amir Globerson.
+ LM vs LM: Detecting factual errors via cross examination.
+ In Proceedings of the 2023 Conference on Empirical Methods in
+Natural Language Processing (EMNLP) , 2023.
+ El-Yaniv and Wiener [2010] 
+Ran El-Yaniv and Yair Wiener.
+ On the foundations of noise-free selective classification.
+ Journal of Machine Learning Research (JMLR) , 11, 2010.
+ Farquhar et al. [2024] 
+Sebastian Farquhar, Jannik Kossen, Lorenz Kuhn, and Yarin Gal.
+ Detecting hallucinations in large language models using semantic
+entropy.
+ Nature , 630, 2024.
+ Fu et al. [2024] 
+Jinlan Fu, See-Kiong Ng, Zhengbao Jiang, and Pengfei Liu.
+ GPTScore: Evaluate as you desire.
+ In Proceedings of the 2024 Conference of the North American
+Chapter of the Association for Computational Linguistics (NAACL-HLT) , pages
+6556–6576, 2024.
+ Geifman and El-Yaniv [2017] 
+Yonatan Geifman and Ran El-Yaniv.
+ Selective classification for deep neural networks.
+ In Advances in Neural Information Processing Systems
+(NeurIPS) , 2017.
+ Greenblatt et al. [2024] 
+Ryan Greenblatt, Buck Shlegeris, Kshitij Sachan, and Fabien Roger.
+ AI control: Improving safety despite intentional subversion.
+ In International Conference on Machine Learning (ICML) , pages
+16295–16336, 2024.
+ Guo et al. [2017] 
+Chuan Guo, Geoff Pleiss, Yu Sun, and Kilian Q. Weinberger.
+ On calibration of modern neural networks.
+ In International Conference on Machine Learning (ICML) , pages
+1321–1330, 2017.
+ Hendrycks et al. [2021] 
+Dan Hendrycks, Steven Basart, Saurav Kadavath, Mantas Mazeika, Akul Arora,
+Ethan Guo, Collin Burns, Samir Puranik, Horace He, Dawn Song, and Jacob
+Steinhardt.
+ Measuring coding challenge competence with APPS.
+ In Advances in Neural Information Processing Systems (NeurIPS)
+Datasets and Benchmarks Track , 2021.
+ Holtzman et al. [2021] 
+Ari Holtzman, Peter West, Vered Shwartz, Yejin Choi, and Luke Zettlemoyer.
+ Surface form competition: Why the highest probability answer isn’t
+always right.
+ In Proceedings of the 2021 Conference on Empirical Methods in
+Natural Language Processing (EMNLP) , pages 7038–7051, 2021.
+ Huang et al. [2024] 
+Jie Huang, Xinyun Chen, Swaroop Mishra, Huaixiu Steven Zheng, Adams Wei Yu,
+Xinying Song, and Denny Zhou.
+ Large language models cannot self-correct reasoning yet.
+ In International Conference on Learning Representations
+(ICLR) , 2024.
+ Inan et al. [2023] 
+Hakan Inan, Kartikeya Upasani, Jianfeng Chi, Rashi Rungta, Krithika Iyer,
+Yuning Mao, Michael Tontchev, Qing Hu, Brian Fuller, Davide Testuggine, and
+Madian Khabsa.
+ Llama Guard: LLM-based input-output safeguard for human-ai
+conversations.
+ arXiv preprint arXiv:2312.06674 , 2023.
+ Jain et al. [2025] 
+Naman Jain, King Han, Alex Gu, Wen-Ding Li, Fanjia Yan, Tianjun Zhang, Sida
+Wang, Armando Solar-Lezama, Koushik Sen, and Ion Stoica.
+ LiveCodeBench: Holistic and contamination free evaluation of large
+language models for code.
+ In International Conference on Learning Representations
+(ICLR) , 2025.
+ Kadavath et al. [2022] 
+Saurav Kadavath, Tom Conerly, Amanda Askell, et al.
+ Language models (mostly) know what they know.
+ arXiv preprint arXiv:2207.05221 , 2022.
+ Kuhn et al. [2023] 
+Lorenz Kuhn, Yarin Gal, and Sebastian Farquhar.
+ Semantic uncertainty: Linguistic invariances for uncertainty
+estimation in natural language generation.
+ In International Conference on Learning Representations
+(ICLR) , 2023.
+ Li et al. [2023] 
+Jinyang Li, Binyuan Hui, Ge Qu, Jiaxi Yang, Binhua Li, Bowen Li, others, and
+Yongbin Li.
+ Can LLM already serve as a database interface? a BIg bench for
+large-scale database grounded text-to-SQLs.
+ In Advances in Neural Information Processing Systems (NeurIPS)
+Datasets and Benchmarks Track , 2023.
+ Li et al. [2022] 
+Yujia Li, David Choi, Junyoung Chung, Nate Kushman, Julian Schrittwieser,
+others, and Oriol Vinyals.
+ Competition-level code generation with AlphaCode.
+ Science , 378, 2022.
+ Lightman et al. [2024] 
+Hunter Lightman, Vineet Kosaraju, Yuri Burda, Harrison Edwards, Bowen Baker,
+Teddy Lee, Jan Leike, John Schulman, Ilya Sutskever, and Karl Cobbe.
+ Let’s verify step by step.
+ In International Conference on Learning Representations
+(ICLR) , 2024.
+ Lin et al. [2022] 
+Stephanie Lin, Jacob Hilton, and Owain Evans.
+ Teaching models to express their uncertainty in words.
+ Transactions on Machine Learning Research (TMLR) , 2022.
+ Liu et al. [2024] 
+Zuxin Liu, Thai Hoang, Jianguo Zhang, Ming Zhu, Tian Lan, others, and Caiming
+Xiong.
+ APIGen: Automated pipeline for generating verifiable and diverse
+function-calling datasets.
+ In Advances in Neural Information Processing Systems (NeurIPS)
+Datasets and Benchmarks Track , 2024.
+ Manakul et al. [2023] 
+Potsawee Manakul, Adian Liusie, and Mark J. F. Gales.
+ SelfCheckGPT: Zero-resource black-box hallucination detection for
+generative large language models.
+ In Proceedings of the 2023 Conference on Empirical Methods in
+Natural Language Processing (EMNLP) , 2023.
+ Mitchell et al. [2023] 
+Eric Mitchell, Yoonho Lee, Alexander Khazatsky, Christopher D. Manning, and
+Chelsea Finn.
+ DetectGPT: Zero-shot machine-generated text detection using
+probability curvature.
+ In International Conference on Machine Learning (ICML) , pages
+24950–24962, 2023.
+ Ni et al. [2023] 
+Ansong Ni, Srini Iyer, Dragomir Radev, Ves Stoyanov, Wen-tau Yih, Sida I. Wang,
+and Xi Victoria Lin.
+ LEVER: Learning to verify language-to-code generation with
+execution.
+ In International Conference on Machine Learning (ICML) , 2023.
+ Patil et al. [2024] 
+Shishir G. Patil, Tianjun Zhang, Xin Wang, and Joseph E. Gonzalez.
+ Gorilla: Large language model connected with massive APIs.
+ In Advances in Neural Information Processing Systems
+(NeurIPS) , 2024.
+ Patil et al. [2025] 
+Shishir G. Patil, Huanzhi Mao, Fanjia Yan, Charlie Cheng-Jie Ji, Vishnu Suresh,
+Ion Stoica, and Joseph E. Gonzalez.
+ The berkeley function calling leaderboard (BFCL): From tool use to
+agentic evaluation of large language models.
+ In International Conference on Machine Learning (ICML) , 2025.
+ Rei et al. [2020] 
+Ricardo Rei, Craig Stewart, Ana C. Farinha, and Alon Lavie.
+ COMET: A neural framework for MT evaluation.
+ In Proceedings of the 2020 Conference on Empirical Methods in
+Natural Language Processing (EMNLP) , pages 2685–2702, 2020.
+ Tian et al. [2023] 
+Katherine Tian, Eric Mitchell, Allan Zhou, Archit Sharma, Rafael Rafailov,
+Huaxiu Yao, Chelsea Finn, and Christopher D. Manning.
+ Just ask for calibration: Strategies for eliciting calibrated
+confidence scores from language models fine-tuned with human feedback.
+ In Proceedings of the 2023 Conference on Empirical Methods in
+Natural Language Processing (EMNLP) , 2023.
+ Trivedi et al. [2024] 
+Harsh Trivedi, Tushar Khot, Mareike Hartmann, Ruskin Manku, Vinty Dong, Edward
+Li, Shashank Gupta, Ashish Sabharwal, and Niranjan Balasubramanian.
+ AppWorld: A controllable world of apps and people for benchmarking
+interactive coding agents.
+ In Proceedings of the 62nd Annual Meeting of the Association
+for Computational Linguistics (Volume 1: Long Papers) , pages 16022–16076,
+2024.
+ Wang et al. [2023] 
+Xuezhi Wang, Jason Wei, Dale Schuurmans, Quoc Le, Ed Chi, Sharan Narang,
+Aakanksha Chowdhery, and Denny Zhou.
+ Self-consistency improves chain of thought reasoning in language
+models.
+ In International Conference on Learning Representations
+(ICLR) , 2023.
+ Xiong et al. [2024] 
+Miao Xiong, Zhiyuan Hu, Xinyang Lu, Yifei Li, Jie Fu, Junxian He, and Bryan
+Hooi.
+ Can LLMs express their uncertainty? an empirical evaluation of
+confidence elicitation in LLMs.
+ In International Conference on Learning Representations
+(ICLR) , 2024.
+ Yang et al. [2023] 
+John Yang, Akshara Prabhakar, Karthik Narasimhan, and Shunyu Yao.
+ Intercode: Standardizing and benchmarking interactive coding with
+execution feedback.
+ In Advances in Neural Information Processing Systems (NeurIPS)
+Datasets and Benchmarks Track , 2023.
+ Yao et al. [2025] 
+Shunyu Yao, Noah Shinn, Pedram Razavi, and Karthik Narasimhan.
+ τ \tau -bench: A benchmark for tool-agent-user interaction in
+real-world domains.
+ In International Conference on Learning Representations
+(ICLR) , 2025.
+ Yuan et al. [2021] 
+Weizhe Yuan, Graham Neubig, and Pengfei Liu.
+ BARTScore: Evaluating generated text as text generation.
+ In Advances in Neural Information Processing Systems
+(NeurIPS) , pages 27263–27277, 2021.
+ Zheng et al. [2023] 
+Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao
+Zhuang, Zi Lin, Zhuohan Li, Dacheng Li, Eric P. Xing, Hao Zhang, Joseph E.
+Gonzalez, and Ion Stoica.
+ Judging LLM-as-a-judge with MT-bench and chatbot arena.
+ In Advances in Neural Information Processing Systems (NeurIPS)
+Datasets and Benchmarks Track , 2023.
+ Appendix A Mechanism ladder: access, not scale 
+ The within-model comparison behind the “access, not scale” claim of § 4 : on a fixed scorer,
+only the readout changes (verbalized confidence → \to verdict-token log-probability), isolating access from
+capability. 
+ Figure 2: The gain is access, not scale. On one Qwen3-32B: the verdict token’s log-probability
+(blue) vs. the same model’s verbalized confidence (grey) and the actor’s own self-assessment
+(orange, A1), across six datasets. Capability is held constant between blue and grey. 
+ Appendix B Worst-case regret of fixed signal policies 
+ Full breakdown behind the safe-default argument of § 8 . Regret is the AUROC gap between a
+fixed policy and the best-achievable signal in each of the six single-call regimes where verdict and TF are
+both defined; lower is more robust. 
+ Table 4: Oriented fusion has no catastrophic regime. Worst-case regret over the six single-call
+regimes where verdict and TF are both defined; lower is more robust. 
+ Fixed policy 
+ worst-case regret (where) 
+ mean regret 
+ always verdict 
+ + 0.180 +0.180 (miss_param) 
+ 0.046 0.046 
+ always teacher-forcing 
+ + 0.165 +0.165 (BFCL v3) 
+ 0.087 0.087 
+ oriented fusion 
+ + 0.019 \mathbf{+0.019} (BFCL long) 
+ 0.007 \mathbf{0.007} 
+ Appendix C Selective prediction: per-dataset results 
+ Per-dataset breakdown behind Mode A (§ 7 ): accept the top-confidence fraction, abstain on the rest. 
+ Table 5: Ranking by proxy confidence beats random abstention everywhere. Accept the
+top-confidence fraction and abstain on the rest. 
+ Dataset 
+ N N 
+ base 
+ AUROC 
+ acc@50% ( Δ \Delta ) 
+ AURC ↓ \downarrow 
+ rand 
+ BFCL (verdict+TF) 
+ 2388 
+ 0.692 
+ 0.596 
+ 0.743 ( + 0.051 +0.051 ) 
+ 0.241 
+ 0.308 
+ xLAM (verdict) 
+ 412 
+ 0.367 
+ 0.713 
+ 0.524 ( + 0.158 +0.158 ) 
+ 0.484 
+ 0.633 
+ xLAM (needle) 
+ 725 
+ 0.542 
+ 0.890 
+ 0.843 ( + 0.300 +0.300 ) 
+ 0.179 
+ 0.458 
+ NESTFUL (needle) 
+ 238 
+ 0.613 
+ 0.788 
+ 0.832 ( + 0.218 +0.218 ) 
+ 0.178 
+ 0.387 
+ tau2 (trajectory) 
+ 149 
+ 0.772 
+ 0.679 
+ 0.867 ( + 0.095 +0.095 ) 
+ 0.149 
+ 0.228 
+ acc@50%: accepted-call accuracy at 50 % 50\% coverage ( Δ \Delta vs. base);
+AURC ↓ \downarrow : risk-coverage area (lower is better); rand: random-abstention AURC. needle rows
+inject one corrupted call, so their base accuracy is measured over that injected-error subset—which is
+why the two xLAM rows show different base accuracies (a subset difference, not a measurement one). tau2 is
+scored at trajectory level. 
+ Appendix D Coverage vs. the combiner (battery detail) 
+ Given a battery, the combiner barely matters but orientation is essential (§ 5 ). On the one
+richly-instrumented, validly-labeled dataset we can test it (BFCL v3, proxy 32B scorer, n = 216 n{=}216 ), the
+full 16-readout single-pass battery reaches 0.764 0.764 vs. 0.706 0.706 for the verdict + + TF pair
+( Δ = + 0.059 \Delta{=}{+}0.059 , one-sided p = 0.028 p{=}0.028 ; two-sided CI 95 [ − 0.001 , + 0.119 ] [{-}0.001,{+}0.119] grazes 0 0 )— suggestive, not confirmed . The combiner choice is not distinguishable: a learned logistic scores
+ 0.733 0.733 against 0.764 0.764 for the orientation-corrected rank-average, with a CI 95 crossing 0 0 . A
+permutation test (shuffled labels) collapses the learned OOF to 0.50 0.50 , so there is no leakage. The larger
+tau2 battery result of prior drafts is withdrawn: tau2 lacks a per-call correctness oracle
+(§ 9 ).
+On the 4-signal xLAM/NESTFUL cells, where few readouts are defined, the full set only ties verdict + + TF
+( Δ ≤ + 0.025 \Delta{\leq}{+}0.025 ). Per-argument-count (xLAM): the learned lift over rank-average is
+significant on multi-argument calls (CI 90 [ + 0.010 , + 0.044 ] [{+}0.010,{+}0.044] ) but null on single-argument calls
+( [ − 0.002 , + 0.032 ] [{-}0.002,{+}0.032] )—one value-token readout already dominates there. 
+ Appendix E Actor self-consistency: detail 
+ Self-consistency (SC) = = plurality agreement of K = 5 K{=}5 temp- 0.8 0.8 samples (name + + canonicalized args),
+execution-free; the label is the gold-match correctness of the deployed temp- 0 0 call (leave-base-out,
+non-circular). SC’s AUROC as a correctness predictor decays monotonically with how unanimous the
+actor’s samples are ( r = − 0.96 r{=}{-}0.96 across five actors from three families; Figure  3 ).
+Near-deterministic frontier actors therefore drive SC to chance. On the ∼ 95 % \sim\!95\% of xLAM problems where
+the K K samples are unanimous, SC carries zero signal by construction, yet the proxy TF signal still
+discriminates at 0.72 0.72 . Code execution artifact. Cluster-agreement of the K K samples on
+the public tests scores 0.72 0.72 – 0.84 0.84 on code_contests/APPS, but that implicitly runs the public-test
+oracle the proxy signal never sees. Made execution-free (agreement on normalized code text), it drops to
+ 0.52 0.52 – 0.64 0.64 on all three code datasets, and on A1 the proxy verdict beats it (LiveCodeBench
+ 0.851 0.851 vs. 0.623 0.623 ). (The three LiveCodeBench verdict figures measure different comparisons on this same
+regime: 0.825 0.825 vs. actor self-assessment, n = 139 n{=}139 (§ 4 ); 0.836 0.836 under leave-one-dataset-out
+transfer; and 0.851 0.851 here on the SC-comparison subset.) 
+ Figure 3: Self-consistency collapses as the actor becomes deterministic. SC AUROC vs. sample
+unanimity (xLAM, K = 5 K{=}5 , execution-free; r = − 0.96 r{=}{-}0.96 ); proxy TF/PMI (shaded) is entropy-invariant. 
+ Appendix F Actor × \times scorer robustness grid 
+ The verdict is not an artifact of one actor × \times scorer pairing (§ 6 , 4 ). 
+ Table 6: The verdict is not one actor × \times scorer artifact. Verdict AUROC across actors and
+scorers. P P = = paired-bootstrap exceedance vs. that actor’s self-assessment; italic self = = actor
+not beaten (self-assesses well). 
+ Dataset 
+ Actor 
+ Qwen 
+ Gemma 
+ self 
+ P P (Q/G) 
+ AppWorld 
+ A1 
+ 0.894 
+ 0.836 
+ 0.788 
+ 1.00/.66 
+ AppWorld 
+ A2 
+ 0.919 
+ 0.884 
+ 0.914 
+ .57/.14 
+ BFCL base 
+ A1 
+ 0.733 
+ 0.728 
+ 0.703 
+ .95/.90 
+ BFCL base 
+ A2 
+ 0.800 
+ 0.823 
+ 0.732 
+ 1.00/1.00 
+ BFCL long 
+ A1 
+ 0.719 
+ 0.723 
+ 0.682 
+ .97/.98 
+ BFCL long 
+ A2 
+ 0.820 
+ 0.821 
+ 0.759 
+ 1.00/1.00 
+ Actors outside family A (cross-family generalization; § 4 ): 
+ BFCL base 
+ B 
+ 0.665 
+ 0.675 
+ 0.656 
+ .68/.81 
+ BFCL long 
+ B 
+ 0.636 
+ 0.657 
+ 0.663 
+ .08/.40 
+ BFCL base 
+ C-120b 
+ 0.739 
+ 0.735 
+ 0.740 
+ .43/.25 
+ BFCL long 
+ C-120b 
+ 0.759 
+ 0.748 
+ 0.739 
+ .94/.74 
+ BFCL base 
+ C-20b 
+ 0.755 
+ 0.768 
+ 0.747 
+ .67/.87 
+ BFCL long 
+ C-20b 
+ 0.753 
+ 0.766 
+ 0.765 
+ .22/.49 
+ Bedrock generated-token elicitation; cf. matched YES/NO in Table  8 . 
+ Appendix G Experimental coverage matrix 
+ Each result table reports the datasets, actors, and scorers for which its signal is defined and its
+claim relevant—not a cherry-picked selection. Value-token TF/PMI need a single forced JSON-argument call
+(undefined on whole-program code and multi-call renders); the verdict applies to any action. 
+ Table 7: Which datasets support which signal, and where each result is used. 
+ Dataset 
+ verd. 
+ TF/PMI 
+ used by (actors; scorers) 
+ AppWorld 
+ ✓ 
+ — 
+ grid, hero, Mode B (A+B+C; Q,Gm) 
+ BFCL base/long 
+ ✓ 
+ — 
+ grid, hero, cap14 (A+B+C; Q,q,Gm) 
+ BFCL parallel/v3 
+ ✓ 
+ ✓ 
+ hero, cap14, battery (A; Q,q) 
+ BFCL miss_func/param 
+ ✓ 
+ ✓ † 
+ hero, cap14 (A; Q,q) 
+ xLAM 
+ ✓ 
+ ✓ 
+ hero, cap14, selective, active, SC, § 6 (A+B+C; Q,q) 
+ NESTFUL 
+ ✓ 
+ ✓ 
+ hero, cap14, selective, active (A; Q,q) 
+ tau2-bench 
+ § § 
+ § § 
+ scope note only (§ 9 ) 
+ LiveCodeBench/cc/APPS 
+ ✓ 
+ — ‡ 
+ hero (§ 4 ), transfer, SC, multi-axis (A; Q) 
+ BIRD (SQL) 
+ ✓ 
+ ✓ ‡ 
+ multi-axis verdict ¶ (A; Q) 
+ Actors: A = = A1/A2, + + B = = actor B, + + C = = C-120b/C-20b
+(generalization only). Scorers: Q = = Qwen3-32B, q = = 14B, Gm = = Gemma-27B.
+ † value-mask degenerate on withheld/multi-call args (reported as full-seq or
+excluded). ‡ whole-program TF/PMI, not the per-argument value-token TF/PMI of the error-locus study.
+ ¶ BIRD carries only the multi-axis-verdict contrast in this paper
+(App.  K ); its other two results are a regime-graded tie and a corrective
+ null , both consistent with claims we make elsewhere. Auditing works: the proxy verdict reaches
+ 0.733 0.733 (CI 95 [ .688 , .777 ] [.688,.777] , 𝒮 L \mathcal{S}_{\text{L}} scorer, n = 442 n{=}442 ; 0.685 0.685 [ .637 , .732 ] [.637,.732] with the Qwen3-32B
+scorer). But the actor self-assesses just as well ( 0.715 0.715 [ .665 , .760 ] [.665,.760] ; Δ + 0.020 \Delta{+}0.020 , P = 0.81 P{=}0.81 ),
+so BIRD is a tie on beats-self (§ 4 ). Signal-gated self-review also does not beat
+blind or deranged-placebo review ( 0.499 0.499 vs. 0.510 0.510 / 0.515 0.515 , n = 448 n{=}448 )—the SQL-reasoning instance of
+the self-verification boundary of App.  J .
+ § tau2-bench lacks a per-call correctness oracle (its gold action-checks give an action-salience
+label), so it is not used as an auditing benchmark; retained only as a scope note (§ 9 ). 
+ Appendix H Capability-axis table (14B vs. 32B) 
+ Representative matched-mechanism cells behind the capability split (Figure  4 ); see
+§ 6 for the full 6 / 6 6/6 TF and 6 / 9 6/9 verdict tallies. 
+ Figure 4: Teacher forcing is size-invariant; the verdict is not. Each dumbbell joins 14B
+(orange) and 32B (blue) AUROC for one cell, same items and prefill. Top: teacher forcing. Middle: verdict.
+Bottom: AppWorld exception. Chance = 0.5 =0.5 (dotted). 
+ Table 8: 14B matches 32B on teacher forcing, trails on request-PMI and the verdict. Qwen3-14B
+vs. 32B, matched items per signal. Δ = \Delta{=} 14B − - 32B; verdict uses matched YES/NO teacher-forcing. Full
+tally in § 6 . 
+ Dataset 
+ Signal 
+ 14B 
+ 32B 
+ Δ \Delta 
+ Teacher forcing—access-bound ( | Δ | ≤ 0.015 |\Delta|{\leq}0.015 , TOST-equivalent) 
+ NESTFUL/A1 
+ TF val {}_{\text{val}} 
+ 0.636 
+ 0.650 
+ − .014 -.014 
+ NESTFUL/A2 
+ TF val {}_{\text{val}} 
+ 0.604 
+ 0.611 
+ − .006 -.006 
+ xLAM/A1 
+ TF val {}_{\text{val}} 
+ 0.674 
+ 0.670 
+ + .004 +.004 
+ xLAM/A2 
+ TF val {}_{\text{val}} 
+ 0.702 
+ 0.690 
+ + .011 +.011 
+ parallel/A1 
+ TF val {}_{\text{val}} 
+ 0.628 
+ 0.633 
+ − .005 -.005 
+ BFCL v3/A1 
+ TF val {}_{\text{val}} 
+ 0.540 
+ 0.549 
+ − .009 -.009 
+ Request-PMI—scale-sensitive (contrasts two prefills) 
+ xLAM/A2 
+ PMI min {}_{\text{min}} 
+ 0.703 
+ 0.751 
+ − .048 -.048 
+ BFCL v3 
+ PMI min {}_{\text{min}} 
+ 0.650 
+ 0.689 
+ − .039 -.039 
+ Discriminative—capability-bound (verdict, matched mechanism) 
+ BFCL base 
+ verdict 
+ 0.543 
+ 0.620 
+ − .077 -.077 
+ BFCL miss_func 
+ verdict 
+ 0.509 
+ 0.629 
+ − .120 -.120 
+ xLAM/A2 
+ verdict 
+ 0.493 
+ 0.542 
+ − .049 -.049 
+ AppWorld 
+ verdict 
+ 0.864 
+ 0.874 
+ − .010 -.010 
+ Appendix I Sidecar latency measurement 
+ Per-call scoring latency behind the cost argument of § 8 , measured on the deployed sidecar
+at realistic full-context length. A scored call is a single prefill of ≈ 160 {\approx}160  ms, overlapped with
+tool I/O in Mode A. 
+ Table 9: A scored call is a single prefill of ≈ 160 {\approx}160  ms. Measured sidecar latency at
+realistic full-context length ( ≈ 1.5 {\approx}1.5 k tokens; Qwen3-14B fp8, one L40S GPU). 
+ Readout 
+ p ​ 50 p50 
+ p ​ 90 p90 
+ p ​ 99 p99 
+ Teacher forcing 
+ 159 159  ms 
+ 166 166  ms 
+ 179 179  ms 
+ Verdict 
+ 123 123  ms 
+ 132 132  ms 
+ 137 137  ms 
+ Concurrency 1; 40 40 timed calls after warm-up. 
+ Appendix J Feeding the signal back to the actor (self-review detail) 
+ Beyond selective escalation (Mode A) and confidence feedback (Mode B), we tested handing the actor its own
+proxy confidence to self-correct . The protocol keeps the actor black-box: it completes its trajectory;
+the Qwen3-32B auditor scores every call; the actor is then shown its calls annotated with per-call signals
+and re-emits a corrected sequence. Arms differ only in the annotation: blind (none),
+ verdict / tf / fusion / all , and placebo . The placebo shows the same
+numbers deranged onto the wrong calls—identical flag budget, wrong positions—which makes it the decisive
+control: it separates localized information from a mere look-again nudge. 
+ The boundary is whether the actor can self-verify the call at review time (Table  11 ).
+Take single-shot xLAM first, where correctness is legible only from the schema. There, showing the signal
+beats unaided review on the A1 reviewer (Holm p = 0.004 p{=}0.004 vs. blind), and beats the deranged placebo on
+both reviewers (A1 p = 0.013 p{=}0.013 , A2 p = 0.006 p{=}0.006 ). The gain is therefore localized information rather
+than a look-again nudge. On A2 the vs-blind margin is directional but not significant after correction.
+NESTFUL (recompute) and live BFCL-v4 (re-read real tool output) go the other way: unaided review already
+captures the gain, and no signal arm beats blind or placebo. These negatives share one cause, and it is the
+boundary itself—when the actor can cheaply self-verify the call from the real result, a proxy number adds
+little beyond unaided reflection. The same boundary separates our two inline benchmarks below. 
+ Mode B in full: the readouts in a live loop. Detail behind § 7 ’s Mode B—appending
+each step’s confidence to its real tool result, so the actor sees it in context on every observation and may
+adjust its next action. We compare the readouts of § 5 
+against three controls: an unannotated run, a vigilance arm that announces the audit but shows no
+number, and a random arm that shows an independent U ⁡ ( 0 , 1 ) U(0,1) draw in place of the real confidence
+(Table  10 ). 
+ On InterCode nl2bash   [ Yang et al., 2023 ] the readouts order as § 5 predicts. All arms cover the same 193 usable tasks (200 minus 7 whose gold command fails
+its own grader) and every contrast is paired. Announcing an audit without showing a number does nothing
+( 0.389 0.389 , − 0.010 -0.010 , p = 0.87 p{=}0.87 ), so any effect requires the number itself. The discriminative verdict alone
+does not separate ( 0.430 0.430 , + 0.031 +0.031 , p = 0.36 p{=}0.36 ). The generative likelihoods do: request-PMI reaches 0.472 0.472 
+( + 0.073 +0.073 , 25/11, p = 0.029 p{=}0.029 ) and teacher forcing 0.497 0.497 ( + 0.098 +0.098 , 25/6, p = 0.001 p{=}0.001 ). Strongest is the
+oriented fusion at 0.518 0.518 ( + 0.119 +0.119 , 29 rescues vs. 6 regressions, exact p = 10 − 4 p{=}10^{-4} , bootstrap
+95% CI [ + 0.062 , + 0.176 ] [{+}0.062,{+}0.176] ). The generative-over-discriminative ordering and the fusion’s low-regret
+behaviour were both established offline as ranking properties (§ 5 , § 6 ); here
+they reappear in a live loop. Read against the random arm below, only the generative readouts and their
+fusion clear its 0.440 0.440 —the verdict arm ( 0.430 0.430 ) does not reach it. The separation that survives a noise
+control is therefore specifically the generative one. 
+ On nl2bash the random arm rules out the trivial explanation that any number in the loop makes the actor more careful:
+an independent U ⁡ ( 0 , 1 ) U(0,1) draw does not significantly beat the unannotated control ( 0.440 0.440 , + 0.041 +0.041 , 25/17,
+ p = 0.28 p{=}0.28 ), and fusion beats it by + 0.078 +0.078 (19/4, p = 0.003 p{=}0.003 , CI [ + 0.031 , + 0.124 ] [{+}0.031,{+}0.124] ). A meaningless
+scalar is therefore not sufficient: the annotation’s content matters relative to noise. We state the claim at
+that level deliberately. The real and random streams differ in more than one respect—in where their low
+values fall, and in how they are scaled. (Fusion occupies a narrow band, mean 0.636 0.636 , sd 0.144 0.144 , while the
+uniform draw has twice the spread and dips below 0.10 0.10 on 9 % 9\% of steps.) The comparison therefore does not
+by itself identify which property drives the effect, so we report the end-to-end result and leave the causal
+decomposition to future work. 
+ AppWorld test_challenge (417 tasks, 139 scenarios) shows the opposite pattern, and the contrast is
+the point. Inline fusion gains + 0.137 +0.137 over the unannotated control there ( 100 100 / 43 43 , p < 10 − 4 p{<}10^{-4} ). But so
+does the random arm, by + 0.132 +0.132 ( 95 95 / 40 40 , p < 10 − 4 p{<}10^{-4} ), and the two are indistinguishable
+( + 0.005 +0.005 , 46 46 / 44 44 , p = 0.92 p{=}0.92 ; cluster-robust 95% CI [ − 0.043 , + 0.053 ] [{-}0.043,{+}0.053] , and + 0.008 +0.008 , p = 0.81 p{=}0.81 , on
+the 390 tasks where our step cap forced neither label). On that benchmark any scalar suffices: we detect no
+contribution from the readout’s content. Reporting only the vs-control number would have made AppWorld look
+like a second confirmation; the random arm shows it is not one. 
+ What distinguishes nl2bash is the shape of its failures: its answers are md5 sums, counts and
+file listings, so a subtly wrong pipeline returns a well-formed, plausible, wrong value. Classifying every
+executed step of the benchmark’s published reference trajectories ( n = 1176 n{=}1176 ), 50 % 50\% of wrong steps
+are silent —clean, non-empty output with no error text—and 48 % 48\% of episodes contain at least
+one such step (a proxy for our actor’s error profile rather than a direct measurement of it). There is no
+traceback for a reviewer to restate, so an external judge adds information the actor cannot obtain from its
+own observation. (Our unannotated control scores 0.399 0.399 , below the 0.485 0.485 the benchmark reports for its own published reference actor.
+Two harness choices account for the gap. The first is an 8-turn cap per task. The second is rewriting
+leading- cd compound commands as subshells, to work around a path-handling bug in the environment
+that prevents the working directory from persisting. Both apply identically to every arm, so they depress
+absolute success uniformly and leave the paired contrasts unaffected.) 
+ The two benchmarks also differ in the signal’s measured validity, in the same direction. On AppWorld the
+ displayed inline confidence has no task-level validity on this split (AUROC 0.388 0.388 mean-pooled,
+ 0.474 0.474 min-pooled—at or below chance, and below a trajectory-length baseline at 0.608 0.608 ), against 0.64 0.64 
+on nl2bash . This is a different quantity from the AppWorld verdict of Table  3 
+( 0.894 0.894 ): that is a per-call verdict AUROC on the standard split, whereas this is the task-level pooled
+validity of the displayed fusion on test_challenge under the revised scorer prompt. The per-call
+readout retains its ranking power; what fails is its aggregation to a task-level target on this split. The
+reason is structural: AppWorld steps execute Python whose failures mostly raise , so the diagnostic
+information is already in the observation the actor reads. A scorer-prompt revision that removed a measured
+position artifact there (confidence–step-index correlation + 0.60 → + 0.15 +0.60\rightarrow+0.15 , reaching parity between
+mandatory setup steps and substantive actions) succeeded mechanically yet bought zero predictive
+power. That locates the failure in the target rather than the prompt. The operational reading is this: the
+readout’s content earns its cost only where the environment does not already surface its own errors.
+An inline number may still raise accuracy elsewhere, as it does on AppWorld, but then any scalar would do.
+A random-value arm is what tells an operator which case they are in. 
+ Taken together, Mode B raises end-to-end accuracy on both live-execution benchmarks ( + 0.119 +0.119 and
+ + 0.137 +0.137 , both p ≤ 10 − 4 p{\leq}10^{-4} ). But only on nl2bash does that gain depend on what the number
+says. The dividing line is whether the environment already surfaces its own errors, and it coincides with
+the signal’s measured validity ( 0.64 0.64 vs. chance). One evaluation lesson generalizes: for such loops an
+unannotated control is not sufficient, and a random-value arm is the minimum. “Beats no annotation” and
+“beats noise” are different claims, and on one of our two benchmarks they come apart. 
+ Table 10: Inline readout comparison, and why a random-value arm is required. A2 actor; each
+readout appended to the real tool result. Contrasts are paired against the unannotated control;
+ nl2bash arms all cover the same 193 tasks, AppWorld all 417. Vigilance announces the audit
+but shows no number; random shows an independent U ⁡ ( 0 , 1 ) U(0,1) draw. The two benchmarks diverge on the
+random arm: on nl2bash it is flat and fusion beats it, so the annotation’s content matters; on
+AppWorld it matches fusion, so there any scalar suffices. Against the unannotated control alone both
+benchmarks would have looked alike. 
+ nl2bash 
+ AppWorld test_challenge 
+ Arm 
+ success 
+ vs. control 
+ success 
+ vs. control 
+ control (no number) 
+ 0.399 0.399 
+ — 
+ 0.595 0.595 
+ — 
+ vigilance (no number) 
+ 0.389 0.389 
+ − 0.010 -0.010 n.s. 
+ — 
+ — 
+ random U ⁡ ( 0 , 1 ) U(0,1) 
+ 0.440 0.440 
+ + 0.041 +0.041 n.s. 
+ 0.727 0.727 
+ + 0.132 +0.132 ( p < 10 − 4 p{<}10^{-4} ) 
+ verdict only 
+ 0.430 0.430 
+ + 0.031 +0.031 n.s. 
+ — 
+ — 
+ request-PMI 
+ 0.472 0.472 
+ + 0.073 +0.073 ( p = .029 p{=}.029 ) 
+ — 
+ — 
+ teacher forcing 
+ 0.497 0.497 
+ + 0.098 +0.098 ( p = .001 p{=}.001 ) 
+ — 
+ — 
+ fusion 
+ 0.518 \mathbf{0.518} 
+ + 0.119 \mathbf{+0.119} ( p = 10 − 4 p{=}10^{-4} ) 
+ 0.731 \mathbf{0.731} 
+ + 0.137 \mathbf{+0.137} ( p < 10 − 4 p{<}10^{-4} ) 
+ fusion vs. random 
+ + 0.078 \mathbf{+0.078} , 19/4, 𝐩 = .003 \mathbf{p{=}.003} 
+ + 0.005 +0.005 , 46/44, p = .92 p{=}.92 
+ signal validity (AUROC) 
+ 0.64 0.64 (task-level) 
+ 0.39 0.39 – 0.47 0.47 (chance) 
+ Table 11: Feedback helps only when the actor cannot self-verify. Signal-guided self-review vs. deranged-placebo, all -signal arm. Self-verif. = = can the actor check the call at
+review time. Bottom: repair rate at a one-call audit budget, signal- vs. random-gated. 
+ Dataset 
+ Self-verif.? 
+ blind 
+ all 
+ all vs. blind / placebo (Holm p p ) 
+ xLAM, A1 ( n = 196 n{=}196 ) 
+ no (schema) 
+ 0.066 0.066 
+ 0.148 \mathbf{0.148} 
+ 0.004 0.004 / 0.013 0.013 
+ xLAM, A2 ( n = 196 n{=}196 ) 
+ no (schema) 
+ 0.097 0.097 
+ 0.138 0.138 
+ 0.46 0.46 / 0.006 0.006 
+ NESTFUL ( n = 184 n{=}184 ) 
+ yes (recomp.) 
+ 0.844 0.844 
+ 0.853 0.853 
+ n.s. / n.s. 
+ BFCL-v4 ( n = 1499 n{=}1499 ) 
+ yes (real res.) 
+ 0.892 0.892 
+ 0.892 0.892 
+ n.s. (all ≈ \approx ) 
+ Selective review at fixed budget k = 1 k{=}1 call (signal- vs. random-gated): 
+ xLAM ( n = 192 n{=}192 ) 
+ — 
+ sig 0.92 0.92 / rand 0.42 0.42 
+ p < 10 − 4 p{<}10^{-4} (95/1) 
+ NESTFUL ( n = 69 n{=}69 ) 
+ — 
+ sig 0.65 0.65 / rand 0.40 0.40 
+ p = 0.008 p{=}0.008 (27/10) 
+ Appendix K Signals beyond the single-pass family, and the judge-free anchor 
+ Figure 5: Failure-mode map (same data as Table  3 ). Signal × \times dataset AUROC;
+black box = = best proxy signal per dataset; grey = = signal undefined for that action type. 
+ Figure 6: Teacher forcing tracks argument-value accuracy; the verdict does not. Spearman ρ \rho 
+vs. deterministic per-parameter accuracy (no LLM judge) as the target sharpens to literal argument values
+(NESTFUL, A2). TF rises to ρ = 0.41 \rho{=}0.41 ; verdict 0.02 0.02 . 
+ Because the auditor is open it admits four readouts a black-box pipeline cannot compute
+(Table  12 ). Ensemble disagreement— − | q Qwen − q Gemma | -|q_{\text{Qwen}}{-}q_{\text{Gemma}}| 
+between different-lineage scorers—is a strong standalone signal ( 0.70 0.70 – 0.80 0.80 ) and near-free.
+Semantic entropy of regenerations ( 0.68 0.68 – 0.71 0.71 ) tracks self-consistency but does not exceed
+single-pass signals. Schema-satisfaction is null on frontier actors ( 0.50 0.50 – 0.51 0.51 ), which emit
+schema-valid calls ∼ \sim 100% of the time. Two verdict elaborations mostly do not beat the one-token
+verdict. A debiased verdict (symmetric double-ask) does not improve on tool calls (BFCL v3 0.670 0.670 
+vs. 0.711 0.711 ). A multi-axis verdict helps only on long code: on LiveCodeBench it gains
+( 0.818 0.818 vs. plain 0.783 0.783 ), whereas on BIRD text-to-SQL it trails ( 0.648 0.648 vs. 0.670 0.670 ), both
+same-file comparisons.
+So the single-token verdict is a strong, cheap default, and elaborations pay off only when the extra axes
+carry independent information. 
+ Table 12: Extra readouts an open scorer enables, and verdict variants. 
+ Signal 
+ AUROC 
+ type 
+ note 
+ Ensemble disagreement 
+ 0.70–0.80 
+ epistemic 
+ orthogonal, near-free 
+ Self-consistency ( k = 5 k{=}5 ) 
+ 0.71–0.75 
+ epistemic 
+ good on easy calls 
+ Semantic entropy 
+ 0.68–0.71 
+ epistemic 
+ no gain over above 
+ Schema-satisfaction 
+ 0.50–0.51 
+ determ. 
+ null (frontier actors) 
+ verdict variants (vs. plain verdict, same rows) 
+ Debiased verdict 
+ 0.51–0.67 
+ discrim. 
+ no gain on tool calls 
+ Multi-axis verdict 
+ 0.65–0.82 
+ discrim. 
+ helps on long code only 
+ Experimental support, please
+ view the build logs 
+ for errors. Generated by
+ L
+ A 
+ T
+ E 
+ xml 
+ .
+ Instructions for reporting errors 
+ We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+ support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+ methods listed below: 
+ Click the "Report Issue" ( 
+ ) button, located in the page header. 
+ Tip: You can select the relevant text first, to include it in your report. 
+ Our team has already identified the following issues . We appreciate your time reviewing and reporting rendering errors we
+ may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+ should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+ all. 
+ Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a list of packages that need conversion , and welcome developer contributions . 
+ We gratefully acknowledge support from our major funders ,
+ member institutions , ,
+ and all contributors.
+ About · 
+ Help · 
+ Contact · 
+ Subscribe · 
+ Copyright · 
+ Privacy · 
+ Accessibility · 
+ Operational Status (opens in new tab) 
