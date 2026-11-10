@@ -21,7 +21,7 @@ def test_dry_run_prints_redacted_and_sends_nothing():
     text = "\n".join(out)
     assert calls == []
     assert KEY not in text and "TESTKEY" not in text and "SECRETVALUE" not in text and "podABCDEF123456" not in text
-    assert "rpa_..." in text and "hf_S..." in text and "[dry-run] POST" in text and "DELETE" in text
+    assert "fake..." in text and "hf_S..." in text and "[dry-run] POST" in text and "DELETE" in text
     assert '"gpuTypeIds"' in text and '"HF_TOKEN"' in text
 
 
