@@ -1,0 +1,113 @@
+[
+ {
+  "claim": "Multicalibration with groups from complexity, code length, prompt length and language raises Brier Skill Score over uncalibrated and Platt/HB baselines; uncalibrated BSS is negative on LiveCodeBench (Qwen3 -0.543).",
+  "stance": "supports",
+  "stance_target": "Group-aware post-hoc calibration of token likelihoods on code",
+  "evidence_type": "empirical",
+  "scope_conditions": "BSS/ACC table (Sec 5)",
+  "quoted_support": "uncalibrated - -0.543 -0.075 ... Platt - 0.377 0.187 ... LINR ✓ 0.463 0.721",
+  "numbers": [
+   "uncalibrated BSS Qwen3/gpt-oss LiveCodeBench -0.543/-0.075",
+   "Platt 0.377/0.187",
+   "LINR 0.463/0.721",
+   "LOGR 0.306/0.733",
+   "R1-distill LiveCodeBench excluded for code-extraction formatting"
+  ],
+  "entities": [
+   "Qwen3 Coder",
+   "GPT-OSS",
+   "DeepSeek-R1-Distill",
+   "LiveCodeBench release_v6",
+   "MultiPL-E",
+   "McEval"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "multicalibration-for-llm-based-code-generation",
+  "breadth": {
+   "confidence_families": "token likelihood; post-hoc Platt, histogram binning, linear/logistic regression group-conditional, iterative group binning (Sec 4)",
+   "model_families_and_sizes": "Qwen3 Coder, GPT-OSS, DeepSeek-R1-Distill (sizes not extracted)",
+   "base_vs_instruct": "not present",
+   "post_training_stages": "not present",
+   "reasoning_models": "three recent open-weight reasoning models prompted (datasets section); enabled setting not extracted",
+   "elicitation_formats": "token likelihood only; self-reflection mentioned in related work",
+   "benchmarks": "LiveCodeBench v6, MultiPL-E, McEval",
+   "label_source": "benchmark unit tests, all-pass",
+   "label_independence": "benchmark tests, independent of model",
+   "contamination_split": "LiveCodeBench recency as leakage mitigation; no per-model date split",
+   "calibration_metrics": "ECE, Brier, Brier Skill Score, accuracy (Sec 3, table)",
+   "granularity": "whole-solution; groups by problem attributes",
+   "causal_intervention": "not present"
+  }
+ },
+ {
+  "claim": "Labels are 'correct if all tests pass' from benchmark unit tests; LiveCodeBench release_v6 (1055 problems, May 2023 to April 2025) chosen to mitigate data leakage.",
+  "stance": "neutral",
+  "stance_target": "L1 contamination control by benchmark recency, not per-model release-date split",
+  "evidence_type": "empirical",
+  "scope_conditions": "Datasets section",
+  "quoted_support": "Generated code is evaluated via benchmark unit tests and labeled as correct if all tests pass.",
+  "numbers": [
+   "1055 problems",
+   "May 2023 to April 2025",
+   "McEval 1,707 samples"
+  ],
+  "entities": [
+   "LiveCodeBench",
+   "McEval"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "multicalibration-for-llm-based-code-generation",
+  "breadth": {
+   "confidence_families": "token likelihood; post-hoc Platt, histogram binning, linear/logistic regression group-conditional, iterative group binning (Sec 4)",
+   "model_families_and_sizes": "Qwen3 Coder, GPT-OSS, DeepSeek-R1-Distill (sizes not extracted)",
+   "base_vs_instruct": "not present",
+   "post_training_stages": "not present",
+   "reasoning_models": "three recent open-weight reasoning models prompted (datasets section); enabled setting not extracted",
+   "elicitation_formats": "token likelihood only; self-reflection mentioned in related work",
+   "benchmarks": "LiveCodeBench v6, MultiPL-E, McEval",
+   "label_source": "benchmark unit tests, all-pass",
+   "label_independence": "benchmark tests, independent of model",
+   "contamination_split": "LiveCodeBench recency as leakage mitigation; no per-model date split",
+   "calibration_metrics": "ECE, Brier, Brier Skill Score, accuracy (Sec 3, table)",
+   "granularity": "whole-solution; groups by problem attributes",
+   "causal_intervention": "not present"
+  }
+ },
+ {
+  "claim": "Authors claim to be first to study multicalibration for code generation and release a dataset of generations, likelihoods and correctness labels.",
+  "stance": "supports",
+  "stance_target": "Novelty of multicalibration on code",
+  "evidence_type": "expert-opinion",
+  "scope_conditions": "Intro",
+  "quoted_support": "our study is the first to investigate multicalibration for code generation",
+  "numbers": [
+   "four approaches"
+  ],
+  "entities": [
+   "multicalibration"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "multicalibration-for-llm-based-code-generation",
+  "breadth": {
+   "confidence_families": "token likelihood; post-hoc Platt, histogram binning, linear/logistic regression group-conditional, iterative group binning (Sec 4)",
+   "model_families_and_sizes": "Qwen3 Coder, GPT-OSS, DeepSeek-R1-Distill (sizes not extracted)",
+   "base_vs_instruct": "not present",
+   "post_training_stages": "not present",
+   "reasoning_models": "three recent open-weight reasoning models prompted (datasets section); enabled setting not extracted",
+   "elicitation_formats": "token likelihood only; self-reflection mentioned in related work",
+   "benchmarks": "LiveCodeBench v6, MultiPL-E, McEval",
+   "label_source": "benchmark unit tests, all-pass",
+   "label_independence": "benchmark tests, independent of model",
+   "contamination_split": "LiveCodeBench recency as leakage mitigation; no per-model date split",
+   "calibration_metrics": "ECE, Brier, Brier Skill Score, accuracy (Sec 3, table)",
+   "granularity": "whole-solution; groups by problem attributes",
+   "causal_intervention": "not present"
+  }
+ }
+]

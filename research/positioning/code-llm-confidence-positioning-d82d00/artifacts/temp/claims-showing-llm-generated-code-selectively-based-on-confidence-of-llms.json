@@ -1,0 +1,64 @@
+{
+ "source_note_id": "showing-llm-generated-code-selectively-based-on-confidence-of-llms",
+ "arxiv": "2410.03234",
+ "full_text": true,
+ "claims": [
+  {
+   "claim": "Sampled-program similarity confidence outperforms the state-of-the-art baseline by 27.79% AUROC and 63.74% AUCPR on TruthCodeBench.",
+   "stance": "neutral",
+   "stance_target": "R1 candidate L1; component verdict: OCCUPIED (sampled readout vs test labels)",
+   "evidence_type": "empirical",
+   "scope_conditions": "see breadth",
+   "quoted_support": "HonestCoder outperforms the state-of-the-art baseline by 27.79% in AUROC and 63.74% in AUCPR.",
+   "numbers": [
+    "27.79%",
+    "63.74%",
+    "2,265 samples"
+   ],
+   "entities": [
+    "2410.03234"
+   ],
+   "time_period": "2024-2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "showing-llm-generated-code-selectively-based-on-confidence-of-llms",
+   "candidate": "L1",
+   "verdict": "OCCUPIED (sampled readout vs test labels)",
+   "makes_core_claim_on_code_with_execution_labels": "partial: sampled-readout confidence vs test labels only"
+  },
+  {
+   "claim": "Benchmark is custom (TruthCodeBench) with four instruct models; no release-date contamination control found in sections read.",
+   "stance": "neutral",
+   "stance_target": "R1 candidate L1; component verdict: NARROW",
+   "evidence_type": "empirical",
+   "scope_conditions": "see breadth",
+   "quoted_support": "We collect and release a multilingual benchmark named TruthCodeBench, which consists of 2,265 samples and covers two popular programming languages (i.e., Python and Java).",
+   "numbers": [],
+   "entities": [
+    "2410.03234"
+   ],
+   "time_period": "2024-2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "showing-llm-generated-code-selectively-based-on-confidence-of-llms",
+   "candidate": "L1",
+   "verdict": "NARROW",
+   "makes_core_claim_on_code_with_execution_labels": "partial: sampled-readout confidence vs test labels only"
+  }
+ ],
+ "breadth": {
+  "confidence_families": "sampled multi-modal program similarity (HonestCoder) vs eight baselines (Sec. 5-6)",
+  "model_families_and_sizes": "DeepSeek-Coder-Instruct 1.3B, 6.7B; Code Llama-Instruct 13B, 7B (Sec. 4)",
+  "base_vs_instruct": "instruct only",
+  "post_training_stages": "not present (searched: pre vs post-training comparison)",
+  "reasoning_models": "not present (searched: reasoning on/off)",
+  "elicitation_formats": "not present (searched: verbal elicitation format variants)",
+  "benchmarks": "TruthCodeBench, 2,265 samples, Python and Java (Sec. 4)",
+  "label_source": "test cases (a requirement passes if sample passes all test cases)",
+  "label_independence": "execution-based",
+  "contamination_split": "not present (searched: release-date split, contamination)",
+  "calibration_metrics": "AUROC, AUCPR (abstract); selective-show counts",
+  "granularity": "whole-solution",
+  "causal_intervention": "not present (searched: steering, patching, ablation)"
+ }
+}

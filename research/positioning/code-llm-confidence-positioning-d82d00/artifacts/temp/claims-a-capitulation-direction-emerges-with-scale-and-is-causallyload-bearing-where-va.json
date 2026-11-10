@@ -1,0 +1,104 @@
+[
+ {
+  "claim": "Probe quality, not statistical significance, predicts causal relevance: ablating the Qwen2.5-7B capitulation direction cuts the reversal rate of a correct answer by 4.8 percentage points, while a gate-failing and a marginally passing direction have no effect.",
+  "stance": "supports",
+  "stance_target": "methodology: validation-gated probes before causal claims (relevant to L2 causal component)",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sycophancy/factual QA, not code or confidence",
+  "quoted_support": "Ablating that direction in Qwen2.5-7B reduces the rate at which the model reverses a correct answer by 4.8 percentage points, roughly a quarter in relative terms, while the identical intervention on a gate-failing direction and on a marginally passing one produces no effect.",
+  "numbers": [
+   "4.8 percentage points",
+   "AUROC 0.778 (Qwen-7B)",
+   "0.720 (Qwen-14B)",
+   "0.710 (Llama-8B)",
+   "gate 0.70"
+  ],
+  "entities": [],
+  "time_period": "2026-11",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "Difference-in-means linear direction in residual stream for capitulation under pushback (Sec 3-4); not confidence",
+   "model_families_and_sizes": "Eight instruction-tuned models, Qwen2.5 and Llama-3.x, 0.5B to 14B (Abstract)",
+   "base_vs_instruct": "All instruction-tuned; no base arm (Abstract)",
+   "post_training_stages": "not present (searched: not studied)",
+   "reasoning_models": "not present (searched: not studied)",
+   "elicitation_formats": "Four pushback types times five paraphrases (Sec 1)",
+   "benchmarks": "568-question closed-book factual task (Sec 1); not code",
+   "label_source": "Episode verdict (answer flip) against ground truth",
+   "label_independence": "not present (searched: n/a)",
+   "contamination_split": "not present (searched: none)",
+   "calibration_metrics": "AUROC with 0.70 gate (Qwen-7B 0.778, Qwen-14B 0.720, Llama-8B 0.710), positive control 1.000",
+   "granularity": "Per episode",
+   "causal_intervention": "Yes: ablating the Qwen2.5-7B direction reduces answer-flip rate by 4.8 percentage points (about a quarter relative); gate-failing and marginal directions produce no effect (Abstract)"
+  },
+  "source_note_id": "a-capitulation-direction-emerges-with-scale-and-is-causallyload-bearing-where-va"
+ },
+ {
+  "claim": "Five measurement hazards change conclusions; numerical precision alone changes about one episode verdict in ten: bfloat16 and float16 agree with float32 on only 88.4% and 89.6% of episode verdicts, below a pre-registered 95% bar.",
+  "stance": "supports",
+  "stance_target": "F: measurement-instrument hazards in probing studies (precision, paraphrase, pre-registration)",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec 5.1, one model",
+  "quoted_support": "Both bfloat16 and float16 fell below the pre-registered 95% agreement bar, at 88.4% and 89.6% respectively.",
+  "numbers": [
+   "88.4%",
+   "89.6%",
+   "95% bar"
+  ],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "Difference-in-means linear direction in residual stream for capitulation under pushback (Sec 3-4); not confidence",
+   "model_families_and_sizes": "Eight instruction-tuned models, Qwen2.5 and Llama-3.x, 0.5B to 14B (Abstract)",
+   "base_vs_instruct": "All instruction-tuned; no base arm (Abstract)",
+   "post_training_stages": "not present (searched: not studied)",
+   "reasoning_models": "not present (searched: not studied)",
+   "elicitation_formats": "Four pushback types times five paraphrases (Sec 1)",
+   "benchmarks": "568-question closed-book factual task (Sec 1); not code",
+   "label_source": "Episode verdict (answer flip) against ground truth",
+   "label_independence": "not present (searched: n/a)",
+   "contamination_split": "not present (searched: none)",
+   "calibration_metrics": "AUROC with 0.70 gate (Qwen-7B 0.778, Qwen-14B 0.720, Llama-8B 0.710), positive control 1.000",
+   "granularity": "Per episode",
+   "causal_intervention": "Yes: ablating the Qwen2.5-7B direction reduces answer-flip rate by 4.8 percentage points (about a quarter relative); gate-failing and marginal directions produce no effect (Abstract)"
+  },
+  "source_note_id": "a-capitulation-direction-emerges-with-scale-and-is-causallyload-bearing-where-va"
+ },
+ {
+  "claim": "The study uses a pre-registered protocol with leave-one-question-out cross-validation, within-question permutation nulls, and a positive control that passes at 1.000 in all eight models, so below-threshold failures are measured absences.",
+  "stance": "supports",
+  "stance_target": "F: instrument validation via positive controls",
+  "evidence_type": "empirical",
+  "scope_conditions": "Intro",
+  "quoted_support": "The positive control passes at 1.000 in all eight models, so each failure below the threshold is an absence rather than an artifact.",
+  "numbers": [
+   "positive control 1.000",
+   "568 questions",
+   "8 models",
+   "5 paraphrases per type"
+  ],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "Difference-in-means linear direction in residual stream for capitulation under pushback (Sec 3-4); not confidence",
+   "model_families_and_sizes": "Eight instruction-tuned models, Qwen2.5 and Llama-3.x, 0.5B to 14B (Abstract)",
+   "base_vs_instruct": "All instruction-tuned; no base arm (Abstract)",
+   "post_training_stages": "not present (searched: not studied)",
+   "reasoning_models": "not present (searched: not studied)",
+   "elicitation_formats": "Four pushback types times five paraphrases (Sec 1)",
+   "benchmarks": "568-question closed-book factual task (Sec 1); not code",
+   "label_source": "Episode verdict (answer flip) against ground truth",
+   "label_independence": "not present (searched: n/a)",
+   "contamination_split": "not present (searched: none)",
+   "calibration_metrics": "AUROC with 0.70 gate (Qwen-7B 0.778, Qwen-14B 0.720, Llama-8B 0.710), positive control 1.000",
+   "granularity": "Per episode",
+   "causal_intervention": "Yes: ablating the Qwen2.5-7B direction reduces answer-flip rate by 4.8 percentage points (about a quarter relative); gate-failing and marginal directions produce no effect (Abstract)"
+  },
+  "source_note_id": "a-capitulation-direction-emerges-with-scale-and-is-causallyload-bearing-where-va"
+ }
+]

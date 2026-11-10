@@ -1,0 +1,98 @@
+{
+ "source_note_id": "functional-entropy-predicting-functional-correctness-in-llm-generated-code-with",
+ "claims": [
+  {
+   "claim": "NLI-based semantic entropy collapses to near-chance AUROC on code (Python 0.50-0.53, Java 0.48-0.56, SQL 0.47-0.58) because NLI cannot separate functionally different code.",
+   "stance": "supports",
+   "stance_target": "L1: execution-graded UQ for code is OCCUPIED for closed API models",
+   "evidence_type": "empirical",
+   "scope_conditions": "GPT-4o, GPT-4o-mini, Gemini-2.5-Pro/Flash/Flash-Lite; LiveCodeBench, MultiPL-E Java, LiveSQLBench",
+   "quoted_support": "Abstract: sampling-based methods relying on natural language inference (NLI) fail because NLI models cannot distinguish functionally different code, causing most responses to collapse into a single semantic cluster.",
+   "numbers": [
+    "AUROC 0.50-0.53 Python",
+    "0.48-0.56 Java",
+    "0.47-0.58 SQL"
+   ],
+   "entities": [
+    "UQLM",
+    "deberta-large-mnli"
+   ],
+   "time_period": "2026",
+   "region": "global",
+   "confidence": "high",
+   "source_note_id": "functional-entropy-predicting-functional-correctness-in-llm-generated-code-with"
+  },
+  {
+   "claim": "LLM-judged functional equivalence methods (functional entropy, equivalence rate, sets) achieve top AUROC in 11 of 15 model-benchmark combinations, up to 0.867 on LiveCodeBench; verbalized confidence is erratic.",
+   "stance": "supports",
+   "stance_target": "L1: sampling-based functional clustering is the strong baseline",
+   "evidence_type": "empirical",
+   "scope_conditions": "m=10 samples at T=1.0; judge Gemini-2.5-Flash validated at 93-97% precision against execution",
+   "quoted_support": "Table 2 (Python AUROC): Func. Equiv. 0.867 (Gem-Fl), Func. Entropy 0.857, Verb. Conf. 0.795/0.716/0.597/0.725/0.681, P(True) 0.771/0.815/0.830/0.752/0.824",
+   "numbers": [
+    "11 of 15",
+    "0.867",
+    "1,711 problems",
+    "Verb. Conf. AUROC 0.597-0.795 Python"
+   ],
+   "entities": [
+    "Gemini-2.5-Flash",
+    "LiveCodeBench"
+   ],
+   "time_period": "2026",
+   "region": "global",
+   "confidence": "high",
+   "source_note_id": "functional-entropy-predicting-functional-correctness-in-llm-generated-code-with"
+  },
+  {
+   "claim": "No open-weight models, hidden-state probes, base/instruct pairs, or interventions are evaluated; all five models are closed APIs.",
+   "stance": "supports",
+   "stance_target": "L2: hidden-state vs verbal comparison on open code models is not covered here",
+   "evidence_type": "empirical",
+   "scope_conditions": "Sec 4.1 setup; Limitations",
+   "quoted_support": "Sec 4.1: We generate code using five large language models ... GPT-4o, GPT-4o-mini, Gemini-2.5-Pro, Gemini-2.5-Flash, and Gemini-2.5-Flash-Lite",
+   "numbers": [
+    "5 models"
+   ],
+   "entities": [
+    "GPT-4o",
+    "Gemini-2.5"
+   ],
+   "time_period": "2026",
+   "region": "global",
+   "confidence": "high",
+   "source_note_id": "functional-entropy-predicting-functional-correctness-in-llm-generated-code-with"
+  },
+  {
+   "claim": "Execution-triggered verification is named only as future work; confidence-routed execution budgets are not tested.",
+   "stance": "supports",
+   "stance_target": "L3: routing utility not tested here",
+   "evidence_type": "expert-opinion",
+   "scope_conditions": "Conclusion",
+   "quoted_support": "Conclusion: exploring hybrid approaches that use UQ scores to selectively trigger execution-based verification in settings where test generation is possible but expensive.",
+   "numbers": [],
+   "entities": [
+    "UQLM"
+   ],
+   "time_period": "2026",
+   "region": "global",
+   "confidence": "medium",
+   "source_note_id": "functional-entropy-predicting-functional-correctness-in-llm-generated-code-with"
+  }
+ ],
+ "breadth": {
+  "confidence_families": "token-probability, NLI semantic entropy/sets, embedding/CodeBLEU similarity, functional-equivalence (LLM judge), verbalized confidence, P(True) (Sec 4.1, Tables 2-4)",
+  "model_families_and_sizes": "GPT-4o, GPT-4o-mini, Gemini-2.5-Pro/Flash/Flash-Lite; closed API (Sec 4.1)",
+  "base_vs_instruct": "not present (searched: base, instruct)",
+  "post_training_stages": "not present (searched: SFT, RLHF)",
+  "reasoning_models": "not present (searched: reasoning; Gemini-2.5 thinking status not stated)",
+  "elicitation_formats": "verbalized confidence and P(True), one prompt each (Sec 4.1)",
+  "benchmarks": "LiveCodeBench 1,055 Python; MultiPL-E Java 386; LiveSQLBench 270 (Sec 4.1)",
+  "label_source": "unit tests (Python, Java); reference query output comparison (SQL) (Sec 4.1)",
+  "label_independence": "execution ground truth independent of the judge; judge validated 93-97% precision (App D)",
+  "contamination_split": "LiveCodeBench cited as contamination free; no per-model release-date split (searched: cutoff)",
+  "calibration_metrics": "AUROC, Brier, ECE (Sec 4.1, App A)",
+  "granularity": "whole-solution",
+  "causal_intervention": "not present (searched: probe, steering, intervention)"
+ }
+}

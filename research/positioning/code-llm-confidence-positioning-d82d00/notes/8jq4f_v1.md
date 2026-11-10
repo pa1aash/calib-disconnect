@@ -1,0 +1,27 @@
+---
+title: 8jq4f_v1
+id: 8jq4f_v1
+tags:
+- code-llm-confidence-positioning-d82d00
+- paper-close-f
+created: '2026-11-09T23:09:56.534919Z'
+updated: '2026-11-09T23:27:44.650466Z'
+source: https://api.crossref.org/works/10.31234/osf.io/8jq4f_v1
+source_domain: api.crossref.org
+fetched_at: '2026-11-09T23:09:56.534606Z'
+fetch_provider: builtin
+status: review
+type: note
+tier: unknown
+content_type: unknown
+deprecated: false
+summary: 'ABSTRACT-ONLY (Crossref record). Sha, Sun, Yang, Luo, Hu, PsyArXiv/OSF preprint
+  2026-01-06: 17 models in five LLM series, five experiments; reasoning ability scales
+  with size but item-level metacognitive sensitivity does not; long deterministic
+  reasoning traces impair self-evaluation and distillation transfers the impairment.
+  Non-code. Full text on osf.io not fetched (host not allowed); no arXiv version found.
+  Relevant to F and L2 (reasoning vs non-reasoning).'
+---
+
+{"status":"ok","message-type":"work","message-version":"1.0.0","message":{"indexed":{"date-parts":[[2026,6,4]],"date-time":"2026-06-04T06:01:16Z","timestamp":1780552876062,"version":"3.54.1"},"posted":{"date-parts":[[2026,1,6]]},"group-title":"PsyArXiv","reference-count":0,"publisher":"Center for Open Science","license":[{"start":{"date-parts":[[2026,1,6]],"date-time":"2026-01-06T00:00:00Z","timestamp":1767657600000},"content-version":"unspecified","delay-in-days":0,"URL":"https:\/\/creativecommons.org\/publicdomain\/zero\/1.0\/legalcode"}],"content-domain":{"domain":[],"crossmark-restriction":false},"short-container-title":[],"abstract":"
+Modern large language models (LLMs) exhibit remarkable reasoning abilities, yet it remains unclear whether gains in reasoning ability are accompanied by corresponding improvements in metacognitive sensitivity, which refers to the ability to discriminate, on an item-by-item basis, between correct and incorrect inferences. Here we systematically evaluate this relationship in five experiments across 17 models spanning five LLM series. Although reasoning ability reliably scales with model size, metacognitive sensitivity does not; in some series, the smallest models even exhibit higher metacognitive sensitivity than their larger counterparts. This deviation from scaling law arises from the intermediate reasoning steps produced by large models: long and deterministic reasoning traces boost performance but hinder accurate self-evaluation. Furthermore, distilling the reasoning traces of large models into small models transfers the impairment in metacognitive sensitivity. These findings demonstrate that metacognitive sensitivity is not an automatic by-product of improved reasoning.<\/p>","DOI":"10.31234\/osf.io\/8jq4f_v1","type":"posted-content","created":{"date-parts":[[2026,1,6]],"date-time":"2026-01-06T17:49:22Z","timestamp":1767721762000},"source":"Crossref","is-referenced-by-count":0,"title":["A trade-off between reasoning ability and metacognitive sensitivity in large language models"],"prefix":"10.31234","author":[{"given":"Ruixin","family":"Sha","sequence":"first","affiliation":[],"role":[{"vocabulary":"crossref","role":"author"}]},{"given":"Conghui","family":"Sun","sequence":"additional","affiliation":[],"role":[{"vocabulary":"crossref","role":"author"}]},{"given":"Chunliang","family":"Yang","sequence":"additional","affiliation":[],"role":[{"vocabulary":"crossref","role":"author"}]},{"ORCID":"https:\/\/orcid.org\/0000-0001-8538-336X","authenticated-orcid":true,"given":"Liang","family":"Luo","sequence":"additional","affiliation":[],"role":[{"vocabulary":"crossref","role":"author"}]},{"ORCID":"https:\/\/orcid.org\/0000-0002-8899-6273","authenticated-orcid":true,"given":"Xiao","family":"Hu","sequence":"additional","affiliation":[],"role":[{"vocabulary":"crossref","role":"author"}]}],"member":"15934","container-title":[],"original-title":[],"deposited":{"date-parts":[[2026,6,4]],"date-time":"2026-06-04T05:04:50Z","timestamp":1780549490000},"score":1,"resource":{"primary":{"URL":"https:\/\/osf.io\/8jq4f_v1"}},"subtitle":[],"short-title":[],"issued":{"date-parts":[[2026,1,6]]},"references-count":0,"URL":"https:\/\/doi.org\/10.31234\/osf.io\/8jq4f_v1","relation":{},"subject":[],"published":{"date-parts":[[2026,1,6]]},"subtype":"preprint"}}

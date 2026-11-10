@@ -1,0 +1,74 @@
+{
+ "source_note_id": "lever-learning-to-verify-language-to-code-generation-with-execution",
+ "claims": [
+  {
+   "claim": "Lever trains a verifier on NL input, program, and execution result, then reranks by combining verification score with generation probability and marginalizing over programs with identical execution results.",
+   "stance": "supports",
+   "stance_target": "execution-aware learned verification for code",
+   "evidence_type": "empirical",
+   "scope_conditions": "four datasets: Spider, WikiTQ, GSM8k, MBPP",
+   "quoted_support": "The sampled programs are reranked by combining the verification score with the LLM generation probability, and marginalizing over programs with the same execution results.",
+   "numbers": [
+    "4 datasets"
+   ],
+   "entities": [
+    "Lever",
+    "code-davinci-002"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "lever-learning-to-verify-language-to-code-generation-with-execution"
+  },
+  {
+   "claim": "Lever improves over base code LLMs by 4.6% to 10.9% with code-davinci-002 and sets new state of the art on all four benchmarks.",
+   "stance": "supports",
+   "stance_target": "verifier utility over execution-error pruning",
+   "evidence_type": "empirical",
+   "scope_conditions": "Tables 2-5",
+   "quoted_support": "improves over strong baselines that use execution error pruning by 4.6% to 10.9%",
+   "numbers": [
+    "4.6%",
+    "10.9%"
+   ],
+   "entities": [
+    "code-davinci-002"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "lever-learning-to-verify-language-to-code-generation-with-execution"
+  },
+  {
+   "claim": "Verification labels are binary by execution match to gold; for multi-test datasets a program is correct only if execution results match on all test cases.",
+   "stance": "neutral",
+   "stance_target": "label construction",
+   "evidence_type": "empirical",
+   "scope_conditions": "Section 3.2 training",
+   "quoted_support": "For datasets that provide multiple test cases, we label a program as correct if and only if its execution results match the ground truth program on all test cases.",
+   "numbers": [],
+   "entities": [
+    "MBPP"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "lever-learning-to-verify-language-to-code-generation-with-execution"
+  }
+ ],
+ "breadth": {
+  "confidence_families": "Learned verifier probability P(v|x,y,z) over NL, program, execution result, combined with LM generation probability (Section 2-3, Eq. 4 loss). No verbal or hidden-state confidence.",
+  "model_families_and_sizes": "Codex code-davinci-002, InCoder-6B, CodeGen-16B-multi generators; T5 and RoBERTa verifier backbones (Section 3 Models).",
+  "base_vs_instruct": "not present (searched: instruct, base)",
+  "post_training_stages": "not present (searched: RLHF, SFT of generator; few-shot prompted generators with trained verifier)",
+  "reasoning_models": "not present (searched: reasoning model, thinking)",
+  "elicitation_formats": "Few-shot prompted sampling (greedy vs sampling), execution results as verifier input (Section 2-3).",
+  "benchmarks": "Spider, WikiTQ, GSM8k, MBPP (Table 1).",
+  "label_source": "Execution-result match against gold program/answer (Section 3.2).",
+  "label_independence": "Verifier trained on training-set samples and evaluated on dev/test splits of each benchmark; ablations (Section 5).",
+  "contamination_split": "not present (searched: contamination, release date, temporal split)",
+  "calibration_metrics": "not present (searched: ECE, Brier, calibration; evaluation is execution accuracy)",
+  "granularity": "Whole-program binary verification.",
+  "causal_intervention": "Ablation of verifier inputs (NL, program, execution result) and aggregation (Section 5); no model-internal intervention."
+ }
+}

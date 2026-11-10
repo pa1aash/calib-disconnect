@@ -1,0 +1,174 @@
+[
+ {
+  "claim": "Static single-token hidden-state probes reach 0.90 AUROC and 0.96 F1 on LiveCodeBench in the best settings across four open-weight instruct LLMs, and richer dynamic token-selection or sequence models give no consistent gain.",
+  "stance": "supports",
+  "stance_target": "hidden states encode code correctness (L2 probe occupancy)",
+  "evidence_type": "empirical",
+  "quoted_support": "Static single-token probes perform best, reaching 0.90 AUROC and 0.96 F1 on LCB in the best settings, generally surpassing the thresholds of previously reported static probe baselines [40,4] for IUE. More elaborate dynamic token-selection and sequence-modeling strategies yield no consistent gains.",
+  "numbers": [
+   "0.90 AUROC",
+   "0.96 F1"
+  ],
+  "entities": [
+   "Klassert",
+   "LiveCodeBench",
+   "BigCodeBench"
+  ],
+  "scope_conditions": "see summary",
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "abstract",
+  "breadth": {
+   "confidence_families": "hidden-state probes (static single-token MLP/XGBoost, LSTM, entropy-filtered token selection); mentions verbalized and sampling UE only in background (Sec 3.2); Brier Skill Score vs multicalibration baselines (Sec 5.2.3)",
+   "model_families_and_sizes": "Qwen3-Coder (48 layers), GPT-OSS-20B, NVIDIA-Nemotron-3-Nano, Olmo 3.1 Instruct 32B (Table 4.2)",
+   "base_vs_instruct": "instruct only (Sec 4.2 'Four open-weight, instruction-tuned LLMs'); no base models",
+   "post_training_stages": "not present (searched: base, SFT, RLHF stage comparison)",
+   "reasoning_models": "GPT-OSS-20B is a reasoning-capable model; no reasoning on/off comparison found",
+   "elicitation_formats": "LCB zero-shot benchmark prompt; BCB Instruct vs Complete prompt variants (Sec 4.1.2); no verbal confidence prompt formats",
+   "benchmarks": "LiveCodeBench code synthesis (1055 tasks), BigCodeBench (1,140 tasks), CALIBRI split (Table 5.7)",
+   "label_source": "benchmark test-suite execution (avg 17 tests per LCB problem); fix-then-diff LLM repair for line labels (Sec 4.3)",
+   "label_independence": "not present (searched: independence of label from probe training split by problem; per-problem grouped split not confirmed)",
+   "contamination_split": "explicitly not controlled: Sec 4.1.1 acknowledges possible contamination; release/cutoff dates listed in Table 4.2 but no date split",
+   "calibration_metrics": "AUROC, F1, Brier Skill Score (Sec 5.1 metrics); ECE term appears in text but BSS is the calibration metric reported",
+   "granularity": "response-level and line-level (token and line labels via fix-then-diff)",
+   "causal_intervention": "not present (searched: steering, ablation) ; only 'ablat' appears in 4 passing mentions"
+  }
+ },
+ {
+  "claim": "Line-level fault localization with known-incorrect programs reaches a Top-3 hit rate of 81% in the best setting, while mixed-program line-level prediction is substantially harder.",
+  "stance": "supports",
+  "stance_target": "L4 localization occupancy (hidden-state, not per-requirement)",
+  "evidence_type": "empirical",
+  "quoted_support": "in a conditional localization setup with known-incorrect programs, Top-K point-of-failure ranking remains effective, achieving a Top-3 hit rate of 81% in the best setting.",
+  "numbers": [
+   "81%",
+   "Top-3"
+  ],
+  "entities": [
+   "fix-then-diff augmentation"
+  ],
+  "scope_conditions": "see summary",
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "abstract",
+  "breadth": {
+   "confidence_families": "hidden-state probes (static single-token MLP/XGBoost, LSTM, entropy-filtered token selection); mentions verbalized and sampling UE only in background (Sec 3.2); Brier Skill Score vs multicalibration baselines (Sec 5.2.3)",
+   "model_families_and_sizes": "Qwen3-Coder (48 layers), GPT-OSS-20B, NVIDIA-Nemotron-3-Nano, Olmo 3.1 Instruct 32B (Table 4.2)",
+   "base_vs_instruct": "instruct only (Sec 4.2 'Four open-weight, instruction-tuned LLMs'); no base models",
+   "post_training_stages": "not present (searched: base, SFT, RLHF stage comparison)",
+   "reasoning_models": "GPT-OSS-20B is a reasoning-capable model; no reasoning on/off comparison found",
+   "elicitation_formats": "LCB zero-shot benchmark prompt; BCB Instruct vs Complete prompt variants (Sec 4.1.2); no verbal confidence prompt formats",
+   "benchmarks": "LiveCodeBench code synthesis (1055 tasks), BigCodeBench (1,140 tasks), CALIBRI split (Table 5.7)",
+   "label_source": "benchmark test-suite execution (avg 17 tests per LCB problem); fix-then-diff LLM repair for line labels (Sec 4.3)",
+   "label_independence": "not present (searched: independence of label from probe training split by problem; per-problem grouped split not confirmed)",
+   "contamination_split": "explicitly not controlled: Sec 4.1.1 acknowledges possible contamination; release/cutoff dates listed in Table 4.2 but no date split",
+   "calibration_metrics": "AUROC, F1, Brier Skill Score (Sec 5.1 metrics); ECE term appears in text but BSS is the calibration metric reported",
+   "granularity": "response-level and line-level (token and line labels via fix-then-diff)",
+   "causal_intervention": "not present (searched: steering, ablation) ; only 'ablat' appears in 4 passing mentions"
+  }
+ },
+ {
+  "claim": "The thesis forgoes strict contamination control: models were released after the LiveCodeBench cutoff and the author acknowledges possible contamination.",
+  "stance": "supports",
+  "stance_target": "L1 release-date contamination control is not done here",
+  "evidence_type": "empirical",
+  "quoted_support": "the methodology prioritizes compiling a large, diverse dataset of problems and responses over strict contamination control. Since this thesis uses models that were published after the benchmark's cutoff date, we recognize the possible impact of data contamination on model performance.",
+  "numbers": [],
+  "entities": [
+   "LiveCodeBench"
+  ],
+  "scope_conditions": "see summary",
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "abstract",
+  "breadth": {
+   "confidence_families": "hidden-state probes (static single-token MLP/XGBoost, LSTM, entropy-filtered token selection); mentions verbalized and sampling UE only in background (Sec 3.2); Brier Skill Score vs multicalibration baselines (Sec 5.2.3)",
+   "model_families_and_sizes": "Qwen3-Coder (48 layers), GPT-OSS-20B, NVIDIA-Nemotron-3-Nano, Olmo 3.1 Instruct 32B (Table 4.2)",
+   "base_vs_instruct": "instruct only (Sec 4.2 'Four open-weight, instruction-tuned LLMs'); no base models",
+   "post_training_stages": "not present (searched: base, SFT, RLHF stage comparison)",
+   "reasoning_models": "GPT-OSS-20B is a reasoning-capable model; no reasoning on/off comparison found",
+   "elicitation_formats": "LCB zero-shot benchmark prompt; BCB Instruct vs Complete prompt variants (Sec 4.1.2); no verbal confidence prompt formats",
+   "benchmarks": "LiveCodeBench code synthesis (1055 tasks), BigCodeBench (1,140 tasks), CALIBRI split (Table 5.7)",
+   "label_source": "benchmark test-suite execution (avg 17 tests per LCB problem); fix-then-diff LLM repair for line labels (Sec 4.3)",
+   "label_independence": "not present (searched: independence of label from probe training split by problem; per-problem grouped split not confirmed)",
+   "contamination_split": "explicitly not controlled: Sec 4.1.1 acknowledges possible contamination; release/cutoff dates listed in Table 4.2 but no date split",
+   "calibration_metrics": "AUROC, F1, Brier Skill Score (Sec 5.1 metrics); ECE term appears in text but BSS is the calibration metric reported",
+   "granularity": "response-level and line-level (token and line labels via fix-then-diff)",
+   "causal_intervention": "not present (searched: steering, ablation) ; only 'ablat' appears in 4 passing mentions"
+  }
+ },
+ {
+  "claim": "A Qwen3-Coder single-token probe attains the highest Brier Skill Score on the CALIBRI test split, above the multicalibration baselines reported by Campos et al., but only for one model and one external benchmark.",
+  "stance": "supports",
+  "stance_target": "probe beats post-hoc calibration on code",
+  "evidence_type": "empirical",
+  "quoted_support": "our single-token probe achieves the highest BSS, significantly outperforming the strongest multicalibration baseline (IGLB).",
+  "numbers": [
+   "Table 5.7"
+  ],
+  "entities": [
+   "CALIBRI",
+   "IGLB",
+   "Qwen3-Coder"
+  ],
+  "scope_conditions": "see summary",
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "abstract",
+  "breadth": {
+   "confidence_families": "hidden-state probes (static single-token MLP/XGBoost, LSTM, entropy-filtered token selection); mentions verbalized and sampling UE only in background (Sec 3.2); Brier Skill Score vs multicalibration baselines (Sec 5.2.3)",
+   "model_families_and_sizes": "Qwen3-Coder (48 layers), GPT-OSS-20B, NVIDIA-Nemotron-3-Nano, Olmo 3.1 Instruct 32B (Table 4.2)",
+   "base_vs_instruct": "instruct only (Sec 4.2 'Four open-weight, instruction-tuned LLMs'); no base models",
+   "post_training_stages": "not present (searched: base, SFT, RLHF stage comparison)",
+   "reasoning_models": "GPT-OSS-20B is a reasoning-capable model; no reasoning on/off comparison found",
+   "elicitation_formats": "LCB zero-shot benchmark prompt; BCB Instruct vs Complete prompt variants (Sec 4.1.2); no verbal confidence prompt formats",
+   "benchmarks": "LiveCodeBench code synthesis (1055 tasks), BigCodeBench (1,140 tasks), CALIBRI split (Table 5.7)",
+   "label_source": "benchmark test-suite execution (avg 17 tests per LCB problem); fix-then-diff LLM repair for line labels (Sec 4.3)",
+   "label_independence": "not present (searched: independence of label from probe training split by problem; per-problem grouped split not confirmed)",
+   "contamination_split": "explicitly not controlled: Sec 4.1.1 acknowledges possible contamination; release/cutoff dates listed in Table 4.2 but no date split",
+   "calibration_metrics": "AUROC, F1, Brier Skill Score (Sec 5.1 metrics); ECE term appears in text but BSS is the calibration metric reported",
+   "granularity": "response-level and line-level (token and line labels via fix-then-diff)",
+   "causal_intervention": "not present (searched: steering, ablation) ; only 'ablat' appears in 4 passing mentions"
+  }
+ },
+ {
+  "claim": "Model table gives release date and knowledge cutoff per model (Qwen3-Coder Jul 31, 2025 / Nov 20, 2024; GPT-OSS-20B Aug 5, 2025 / Jun 1, 2024; Nemotron-3-Nano Dec 15, 2025 / Nov 25, 2025; Olmo 3.1 Instruct Nov 20, 2025 / Dec 1, 2024), but does not split tasks by date.",
+  "stance": "neutral",
+  "stance_target": "L1 contamination split",
+  "evidence_type": "empirical",
+  "quoted_support": "Qwen3-Coder [49] Jul 31, 2025 Nov 20, 2024 48 2048",
+  "numbers": [
+   "Table 4.2"
+  ],
+  "entities": [
+   "Qwen3-Coder",
+   "GPT-OSS-20B",
+   "NVIDIA-Nemotron-3-Nano",
+   "Olmo 3.1"
+  ],
+  "scope_conditions": "see summary",
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "abstract",
+  "breadth": {
+   "confidence_families": "hidden-state probes (static single-token MLP/XGBoost, LSTM, entropy-filtered token selection); mentions verbalized and sampling UE only in background (Sec 3.2); Brier Skill Score vs multicalibration baselines (Sec 5.2.3)",
+   "model_families_and_sizes": "Qwen3-Coder (48 layers), GPT-OSS-20B, NVIDIA-Nemotron-3-Nano, Olmo 3.1 Instruct 32B (Table 4.2)",
+   "base_vs_instruct": "instruct only (Sec 4.2 'Four open-weight, instruction-tuned LLMs'); no base models",
+   "post_training_stages": "not present (searched: base, SFT, RLHF stage comparison)",
+   "reasoning_models": "GPT-OSS-20B is a reasoning-capable model; no reasoning on/off comparison found",
+   "elicitation_formats": "LCB zero-shot benchmark prompt; BCB Instruct vs Complete prompt variants (Sec 4.1.2); no verbal confidence prompt formats",
+   "benchmarks": "LiveCodeBench code synthesis (1055 tasks), BigCodeBench (1,140 tasks), CALIBRI split (Table 5.7)",
+   "label_source": "benchmark test-suite execution (avg 17 tests per LCB problem); fix-then-diff LLM repair for line labels (Sec 4.3)",
+   "label_independence": "not present (searched: independence of label from probe training split by problem; per-problem grouped split not confirmed)",
+   "contamination_split": "explicitly not controlled: Sec 4.1.1 acknowledges possible contamination; release/cutoff dates listed in Table 4.2 but no date split",
+   "calibration_metrics": "AUROC, F1, Brier Skill Score (Sec 5.1 metrics); ECE term appears in text but BSS is the calibration metric reported",
+   "granularity": "response-level and line-level (token and line labels via fix-then-diff)",
+   "causal_intervention": "not present (searched: steering, ablation) ; only 'ablat' appears in 4 passing mentions"
+  }
+ }
+]

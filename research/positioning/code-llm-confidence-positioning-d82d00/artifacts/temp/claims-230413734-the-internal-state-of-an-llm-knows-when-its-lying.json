@@ -1,0 +1,69 @@
+[
+ {
+  "claim": "A classifier on hidden-layer activations labels statements true/false with 71% to 83% average accuracy depending on the base LLM.",
+  "stance": "neutral",
+  "stance_target": "L2 background: probes read internal truthfulness",
+  "evidence_type": "empirical",
+  "scope_conditions": "Abstract; Sec. 5; factual statements, not code",
+  "quoted_support": "our trained classifier achieves an average of 71% to 83% accuracy labeling which sentences are true versus false, depending on the LLM base model.",
+  "numbers": [
+   "71% to 83%",
+   "86.4% (OPT-6.7b layer 20 listed)"
+  ],
+  "entities": [
+   "SAPLMA",
+   "OPT-6.7b",
+   "LLaMA2"
+  ],
+  "time_period": "2023",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "230413734-the-internal-state-of-an-llm-knows-when-its-lying",
+  "breadth": {
+   "confidence_families": "hidden-state probe (SAPLMA), few-shot prompting, sentence probability",
+   "model_families_and_sizes": "OPT-6.7b, LLaMA2 (Sec. 4-5)",
+   "base_vs_instruct": "not present",
+   "post_training_stages": "not present (searched: full text via local PDF extraction)",
+   "reasoning_models": "not present",
+   "elicitation_formats": "few-shot true/false prompting vs probe",
+   "benchmarks": "true-false dataset of statements across topics (not code)",
+   "label_source": "human-curated truth labels",
+   "label_independence": "not code",
+   "contamination_split": "held-out topic split",
+   "calibration_metrics": "accuracy",
+   "granularity": "sentence",
+   "causal_intervention": "not present"
+  }
+ },
+ {
+  "claim": "Sentence probability is related to truthfulness but confounded by length and word frequency, so probes carry additional signal.",
+  "stance": "neutral",
+  "stance_target": "L2: probe vs probability readout",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec. 1",
+  "quoted_support": "Therefore, sentence probabilities provide",
+  "numbers": [],
+  "entities": [
+   "sentence probability"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "medium",
+  "source_note_id": "230413734-the-internal-state-of-an-llm-knows-when-its-lying",
+  "breadth": {
+   "confidence_families": "hidden-state probe (SAPLMA), few-shot prompting, sentence probability",
+   "model_families_and_sizes": "OPT-6.7b, LLaMA2 (Sec. 4-5)",
+   "base_vs_instruct": "not present",
+   "post_training_stages": "not present (searched: full text via local PDF extraction)",
+   "reasoning_models": "not present",
+   "elicitation_formats": "few-shot true/false prompting vs probe",
+   "benchmarks": "true-false dataset of statements across topics (not code)",
+   "label_source": "human-curated truth labels",
+   "label_independence": "not code",
+   "contamination_split": "held-out topic split",
+   "calibration_metrics": "accuracy",
+   "granularity": "sentence",
+   "causal_intervention": "not present"
+  }
+ }
+]

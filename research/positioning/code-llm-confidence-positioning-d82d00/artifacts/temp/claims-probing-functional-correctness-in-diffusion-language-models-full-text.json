@@ -1,0 +1,126 @@
+{
+ "source_note_id": "probing-functional-correctness-in-diffusion-language-models-full-text",
+ "claims": [
+  {
+   "claim": "Linear probes on hidden states of two diffusion LMs (LLaDA-8B, Dream-7B) predict functional correctness, with AUC rising 0.08-0.11 across denoising steps on reasoning tasks.",
+   "stance": "supports",
+   "stance_target": "hidden-state probes encode correctness beyond surface output",
+   "evidence_type": "empirical",
+   "scope_conditions": "two DLMs, four tasks (JSON, GSM8K, MBPP, ARC), logistic-regression probes with 5-fold CV",
+   "quoted_support": "Across two models (LLaDA-8B, Dream-7B) and four tasks, we find that DLMs uniquely accumulate correctness signal across denoising steps (AUC gains of 0.08–0.11 on reasoning tasks), absent in single-pass AR decoding.",
+   "numbers": [
+    "AUC gain 0.08-0.11",
+    "LLaDA-8B",
+    "Dream-7B"
+   ],
+   "entities": [
+    "LLaDA",
+    "Dream",
+    "MBPP"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "probing-functional-correctness-in-diffusion-language-models-full-text"
+  },
+  {
+   "claim": "On MBPP, step-0 probe AUC is about 0.75-0.76 and peaks at about 0.84-0.87 at later steps; baseline MBPP pass rates are 40.9% (LLaDA) and 44.4% (Dream).",
+   "stance": "supports",
+   "stance_target": "probe AUC on code execution labels",
+   "evidence_type": "empirical",
+   "scope_conditions": "MBPP 257 sanitized test instances, 128 denoising steps, seed 0",
+   "quoted_support": "MBPP follows the same gradual-buildup pattern as GSM8K: step-0 AUC is ≈ 0.75–0.76±0.04 and peaks at ≈ 0.84–0.87 ± 0.05 at later steps (step 64 for LLaDA, step 127 for Dream).",
+   "numbers": [
+    "0.75-0.76",
+    "0.84-0.87",
+    "40.9%",
+    "44.4%",
+    "257 instances"
+   ],
+   "entities": [
+    "MBPP",
+    "LLaDA",
+    "Dream"
+   ],
+   "time_period": "2026",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "probing-functional-correctness-in-diffusion-language-models-full-text"
+  },
+  {
+   "claim": "A hidden-state probe beats confidence heuristics from the model's own softmax (entropy, max-prob) by 5-20 points in filtering accuracy at tau=0.80 and by 0.05-0.18 mean peak AUC over LR-entropy.",
+   "stance": "supports",
+   "stance_target": "probe beats logit-derived readout",
+   "evidence_type": "empirical",
+   "scope_conditions": "eight (dataset, model) settings; offline simulation",
+   "quoted_support": "Across all eight (dataset, model) settings, the probe outperforms the best raw signal in classification accuracy at τ = 0.80 by 5–20 percentage points, and its peak per-step AUC exceeds LR-entropy by 0.05–0.18 on average (full tables in Appendix J).",
+   "numbers": [
+    "5-20 pp",
+    "0.05-0.18 AUC"
+   ],
+   "entities": [
+    "LLaDA",
+    "Dream"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "probing-functional-correctness-in-diffusion-language-models-full-text"
+  },
+  {
+   "claim": "Probe-based selective generation avoids 36-98% of denoising compute in an offline simulation that does not cost the probe forward pass.",
+   "stance": "supports",
+   "stance_target": "confidence-routed compute savings",
+   "evidence_type": "empirical",
+   "scope_conditions": "Table 2, tau=0.80, offline simulation",
+   "quoted_support": "The selective generation analysis is a simulation on states from full 128-step generation and does not account for inference overhead of running probes in real time.",
+   "numbers": [
+    "36-98% compute saved",
+    "JSON 98.4% LLaDA",
+    "MBPP 95.5% LLaDA",
+    "MBPP 97.8% Dream"
+   ],
+   "entities": [
+    "LLaDA",
+    "Dream"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "probing-functional-correctness-in-diffusion-language-models-full-text"
+  },
+  {
+   "claim": "Step-0 probe signal is comparable to an AR (Qwen-2.5-7B) probe on the same prompt, so it reflects prompt difficulty, not diffusion-specific computation.",
+   "stance": "neutral",
+   "stance_target": "step-0 signal origin",
+   "evidence_type": "empirical",
+   "scope_conditions": "Appendix F Table 6",
+   "quoted_support": "The step-0 hidden state already carries above-chance signal (AUC 0.61–0.80), but this is comparable to a probe on an AR model conditioned on the same prompt, indicating that step-0 signal reflects prompt difficulty rather than diffusion-specific computation.",
+   "numbers": [
+    "AUC 0.61-0.80"
+   ],
+   "entities": [
+    "Qwen-2.5-7B"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "probing-functional-correctness-in-diffusion-language-models-full-text"
+  }
+ ],
+ "breadth": {
+  "confidence_families": "Hidden-state linear probe (logistic regression on PCA-64 features), Section 3 Probe training; softmax baselines mean entropy and mean max-prob over masked positions (Section 5.3, Comparison to confidence heuristics); output-text-feature control (Appendix K). No verbal confidence, no sampling consistency.",
+  "model_families_and_sizes": "LLaDA-8B-Instruct (33 layers) and Dream-7B-Instruct (29 layers), both discrete masked diffusion LMs (Section 4 Models); Qwen-2.5-7B as AR probe baseline (Section 6, Appendix F).",
+  "base_vs_instruct": "not present as a pair comparison; both evaluated models are the Instruct variants (Section 4 Models). Searched: 'base', 'Instruct'.",
+  "post_training_stages": "not present (searched: SFT, RLHF, DPO). Section 6 notes only that Dream is fine-tuned from Qwen-2.5 and LLaDA is trained from scratch.",
+  "reasoning_models": "not present as reasoning-enabled/disabled models; 'reasoning tasks' refers to GSM8K/MBPP/ARC task type (Section 5.1). Searched: thinking, chain-of-thought.",
+  "elicitation_formats": "Probe on mean-pooled hidden states in 4 position regions at 7 denoising checkpoints t in {0,1,4,16,32,64,127} (Section 3 Hidden state extraction). No verbal or sampled-consistency elicitation.",
+  "benchmarks": "JSON schema (272 instances, eth-sri/json-mode-eval-extended), GSM8K (1,319), MBPP (257 sanitized), ARC-Challenge (1,172) (Section 4 Datasets); generation lengths 256, 512, 256, 256.",
+  "label_source": "MBPP: output correct if generated function passes all provided test assertions (execution); GSM8K numeric match; JSON parse and structure match; ARC letter match (Section 3 Functional correctness).",
+  "label_independence": "not present as a separate-labeler analysis; labels are programmatic test/gold matches; stratified 5-fold CV, shuffled-label controls (AUC 0.53-0.58, Section 3) and length-matched controls (Section 7, Appendix E). No problem-level grouping stated. Searched: leakage, group split.",
+  "contamination_split": "not present (searched: contamination, release date, temporal split). MBPP sanitized test split used; calibration/threshold set on same data via CV, with the Limitations noting a held-out development split would be required.",
+  "calibration_metrics": "AUC primary (Section 3); classification accuracy vs majority baseline in filtering (Table 2). No ECE or Brier (searched: ECE, Brier, calibration error).",
+  "granularity": "Whole-output (instance-level) correctness per prompt; features pooled over 4 generation-position regions and layer-by-step grid; no per-test or per-requirement labels.",
+  "causal_intervention": "not present for hidden states (searched: steering, ablation, patching). Related work cites Shnaidman et al. (2026) activation steering on DLMs; seed-selection test at step 1 yielded +0.0% (Section 5.1) is a selection test, not a causal intervention. Layer-origin interpretation is explicitly 'correlational rather than causal' (Limitations)."
+ }
+}

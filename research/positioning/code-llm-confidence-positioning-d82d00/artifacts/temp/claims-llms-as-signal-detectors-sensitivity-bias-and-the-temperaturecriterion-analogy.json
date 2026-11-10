@@ -1,0 +1,99 @@
+[
+ {
+  "claim": "Pre-registered SDT study of 3 LLMs over 168,000 trials finds temperature increases sensitivity (AUC) and shifts criterion simultaneously, so the temperature-as-criterion analogy breaks.",
+  "stance": "supports",
+  "stance_target": "F: SDT framing of LLM confidence is occupied for factual QA",
+  "evidence_type": "empirical",
+  "scope_conditions": "Llama-3-8B-Instruct, Mistral-7B-Instruct-v0.3, Llama-3-8B-Base, Q5_K_M; factual discrimination",
+  "quoted_support": "Our results confirm the breakdown with temperature simultaneously increasing sensitivity (AUC) and shifting criterion.",
+  "numbers": [
+   "168,000 trials",
+   "z-ROC slopes 0.52-0.84",
+   "instruct 0.52-0.63",
+   "base 0.77-0.87"
+  ],
+  "entities": [
+   "Cacioli",
+   "Signal Detection Theory"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "llms-as-signal-detectors-sensitivity-bias-and-the-temperaturecriterion-analogy",
+  "breadth": {
+   "confidence_families": "normalized log-probability as evidence variable (Sec 3); SDT parametric fit",
+   "model_families_and_sizes": "Llama-3-8B-Instruct, Mistral-7B-Instruct-v0.3, Llama-3-8B-Base, Q5_K_M (Sec 3.1)",
+   "base_vs_instruct": "yes: Llama-3-8B base vs instruct (z-ROC slope 0.77-0.87 vs 0.52-0.63, Abstract)",
+   "post_training_stages": "instruct vs base only",
+   "reasoning_models": "not present (searched: reasoning models)",
+   "elicitation_formats": "factual discrimination; temperature manipulation (Sec 3)",
+   "benchmarks": "factual knowledge domains (168,000 trials); no code",
+   "label_source": "answer match (30.1% missed-match rate, Sec 5.5)",
+   "label_independence": "not applicable to code",
+   "contamination_split": "not present (searched: contamination)",
+   "calibration_metrics": "AUC/d_a, z-ROC slope, criterion; contrasts with ECE (Abstract)",
+   "granularity": "per-trial answer",
+   "causal_intervention": "temperature manipulation (not representation-level)"
+  }
+ },
+ {
+  "claim": "ECE conflates sensitivity and bias; models at distinct positions in sensitivity-bias space cannot be distinguished by calibration metrics alone.",
+  "stance": "supports",
+  "stance_target": "F: separate discrimination from bias",
+  "evidence_type": "empirical",
+  "scope_conditions": "Abstract",
+  "quoted_support": "The SDT decomposition revealed that models occupying distinct positions in sensitivity–bias space could not be distinguished by calibration metrics alone",
+  "numbers": [],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "llms-as-signal-detectors-sensitivity-bias-and-the-temperaturecriterion-analogy",
+  "breadth": {
+   "confidence_families": "normalized log-probability as evidence variable (Sec 3); SDT parametric fit",
+   "model_families_and_sizes": "Llama-3-8B-Instruct, Mistral-7B-Instruct-v0.3, Llama-3-8B-Base, Q5_K_M (Sec 3.1)",
+   "base_vs_instruct": "yes: Llama-3-8B base vs instruct (z-ROC slope 0.77-0.87 vs 0.52-0.63, Abstract)",
+   "post_training_stages": "instruct vs base only",
+   "reasoning_models": "not present (searched: reasoning models)",
+   "elicitation_formats": "factual discrimination; temperature manipulation (Sec 3)",
+   "benchmarks": "factual knowledge domains (168,000 trials); no code",
+   "label_source": "answer match (30.1% missed-match rate, Sec 5.5)",
+   "label_independence": "not applicable to code",
+   "contamination_split": "not present (searched: contamination)",
+   "calibration_metrics": "AUC/d_a, z-ROC slope, criterion; contrasts with ECE (Abstract)",
+   "granularity": "per-trial answer",
+   "causal_intervention": "temperature manipulation (not representation-level)"
+  }
+ },
+ {
+  "claim": "Limitations: two model families at 7-8B with quantization, 30.1% scoring missed-match rate, factual QA only; no code or execution ground truth.",
+  "stance": "supports",
+  "stance_target": "F occupancy narrow: not on code",
+  "evidence_type": "empirical",
+  "scope_conditions": "Section 5.5",
+  "quoted_support": "Only two model families (Llama-3-8B and Mistral-7B) were tested, both at 7–8B parameters with Q5_K_M quantisation.",
+  "numbers": [
+   "30.1%"
+  ],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "llms-as-signal-detectors-sensitivity-bias-and-the-temperaturecriterion-analogy",
+  "breadth": {
+   "confidence_families": "normalized log-probability as evidence variable (Sec 3); SDT parametric fit",
+   "model_families_and_sizes": "Llama-3-8B-Instruct, Mistral-7B-Instruct-v0.3, Llama-3-8B-Base, Q5_K_M (Sec 3.1)",
+   "base_vs_instruct": "yes: Llama-3-8B base vs instruct (z-ROC slope 0.77-0.87 vs 0.52-0.63, Abstract)",
+   "post_training_stages": "instruct vs base only",
+   "reasoning_models": "not present (searched: reasoning models)",
+   "elicitation_formats": "factual discrimination; temperature manipulation (Sec 3)",
+   "benchmarks": "factual knowledge domains (168,000 trials); no code",
+   "label_source": "answer match (30.1% missed-match rate, Sec 5.5)",
+   "label_independence": "not applicable to code",
+   "contamination_split": "not present (searched: contamination)",
+   "calibration_metrics": "AUC/d_a, z-ROC slope, criterion; contrasts with ECE (Abstract)",
+   "granularity": "per-trial answer",
+   "causal_intervention": "temperature manipulation (not representation-level)"
+  }
+ }
+]

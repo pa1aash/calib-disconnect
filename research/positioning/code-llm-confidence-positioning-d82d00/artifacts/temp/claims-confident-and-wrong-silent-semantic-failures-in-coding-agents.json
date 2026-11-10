@@ -1,0 +1,141 @@
+[
+ {
+  "claim": "Submit rate and test-verified resolve rate diverge: GPT-5 submits 100% and resolves 44%; Llama 4 99% vs 18%; Gemini submits 70% but resolves 50%, ranking differently from submit rate.",
+  "stance": "supports",
+  "stance_target": "F: completion/indicator metrics mismeasure construct; instrument-validity framing for coding agents",
+  "evidence_type": "empirical",
+  "scope_conditions": "50 SWE-bench Verified tasks, 5 runs each, 4 models, mini-SWE-agent, Table 1",
+  "quoted_support": "By submit rate, meaning whether the agent produces a patch, GPT-5 looks perfect: 100% across 250 runs on SWE-bench. By resolve rate, whether the patch passes the project's tests, it drops to 44%.",
+  "numbers": [
+   "Claude 0.97/0.65",
+   "GPT-5 1.00/0.44",
+   "Llama 4 0.99/0.18",
+   "Gemini 0.70/0.50"
+  ],
+  "entities": [
+   "GPT-5",
+   "Gemini 3.1 Pro",
+   "Llama 4 Maverick",
+   "Claude 4.5 Sonnet"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "confident-and-wrong-silent-semantic-failures-in-coding-agents",
+  "breadth": {
+   "confidence_families": "none; indicators are submit rate, step CV, patch similarity, loop detector (Sec 2, 5)",
+   "model_families_and_sizes": "Claude 4.5 Sonnet, GPT-5, Gemini 3.1 Pro, Llama 4 Maverick via hosted APIs, sizes not stated (Sec 4)",
+   "base_vs_instruct": "not present (searched: base, instruct)",
+   "post_training_stages": "not present (searched: RLHF, SFT)",
+   "reasoning_models": "not stated (searched: reasoning, thinking)",
+   "elicitation_formats": "not present (searched: verbalized confidence); pre-edit interpretation and test-anchored guards (Sec 4)",
+   "benchmarks": "SWE-bench Verified, 50 tasks across 5 repos (Sec 4)",
+   "label_source": "SWE-bench harness test-suite pass (resolve rate) (Sec 2)",
+   "label_independence": "execution criterion independent of agent self-report",
+   "contamination_split": "not present (searched: contamination, release date)",
+   "calibration_metrics": "resolve rate, SSFR, step CV, bootstrap leaderboards; no ECE/AUROC (Sec 5)",
+   "granularity": "whole-trajectory / patch level",
+   "causal_intervention": "prompt-level guard interventions only (Sec 5.6)"
+  }
+ },
+ {
+  "claim": "The paper explicitly frames agent evaluation as construct measurement (construct, indicator, criterion; reliability x validity grid), citing Messick 1989 and Jacobs and Wallach 2021; it is about agent success metrics, not confidence calibration.",
+  "stance": "supports",
+  "stance_target": "F: measurement/metrology framing exists in coding-agent evaluation but not applied to confidence estimators",
+  "evidence_type": "theoretical",
+  "scope_conditions": "Sec 1-3",
+  "quoted_support": "We borrow the language of measurement science and psychometrics on purpose (Messick, 1989; Jacobs and Wallach, 2021).",
+  "numbers": [
+   "silent semantic failure rate 80% Llama 4, 68% GPT-5, 40% Claude, 16% Gemini"
+  ],
+  "entities": [
+   "Messick",
+   "Jacobs and Wallach"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "confident-and-wrong-silent-semantic-failures-in-coding-agents",
+  "breadth": {
+   "confidence_families": "none; indicators are submit rate, step CV, patch similarity, loop detector (Sec 2, 5)",
+   "model_families_and_sizes": "Claude 4.5 Sonnet, GPT-5, Gemini 3.1 Pro, Llama 4 Maverick via hosted APIs, sizes not stated (Sec 4)",
+   "base_vs_instruct": "not present (searched: base, instruct)",
+   "post_training_stages": "not present (searched: RLHF, SFT)",
+   "reasoning_models": "not stated (searched: reasoning, thinking)",
+   "elicitation_formats": "not present (searched: verbalized confidence); pre-edit interpretation and test-anchored guards (Sec 4)",
+   "benchmarks": "SWE-bench Verified, 50 tasks across 5 repos (Sec 4)",
+   "label_source": "SWE-bench harness test-suite pass (resolve rate) (Sec 2)",
+   "label_independence": "execution criterion independent of agent self-report",
+   "contamination_split": "not present (searched: contamination, release date)",
+   "calibration_metrics": "resolve rate, SSFR, step CV, bootstrap leaderboards; no ECE/AUROC (Sec 5)",
+   "granularity": "whole-trajectory / patch level",
+   "causal_intervention": "prompt-level guard interventions only (Sec 5.6)"
+  }
+ },
+ {
+  "claim": "Cheap process features (3-gram command loops, trajectory length r = -0.26) partially recover the missing validity signal without tests; two pre-edit guard prompts do not change resolve rate (GPT-5 44.4% to 46.0% and 44.0%).",
+  "stance": "neutral",
+  "stance_target": "L3: test-free signals for routing; no verbal confidence studied",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec 5.5-5.6, Table 4",
+  "quoted_support": "Neither guard moves overall resolve rate: the interpretation guard leaves Claude at 65.2% to 64.8% and GPT-5 at 44.4% to 46.0%.",
+  "numbers": [
+   "r=-0.26 p<0.001",
+   "19/50 to 16/50 SSF tasks with test-anchored guard"
+  ],
+  "entities": [
+   "mini-SWE-agent"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "confident-and-wrong-silent-semantic-failures-in-coding-agents",
+  "breadth": {
+   "confidence_families": "none; indicators are submit rate, step CV, patch similarity, loop detector (Sec 2, 5)",
+   "model_families_and_sizes": "Claude 4.5 Sonnet, GPT-5, Gemini 3.1 Pro, Llama 4 Maverick via hosted APIs, sizes not stated (Sec 4)",
+   "base_vs_instruct": "not present (searched: base, instruct)",
+   "post_training_stages": "not present (searched: RLHF, SFT)",
+   "reasoning_models": "not stated (searched: reasoning, thinking)",
+   "elicitation_formats": "not present (searched: verbalized confidence); pre-edit interpretation and test-anchored guards (Sec 4)",
+   "benchmarks": "SWE-bench Verified, 50 tasks across 5 repos (Sec 4)",
+   "label_source": "SWE-bench harness test-suite pass (resolve rate) (Sec 2)",
+   "label_independence": "execution criterion independent of agent self-report",
+   "contamination_split": "not present (searched: contamination, release date)",
+   "calibration_metrics": "resolve rate, SSFR, step CV, bootstrap leaderboards; no ECE/AUROC (Sec 5)",
+   "granularity": "whole-trajectory / patch level",
+   "causal_intervention": "prompt-level guard interventions only (Sec 5.6)"
+  }
+ },
+ {
+  "claim": "No verbalized confidence, probes, or calibration metrics are reported; the paper's 'calibrated' discussion concerns abstention on already-fixed bugs (all four models edit correct code on 60-90% of runs, n = 50 per model).",
+  "stance": "neutral",
+  "stance_target": "scope: not an occupant of confidence-estimation candidates",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec 6, Fig 3",
+  "quoted_support": "On 60-90% of runs (n = 50 per model), every model edits correct code instead of abstaining.",
+  "numbers": [
+   "60-90%",
+   "n=50 per model"
+  ],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "confident-and-wrong-silent-semantic-failures-in-coding-agents",
+  "breadth": {
+   "confidence_families": "none; indicators are submit rate, step CV, patch similarity, loop detector (Sec 2, 5)",
+   "model_families_and_sizes": "Claude 4.5 Sonnet, GPT-5, Gemini 3.1 Pro, Llama 4 Maverick via hosted APIs, sizes not stated (Sec 4)",
+   "base_vs_instruct": "not present (searched: base, instruct)",
+   "post_training_stages": "not present (searched: RLHF, SFT)",
+   "reasoning_models": "not stated (searched: reasoning, thinking)",
+   "elicitation_formats": "not present (searched: verbalized confidence); pre-edit interpretation and test-anchored guards (Sec 4)",
+   "benchmarks": "SWE-bench Verified, 50 tasks across 5 repos (Sec 4)",
+   "label_source": "SWE-bench harness test-suite pass (resolve rate) (Sec 2)",
+   "label_independence": "execution criterion independent of agent self-report",
+   "contamination_split": "not present (searched: contamination, release date)",
+   "calibration_metrics": "resolve rate, SSFR, step CV, bootstrap leaderboards; no ECE/AUROC (Sec 5)",
+   "granularity": "whole-trajectory / patch level",
+   "causal_intervention": "prompt-level guard interventions only (Sec 5.6)"
+  }
+ }
+]

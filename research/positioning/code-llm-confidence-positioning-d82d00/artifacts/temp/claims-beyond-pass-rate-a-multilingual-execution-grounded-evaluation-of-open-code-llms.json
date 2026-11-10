@@ -1,0 +1,58 @@
+[
+  {
+    "claim": "On a large-scale multilingual LeetCode benchmark, partial-correctness (fractional passed-testcase ratios) is concentrated near the extremes (0% or 100%) rather than spread across intermediate near-miss regions.",
+    "stance": "supports",
+    "stance_target": "Competitive/algorithmic-style code evaluation collapses to near-binary outcomes, in contrast to functional/API-composition code where partial pass is common",
+    "evidence_type": "empirical",
+    "scope_conditions": "2,707 free LeetCode problems, 12 programming languages, 9 open-weight code LLMs, 325,343 problem-model-language jobs",
+    "quoted_support": "Wrong-answer cases are concentrated in the zero-percent passed-testcase bin across models, with little evidence of intermediate testcase success... partial correctness is concentrated near the extremes rather than distributed across near-miss regions.",
+    "numbers": ["2,707 problems", "325,343 jobs", "12 languages", "9 models", "23.64% best mean correctness (Yi-Coder-9B-Chat)", "57.2% human acceptance baseline", "63.25% compile-error share of non-accepted submissions"],
+    "entities": ["Yi-Coder-9B-Chat", "Qwen2.5-Coder-14B-Instruct", "Gemma-2-27B-IT", "LeetCode"],
+    "time_period": "2026",
+    "region": "n/a",
+    "confidence": "high",
+    "source_note_id": "beyond-pass-rate-a-multilingual-execution-grounded-evaluation-of-open-code-llms"
+  },
+  {
+    "claim": "Model rankings on code-generation benchmarks are slice-dependent: the best model by mean correctness is not the best model by hard-problem performance, accepted-problem coverage, or static code quality.",
+    "stance": "neutral",
+    "stance_target": "Aggregate pass@k obscures multidimensional model differences",
+    "evidence_type": "empirical",
+    "scope_conditions": "9 open code LLMs, LeetCode-derived tasks",
+    "quoted_support": "Qwen2.5-Coder-14B-Instruct is strongest on hard problems and distinct-problem coverage, while Gemma-2-27B-IT achieves the highest all-language lint pass rate.",
+    "numbers": ["Yi-Coder 9B: 23.6% correctness, 10.1% hard, 66.0% coverage", "Qwen2.5 14B: 22.2% correctness, 11.1% hard, 77.1% coverage"],
+    "entities": ["Yi-Coder-9B-Chat", "Qwen2.5-Coder-14B-Instruct"],
+    "time_period": "2026",
+    "region": "n/a",
+    "confidence": "high",
+    "source_note_id": "beyond-pass-rate-a-multilingual-execution-grounded-evaluation-of-open-code-llms"
+  },
+  {
+    "claim": "Compile errors, not wrong answers, are the dominant non-accepted outcome across all 9 evaluated open code LLMs on multilingual LeetCode tasks.",
+    "stance": "neutral",
+    "stance_target": "Failure-mode composition of code LLMs",
+    "evidence_type": "empirical",
+    "scope_conditions": "9 open code LLMs, 12 languages, LeetCode judge outcomes",
+    "quoted_support": "compile errors account for 63.25% of non-accepted best submissions, indicating that many failures occur before semantic correctness can be tested.",
+    "numbers": ["63.25% compile-error share"],
+    "entities": ["LeetCode"],
+    "time_period": "2026",
+    "region": "n/a",
+    "confidence": "medium",
+    "source_note_id": "beyond-pass-rate-a-multilingual-execution-grounded-evaluation-of-open-code-llms"
+  },
+  {
+    "claim": "Functional correctness and static code quality (lint cleanliness, structural regularity) produce different model rankings, showing they measure distinct properties.",
+    "stance": "neutral",
+    "stance_target": "Multi-metric code evaluation beyond pass rate",
+    "evidence_type": "empirical",
+    "scope_conditions": "9 open code LLMs, accepted-code and all-language linter analysis",
+    "quoted_support": "A model can generate code that is short, regular, and structurally tidy while still failing to compile or solve the task.",
+    "numbers": ["Stable-Code-Instruct-3B: 0.588 quality score vs 0.7% correctness"],
+    "entities": ["Stable-Code-Instruct-3B", "Gemma-2-27B-IT"],
+    "time_period": "2026",
+    "region": "n/a",
+    "confidence": "medium",
+    "source_note_id": "beyond-pass-rate-a-multilingual-execution-grounded-evaluation-of-open-code-llms"
+  }
+]

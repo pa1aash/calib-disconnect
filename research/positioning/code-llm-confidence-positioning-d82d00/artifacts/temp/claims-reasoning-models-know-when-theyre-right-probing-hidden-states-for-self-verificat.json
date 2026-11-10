@@ -1,0 +1,37 @@
+[
+ {
+  "claim": "Probes on hidden states of distilled R1 reasoning models verify intermediate answers with high ROC-AUC and low ECE, and a probe-confidence early-exit cuts tokens 24% at unchanged accuracy (math and logic only).",
+  "stance": "supports",
+  "stance_target": "L2/L3: probe calibration in reasoning models and confidence-routed compute within a trace (non-code)",
+  "quoted_support": "We adopt the probe as a verifier and implement a confidence-based early-exit strategy by thresholding confidence scores from the probe.",
+  "numbers": [
+   "24% token reduction (vault summary)",
+   "Table 1 ECE 0.02-0.10 (vault summary)"
+  ],
+  "entities": [
+   "R1-Distill Llama-8B/70B",
+   "Qwen-1.5B/7B/32B"
+  ],
+  "time_period": "2025",
+  "confidence": "high",
+  "evidence_type": "empirical",
+  "scope_conditions": "",
+  "region": "",
+  "source_note_id": "reasoning-models-know-when-theyre-right-probing-hidden-states-for-self-verificat",
+  "breadth": {
+   "confidence_families": "hidden-state probes; no verbal baseline",
+   "model_families_and_sizes": "R1-distilled Llama-8B/70B and Qwen-1.5B/7B/32B",
+   "base_vs_instruct": "not present",
+   "post_training_stages": "not verified in this pass (batch 13 read abstract and targeted passages only)",
+   "reasoning_models": "all models are reasoning (long CoT)",
+   "elicitation_formats": "not verified in this pass (batch 13 read abstract and targeted passages only)",
+   "benchmarks": "GSM8K, MATH, AIME, KnowLogic (no code)",
+   "label_source": "answer correctness",
+   "label_independence": "not verified in this pass (batch 13 read abstract and targeted passages only)",
+   "contamination_split": "not verified in this pass (batch 13 read abstract and targeted passages only)",
+   "calibration_metrics": "ROC-AUC, ECE, Brier (Table 1)",
+   "granularity": "intermediate answer position",
+   "causal_intervention": "not present"
+  }
+ }
+]

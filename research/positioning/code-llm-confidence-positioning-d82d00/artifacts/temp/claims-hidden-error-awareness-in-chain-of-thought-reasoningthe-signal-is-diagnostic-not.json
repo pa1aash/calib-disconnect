@@ -1,0 +1,147 @@
+[
+ {
+  "claim": "A linear hidden-state probe predicts CoT trace correctness at 0.95 AUROC, far above verbalized confidence (0.67), self-consistency (0.82), and CCS (0.72), on math reasoning.",
+  "stance": "supports",
+  "stance_target": "L2 probe-beats-verbal pattern generalizes outside code (math) and outside non-reasoning models",
+  "evidence_type": "empirical",
+  "scope_conditions": "MATH-500 (100 train, 200 held-out); nine models 1.5B-72B; Sec 3, Tables 1-2",
+  "quoted_support": "A linear probe on hidden states predicts trace correctness with 0.95 AUROC—from the very first reasoning step (0.79)—while verbalized confidence for wrong traces is 4.55/5, nearly identical to correct ones (4.87/5).",
+  "numbers": [
+   "0.95 AUROC",
+   "0.79 first step",
+   "4.55/5 vs 4.87/5",
+   "text classifier 0.59",
+   "probe 0.953",
+   "self-consistency 0.823"
+  ],
+  "entities": [
+   "Qwen2.5",
+   "Llama-3.1-8B",
+   "Phi-3.5-mini",
+   "DeepSeek-R1-Distill-Qwen-7B",
+   "CCS"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "hidden-error-awareness-in-chain-of-thought-reasoningthe-signal-is-diagnostic-not",
+  "breadth": {
+   "confidence_families": "hidden-state linear probe; verbalized 1-5 confidence; self-consistency N=5; CCS; text-surface classifier (Table 2)",
+   "model_families_and_sizes": "Qwen2.5 1.5B/3B/7B/14B/32B/72B, Phi-3.5-mini, Llama-3.1-8B, DeepSeek-R1-Distill-Qwen-7B (Table 1)",
+   "base_vs_instruct": "not present (all 'std' vs 'reas.' type; searched base, instruct)",
+   "post_training_stages": "RL-distilled reasoning model compared with standard models (Table 1)",
+   "reasoning_models": "DeepSeek-R1-Distill-Qwen-7B, eval AUROC 0.852; chain-of-thought generated greedily (Table 1, Alg. 1)",
+   "elicitation_formats": "verbalized 1-5 scale; CoT trace hidden states at last token (Sec 3.1)",
+   "benchmarks": "MATH-500 (100 train, 200 held-out eval) (Sec 3.1, Table 1); no code",
+   "label_source": "final answer vs reference (Alg. 1 step 3)",
+   "label_independence": "probe trained on separate MATH-500 problems disjoint from eval sets (Sec 3.1)",
+   "contamination_split": "not present (searched: contaminat, release date)",
+   "calibration_metrics": "AUROC only; no ECE or Brier scanned",
+   "granularity": "per CoT trace, also first reasoning step",
+   "causal_intervention": "activation steering, probe-guided best-of-N, self-correction, activation patching (Sec 5)"
+  }
+ },
+ {
+  "claim": "Four causal interventions (activation steering, probe-guided best-of-N, self-correction, activation patching) fail to improve accuracy; the probe signal is diagnostic, not causal.",
+  "stance": "supports",
+  "stance_target": "L2: causal-intervention component for probes is occupied in math, not code",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec 5; MATH-500",
+  "quoted_support": "Four interventions—activation steering, probe-guided best-of-N, self-correction, and activation patching—all fail; patching destroys output coherence entirely.",
+  "numbers": [
+   "accuracy -> 0% under patching"
+  ],
+  "entities": [
+   "activation patching",
+   "activation steering"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "hidden-error-awareness-in-chain-of-thought-reasoningthe-signal-is-diagnostic-not",
+  "breadth": {
+   "confidence_families": "hidden-state linear probe; verbalized 1-5 confidence; self-consistency N=5; CCS; text-surface classifier (Table 2)",
+   "model_families_and_sizes": "Qwen2.5 1.5B/3B/7B/14B/32B/72B, Phi-3.5-mini, Llama-3.1-8B, DeepSeek-R1-Distill-Qwen-7B (Table 1)",
+   "base_vs_instruct": "not present (all 'std' vs 'reas.' type; searched base, instruct)",
+   "post_training_stages": "RL-distilled reasoning model compared with standard models (Table 1)",
+   "reasoning_models": "DeepSeek-R1-Distill-Qwen-7B, eval AUROC 0.852; chain-of-thought generated greedily (Table 1, Alg. 1)",
+   "elicitation_formats": "verbalized 1-5 scale; CoT trace hidden states at last token (Sec 3.1)",
+   "benchmarks": "MATH-500 (100 train, 200 held-out eval) (Sec 3.1, Table 1); no code",
+   "label_source": "final answer vs reference (Alg. 1 step 3)",
+   "label_independence": "probe trained on separate MATH-500 problems disjoint from eval sets (Sec 3.1)",
+   "contamination_split": "not present (searched: contaminat, release date)",
+   "calibration_metrics": "AUROC only; no ECE or Brier scanned",
+   "granularity": "per CoT trace, also first reasoning step",
+   "causal_intervention": "activation steering, probe-guided best-of-N, self-correction, activation patching (Sec 5)"
+  }
+ },
+ {
+  "claim": "Probe AUROC is non-monotone in model scale (Qwen2.5-7B CV 0.669, 14B 0.762, 32B 0.956, 72B 0.977) and holds for an RL-distilled reasoning model (DS-R1-7B eval 0.852).",
+  "stance": "supports",
+  "stance_target": "Reasoning vs non-reasoning probe contrast has an occupant in math",
+  "evidence_type": "empirical",
+  "scope_conditions": "Table 1",
+  "quoted_support": "The RL-distilled reasoning model DeepSeek-R1-7B also shows strong hidden error awareness (0.852), despite 76% base accuracy.",
+  "numbers": [
+   "0.669",
+   "0.762",
+   "0.956",
+   "0.977",
+   "0.852",
+   "76%"
+  ],
+  "entities": [
+   "DeepSeek-R1-Distill-Qwen-7B"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "hidden-error-awareness-in-chain-of-thought-reasoningthe-signal-is-diagnostic-not",
+  "breadth": {
+   "confidence_families": "hidden-state linear probe; verbalized 1-5 confidence; self-consistency N=5; CCS; text-surface classifier (Table 2)",
+   "model_families_and_sizes": "Qwen2.5 1.5B/3B/7B/14B/32B/72B, Phi-3.5-mini, Llama-3.1-8B, DeepSeek-R1-Distill-Qwen-7B (Table 1)",
+   "base_vs_instruct": "not present (all 'std' vs 'reas.' type; searched base, instruct)",
+   "post_training_stages": "RL-distilled reasoning model compared with standard models (Table 1)",
+   "reasoning_models": "DeepSeek-R1-Distill-Qwen-7B, eval AUROC 0.852; chain-of-thought generated greedily (Table 1, Alg. 1)",
+   "elicitation_formats": "verbalized 1-5 scale; CoT trace hidden states at last token (Sec 3.1)",
+   "benchmarks": "MATH-500 (100 train, 200 held-out eval) (Sec 3.1, Table 1); no code",
+   "label_source": "final answer vs reference (Alg. 1 step 3)",
+   "label_independence": "probe trained on separate MATH-500 problems disjoint from eval sets (Sec 3.1)",
+   "contamination_split": "not present (searched: contaminat, release date)",
+   "calibration_metrics": "AUROC only; no ECE or Brier scanned",
+   "granularity": "per CoT trace, also first reasoning step",
+   "causal_intervention": "activation steering, probe-guided best-of-N, self-correction, activation patching (Sec 5)"
+  }
+ },
+ {
+  "claim": "Stated limitations: MATH-500 is the primary benchmark, models up to 72B, one reasoning model, no probe-based fine-tuning.",
+  "stance": "neutral",
+  "stance_target": "Gap left for code",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec 7 Limitations",
+  "quoted_support": "We test up to 72B across three families plus one reasoning model, using MATH-500 as the primary benchmark.",
+  "numbers": [],
+  "entities": [
+   "MATH-500"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "hidden-error-awareness-in-chain-of-thought-reasoningthe-signal-is-diagnostic-not",
+  "breadth": {
+   "confidence_families": "hidden-state linear probe; verbalized 1-5 confidence; self-consistency N=5; CCS; text-surface classifier (Table 2)",
+   "model_families_and_sizes": "Qwen2.5 1.5B/3B/7B/14B/32B/72B, Phi-3.5-mini, Llama-3.1-8B, DeepSeek-R1-Distill-Qwen-7B (Table 1)",
+   "base_vs_instruct": "not present (all 'std' vs 'reas.' type; searched base, instruct)",
+   "post_training_stages": "RL-distilled reasoning model compared with standard models (Table 1)",
+   "reasoning_models": "DeepSeek-R1-Distill-Qwen-7B, eval AUROC 0.852; chain-of-thought generated greedily (Table 1, Alg. 1)",
+   "elicitation_formats": "verbalized 1-5 scale; CoT trace hidden states at last token (Sec 3.1)",
+   "benchmarks": "MATH-500 (100 train, 200 held-out eval) (Sec 3.1, Table 1); no code",
+   "label_source": "final answer vs reference (Alg. 1 step 3)",
+   "label_independence": "probe trained on separate MATH-500 problems disjoint from eval sets (Sec 3.1)",
+   "contamination_split": "not present (searched: contaminat, release date)",
+   "calibration_metrics": "AUROC only; no ECE or Brier scanned",
+   "granularity": "per CoT trace, also first reasoning step",
+   "causal_intervention": "activation steering, probe-guided best-of-N, self-correction, activation patching (Sec 5)"
+  }
+ }
+]

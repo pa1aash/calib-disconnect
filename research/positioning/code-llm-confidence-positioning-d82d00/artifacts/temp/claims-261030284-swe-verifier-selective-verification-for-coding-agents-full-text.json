@@ -1,0 +1,109 @@
+[
+ {
+  "claim": "A trained 4B verifier gating step-level candidate sampling raises SWE-Bench Verified resolve from 75.47% to 77.20% at 1.09x cost on MiniMax-M2.7, verifying 3.43% of steps.",
+  "stance": "supports",
+  "stance_target": "score-gated selective compute is a competitive verification strategy",
+  "evidence_type": "empirical",
+  "scope_conditions": "SWE-Bench Verified, mini-swe-agent, two policies",
+  "quoted_support": "Table 1: MiniMax-M2.7 None 75.47+-1.40 at 1.00x; Selective Two-Stage Rubric 77.20+-0.87 at 1.09x (3.43% verified).",
+  "numbers": [
+   "75.47+-1.40",
+   "77.20+-0.87",
+   "1.09x",
+   "3.43%",
+   "All-step Self-Verification 75.27+-1.86 at 3.35x",
+   "Trajectory LLM-as-a-Verifier@3 75.85+-0.87 at 3.50x",
+   "Oracle@3 82.20 at 3.00x"
+  ],
+  "entities": [
+   "SWE-Verifier",
+   "MiniMax-M2.7",
+   "SWE-Bench Verified"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "261030284-swe-verifier-selective-verification-for-coding-agents-full-text",
+  "breadth": {
+   "confidence_families": "trained generative verifier score (Qwen3.5-4B student) used as gate; not a confidence/probability of correctness; no probes or verbal confidence (Sec 3.1)",
+   "model_families_and_sizes": "policies MiniMax-M2.7 and DeepSeek-V4-Flash; verifier Qwen3.5-4B (Sec 4.1)",
+   "base_vs_instruct": "not present (Untrained = base Qwen3.5-4B as ablation only)",
+   "post_training_stages": "verifier fine-tuned on 30k action labels from 6,000 steps with GPT-5.6 teacher scores (Sec 3.3)",
+   "reasoning_models": "DeepSeek-V4-Flash with correct-high reasoning (Table 1 caption)",
+   "elicitation_formats": "verifier score threshold (0.2 for DeepSeek) triggers candidate sampling (Sec 4.2)",
+   "benchmarks": "SWE-Bench Verified 500 tasks, 202-task subset for tuning (Sec 4.1)",
+   "label_source": "SWE-Bench test-based resolve rate",
+   "label_independence": "verifier trained on teacher-scored preferences with observed environment outcomes; resolve labels separate",
+   "contamination_split": "not present (searched: contamination)",
+   "calibration_metrics": "not present (searched: ECE, AUROC, calibration beyond prompt wording); metrics are resolve %, steps, cost multiple",
+   "granularity": "per-step action in agent trajectory",
+   "causal_intervention": "gate vs selector ablations (Table 2); threshold sweep (Fig 3); no hidden-state intervention"
+  }
+ },
+ {
+  "claim": "Generalization to DeepSeek-V4-Flash: 72.60% to 74.27% at 1.13x cost with a threshold of 0.2 fixed without per-variant tuning.",
+  "stance": "supports",
+  "stance_target": "gated verification transfers across policies",
+  "evidence_type": "empirical",
+  "scope_conditions": "Table 1",
+  "quoted_support": "DeepSeek-V4-Flash None 72.60+-0.53; Two-Stage Rubric 74.27+-1.01 at 1.13x; Oracle@3 80.60.",
+  "numbers": [
+   "72.60+-0.53",
+   "74.27+-1.01",
+   "1.13x",
+   "3.59% verified",
+   "Oracle@3 80.60"
+  ],
+  "entities": [
+   "DeepSeek-V4-Flash"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "261030284-swe-verifier-selective-verification-for-coding-agents-full-text",
+  "breadth": {
+   "confidence_families": "trained generative verifier score (Qwen3.5-4B student) used as gate; not a confidence/probability of correctness; no probes or verbal confidence (Sec 3.1)",
+   "model_families_and_sizes": "policies MiniMax-M2.7 and DeepSeek-V4-Flash; verifier Qwen3.5-4B (Sec 4.1)",
+   "base_vs_instruct": "not present (Untrained = base Qwen3.5-4B as ablation only)",
+   "post_training_stages": "verifier fine-tuned on 30k action labels from 6,000 steps with GPT-5.6 teacher scores (Sec 3.3)",
+   "reasoning_models": "DeepSeek-V4-Flash with correct-high reasoning (Table 1 caption)",
+   "elicitation_formats": "verifier score threshold (0.2 for DeepSeek) triggers candidate sampling (Sec 4.2)",
+   "benchmarks": "SWE-Bench Verified 500 tasks, 202-task subset for tuning (Sec 4.1)",
+   "label_source": "SWE-Bench test-based resolve rate",
+   "label_independence": "verifier trained on teacher-scored preferences with observed environment outcomes; resolve labels separate",
+   "contamination_split": "not present (searched: contamination)",
+   "calibration_metrics": "not present (searched: ECE, AUROC, calibration beyond prompt wording); metrics are resolve %, steps, cost multiple",
+   "granularity": "per-step action in agent trajectory",
+   "causal_intervention": "gate vs selector ablations (Table 2); threshold sweep (Fig 3); no hidden-state intervention"
+  }
+ },
+ {
+  "claim": "The routing signal is a trained verifier preference score, not an elicited or probed confidence, and no random-routing baseline at matched verify rate is reported in Table 1.",
+  "stance": "neutral",
+  "stance_target": "L3 occupancy: confidence-routed budget vs random and oracle routing",
+  "evidence_type": "empirical",
+  "scope_conditions": "Table 1 baselines: none, trajectory, all-step, selective, Oracle@3",
+  "quoted_support": "Trajectory verification ... Oracle@3 gives an upper bound by selecting a successful rollout whenever one exists.",
+  "numbers": [],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "medium",
+  "source_note_id": "261030284-swe-verifier-selective-verification-for-coding-agents-full-text",
+  "breadth": {
+   "confidence_families": "trained generative verifier score (Qwen3.5-4B student) used as gate; not a confidence/probability of correctness; no probes or verbal confidence (Sec 3.1)",
+   "model_families_and_sizes": "policies MiniMax-M2.7 and DeepSeek-V4-Flash; verifier Qwen3.5-4B (Sec 4.1)",
+   "base_vs_instruct": "not present (Untrained = base Qwen3.5-4B as ablation only)",
+   "post_training_stages": "verifier fine-tuned on 30k action labels from 6,000 steps with GPT-5.6 teacher scores (Sec 3.3)",
+   "reasoning_models": "DeepSeek-V4-Flash with correct-high reasoning (Table 1 caption)",
+   "elicitation_formats": "verifier score threshold (0.2 for DeepSeek) triggers candidate sampling (Sec 4.2)",
+   "benchmarks": "SWE-Bench Verified 500 tasks, 202-task subset for tuning (Sec 4.1)",
+   "label_source": "SWE-Bench test-based resolve rate",
+   "label_independence": "verifier trained on teacher-scored preferences with observed environment outcomes; resolve labels separate",
+   "contamination_split": "not present (searched: contamination)",
+   "calibration_metrics": "not present (searched: ECE, AUROC, calibration beyond prompt wording); metrics are resolve %, steps, cost multiple",
+   "granularity": "per-step action in agent trajectory",
+   "causal_intervention": "gate vs selector ablations (Table 2); threshold sweep (Fig 3); no hidden-state intervention"
+  }
+ }
+]

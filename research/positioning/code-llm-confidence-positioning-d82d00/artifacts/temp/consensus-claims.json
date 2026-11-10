@@ -1,0 +1,213 @@
+[
+ {
+  "claim": "Hidden states of code models linearly encode the execution correctness of generated code above chance (reported AUCs or accuracies well above random across autoregressive, diffusion, agentic, and pre-generation settings).",
+  "sources": [
+   "on-llms-internal-representation-of-code-correctness",
+   "250112934-correctness-assessment-of-code-generated-by-large-language-models-usin",
+   "260614530-code-correctness-linearly-decodable-from-hidden-states-before-generati",
+   "260705188-latent-programming-horizons-in-coding-agents-full-text",
+   "a-heckler-in-the-hidden-statecorrectness-signals-in-diffusion-language-models",
+   "probing-functional-correctness-in-diffusion-language-models-full-text",
+   "mechanistic-interpretability-of-code-correctness-in-llms-via-sparse-autoencoders",
+   "which-signals-of-code-correctness-survive-distribution-shift-hidden-state-and-ca",
+   "abstract"
+  ],
+  "scope": "Code with execution labels; 8+ independent groups after collapsing Devanbu/Nadi and Bui/Vu clusters",
+  "candidate": "L2"
+ },
+ {
+  "claim": "Stated (verbal or reflective) confidence of code models is poorly calibrated, overconfident, or inconsistent as a predictor of execution correctness, especially for small open instruct models.",
+  "sources": [
+   "240202047-calibration-and-correctness-of-language-models-for-code",
+   "verbalized-uncertainty-in-coding-llms-contamination-aware-calibration-uncertainl",
+   "functional-entropy-predicting-functional-correctness-in-llm-generated-code-with",
+   "an-empirical-study-of-security-calibration-in-large-language-models-for-code",
+   "characterizing-overconfident-failure-in-llm-based-code-generation-full-text",
+   "1introduction"
+  ],
+  "scope": "Code with execution labels; Ribeiro et al. (same Devanbu/Nadi cluster as 240202047) counted once",
+  "candidate": "L1, L2"
+ },
+ {
+  "claim": "Token-level likelihood or entropy is a weak discriminator of pass versus fail across problems on code (AUROC near or below about 0.70 in most reported settings).",
+  "sources": [
+   "characterizing-overconfident-failure-in-llm-based-code-generation-full-text",
+   "semantic-vs-structural-signals-log-probability-and-llm-as-a-judge-for-reference",
+   "assessing-correctness-in-llm-based-code-generation-via-uncertainty-estimation",
+   "240202047-calibration-and-correctness-of-language-models-for-code",
+   "multicalibration-for-llm-based-code-generation"
+  ],
+  "scope": "Code with execution labels; exceptions are within-task mutant ranking and token-localization uses",
+  "candidate": "L1"
+ },
+ {
+  "claim": "NLI- or embedding-based semantic entropy transferred from NLG fails on code; clustering sampled programs by execution behavior or symbolic equivalence is needed for sampled agreement to track correctness.",
+  "sources": [
+   "functional-entropy-predicting-functional-correctness-in-llm-generated-code-with",
+   "assessing-correctness-in-llm-based-code-generation-via-uncertainty-estimation",
+   "ensemble-based-uncertainty-estimation-for-code-correctness-estimation",
+   "code-mue-measuring-code-llms-uncertainty-through-execution-based-semantic-intera"
+  ],
+  "scope": "Code with execution labels; assessing-correctness and using-semantic-distance may share the Sharma and David group, so only one is listed",
+  "candidate": "L1"
+ },
+ {
+  "claim": "Binned ECE alone is a misleading calibration measure: it can be near zero for base-rate or collapsed predictors and decouples from discrimination, so resolution, Brier skill, or AUROC must be reported alongside it.",
+  "sources": [
+   "240202047-calibration-and-correctness-of-language-models-for-code",
+   "verbalized-uncertainty-in-coding-llms-contamination-aware-calibration-uncertainl",
+   "measurement-validity-and-representation-dynamics-ofconfidence-signals-in-large-l",
+   "tce-a-test-based-approach-to-measuring-calibration-error",
+   "llms-as-signal-detectors-sensitivity-bias-and-the-temperaturecriterion-analogy",
+   "when-calibration-rankings-reverse-accuracy-controlled-evaluation-for-fair-compar",
+   "characterizing-overconfident-failure-in-llm-based-code-generation-full-text"
+  ],
+  "scope": "Mixed: code with execution labels (240202047, verbalized-uncertainty, characterizing-overconfident) and general-domain",
+  "candidate": "L1, F"
+ },
+ {
+  "claim": "Calibration and discrimination dissociate: post-hoc recalibration improves calibration error or Brier but does not improve ranking by correctness, and cannot recover information the score has lost.",
+  "sources": [
+   "characterizing-overconfident-failure-in-llm-based-code-generation-full-text",
+   "when-to-answer-and-when-to-defer-a-decision-framework-for-reliable-code-predicti",
+   "beyond-confidence-rethinking-uncertainty-calibration-in-deep-code-models",
+   "decomposing-probabilistic-scores-reliability-information-loss-and-uncertaintysup",
+   "rethinking-early-stopping-refine-then-calibrate",
+   "statistical-inference-for-score-decompositions"
+  ],
+  "scope": "Mixed: code (generation and classification) plus general statistical theory",
+  "candidate": "L1, F"
+ },
+ {
+  "claim": "Benchmark test suites are thin enough that execution labels carry false passes; strengthening tests lowers measured pass rates and can change model rankings.",
+  "sources": [
+   "is-your-code-generated-by-chatgpt-really-correct-rigorous-evaluation-of-large-la",
+   "rethinking-verification-for-llm-code-generation-from-generation-to-testing",
+   "swe-abs-adversarial-benchmark-strengthening-exposes-inflated-success-rates-on-te",
+   "certified-against-which-oracleexecution-labels-set-the-reported-riskof-conformal"
+  ],
+  "scope": "Code with execution labels (function-level, repository-level, text-to-SQL)",
+  "candidate": "L1"
+ },
+ {
+  "claim": "LLM-written tests are not independent verifiers: they inherit the generator's blind spots, often fail to execute or carry wrong oracles, and agreement-based selection fails when samples share correlated errors.",
+  "sources": [
+   "261005170-verification-trap-understanding-test-time-selection-failures-under-fal",
+   "261032548-beyond-coverage-and-mutation-a-blind-spot-analysis-of-llm-generated-un",
+   "certified-against-which-oracleexecution-labels-set-the-reported-riskof-conformal",
+   "inference-time-code-selection-via-symbolic-equivalence-partitioning-full-text",
+   "ensemble-based-uncertainty-estimation-for-code-correctness-estimation"
+  ],
+  "scope": "Code with execution labels; duplicate notes for verification-trap and beyond-coverage counted once",
+  "candidate": "L1, L4"
+ },
+ {
+  "claim": "Pooled AUROC of code and agent correctness predictors is dominated by problem difficulty; within-problem or within-run discrimination is much weaker.",
+  "sources": [
+   "which-signals-of-code-correctness-survive-distribution-shift-hidden-state-and-ca",
+   "disentangling-task-difficulty-from-run-level-failure-in-agent-failure-prediction",
+   "hard-issue-weak-model-or-bad-runrethinking-failure-prediction-for-coding-agents",
+   "probing-functional-correctness-in-diffusion-language-models-full-text",
+   "continue-or-restart-the-limits-of-early-failure-prediction-in-coding-agents"
+  ],
+  "scope": "Code with execution labels; disentangling, hard-issue, and continue-or-restart may share authors (not confirmed in the redundancy audit), so independence rests on which-signals and the diffusion probe paper plus at least one agent paper",
+  "candidate": "L1, L2"
+ },
+ {
+  "claim": "Outside code, hidden-state probes or internal estimators predict answer correctness better than verbalized confidence.",
+  "sources": [
+   "hidden-error-awareness-in-chain-of-thought-reasoningthe-signal-is-diagnostic-not",
+   "calibration-not-answer-selection-distilling-internal-confidence-in-reasoning-mod",
+   "when-words-fall-short-iterative-synergy-between-verbalized-reasoning-and-hidden",
+   "what-llm-forecasters-know-but-dont-say-probing-internal-representations-for-cali",
+   "how-llms-detect-and-correct-their-own-errors-the-role-of-internal-confidence-sig",
+   "the-internal-state-of-an-llm-knows-when-its-lying"
+  ],
+  "scope": "General-domain (math, factual QA, forecasting, true/false statements); no execution labels",
+  "candidate": "L2"
+ },
+ {
+  "claim": "Post-training (instruction tuning, RLHF, RL with verifiable rewards) degrades token-probability calibration relative to the base model in general NLP.",
+  "sources": [
+   "gpt-4-technical-report",
+   "large-language-models-are-overconfident-in-their-own-responses",
+   "trained-on-tokens-calibrated-on-conceptsthe-emergence-of-semantic-calibration-in",
+   "beyond-binary-rewards-training-lms-to-reason-about-their-uncertainty-2",
+   "post-training-shifts-confidence-a-three-stage-analysis-of-how-sft-rl-and-opd-sha"
+  ],
+  "scope": "General-domain (MMLU, QA, math); code evidence limited to characterizing-overconfident at token level",
+  "candidate": "L2"
+ },
+ {
+  "claim": "Verbal confidence from small or mid-size instruct models is often degenerate (saturated near a ceiling or collapsed into few values), and its behavior depends on elicitation format.",
+  "sources": [
+   "verbalized-uncertainty-in-coding-llms-contamination-aware-calibration-uncertainl",
+   "260722034-small-vlms-know-when-wrong-but-cannot-say-so-full-text",
+   "verbal-confidence-saturation-in-3-9b-open-weight-instruction-tuned-llms-a-pre-re",
+   "measurement-validity-and-representation-dynamics-ofconfidence-signals-in-large-l",
+   "can-llms-express-their-uncertainty-an-empirical-evaluation-of-confidence-elicita"
+  ],
+  "scope": "Mixed: code (verbalized-uncertainty) and general-domain; verbal-confidence-saturation and measurement-validity may share an author line (pre-registered validity series), counted cautiously",
+  "candidate": "L2, F"
+ },
+ {
+  "claim": "Under a matched sampling budget, self-repair with feedback is often no better than independent resampling on code.",
+  "sources": [
+   "is-self-repair-a-silver-bullet-for-code-generation",
+   "falsification-not-exposure-placebo-controlled-decomposition-of-self-repair-feedb",
+   "code-correctness-is-linearly-decodable-from-llm-hidden-states-before-generation"
+  ],
+  "scope": "Code with execution labels",
+  "candidate": "L4"
+ },
+ {
+  "claim": "Agreement- or confidence-based adaptive sampling and early stopping reduce compute at near-equal accuracy on mostly solvable reasoning workloads.",
+  "sources": [
+   "lets-sample-step-by-stepadaptive-consistency-for-efficient-reasoning-and-coding",
+   "efficient-test-time-scaling-via-self-calibration",
+   "zero-overhead-introspectionfor-adaptive-test-time-compute",
+   "1introduction-2",
+   "reasoning-models-know-when-theyre-right-probing-hidden-states-for-self-verificat"
+  ],
+  "scope": "Mostly general-domain math and reasoning (lets-sample includes code datasets); contested for hard workloads by give-up-to-get-more",
+  "candidate": "L3"
+ },
+ {
+  "claim": "Execution-based selection among sampled programs (generated-test agreement, behavior clustering, execution-result MBR, execution-aware verifiers) improves over plain generation.",
+  "sources": [
+   "codet-code-generation-with-generated-tests",
+   "competition-level-code-generation-with-alphacode",
+   "natural-language-to-code-translation-with-execution",
+   "lever-learning-to-verify-language-to-code-generation-with-execution",
+   "inference-time-code-selection-via-symbolic-equivalence-partitioning-full-text"
+  ],
+  "scope": "Code with execution labels",
+  "candidate": "L3"
+ },
+ {
+  "claim": "Fine-grained (token- or line-level) localization of likely-faulty code from model signals is feasible and already demonstrated.",
+  "sources": [
+   "251224560-localized-calibrated-uncertainty-in-code-language-models-full-text",
+   "abstract",
+   "risk-assessment-framework-for-code-llms-via-leveraging-internal-states",
+   "enhancing-automated-program-repair-via-faulty-token-localization-and-quality-awa",
+   "flare-fine-grained-diagnostic-feedback-for-llm-code-refinement-2",
+   "semguard-real-time-semantic-evaluator-for-correcting-llm-generated-code"
+  ],
+  "scope": "Code; labels are repair patches, edits, or execution outcomes rather than per-requirement test groups",
+  "candidate": "L4"
+ },
+ {
+  "claim": "Signal-detection and psychometric framings (type-2 AUROC, meta-d', sensitivity versus bias, validity screening) are already applied to LLM confidence outside code.",
+  "sources": [
+   "do-llms-know-what-they-know-measuring-metacognitive-efficiency-with-signal-detec",
+   "llms-as-signal-detectors-sensitivity-bias-and-the-temperaturecriterion-analogy",
+   "measuring-some-aspects-of-the-metacognition-of-ai",
+   "the-metacognitive-monitoring-battery-a-cross-domain-benchmark-for-llm-self-monit",
+   "metacognition-and-uncertainty-communication-in-humans-and-large-language-models",
+   "measurement-validity-and-representation-dynamics-ofconfidence-signals-in-large-l"
+  ],
+  "scope": "General-domain; none on code with execution labels",
+  "candidate": "F"
+ }
+]

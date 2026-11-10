@@ -1,0 +1,180 @@
+{
+ "note_id": "on-the-robustness-of-llms-internal-representation-of-code-correctness",
+ "claims": [
+  {
+   "claim": "Probe accuracy for code correctness is highly sensitive to construction method, prompt framing, and hidden-state location; no single configuration is best across models and benchmarks.",
+   "stance": "neutral",
+   "stance_target": "L2 probe robustness",
+   "evidence_type": "empirical",
+   "scope_conditions": "",
+   "quoted_support": "Our results show that no single configuration recovers the direction best. Only the construction method generalises, while the best prompt framing, read-out location, and model change from one benchmark to the other.",
+   "numbers": [
+    "4 models",
+    "HumanEval, BigCodeBench, MBPP+"
+   ],
+   "entities": [
+    "Ribeiro",
+    "Nadi"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "on-the-robustness-of-llms-internal-representation-of-code-correctness",
+   "breadth": {
+    "confidence_families": "hidden-state linear probe directions (PCA, mean-diff); token probability and verbalised confidence only as cited prior work (Sec I)",
+    "model_families_and_sizes": "Mistral-7B-Instruct-v0.3, Qwen2.5-Coder-7B-Instruct, OpenCoder-8B-Instruct, CodeLlama-7B-Instruct (Sec III-C)",
+    "base_vs_instruct": "instruct only (Sec III-C)",
+    "post_training_stages": "not studied beyond instruct",
+    "reasoning_models": "none",
+    "elicitation_formats": "prompt framing neutral vs concept (Sec III, Tables II-III)",
+    "benchmarks": "HumanEval (164), BigCodeBench, MBPP+ (fit OOD), synthetic mutant pairs",
+    "label_source": "unit-test execution (Sec VII construct validity)",
+    "label_independence": "self-generated candidates scored by tests; benchmark tasks split fit/val/test (Sec III-A)",
+    "contamination_split": "not present (searched: release date, contamination)",
+    "calibration_metrics": "pairwise ranking accuracy % (Tables II-III); no ECE/Brier",
+    "granularity": "whole solution, last-token or other positions",
+    "causal_intervention": "not present for steering of code correctness (steering mentioned only in related work)"
+   }
+  },
+  {
+   "claim": "Prior probe configuration (PCA, last token, neutral fit, concept test) reached only 41-63% max accuracy; accuracy varied by data subset.",
+   "stance": "neutral",
+   "stance_target": "",
+   "evidence_type": "empirical",
+   "scope_conditions": "",
+   "quoted_support": "However, the highest obtained accuracy ranged from 41\u201363% across models and benchmarks, suggesting that the method of capturing the representation may not generalize well.",
+   "numbers": [
+    "41-63%"
+   ],
+   "entities": [],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "on-the-robustness-of-llms-internal-representation-of-code-correctness",
+   "breadth": {
+    "confidence_families": "hidden-state linear probe directions (PCA, mean-diff); token probability and verbalised confidence only as cited prior work (Sec I)",
+    "model_families_and_sizes": "Mistral-7B-Instruct-v0.3, Qwen2.5-Coder-7B-Instruct, OpenCoder-8B-Instruct, CodeLlama-7B-Instruct (Sec III-C)",
+    "base_vs_instruct": "instruct only (Sec III-C)",
+    "post_training_stages": "not studied beyond instruct",
+    "reasoning_models": "none",
+    "elicitation_formats": "prompt framing neutral vs concept (Sec III, Tables II-III)",
+    "benchmarks": "HumanEval (164), BigCodeBench, MBPP+ (fit OOD), synthetic mutant pairs",
+    "label_source": "unit-test execution (Sec VII construct validity)",
+    "label_independence": "self-generated candidates scored by tests; benchmark tasks split fit/val/test (Sec III-A)",
+    "contamination_split": "not present (searched: release date, contamination)",
+    "calibration_metrics": "pairwise ranking accuracy % (Tables II-III); no ECE/Brier",
+    "granularity": "whole solution, last-token or other positions",
+    "causal_intervention": "not present for steering of code correctness (steering mentioned only in related work)"
+   }
+  },
+  {
+   "claim": "Last-token read-out scores 63-69% when test framing is concept but 37-55% under neutral framing (Table II, BigCodeBench).",
+   "stance": "neutral",
+   "stance_target": "",
+   "evidence_type": "empirical",
+   "scope_conditions": "",
+   "quoted_support": "the last token scores 63 \u2013 69% across the four models when the testing framing is also concept, but 37 \u2013 55% under a neutral one ( Table II ).",
+   "numbers": [
+    "63-69%",
+    "37-55%",
+    "14% (BigCodeBench) and 3% (HumanEval) method main effect"
+   ],
+   "entities": [],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "on-the-robustness-of-llms-internal-representation-of-code-correctness",
+   "breadth": {
+    "confidence_families": "hidden-state linear probe directions (PCA, mean-diff); token probability and verbalised confidence only as cited prior work (Sec I)",
+    "model_families_and_sizes": "Mistral-7B-Instruct-v0.3, Qwen2.5-Coder-7B-Instruct, OpenCoder-8B-Instruct, CodeLlama-7B-Instruct (Sec III-C)",
+    "base_vs_instruct": "instruct only (Sec III-C)",
+    "post_training_stages": "not studied beyond instruct",
+    "reasoning_models": "none",
+    "elicitation_formats": "prompt framing neutral vs concept (Sec III, Tables II-III)",
+    "benchmarks": "HumanEval (164), BigCodeBench, MBPP+ (fit OOD), synthetic mutant pairs",
+    "label_source": "unit-test execution (Sec VII construct validity)",
+    "label_independence": "self-generated candidates scored by tests; benchmark tasks split fit/val/test (Sec III-A)",
+    "contamination_split": "not present (searched: release date, contamination)",
+    "calibration_metrics": "pairwise ranking accuracy % (Tables II-III); no ECE/Brier",
+    "granularity": "whole solution, last-token or other positions",
+    "causal_intervention": "not present for steering of code correctness (steering mentioned only in related work)"
+   }
+  },
+  {
+   "claim": "Controlling program pairs to isolate the bug-causing change does not improve the direction; a direction fit on mutant pairs separates them in isolation but does not transfer to ranking real candidates.",
+   "stance": "neutral",
+   "stance_target": "",
+   "evidence_type": "empirical",
+   "scope_conditions": "",
+   "quoted_support": "Controlling the fitting pairs to isolate the bug-causing change does not improve the direction either \u2014 on BigCodeBench a direction fit on such pairs separates them with high accuracy in isolation, yet does not transfer to ranking the benchmark\u2019s own candidate implementations.",
+   "numbers": [
+    "1,217 labelled pairs",
+    "9,585 validated confounds"
+   ],
+   "entities": [],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "on-the-robustness-of-llms-internal-representation-of-code-correctness",
+   "breadth": {
+    "confidence_families": "hidden-state linear probe directions (PCA, mean-diff); token probability and verbalised confidence only as cited prior work (Sec I)",
+    "model_families_and_sizes": "Mistral-7B-Instruct-v0.3, Qwen2.5-Coder-7B-Instruct, OpenCoder-8B-Instruct, CodeLlama-7B-Instruct (Sec III-C)",
+    "base_vs_instruct": "instruct only (Sec III-C)",
+    "post_training_stages": "not studied beyond instruct",
+    "reasoning_models": "none",
+    "elicitation_formats": "prompt framing neutral vs concept (Sec III, Tables II-III)",
+    "benchmarks": "HumanEval (164), BigCodeBench, MBPP+ (fit OOD), synthetic mutant pairs",
+    "label_source": "unit-test execution (Sec VII construct validity)",
+    "label_independence": "self-generated candidates scored by tests; benchmark tasks split fit/val/test (Sec III-A)",
+    "contamination_split": "not present (searched: release date, contamination)",
+    "calibration_metrics": "pairwise ranking accuracy % (Tables II-III); no ECE/Brier",
+    "granularity": "whole solution, last-token or other positions",
+    "causal_intervention": "not present for steering of code correctness (steering mentioned only in related work)"
+   }
+  },
+  {
+   "claim": "Motivating premise: stated and token-level confidence are poorly calibrated with code correctness, while the probe judges candidates better with no test execution (claim attributed to prior work).",
+   "stance": "neutral",
+   "stance_target": "",
+   "evidence_type": "expert-opinion",
+   "scope_conditions": "attributed to Ribeiro et al. ICSE 2026",
+   "quoted_support": "recent work captured an internal signal of code correctness that is able to judge candidate solutions better than the model\u2019s token-level or stated confidence, with no test execution.",
+   "numbers": [],
+   "entities": [],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "on-the-robustness-of-llms-internal-representation-of-code-correctness",
+   "breadth": {
+    "confidence_families": "hidden-state linear probe directions (PCA, mean-diff); token probability and verbalised confidence only as cited prior work (Sec I)",
+    "model_families_and_sizes": "Mistral-7B-Instruct-v0.3, Qwen2.5-Coder-7B-Instruct, OpenCoder-8B-Instruct, CodeLlama-7B-Instruct (Sec III-C)",
+    "base_vs_instruct": "instruct only (Sec III-C)",
+    "post_training_stages": "not studied beyond instruct",
+    "reasoning_models": "none",
+    "elicitation_formats": "prompt framing neutral vs concept (Sec III, Tables II-III)",
+    "benchmarks": "HumanEval (164), BigCodeBench, MBPP+ (fit OOD), synthetic mutant pairs",
+    "label_source": "unit-test execution (Sec VII construct validity)",
+    "label_independence": "self-generated candidates scored by tests; benchmark tasks split fit/val/test (Sec III-A)",
+    "contamination_split": "not present (searched: release date, contamination)",
+    "calibration_metrics": "pairwise ranking accuracy % (Tables II-III); no ECE/Brier",
+    "granularity": "whole solution, last-token or other positions",
+    "causal_intervention": "not present for steering of code correctness (steering mentioned only in related work)"
+   }
+  }
+ ],
+ "breadth": {
+  "confidence_families": "hidden-state linear probe directions (PCA, mean-diff); token probability and verbalised confidence only as cited prior work (Sec I)",
+  "model_families_and_sizes": "Mistral-7B-Instruct-v0.3, Qwen2.5-Coder-7B-Instruct, OpenCoder-8B-Instruct, CodeLlama-7B-Instruct (Sec III-C)",
+  "base_vs_instruct": "instruct only (Sec III-C)",
+  "post_training_stages": "not studied beyond instruct",
+  "reasoning_models": "none",
+  "elicitation_formats": "prompt framing neutral vs concept (Sec III, Tables II-III)",
+  "benchmarks": "HumanEval (164), BigCodeBench, MBPP+ (fit OOD), synthetic mutant pairs",
+  "label_source": "unit-test execution (Sec VII construct validity)",
+  "label_independence": "self-generated candidates scored by tests; benchmark tasks split fit/val/test (Sec III-A)",
+  "contamination_split": "not present (searched: release date, contamination)",
+  "calibration_metrics": "pairwise ranking accuracy % (Tables II-III); no ECE/Brier",
+  "granularity": "whole solution, last-token or other positions",
+  "causal_intervention": "not present for steering of code correctness (steering mentioned only in related work)"
+ }
+}

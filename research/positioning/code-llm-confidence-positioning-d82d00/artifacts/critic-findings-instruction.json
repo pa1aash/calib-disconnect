@@ -1,0 +1,106 @@
+{
+  "critic_type": "instruction",
+  "structural_mirror_check": "PASS: all ten H2 headings match required_section_headings in order and wording (## 1 through ## 10).",
+  "convention_check": "No em-dashes found; no British spellings found; body citation density 1.89 [[...]] per 1000 chars (above 1.5).",
+  "findings": [
+    {
+      "severity": "critical",
+      "atomic_item": "judge each candidate and each of its components OCCUPIED, NARROW, or CLEAN with full-text evidence (F: measurement-instrument or metrology framing of calibration)",
+      "failure_mode": "under-covered",
+      "location": "Section 6, paragraph starting 'The vocabulary is in use too' ('Only metrology-proper terms (measurand, GUM uncertainty budget, traceability) are unused for LLM confidence'); Section 8 row 'F | Q1 vocabulary | OCCUPIED (validity, psychometric); Prov. (metrology-proper terms)'; Section 10 G-FT row ('F Q1 (metrology-proper terms)'); Section 9.4 ('use its vocabulary as exposition')",
+      "issue": "Authoritative VERDICTS.md (Challenge resolutions) moved F Q1 metrology-proper vocabulary from CLEAN (provisional) to OCCUPIED via Zabolotnii, Holinko, and Antonenko 2604.26671 (full text, Sec 1 VIM/GUM measurand and traceability applied to clinical AI; Sec 10 stated-confidence calibration error as an instrument's systematic error) and TRACE 2605.03838; the draft still asserts the terms are unused and lists F Q1 as a provisional cell in three places.",
+      "requires_orchestrator_restructure": false,
+      "recommendation": "Rewrite the Section 6 sentence to say metrology-proper terms are also in use, at conceptual depth, citing 2604.26671 (Sec 1, Sec 10; full text) and TRACE 2605.03838 [[trace-a-metrologically-grounded-engineering-frameworkfor-trustworthy-agentic-ai]]; change the Section 8 F Q1 cell to OCCUPIED (validity, psychometric, and metrology-proper) with location '2604.26671 Sec 1, Sec 10; 2605.03838; 2610.25846; 2603.14893'; delete 'F Q1 (metrology-proper terms)' from the G-FT row in Section 10; add to Section 9.4 that any exposition using measurand or readout vocabulary must cite 2604.26671 and TRACE. 2604.26671 has no vault note (full text only at research/positioning/w4/parts/critic-A/raw/ft_2604.26671.txt): route to the step 13 gap-fetch so a [[note-id]] exists before patching."
+    },
+    {
+      "severity": "major",
+      "atomic_item": "L3 (verification utility: confidence-routed execution budgets versus random and oracle routing)",
+      "failure_mode": "under-covered",
+      "location": "Section 4.2, final paragraph ('no fetched work gates on elicited verbal or probe confidence with both random and label-sorted oracle arms on clean labels') and the residual sentence ending 'and it is NARROW'; Section 8 row 'L3 | Q1, Q4, Q5 routing'; Section 7.3 table row 'Heteroskedastic Signals, SWE-Verifier, Give Up'",
+      "issue": "VERDICTS.md restates the L3 routing residual after TRIAGE 2605.13414 (concurrent; full text, Sec 3, Eq. 1 to 3), which already normalizes self-directed token-budget allocation on LiveCodeBench between a random-permutation reference and a knapsack oracle; the draft never mentions TRIAGE and implies the random-and-oracle comparator design is itself unpublished on code.",
+      "requires_orchestrator_restructure": false,
+      "recommendation": "In Section 4.2 add TRIAGE as the closest comparator-side occupant (random-permutation reference versus knapsack oracle on LiveCodeBench, gate is a self-written plan, budget is generation tokens) and restate the residual exactly as VERDICTS.md does: elicited verbal or probe confidence as the gate, execution budget per candidate as the unit, unmodified execution labels, matched-budget random and label-sorted oracle; the comparator design is not claimed. Add 'TRIAGE 2605.13414 Sec 3, Eq. 1-3' to the Section 8 L3 Q1/Q4/Q5 location cell and a TRIAGE row to Section 7.3. Gap-fetch a vault note for 2605.13414 first (none exists)."
+    },
+    {
+      "severity": "major",
+      "atomic_item": "L4 (per-requirement or per-test-group confidence, localization, targeted repair versus regeneration, self-written test adequacy)",
+      "failure_mode": "under-covered",
+      "location": "Section 5, paragraph 'Three residuals survive' ('and the targeted-repair papers lack the matched arm'); Section 8 row 'L4 | Q2 targeted repair versus regeneration | NARROW | FLARE; TokenRepair; Olausson Sec 4; Iscan'; Section 9.4",
+      "issue": "VERDICTS.md shrinks the L4 Q2 residual via 2609.00854 (concurrent, ABSTRACT-ONLY): spectrum-based localization plus infilling loses to blind resampling at matched attempts with a random-span placebo; the draft states that targeted-repair work lacks a matched arm, which is now false, and omits the ABSTRACT-ONLY marker the prompt requires.",
+      "requires_orchestrator_restructure": false,
+      "recommendation": "Replace 'the targeted-repair papers lack the matched arm' with a sentence citing 2609.00854 (ABSTRACT-ONLY; matched-attempt localization-plus-infilling versus blind resampling, 3:40, random-span placebo, no confidence signal) and state the residual as VERDICTS.md does: only that localization comes from the model's own per-requirement confidence, with a lower prior that it wins. Update the Section 8 L4 Q2 cell to 'NARROW (residual shrinks)' and add '2609.00854 (ABSTRACT-ONLY)'. Add one clause in 9.4 that this lowers L4's prior. Gap-fetch a vault note for 2609.00854."
+    },
+    {
+      "severity": "critical",
+      "atomic_item": "Scope: docs/s3/POSITIONING_BRIEF_R1.md (read it in full; it is the binding scope, including its occupancy questions, facets, verdict definitions, breadth matrix, and pivot criteria)",
+      "failure_mode": "decomposition-gap",
+      "location": "Section 7 (Close occupants), 7.1 to 7.3; prompt-decomposition.json entities and required_formats",
+      "issue": "The prompt names the breadth matrix explicitly, and the brief defines OCCUPIED as 'comparable breadth' on that fixed 14-dimension matrix; the decomposition dropped it, and the draft never presents occupant breadth on the matrix dimensions (no 'breadth matrix' or dossier reference anywhere), so the comparable-breadth basis of each OCCUPIED verdict is not shown.",
+      "requires_orchestrator_restructure": true,
+      "recommendation": "Add a compact breadth-matrix table to Section 7 (new H3 '7.4 Breadth matrix for the closest occupants') for the occupants behind OCCUPIED or OCCUPIED (union) verdicts (Ribeiro 2512.07404, Campos 2611.07876, NeuroSym-Cal, Tuerlings, Gros and Devanbu 2512.24560, Rathnasuriya and Yang 2610.11300, CREDO 2609.34857, Miglani 2609.36783), with columns drawn from the brief's matrix (confidence families, model families, scales, benchmarks, base/instruct pairs, reasoning, elicitation formats, label independence, contamination split, calibration metrics, granularity, causal intervention), populated from research/positioning/w4/dossiers/, and point to dossiers/INDEX.md for the remaining occupants."
+    },
+    {
+      "severity": "major",
+      "atomic_item": "identify every close occupant",
+      "failure_mode": "under-covered",
+      "location": "Section 7.3 'Other close occupants' table; Section 10 paragraph 'Of 75 close occupants examined in full text'",
+      "issue": "The draft says 75 close occupants were examined but Section 7 names about 30 and gives no pointer to the full list; occupants that bear on verdicts in VERDICTS.md (TRIAGE 2605.13414, 2609.00854, 2604.26671, TRACE 2605.03838, RLCM 2604.23333, EpiCaR 2601.06786, Open the Oyster 2511.02197, Barkan 2512.24661, Ghosh 2610.25846) are absent from the occupant section.",
+      "requires_orchestrator_restructure": false,
+      "recommendation": "Add rows to the Section 7.3 table for TRIAGE (L3 comparator design), 2609.00854 (L4 Q2, ABSTRACT-ONLY), 2604.26671 and TRACE (F Q1), RLCM and EpiCaR (L2 Q10, Q11), Open the Oyster and Barkan (L2 Q2b, Q9), and Ghosh (L2 Q3, F), each with status tag, what it occupies, and what it leaves open; add one sentence stating that the complete list of 75 dossiers is in research/positioning/w4/dossiers/INDEX.md."
+    },
+    {
+      "severity": "major",
+      "atomic_item": "judge each candidate and each of its components OCCUPIED, NARROW, or CLEAN with full-text evidence (section, table, or equation cited; ABSTRACT-ONLY when only the abstract was reachable)",
+      "failure_mode": "under-covered",
+      "location": "Section 4.3 ('No fetched record measures stated confidence before and after the model sees a failing test'); Section 2.2 Contamination paragraph ('no fetched work ... compares calibration on pre-cutoff versus post-cutoff problems'); Section 9.3",
+      "issue": "VERDICTS.md requires that unread leads be named before any novelty sentence (LADDER 2610.34737 and Agentic Self-Awareness 2610.19226 for L3 Q2/Q7, both ABSTRACT-ONLY; Crossref 10.1109/tse.2026.3713834 for L1 Q13, title only) and lists Not-One-Belief 2610.35694 among L3 Q2 nearest works; the draft names none of them while issuing CLEAN (provisional) for exactly these cells.",
+      "requires_orchestrator_restructure": false,
+      "recommendation": "In Section 4.3 add Not-One-Belief [[not-one-belief-answer-payloads-persistence-and-dissociated-confidence-signals-in]] to the nearest-work list and one sentence naming LADDER [[ladder-diagnosing-domain-level-self-assessment-under-noisy-feedback]] and 2610.19226 as ABSTRACT-ONLY leads to read before any novelty claim; in Section 2.2 add that the TSE record 10.1109/tse.2026.3713834 is a title-only lead for Q13; and in Section 9.3 make reading these leads a precondition for raising Rank 3."
+    },
+    {
+      "severity": "major",
+      "atomic_item": "determine which contribution is strongest and defensible for TMLR under its two acceptance criteria (claims supported by accurate, convincing, clear evidence; interest to some of the TMLR audience)",
+      "failure_mode": "wrong-format",
+      "location": "Sections 9.2, 9.3, 9.4",
+      "issue": "Rank 1 gives a contribution sentence, evidence needs, TMLR fit per criterion, and main risks, but Rank 2 has no evidence-needs list, Rank 3 has no quoted contribution sentence and no explicit criterion-1/criterion-2 fit, and Rank 4 has none of the fields, so the ranked list is not uniformly judged against TMLR's two criteria.",
+      "requires_orchestrator_restructure": false,
+      "recommendation": "Give Ranks 2 and 3 the same four labeled fields as Rank 1 (Contribution sentence; Evidence the paper must generate; TMLR fit, criterion 1 and criterion 2 separately; Main risk), drawing evidence needs from Section 2.2 to 2.4 for Rank 2 and the genuine/spurious/placebo protocol in Section 4.4 for Rank 3; for Rank 4 add one line each on TMLR fit and the blocking risk."
+    },
+    {
+      "severity": "minor",
+      "atomic_item": "pivot criteria",
+      "failure_mode": "under-covered",
+      "location": "Section 3.9 'Pivot criteria and verdict on L2' and Section 9.2",
+      "issue": "The four L2 pivot criteria are evaluated, but the brief's replacement order (L1 plus L3 spine, then L4, then F as framing) with its A25 gate and the A26 all-occupied fallback is never explicitly applied; the ranking only implicitly follows it.",
+      "requires_orchestrator_restructure": false,
+      "recommendation": "Add two sentences at the end of Section 3.9 or start of Section 9 stating that L2 does not fail the pivot criteria (so no replacement is triggered), that if it did the A25-gated replacement order would be L1 plus L3 (NARROW, eligible), then L4 (NARROW, eligible but needs operator scope decision), then F (OCCUPIED, ineligible), and that A26 does not apply because not every candidate is OCCUPIED."
+    },
+    {
+      "severity": "minor",
+      "atomic_item": "verdict definitions",
+      "failure_mode": "under-covered",
+      "location": "Section 1.1 bullet '**CLEAN:** the search conditions are met and nothing relevant was found.'",
+      "issue": "The brief's CLEAN definition has three explicit conditions (every fixed query ran on every validated instrument; forward and backward screens of the three closest works completed; last ten screens added nothing), and the draft compresses them to 'the search conditions are met' and never reports whether backward screens were completed for any CLEAN (provisional) cell.",
+      "requires_orchestrator_restructure": false,
+      "recommendation": "Expand the CLEAN bullet to list the three conditions, and add one sentence in Section 10 stating which of them each CLEAN (provisional) cell met (G-FCS already records forward screens; state the backward-screen status, or say it is a gap)."
+    },
+    {
+      "severity": "minor",
+      "atomic_item": "Already established in this wave: Ribeiro, Spiess, Devanbu, and Nadi ... (research/positioning/w4/L2_OCCUPANT.md)",
+      "failure_mode": "missing",
+      "location": "Section 7.1 or Section 1.3",
+      "issue": "The binding brief (ordering note, modified A31) requires the run to record whether its own width sweep found Ribeiro et al. independently, and lists Bui et al. and Vu et al. (pre-generation code-correctness probing, cited by the close citers) as leads that L2_OCCUPANT.md records as not fetched; the draft records neither.",
+      "requires_orchestrator_restructure": false,
+      "recommendation": "Add one sentence in Section 7.1 stating whether the width sweep surfaced Ribeiro independently (from SEARCH_LOG.md or PROGRESS.md), and one sentence in Section 7.2 or 10 recording Bui et al. and Vu et al. as leads not fetched in this wave."
+    },
+    {
+      "severity": "major",
+      "atomic_item": "readability-structural: audience adaptation and definitions",
+      "failure_mode": "missing-definitions",
+      "location": "Section 3.7 'Post-training stages' ('0.644 (OPD)'); Section 6 table ('meta-d''... 'model-free meta-I'; 'Murphy resolutions'); Section 6 paragraph ('GUM uncertainty budget'); Section 2.1 ('IGLB, a multicalibration baseline'; 'distributed alignment search'); Section 4.2 ('Thompson sampling'); Section 6 table ('AUPRC')",
+      "issue": "Many terms are defined inline (AUROC, BSS, ECE, LAT, EigenScore, RLVR, Learn-Then-Test), but OPD, meta-d', meta-I, Murphy decomposition and resolution, GUM, IGLB, distributed alignment search, Thompson sampling, and AUPRC appear without a first-use gloss.",
+      "requires_orchestrator_restructure": false,
+      "recommendation": "Add short parenthetical definitions on first use: OPD (expand the acronym as the source paper does), meta-d' (type-2 signal-detection sensitivity of confidence to correctness), meta-I (model-free information-theoretic analogue), Murphy decomposition (Brier score split into reliability, resolution, and uncertainty), GUM (Guide to the Expression of Uncertainty in Measurement), IGLB (expand per the multicalibration paper), distributed alignment search (learned rotation that localizes a causal variable in hidden states), Thompson sampling (posterior-sampling allocation), AUPRC (area under the precision-recall curve)."
+    }
+  ]
+}

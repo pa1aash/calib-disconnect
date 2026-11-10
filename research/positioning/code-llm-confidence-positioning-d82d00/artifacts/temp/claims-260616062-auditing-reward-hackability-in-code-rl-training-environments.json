@@ -1,0 +1,72 @@
+[
+  {
+    "claim": "28.5% of a 49-task sample of SWE-bench Verified have test suites weak enough that a Docker-verified incorrect patch passes them.",
+    "stance": "supports",
+    "stance_target": "whole-task test suites in code RL/eval environments are frequently hackable",
+    "evidence_type": "empirical",
+    "scope_conditions": "SWE-bench Verified, 49-task audited sample",
+    "quoted_support": "On a 49-task sample of SWE-bench Verified, 28.5% of tasks have test suites weak enough that a Docker-verified incorrect patch passes them.",
+    "numbers": ["28.5%", "49-task sample"],
+    "entities": ["SWE-bench Verified"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260616062-auditing-reward-hackability-in-code-rl-training-environments"
+  },
+  {
+    "claim": "On R2E-Gym tasks across 6 repositories, single-shot exploit generation against the test harness succeeds 25.0% of the time.",
+    "stance": "supports",
+    "stance_target": "code RL environments are exploitable via weak verifiers",
+    "evidence_type": "empirical",
+    "scope_conditions": "20 R2E-Gym tasks, 6 repositories",
+    "quoted_support": "On 20 R2E-Gym tasks across 6 repositories, the same pipeline at single-shot exploit generation yields 25.0%.",
+    "numbers": ["25.0%", "20 tasks", "6 repositories"],
+    "entities": ["R2E-Gym"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260616062-auditing-reward-hackability-in-code-rl-training-environments"
+  },
+  {
+    "claim": "Within the same human-rated difficulty stratum, frontier model Pass@1 on SWE-bench Verified is 14.14 percentage points higher on tasks flagged as hackable than on robust tasks, across a meta-analysis of 134 model submissions.",
+    "stance": "supports",
+    "stance_target": "test-suite weakness inflates measured model performance (reward hacking proxy at task level)",
+    "evidence_type": "statistical",
+    "scope_conditions": "SWE-bench Verified leaderboard, 134 frontier model submissions",
+    "quoted_support": "A random-effects meta-analysis over 134 frontier model submissions to SWE-bench Verified finds, within the same human-rated difficulty stratum, model Pass@1 is +14.14 percentage points higher on flagged-hackable tasks than on robust ones (95% CI [+11.80, +16.48]; one-sided p < 10^-6; I^2 = 0%; 123 of 134 models positive).",
+    "numbers": ["+14.14pp", "95% CI [11.80, 16.48]", "p<1e-6", "I^2=0%", "123/134 models"],
+    "entities": ["SWE-bench Verified"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "high",
+    "source_note_id": "260616062-auditing-reward-hackability-in-code-rl-training-environments"
+  },
+  {
+    "claim": "An inline LLM judge gated by a Docker gold-sanity check (running each generated test against the gold solution before consulting the judge) flags 65 of 105 decisive LLM-generated tests as failing on the gold patch itself, a defect rate the LLM judge alone misses.",
+    "stance": "supports",
+    "stance_target": "LLM judges alone are unreliable for detecting weak/hackable test augmentations; gold-sanity gating is necessary",
+    "evidence_type": "empirical",
+    "scope_conditions": "11 broken SWE-bench Verified tasks, hardening procedure",
+    "quoted_support": "the gate flags 65 of 105 decisive LLM-generated tests as failing on the gold patch itself, a 61.9% per-augmentation defect rate the LLM judge alone misses.",
+    "numbers": ["65/105", "61.9%", "9 of 11 tasks converged"],
+    "entities": ["SWE-bench Verified"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "260616062-auditing-reward-hackability-in-code-rl-training-environments"
+  },
+  {
+    "claim": "This audit operates at whole-task granularity (does any incorrect patch pass the FULL test suite) rather than localizing hackability to individual unit-test methods/sub-requirements within a task.",
+    "stance": "neutral",
+    "stance_target": "granularity gap that a per-requirement harness could fill",
+    "evidence_type": "theoretical",
+    "scope_conditions": "SWE-bench Verified / R2E-Gym task structure",
+    "quoted_support": "On a 49-task sample of SWE-bench Verified, 28.5% of tasks have test suites weak enough that a Docker-verified incorrect patch passes them.",
+    "numbers": [],
+    "entities": ["SWE-bench Verified", "R2E-Gym"],
+    "time_period": "2026",
+    "region": null,
+    "confidence": "medium",
+    "source_note_id": "260616062-auditing-reward-hackability-in-code-rl-training-environments"
+  }
+]

@@ -1,0 +1,95 @@
+{
+ "source_note_id": "the-internal-state-of-an-llm-knows-when-its-lying",
+ "claims": [
+  {
+   "claim": "SAPLMA, a feedforward classifier on hidden-layer activations, labels statements true vs false with 71% to 83% average accuracy depending on the LLM base model.",
+   "stance": "supports",
+   "stance_target": "hidden-state probe beats prompting",
+   "evidence_type": "empirical",
+   "scope_conditions": "OPT-6.7b and LLAMA2-7b, six-topic true-false dataset",
+   "quoted_support": "our trained classifier achieves an average of 71% to 83% accuracy labeling which sentences are true versus false, depending on the LLM base model.",
+   "numbers": [
+    "71%-83%"
+   ],
+   "entities": [
+    "SAPLMA",
+    "OPT-6.7b",
+    "LLaMA2-7b"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "the-internal-state-of-an-llm-knows-when-its-lying"
+  },
+  {
+   "claim": "Few-shot prompting reaches no more than 56% accuracy, versus 60-80% for SAPLMA on specific topics.",
+   "stance": "supports",
+   "stance_target": "probe beats verbal/prompted readout",
+   "evidence_type": "empirical",
+   "scope_conditions": "Table 1, Section 5",
+   "quoted_support": "SAPLMA reaches accuracy levels of between 60% to 80% on specific topics, while few-shot prompting achieves only slightly above random performance, with no more than a 56% accuracy level.",
+   "numbers": [
+    "60-80%",
+    "<=56%"
+   ],
+   "entities": [
+    "SAPLMA"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "the-internal-state-of-an-llm-knows-when-its-lying"
+  },
+  {
+   "claim": "LLM-assigned sentence probability relates to truthfulness but depends on sentence length and word frequency.",
+   "stance": "supports",
+   "stance_target": "logit readout confounds",
+   "evidence_type": "empirical",
+   "scope_conditions": "Abstract / Section on sentence probability",
+   "quoted_support": "this probability is also dependent on sentence length and the frequencies of words in the sentence",
+   "numbers": [],
+   "entities": [
+    "SAPLMA"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "the-internal-state-of-an-llm-knows-when-its-lying"
+  },
+  {
+   "claim": "SAPLMA with OPT-6.7b is best at the 20th of 32 layers; a random-label control yields 62.5% accuracy.",
+   "stance": "supports",
+   "stance_target": "layer localization and probe-capacity control",
+   "evidence_type": "empirical",
+   "scope_conditions": "Section 5, Table 1",
+   "quoted_support": "The average accuracy on the random training data is only 62.5%.",
+   "numbers": [
+    "20th layer",
+    "62.5% random-label",
+    "86.4% (one setting)"
+   ],
+   "entities": [
+    "OPT-6.7b"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "the-internal-state-of-an-llm-knows-when-its-lying"
+  }
+ ],
+ "breadth": {
+  "confidence_families": "Hidden-layer feedforward probe (SAPLMA); baselines BERT-embedding classifier, 3/5-shot prompting, 'It-is-true' sentence probability (Section 4-5).",
+  "model_families_and_sizes": "Facebook OPT-6.7b and LLAMA2-7b, both 32 layers (Section 4); layers last, 28th, 24th, 20th, middle probed.",
+  "base_vs_instruct": "not present (searched: instruct, chat); base pretrained LLMs.",
+  "post_training_stages": "not present (searched: RLHF, SFT; only a classifier on frozen activations is trained)",
+  "reasoning_models": "not present (searched: reasoning, chain-of-thought)",
+  "elicitation_formats": "Activations as LLM reads externally generated statements; also generated statements; few-shot prompting baseline (Section 4-5).",
+  "benchmarks": "True-False dataset: Cities, Inventions, Chemical Elements, Animals, Companies, Scientific Facts (Section 3); no code.",
+  "label_source": "Curated true/false labels from reliable sources; Scientific Facts created with ChatGPT (Section 3).",
+  "label_independence": "Leave-one-topic-out: classifier trained on all other topics, tested on held-out topic; 3 random seeds (Section 4).",
+  "contamination_split": "not present (searched: contamination, release date; dataset built from information 'present in the LLM's training data' by design)",
+  "calibration_metrics": "Accuracy only; no ECE or Brier (searched: ECE, Brier, calibration).",
+  "granularity": "Per-statement binary truthfulness.",
+  "causal_intervention": "not present (searched: steering, ablation, patching)"
+ }
+}

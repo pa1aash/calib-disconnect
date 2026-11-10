@@ -1,0 +1,84 @@
+{
+ "source_note_id": "confidence-comes-from-experience-experiential-confidence-estimation-from-reasoni",
+ "arxiv": "2609.17708",
+ "full_text": true,
+ "claims": [
+  {
+   "claim": "XConf beats or matches 10-sample self-consistency in AUROC on 23 of 24 comparisons with much lower ECE at a tenth of the generation cost; advantage largest on coding and agentic tasks.",
+   "stance": "neutral",
+   "stance_target": "R1 candidate L3; component verdict: NARROW",
+   "evidence_type": "empirical",
+   "scope_conditions": "see breadth",
+   "quoted_support": "XConf beats or matches ten-sample self-consistency in discrimination (AUROC) on 23 of 24 comparisons, with much lower calibration error (ECE), at a tenth of the generation cost.",
+   "numbers": [
+    "23 of 24",
+    "8.7 points"
+   ],
+   "entities": [
+    "2609.17708"
+   ],
+   "time_period": "2024-2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "confidence-comes-from-experience-experiential-confidence-estimation-from-reasoni",
+   "candidate": "L3",
+   "verdict": "NARROW",
+   "makes_core_claim_on_code_with_execution_labels": false
+  },
+  {
+   "claim": "Confidence is restated after retrieving graded past episodes of similar tasks and similar stated confidence, not after test failures on the current program.",
+   "stance": "neutral",
+   "stance_target": "R1 candidate L3; component verdict: NARROW",
+   "evidence_type": "empirical",
+   "scope_conditions": "see breadth",
+   "quoted_support": "Recall retrieves the model's own verified episodes on similar tasks met with a similar confidence, and reads off their historical success rate; Reflect then shows the model this record and has it restate a confidence",
+   "numbers": [],
+   "entities": [
+    "2609.17708"
+   ],
+   "time_period": "2024-2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "confidence-comes-from-experience-experiential-confidence-estimation-from-reasoni",
+   "candidate": "L3",
+   "verdict": "NARROW",
+   "makes_core_claim_on_code_with_execution_labels": false
+  },
+  {
+   "claim": "Code and SWE-bench Verified episodes are graded by real unit tests; thinking is disabled in all four columns, with a thinking-on ablation.",
+   "stance": "neutral",
+   "stance_target": "R1 candidate L1; component verdict: NARROW",
+   "evidence_type": "empirical",
+   "scope_conditions": "see breadth",
+   "quoted_support": "real unit tests on code and on SWE-bench Verified",
+   "numbers": [
+    "thinking-on ablation: 6 of 6 paired cells, +.21 AUROC average"
+   ],
+   "entities": [
+    "2609.17708"
+   ],
+   "time_period": "2024-2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "confidence-comes-from-experience-experiential-confidence-estimation-from-reasoni",
+   "candidate": "L1",
+   "verdict": "NARROW",
+   "makes_core_claim_on_code_with_execution_labels": false
+  }
+ ],
+ "breadth": {
+  "confidence_families": "verbalized, SC@10 (code-similarity on LiveCodeBench), likelihood, judge, trained baselines, XConf experiential (Sec. 2 Table 1, Sec. 4)",
+  "model_families_and_sizes": "Gemini 2.5 Flash, Gemini 3.5 Flash, Qwen3.5-397B, Claude Sonnet 4.6 (Sec. 4)",
+  "base_vs_instruct": "not present (searched: base/instruct pairs)",
+  "post_training_stages": "not present (searched: pre vs post-training comparison)",
+  "reasoning_models": "thinking disabled in all columns; thinking-on ablation reported (Sec. 4, thinking modes paragraph)",
+  "elicitation_formats": "verbalized initial confidence plus Recall/Reflect restatement (Sec. 3)",
+  "benchmarks": "9 benchmarks incl. LiveCodeBench, SWE-bench Verified, AppWorld, ScienceWorld, MMLU-Pro (Table 2)",
+  "label_source": "real unit tests for code and SWE-bench Verified; LLM verifier for math/reasoning",
+  "label_independence": "execution-based for code",
+  "contamination_split": "not present (searched: release-date split; near-duplicate audit with random folds noted in Sec. 4)",
+  "calibration_metrics": "AUROC, ECE, AURC, Brier (Table 7), paired bootstrap CIs",
+  "granularity": "whole-solution / whole-trajectory",
+  "causal_intervention": "not present (searched: steering, patching, ablation)"
+ }
+}

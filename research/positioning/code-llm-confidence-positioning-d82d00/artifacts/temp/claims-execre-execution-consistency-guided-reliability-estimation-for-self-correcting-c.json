@@ -1,0 +1,134 @@
+[
+ {
+  "claim": "ExeCRE estimates code reliability by statistical analysis of execution-output consistency over many random inputs using a Dawid-Skene latent-reliability model, and uses it to gate self-correction; under GPT-5.2 on LiveCodeBench misleading feedback on already-correct code drops from 113.2 to 14.0.",
+  "stance": "supports",
+  "stance_target": "L1/L3 execution-based reliability exists but is not calibration against ground truth",
+  "evidence_type": "empirical",
+  "scope_conditions": "LiveCodeBench v6 2025-01-01 to 2025-05-01, 182 problems",
+  "quoted_support": "Under GPT-5.2 on LiveCodeBench, the average number of misleading feedback cases on already correct code drops from 113.2 with a representative self-correction baseline to 14.0 with ExeCRE.",
+  "numbers": [
+   "113.2 to 14.0"
+  ],
+  "entities": [
+   "ExeCRE",
+   "Dawid-Skene",
+   "GPT-5.2"
+  ],
+  "time_period": "2026-08",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "Execution-consistency reliability estimate via Dawid-Skene over outputs on randomly generated inputs from 10 sampled reference codes and 5 schemas (Sec 4.5)",
+   "model_families_and_sizes": "GPT-5.2, DeepSeek-V3.2, Qwen2.5-Coder-32B-Instruct, LLaMA-3.1-8B-Instruct (Sec 4.5); GSM8K extra for the two open models",
+   "base_vs_instruct": "not present (searched: all instruct/chat)",
+   "post_training_stages": "not present (searched: not studied)",
+   "reasoning_models": "not present as an axis (GPT-5.2 and DeepSeek-V3.2 are used; reasoning setting not reported in searched text)",
+   "elicitation_formats": "Execution-output consistency, not verbal or logit confidence (searched: verbalized 0)",
+   "benchmarks": "LiveCodeBench v6, 182 problems released 2025-01-01 to 2025-05-01 (Sec 4.x Datasets)",
+   "label_source": "Hidden test cases of LiveCodeBench; Pass@1",
+   "label_independence": "Reliability estimated without tests but evaluated against them",
+   "contamination_split": "Release-date window vs knowledge cutoff: Qwen2.5-Coder-32B cutoff 2024-06, LLaMA-3.1-8B 2023-12 are cutoff-clean; GPT-5.2 cutoff 2025-08 postdates window; DeepSeek-V3.2 cutoff undisclosed (Sec 4.5, 5.1, Threats)",
+   "calibration_metrics": "not present (searched: AUROC 0, Brier 0; ECE hits were substring of 'ExeCRE')",
+   "granularity": "Per candidate program",
+   "causal_intervention": "not present (searched: none; self-correction pipeline comparison)"
+  },
+  "source_note_id": "execre-execution-consistency-guided-reliability-estimation-for-self-correcting-c"
+ },
+ {
+  "claim": "The evaluation applies explicit release-window versus knowledge-cutoff control: the 182-problem window is cutoff-clean for Qwen2.5-Coder-32B-Instruct (cutoff 2024-06) and LLaMA-3.1-8B-Instruct (2023-12), but not for GPT-5.2 (2025-08); DeepSeek-V3.2 is unverifiable.",
+  "stance": "supports",
+  "stance_target": "L1 release-date contamination control is practised for pass@1 in self-correction work, not for confidence calibration",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec 4.5, 5.1, Threats",
+  "quoted_support": "GPT-5.2, Qwen2.5-Coder-32B-Instruct, and LLaMA-3.1-8B-Instruct have reported knowledge cutoffs of 2025-08, 2024-06, and 2023-12, respectively.",
+  "numbers": [
+   "2025-08",
+   "2024-06",
+   "2023-12",
+   "182 problems"
+  ],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "Execution-consistency reliability estimate via Dawid-Skene over outputs on randomly generated inputs from 10 sampled reference codes and 5 schemas (Sec 4.5)",
+   "model_families_and_sizes": "GPT-5.2, DeepSeek-V3.2, Qwen2.5-Coder-32B-Instruct, LLaMA-3.1-8B-Instruct (Sec 4.5); GSM8K extra for the two open models",
+   "base_vs_instruct": "not present (searched: all instruct/chat)",
+   "post_training_stages": "not present (searched: not studied)",
+   "reasoning_models": "not present as an axis (GPT-5.2 and DeepSeek-V3.2 are used; reasoning setting not reported in searched text)",
+   "elicitation_formats": "Execution-output consistency, not verbal or logit confidence (searched: verbalized 0)",
+   "benchmarks": "LiveCodeBench v6, 182 problems released 2025-01-01 to 2025-05-01 (Sec 4.x Datasets)",
+   "label_source": "Hidden test cases of LiveCodeBench; Pass@1",
+   "label_independence": "Reliability estimated without tests but evaluated against them",
+   "contamination_split": "Release-date window vs knowledge cutoff: Qwen2.5-Coder-32B cutoff 2024-06, LLaMA-3.1-8B 2023-12 are cutoff-clean; GPT-5.2 cutoff 2025-08 postdates window; DeepSeek-V3.2 cutoff undisclosed (Sec 4.5, 5.1, Threats)",
+   "calibration_metrics": "not present (searched: AUROC 0, Brier 0; ECE hits were substring of 'ExeCRE')",
+   "granularity": "Per candidate program",
+   "causal_intervention": "not present (searched: none; self-correction pipeline comparison)"
+  },
+  "source_note_id": "execre-execution-consistency-guided-reliability-estimation-for-self-correcting-c"
+ },
+ {
+  "claim": "On cutoff-clean models ExeCRE raises Pass@1 modestly (Qwen2.5-Coder-32B 31.5 to 32.5; LLaMA-3.1-8B 19.4 to 21.0) while reducing misleading feedback (50.4 to 7.4; 30.0 to 1.2).",
+  "stance": "supports",
+  "stance_target": "effect sizes on cutoff-clean subset",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec 5.1",
+  "quoted_support": "On Qwen2.5-Coder-32B-Instruct, ExeCRE increases Pass@1 from 31.5 to 32.5 and reduces misleading feedback from 50.4 to 7.4.",
+  "numbers": [
+   "31.5 to 32.5",
+   "50.4 to 7.4",
+   "19.4 to 21.0",
+   "30.0 to 1.2"
+  ],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "Execution-consistency reliability estimate via Dawid-Skene over outputs on randomly generated inputs from 10 sampled reference codes and 5 schemas (Sec 4.5)",
+   "model_families_and_sizes": "GPT-5.2, DeepSeek-V3.2, Qwen2.5-Coder-32B-Instruct, LLaMA-3.1-8B-Instruct (Sec 4.5); GSM8K extra for the two open models",
+   "base_vs_instruct": "not present (searched: all instruct/chat)",
+   "post_training_stages": "not present (searched: not studied)",
+   "reasoning_models": "not present as an axis (GPT-5.2 and DeepSeek-V3.2 are used; reasoning setting not reported in searched text)",
+   "elicitation_formats": "Execution-output consistency, not verbal or logit confidence (searched: verbalized 0)",
+   "benchmarks": "LiveCodeBench v6, 182 problems released 2025-01-01 to 2025-05-01 (Sec 4.x Datasets)",
+   "label_source": "Hidden test cases of LiveCodeBench; Pass@1",
+   "label_independence": "Reliability estimated without tests but evaluated against them",
+   "contamination_split": "Release-date window vs knowledge cutoff: Qwen2.5-Coder-32B cutoff 2024-06, LLaMA-3.1-8B 2023-12 are cutoff-clean; GPT-5.2 cutoff 2025-08 postdates window; DeepSeek-V3.2 cutoff undisclosed (Sec 4.5, 5.1, Threats)",
+   "calibration_metrics": "not present (searched: AUROC 0, Brier 0; ECE hits were substring of 'ExeCRE')",
+   "granularity": "Per candidate program",
+   "causal_intervention": "not present (searched: none; self-correction pipeline comparison)"
+  },
+  "source_note_id": "execre-execution-consistency-guided-reliability-estimation-for-self-correcting-c"
+ },
+ {
+  "claim": "The paper declines to treat GPT-5.2 and DeepSeek-V3.2 results as contamination-free evidence and notes no cutoff-clean subset exists for GPT-5.2 in the latest LiveCodeBench release available to the authors.",
+  "stance": "supports",
+  "stance_target": "contamination caveat for frontier models",
+  "evidence_type": "expert-opinion",
+  "scope_conditions": "Sec 5.1",
+  "quoted_support": "We therefore use the GPT-5.2 and DeepSeek-V3.2 results for comparison but do not consider them contamination-free evidence.",
+  "numbers": [],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "Execution-consistency reliability estimate via Dawid-Skene over outputs on randomly generated inputs from 10 sampled reference codes and 5 schemas (Sec 4.5)",
+   "model_families_and_sizes": "GPT-5.2, DeepSeek-V3.2, Qwen2.5-Coder-32B-Instruct, LLaMA-3.1-8B-Instruct (Sec 4.5); GSM8K extra for the two open models",
+   "base_vs_instruct": "not present (searched: all instruct/chat)",
+   "post_training_stages": "not present (searched: not studied)",
+   "reasoning_models": "not present as an axis (GPT-5.2 and DeepSeek-V3.2 are used; reasoning setting not reported in searched text)",
+   "elicitation_formats": "Execution-output consistency, not verbal or logit confidence (searched: verbalized 0)",
+   "benchmarks": "LiveCodeBench v6, 182 problems released 2025-01-01 to 2025-05-01 (Sec 4.x Datasets)",
+   "label_source": "Hidden test cases of LiveCodeBench; Pass@1",
+   "label_independence": "Reliability estimated without tests but evaluated against them",
+   "contamination_split": "Release-date window vs knowledge cutoff: Qwen2.5-Coder-32B cutoff 2024-06, LLaMA-3.1-8B 2023-12 are cutoff-clean; GPT-5.2 cutoff 2025-08 postdates window; DeepSeek-V3.2 cutoff undisclosed (Sec 4.5, 5.1, Threats)",
+   "calibration_metrics": "not present (searched: AUROC 0, Brier 0; ECE hits were substring of 'ExeCRE')",
+   "granularity": "Per candidate program",
+   "causal_intervention": "not present (searched: none; self-correction pipeline comparison)"
+  },
+  "source_note_id": "execre-execution-consistency-guided-reliability-estimation-for-self-correcting-c"
+ }
+]

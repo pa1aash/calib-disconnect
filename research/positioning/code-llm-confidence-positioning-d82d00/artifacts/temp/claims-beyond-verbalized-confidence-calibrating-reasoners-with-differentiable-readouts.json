@@ -1,0 +1,46 @@
+[
+ {
+  "claim": "CREDO trains stated confidence on execution-graded code (DeepCoder train) with Qwen3-8B and reports AUROC, ECE and Brier on code, beating RLCR, DCPO and GRPO in domain.",
+  "stance": "refutes",
+  "stance_target": "Row 11 / pivot 3 premise: no code study reports discrimination after training stated confidence (CLEAN provisional)",
+  "evidence_type": "empirical",
+  "scope_conditions": "Qwen3-8B only; Python code RLVR; evaluated on DeepCoder test, LiveCodeBench v5 and v6, HumanEval+; no probe arm",
+  "quoted_support": "Code trains on DeepCoder and is evaluated on four: its in-distribution split, LiveCodeBench v5 and v6, and HumanEval+. We report accuracy and three calibration measures: ECE on the reported values, AUROC on the ranking they induce, and Brier on both.",
+  "numbers": [
+   "Table 1 in-domain code CREDO: Acc .600, ECE .064, AUROC .850, Brier .127",
+   "RLCR code: Acc .553, ECE .075, AUROC .815, Brier .146",
+   "DCPO code: Acc .576, ECE .153, AUROC .776, Brier .153",
+   "GRPO code: Acc .581, ECE .182, AUROC .753, Brier .205",
+   "Base code: Acc .455, ECE .418, AUROC .690, Brier .395",
+   "DeepCoder 9,500 train problems; LCB v5 279, LCB v6 131, HumanEval+ 163 problems (Table 5)"
+  ],
+  "entities": [
+   "CREDO",
+   "RLCR",
+   "DCPO",
+   "GRPO",
+   "Qwen3-8B",
+   "DeepCoder",
+   "LiveCodeBench"
+  ],
+  "time_period": "arXiv 2609.34857 (Sep 2026)",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "beyond-verbalized-confidence-calibrating-reasoners-with-differentiable-readouts",
+  "breadth": {
+   "confidence_families": "trained verbalized numeral (GRPO, RLCR, DCPO) and trained token-pair readout (CREDO); digit-expectation '-d' variants (Sec 4.2, Table 1); probe not present (searched: probe, hidden state, residual stream: 0 hits)",
+   "model_families_and_sizes": "Qwen3-8B for code (Sec 4.1); math also 1.7B and 4B (App C.1)",
+   "base_vs_instruct": "not present (searched: base model; Qwen3-8B untrained 'Base' row is a post-trained model)",
+   "post_training_stages": "RLVR with calibration terms (Sec 4.1); no SFT versus RL stage comparison",
+   "reasoning_models": "Qwen3-8B reasoning model; reasoning enabled presumably (not verified in Sec 4.1)",
+   "elicitation_formats": "<confidence>0.d</confidence> numeral format and readout token pair (App B.3)",
+   "benchmarks": "DeepCoder test, LiveCodeBench v5, v6, HumanEval+ (Table 5)",
+   "label_source": "program executed against the problem's tests (App B.3)",
+   "label_independence": "benchmark tests; same tests reward training and grade evaluation sets; train/eval sets distinct",
+   "contamination_split": "not present (searched: contaminat, release date; LCB v5/v6 used as eval sets without release-date split)",
+   "calibration_metrics": "ECE, AUROC, Brier (Sec 4.1, Table 1)",
+   "granularity": "whole solution",
+   "causal_intervention": "not present (searched: steer, ablat; leave-one-out ablation of method components only, Table 2)"
+  }
+ }
+]

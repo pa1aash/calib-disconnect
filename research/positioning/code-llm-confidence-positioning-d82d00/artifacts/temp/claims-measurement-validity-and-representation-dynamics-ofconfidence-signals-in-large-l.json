@@ -1,0 +1,128 @@
+{
+ "source_note_id": "measurement-validity-and-representation-dynamics-ofconfidence-signals-in-large-l",
+ "claims": [
+  {
+   "claim": "A pre-registered audit of verbal, probe, and sampling-agreement confidence on five Qwen2.5 models (0.5B-7B, one base/instruct pair at 7B) finds three formats of verbal confidence barely correlate (Spearman 0.126, -0.069, 0.247 vs target >=0.60).",
+   "stance": "supports",
+   "stance_target": "F: measurement-validity framing of confidence is OCCUPIED for factual and math tasks (not code)",
+   "evidence_type": "empirical",
+   "scope_conditions": "Qwen2.5 only; PopQA, SimpleQA, GSM8K, MATH; no code",
+   "quoted_support": "Table 2: Format A vs. Format B +0.126; Format A vs. Format C -0.069; Format B vs. Format C +0.247; all FALSIFIED against >=0.60",
+   "numbers": [
+    "Format A vs B +0.126",
+    "A vs C -0.069",
+    "B vs C +0.247",
+    "13,121 of 15,000 Format A responses state 90 or higher"
+   ],
+   "entities": [
+    "Qwen2.5",
+    "Murphy decomposition",
+    "Gate 2"
+   ],
+   "time_period": "2026",
+   "region": "global",
+   "confidence": "high",
+   "source_note_id": "measurement-validity-and-representation-dynamics-ofconfidence-signals-in-large-l"
+  },
+  {
+   "claim": "ECE misleads: verbal confidence has low ECE by clustering near the base rate, while sampling agreement has worse ECE but about 2.02x the Murphy resolution and the lowest Brier.",
+   "stance": "supports",
+   "stance_target": "F: ECE alone is an invalid instrument; resolution must be reported",
+   "evidence_type": "empirical",
+   "scope_conditions": "N=842 matched items, 10 cells, base rate 0.2815",
+   "quoted_support": "Table 3: Verbal ECE(15 bins) 0.0366, Resolution 0.03160, Brier 0.1713; Internal Probe 0.0500, 0.05154, 0.1524; Behavioral Consensus 0.0704, 0.06371, 0.1465",
+   "numbers": [
+    "Verbal Brier 0.1713",
+    "Probe Brier 0.1524",
+    "Behavioral Brier 0.1465",
+    "resolution ratio 2.02x"
+   ],
+   "entities": [
+    "Murphy 1973",
+    "Brier score"
+   ],
+   "time_period": "2026",
+   "region": "global",
+   "confidence": "high",
+   "source_note_id": "measurement-validity-and-representation-dynamics-ofconfidence-signals-in-large-l"
+  },
+  {
+   "claim": "Probe onset layers for predicting sampling-inconsistency labels are earlier for retrieval (mean 6.82%) than for reasoning (mean 28.08%) of depth, but in 9 of 11 retrieval cells a prompt-only TF-IDF baseline matches the probe.",
+   "stance": "supports",
+   "stance_target": "L2: probe-versus-surface-baseline controls exist outside code",
+   "evidence_type": "empirical",
+   "scope_conditions": "Probe label is semantic-entropy median split, not correctness; last prompt token only",
+   "quoted_support": "Section 4.2: the onset-layer probe fails to beat the prompt-only TF-IDF baseline in 12 of 24 cells, including 9 of 11 retrieval cells.",
+   "numbers": [
+    "mean onset 6.82% vs 28.08%",
+    "Delta +21.26 pp [9.72, 33.05]",
+    "p=0.004",
+    "12 of 24 cells"
+   ],
+   "entities": [
+    "TF-IDF baseline",
+    "semantic entropy"
+   ],
+   "time_period": "2026",
+   "region": "global",
+   "confidence": "high",
+   "source_note_id": "measurement-validity-and-representation-dynamics-ofconfidence-signals-in-large-l"
+  },
+  {
+   "claim": "The base/instruct comparison (H3) could not be tested because Qwen2.5-7B-Base verbal confidence was degenerate (two labels used), excluding its verbal signal in all six tiers.",
+   "stance": "supports",
+   "stance_target": "L2: base-vs-instruct verbal comparison is blocked by degenerate base-model verbal output",
+   "evidence_type": "empirical",
+   "scope_conditions": "Qwen2.5-7B-Base vs Instruct; Format B",
+   "quoted_support": "Section 3.3 Gate 4: the pre-registered verbal-degeneracy guard (>=3 distinct values per cell) excluded its verbal signal in all six tiers. With 0 matched rows, H3 declined to test",
+   "numbers": [
+    "0 matched rows",
+    "Format parsing >=99%"
+   ],
+   "entities": [
+    "Qwen2.5-7B-Base",
+    "Qwen2.5-7B-Instruct"
+   ],
+   "time_period": "2026",
+   "region": "global",
+   "confidence": "high",
+   "source_note_id": "measurement-validity-and-representation-dynamics-ofconfidence-signals-in-large-l"
+  },
+  {
+   "claim": "The paper positions itself as a measurement-validity study with pre-registered hypotheses and audit gates, and names Mahaut et al. 2024 and DECK (Chauhan 2026) as closest prior work.",
+   "stance": "neutral",
+   "stance_target": "F: instrument/validity framing precedent",
+   "evidence_type": "empirical",
+   "scope_conditions": "LLM confidence signals; not code",
+   "quoted_support": "Section 2: We position this paper as a measurement-validity study rather than a discovery",
+   "numbers": [
+    "195/200 (97.5%) human-grader agreement",
+    "5 pre-registered hypotheses: 2 falsified, 1 partly supported, 1 not supported, 1 untestable"
+   ],
+   "entities": [
+    "Mahaut et al. 2024",
+    "DECK",
+    "Chauhan 2026"
+   ],
+   "time_period": "2026",
+   "region": "global",
+   "confidence": "high",
+   "source_note_id": "measurement-validity-and-representation-dynamics-ofconfidence-signals-in-large-l"
+  }
+ ],
+ "breadth": {
+  "confidence_families": "verbal (3 formats), linear probe on prefill hidden state (21 depths), sampling agreement/semantic entropy (10 samples, T=0.8) (Sec 3, 4, 5)",
+  "model_families_and_sizes": "Qwen2.5 0.5B/1.5B/3B/7B (Sec 3.1)",
+  "base_vs_instruct": "Qwen2.5-7B Base vs Instruct; comparison untestable (Sec 3.3 Gate 4)",
+  "post_training_stages": "not present (searched: SFT, RLHF, DPO)",
+  "reasoning_models": "not present (no reasoning-mode models)",
+  "elicitation_formats": "A integer 0-100; B five ordinal labels; C answer-or-pass (Sec 5, Table 2)",
+  "benchmarks": "PopQA (high/low quintile), SimpleQA, GSM8K, MATH L1-2, MATH L4-5; no code (Sec 3.1)",
+  "label_source": "automated graders (alias match, NLI, numeric, symbolic) with 200-item human audit (Sec 3.3 Gate 1); probe label is semantic-entropy median split (Sec 4)",
+  "label_independence": "probe label derived from the model's own samples, not correctness (Sec 4)",
+  "contamination_split": "500 questions per cell, 60/20/20 train/calibration/test (Sec 3.1); no release-date control",
+  "calibration_metrics": "ECE (10 and 15 bins), Murphy reliability/resolution, Brier, AUROC (Sec 6, Table 3)",
+  "granularity": "whole-answer",
+  "causal_intervention": "not present (searched: steering, ablation, patching)"
+ }
+}

@@ -1,0 +1,74 @@
+{
+ "source_note_id": "generation-probabilities-are-not-enough-uncertainty-highlighting-in-ai-code-comp",
+ "claims": [
+  {
+   "claim": "In a 30-programmer mixed-methods study, highlighting tokens by predicted likelihood of being edited speeds task completion and targeted edits; highlighting by generation probability gives no benefit over no highlighting.",
+   "stance": "supports",
+   "stance_target": "token-probability uncertainty is not enough for code",
+   "evidence_type": "empirical",
+   "scope_conditions": "30 participants, Python, three LeetCode tasks, Codex completions",
+   "quoted_support": "highlighting tokens according to their probability of being generated does not provide any benefit over the baseline with no highlighting.",
+   "numbers": [
+    "30 participants",
+    "3 tasks"
+   ],
+   "entities": [
+    "Codex",
+    "edit model"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "generation-probabilities-are-not-enough-uncertainty-highlighting-in-ai-code-comp"
+  },
+  {
+   "claim": "Participants preferred highlights granular enough to narrow in on specific areas, informing granularity of uncertainty display.",
+   "stance": "supports",
+   "stance_target": "granularity of confidence display",
+   "evidence_type": "empirical",
+   "scope_conditions": "design probes",
+   "quoted_support": "participants prefer highlights that are sufficiently granular to allow them to narrow in",
+   "numbers": [],
+   "entities": [],
+   "time_period": "",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "generation-probabilities-are-not-enough-uncertainty-highlighting-in-ai-code-comp"
+  },
+  {
+   "claim": "The edit model was built from 9 participants editing completions; a token's edit probability is the fraction of participants who edited it; tokens edited by at least 4 of 6 were highlighted (203 characters).",
+   "stance": "neutral",
+   "stance_target": "label source for token-level uncertainty",
+   "evidence_type": "empirical",
+   "scope_conditions": "Section on edit model",
+   "quoted_support": "For each token in the completion, we then set the probability of an edit to be the fraction of participants who edited it.",
+   "numbers": [
+    "9 participants",
+    "4 of 6",
+    "203 characters"
+   ],
+   "entities": [
+    "Codex"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "generation-probabilities-are-not-enough-uncertainty-highlighting-in-ai-code-comp"
+  }
+ ],
+ "breadth": {
+  "confidence_families": "Token generation probability from the code model versus a human-edit-likelihood model (Section 3-4).",
+  "model_families_and_sizes": "OpenAI Codex (Code Davinci 002; completions retrieved June 2022) (Section on tasks).",
+  "base_vs_instruct": "not present (searched: instruct, base)",
+  "post_training_stages": "not present (searched: RLHF, SFT)",
+  "reasoning_models": "not present (searched: reasoning model)",
+  "elicitation_formats": "Token-level highlights from generation probability or edit model; single completion per task (Section 4).",
+  "benchmarks": "Three LeetCode-style tasks with imperfect Codex completions; no standard benchmark.",
+  "label_source": "Human edits by programmers (closed-world edit model); not execution ground truth.",
+  "label_independence": "Separate nine-participant data collection for the edit model vs 30-participant main study.",
+  "contamination_split": "Acknowledged: training data of Code Davinci 002 undisclosed; no evidence of memorization in selected generations (Footnote 5).",
+  "calibration_metrics": "not present (searched: ECE, Brier, AUROC; outcomes are task time, edits, subjective preference)",
+  "granularity": "Per-token highlighting.",
+  "causal_intervention": "Between-condition user-study intervention (highlighting conditions), not model-internal."
+ }
+}

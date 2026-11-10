@@ -1,0 +1,1288 @@
+---
+title: '[2607.05188] Latent Programming Horizons in Coding Agents (full text)'
+id: 260705188-latent-programming-horizons-in-coding-agents-full-text
+tags:
+- code-llm-confidence-positioning-d82d00
+- close-occupant
+created: '2026-11-09T23:11:27.004860Z'
+updated: '2026-11-09T23:27:44.722860Z'
+source: https://arxiv.org/pdf/2607.05188
+status: review
+type: note
+tier: institutional
+content_type: paper
+deprecated: false
+summary: 'FULL TEXT. Silva, Tu, Monperrus: linear probes on residual streams of Qwen3.6-35B-A3B
+  and Laguna-XS.2 in mini-swe-agent decode parse, test-pass, failing-test reduction
+  and regression, AUC up to 0.83, ahead-of-edit up to ~25 steps; cross-benchmark transfer.
+  Probe-only, no verbal comparison, no calibration metrics located. Cites Ribeiro,
+  Bui (AutoProbe), Vu, Di Cicco, Gros and Devanbu as prior correctness probing.'
+---
+
+Latent Programming Horizons in Coding Agents
+ André Silva, Han Tu, Martin Monperrus
+ KTH Royal Institute of Technology
+ Stockholm, Sweden
+ {andreans, htu, monperrus}@kth.se
+ Abstract
+ A coding agent solving a software-engineering task spends dozens of steps
+arXiv:2607.05188v1 [cs.LG] 6 Jul 2026
+ reasoning, editing code, and running tests, yet little is known about what
+ the underlying language model internally represents about the program
+ it is working on. We show that the residual streams of language models
+ under coding agents linearly encode properties of the evolving program:
+ a logistic-regression probe on hidden states is able to decode whether the
+ current code parses, passes its test suite, reduces the number of failing tests,
+ and introduces regressions, reaching AUC up to 0.83 for correctness across
+ two models and two benchmarks. Our second finding is more surprising:
+ these representations run ahead of the agent’s own edits. Probes trained
+ to predict the outcome of future edits (before they are materialized and
+ written on disk) achieve performance above chance up to roughly 25 steps
+ in advance. We call this the agent’s latent programming horizon. As a proof
+ of external validity, we show that the probes transfer across benchmarks
+ without retraining. Our positive results open calls for more research in
+ mechanistic interpretability of coding agents.
+ § Code | Data
+ 1 Introduction
+ Coding agents are increasingly used to solve complex software engineering tasks. Over
+ many steps, they read files, reason about the problem, edit code, run tests, and revise their
+ changes, iterating until the task is complete. Despite intense interest in building such agents,
+ strikingly little is known about how the underlying language model represents the code
+ it is working on. In this paper, we study the following question: what does a coding agent
+ internally represent about the program it is editing?
+ Prior work in other domains gives reason to expect a rich answer. Transformers trained on
+ board games develop linearly decodable internal representations of the game state (Li et al.,
+ 2023; Nanda et al., 2023; Karvonen, 2024). Models trained on synthetic grid-world programs
+ encode both the current and future semantic state of those programs (Jin & Rinard, 2024).
+ In the software domain, prior work (Ribeiro et al., 2025; Bui et al., 2025; Vu et al., 2025) has
+ established that the correctness of a single generated function is linearly decodable from
+ a model’s hidden states. Yet, these papers assume single-step generation where the full
+ program sits in context and never changes. None of them is about coding agents iteratively
+ editing an only partially observed real codebase, over dozens of steps, where the model’s
+ hidden state shifts with every edit. This is the problem we address in this paper.
+ To study this arguably difficult question, we proceed as follows. We systematically col-
+ lect agentic trajectories, extract the residual stream of the model at each agentic step,
+ and train linear probes to decode properties of the program being edited. We consider
+ two open-weight models running mini-swe-agent (Yang et al., 2024) on two benchmarks
+ (SWE-Bench-Verified (Jimenez et al., 2024) and SWE-Bench-Pro (Deng et al., 2025)). Two main
+ findings emerge.
+ 1
+ 01 02 03 04 05 06 07 08 09 10 11
+ Fix parsing: read_file lexer.py edit_file lexer.py pytest -q test_parser.py edit_file lexer.py pytest -q 3 passed
+ nested generics fail Inspect the lexer 248 lines read ✓ Track bracket depth edit applied ✓ Run the suite 1 failed Fix deepest nesting edit applied ✓ Verify & submit ✓
+ P(correct) high
+ anticipates future programs before they are materialized
+ h7
+ h3
+ h5 h8 h9 h11
+ h4 h10
+ h6
+ h3 → probe h7 → probe h11 → probe
+ P(compile) 0.42 P(compile) 0.91 P(compile) 0.99
+ P(correct) 0.06 P(correct) 0.24 P(correct) 0.96
+Figure 1: A coding agent iteratively edits code and runs tests (top); the hidden states at
+each step trace a corresponding path through the latent program space (bottom). The
+space is shaded by probe-estimated P(correct), with a warm basin marking the final region
+where the final program is fully correct and the coding task is successful. Our experiments
+show that linear probes trained on hidden states decode program properties such as full
+correctness well above chance throughout the agentic trajectories. Beyond current state, the
+latent program representation captures future programs’ properties: this demonstrates that
+coding agents have a latent programming horizon.
+Coding agents encode the current program. Linear probes recover hard program proper-
+ties. We show that the probes capture whether the current program parses, passes its test
+suite, reduces the number of failing tests, and introduces regressions, all well above a sound
+shuffled-label control. The signal persists throughout the trajectory and is strongest in the
+model’s intermediate layers.
+Coding agents anticipate future programs. Beyond tracking the present, the agents repre-
+sent programs that have not yet materialized. Probes trained to predict the outcome of a
+future edit succeed up to roughly 25 steps in advance. This is the coding analogue of learned
+look-ahead in game-playing networks (Jenner et al., 2024; Taufeeque et al., 2024). Coding
+agents have an idea of the shape of the future programs they will write, well before those
+changes are materialized with edits.
+ To the best of our knowledge, we are the first to show that coding agents maintain
+and continually update latent representations of programs and their semantic properties
+(Figure 1). Furthermore, we are the first to report on a long-term programming horizon in
+the latent space, with strong evidence from ahead-of-chance prediction capabilities.
+Contributions.
+ • We propose a novel experimental protocol to study how coding agents maintain a
+ representation of programs in the latent space.
+ • We show that linear probes on the hidden states of coding agents are able to decode
+ four hard properties of programs. Our experimental results are based on real-world
+ codebases and multi-step trajectories (median = 52 steps). We demonstrate that
+ these probes are calibrated and transfer across benchmarks without retraining.
+ • We show that the latent space captures the programming horizon. The latent pro-
+ gram representation grounds future edit prediction: probes can predict the outcome
+ of an edit k steps ahead, and this holds for up to k = 25 steps.
+ 2
+2 Latent Program Representations
+Consider a coding agent solving a programming task by iteratively searching and reasoning
+about the codebase, making edits, running tests, and using the feedback to guide its next
+steps. Beyond the tokens the underlying model emits and observes, such an agent may
+encode a latent program representation, an internal account of the program that it updates
+and revises. This representation, invisible to the harness and the user at the token level, is
+the object we study in this paper.
+This representation, if it exists, lives somewhere in the internal calculation of the model.
+Indeed, transformer models maintain a running hidden-state vector, called the residual
+stream, which each layer reads from and writes an additive update back to, carrying
+information from the input through to the output. We write hℓt ∈ Rd for the residual
+stream at token position t after layer ℓ. Because every layer communicates through it, the
+residual stream is the standard target for probing what a model internally represents (Elhage
+et al., 2021). In this paper, we study whether the residual stream contains latent program
+representations.
+Definition 1 (Latent program representation). A latent program representation is what is
+encoded about a program in the residual stream hℓt . It is captured independently from the surface
+tokens the agent has emitted or will emit.
+The residual stream does not only contain the latent program representation. It also carries
+information about the task at hand and the past conversation, so the latent program repre-
+sentation is tangled with other signals in the hidden state, and recovering it is the job of the
+probes we introduce later, see subsection 3.4.
+Definition 2 (Latent program space). The latent program space is the manifold of the hidden-state
+space Rd along which latent program representations are encoded. As the agent edits code and runs
+tests, the hidden state moves along this manifold, forming a latent program representation trajectory.
+At each step, the hidden state is the point on this manifold, it captures the current program.
+A capable agent, however, might not only reason about the present. If the model is planning
+ahead, its current hidden state should also encode properties of the future programs, the
+ones it might write several steps ahead. We call the reach of this planning in the latent space
+the “latent programming horizon”.
+Definition 3 (Latent programming horizon). The latent programming horizon is the extent
+to which future edits are already encoded in the current residual stream. We define the latent
+programming horizon as the capability of predicting program properties of the program at t + k steps
+in advance, only based on hℓt . We refer to it as the programming horizon at k.
+The horizon k captures the depth of future planning. Any prediction about the program at
+k = 0 means that the properties of the current program are represented in the latent space
+For small k (a short-term horizon), prediction success means the current hidden state already
+carries properties of edits that are a few steps away, for example, a sequence of edits in the
+same file. For large k (a long-term horizon), prediction success means the agent anticipates
+programs that it will write only much later in the trajectory.
+While language models are not explicitly trained to encode program representations in
+their hidden states, several training signals may push them in that direction. Next-token
+prediction implicitly rewards learning program syntax and semantics, as predicting the next
+line of a function is easier if those are understood. Beyond next-token training objectives,
+modern code models are also post-trained with signals based on execution traces (Copet
+et al., 2025) or feedback from compilers and test suites (Ye et al., 2022), particularly during
+reinforcement learning (Wei et al., 2026). Basically, both pre-training and post-training
+should contribute to having semantically rich latent representations of the program a coding
+agent is working on.
+In this paper, we are the first to study whether latent program representations have emerged
+in the latent space of coding models and how coding agents maintain them during software
+engineering tasks.
+ 3
+ HIDDEN STATE
+ ht hidden state at step t
+ PROBES
+ one per probes0 probes1 probes2 probes4 probes8
+ property ×
+ horizon
+ t t+1 t+2 t+4 t+8
+ PROGRAM PROPERTIES
+ WELL-
+ FORMEDNESS
+ FULL
+ CORRECTNESS
+ PARTIAL
+ CORRECTNESS
+ REGRESSION
+ CURRENT SHORT-TERM LONG-TERM
+ programming horizon
+ true false
+Figure 2: Our method to train probes to predict program properties. A residual-stream
+vector ht , taken at step t of an agentic editing trajectory, is processed by linear probes,
+parameterized with a lookahead programming horizon k. Each probe predicts whether the
+program k steps ahead one of four binary properties (▲ W ELL - FORMEDNESS, • F ULL C OR -
+RECTNESS , ■ PARTIAL C ORRECTNESS, ♦ R EGRESSION); ground-truth labels are computed at
+each edit event by checking out that program version and evaluating it. At k =0 the probe
+evaluates whether the latent space maps the program as it currently stands, while probes
+at larger k measure how far ahead ht anticipates the program the agent will eventually
+write: its latent programming horizon. Filled cells mark a property observed in the program
+(true), light cells an unsatisfied one (false); all computed symbolically from the training
+trajectories. At inference time, the probes predict future properties, and we measure the
+prediction accuracy.
+3 Methods
+We study what coding agents do during multi-step agentic editing of real codebases, in the
+latent space.
+3.1 Overview
+We need a way to capture program representations in the hidden state. For this, we follow
+the probing literature (Alain & Bengio, 2017; Zhang et al., 2025) and train linear probes to
+classify program properties from hidden states. Figure 2 shows an overview of our setup. If
+such probes predict program properties above chance, it shows the model actually encodes
+those properties in its residual stream.
+3.2 Formal Setup
+Let M be a language model with L transformer layers. An agentic trajectory T for a coding
+task consists of S interaction steps. At each step s, the agent generates a response As given
+the accumulated context; the tool then produces an output Os .
+The full trajectory is the linearised concatenation:
+ T = C1 ⊕ A1 ⊕ O1 ⊕ · · · ⊕ AS ⊕ OS
+where C1 is the initial context (typically system and user prompts), and ⊕ denotes token-
+sequence concatenation.
+ 4
+For each position t in the generated portions Ss=1 As , let hℓt ∈ Rd denote the residual
+ S
+stream after layer ℓ. We index layers from 1, so that h1t is the residual stream after the first
+transformer block and htL after the final block.
+An edit event occurs at step s when As includes a tool call that modifies the codebase. Let
+e1 < e2 < · · · denote the token indices of successive edit events within T . The edits capture
+the trial-and-error process of the model to perform the task at hand.
+In this paper, a program property ϕ is a function that assigns to each edit event ei a binary
+ ϕ
+label yi ∈ {0, 1} reflecting a property of the resulting program version. For example, the
+property ‘compilability’ captures whether a program at a given edit compiles, see Section 3.3
+for the list of properties considered in this paper.
+Labels are computed externally only at each event, and then kept until the next edit: every
+generated token position t with ei ≤ t < ei+1 receives the label of edit ei .
+We also evaluate ϕ on the initial program version and treat it as a phantom edit e0 preceding
+the trajectory, so every position t has a well-defined label even before the first agent edit.
+It is convenient to index labels by step rather than by token: let σ (t) be the step in which
+ ϕ
+token t is generated (so t ∈ Aσ(t) ), and let ys denote the label in effect at step s, that is, the
+ ϕ ϕ
+label of the most recent edit at or before step s. The token-level label is then yt = yσ(t) .
+3.3 Program Properties
+We define four program properties to study through probing. We will train probes to predict
+both current and future values of these properties from the hidden states of the model while
+working on a program.
+▲ W ELL - FORMEDNESS Well-formedness is a necessary precondition for code to execute.
+We operationally define it by parsing or compiling the program at a given version. The label
+is 1 if it succeeds and 0 otherwise.
+• F ULL C ORRECTNESS Full correctness tracks the functional behavior of the program,
+which is the ultimate goal of code generation and repair. The label is 1 if the program passes
+the benchmark’s test suite oracle, and 0 otherwise.
+■ PARTIAL C ORRECTNESS Rather than asking whether the code is fully correct, this probe
+captures partial correctness, whether the program is moving in the right direction. The label
+is 1 if the number of failing tests is strictly less than at the beginning of the task, and 0
+otherwise.
+♦ R EGRESSION A capable agent must attend not only to the tests it is trying to fix but also
+to those it must not break. This probe tests whether hidden states carry a signal about side
+effects of an edit. The label is 1 if any test that passed at the beginning of the task now fails,
+and 0 otherwise.
+ Together, these four properties span what a coding agent must track to resolve a task: the
+well-formedness of an edit (▲ W ELL - FORMEDNESS), its functional correctness (• F ULL C OR -
+RECTNESS ), its directional progress per the test suite outcomes (■ PARTIAL C ORRECTNESS ),
+and its collateral effect on the rest of the repository (♦ R EGRESSION).
+3.4 Probing Program Poperties
+For each layer ℓ ∈ {1, 11, 21, 31, 40}, we collect all hidden states hℓt together with their labels
+ ϕ
+yt . To test whether hidden states at layer ℓ carry information about ϕ, we train a logistic
+regression classifier, w ∈ Rd , to predict yt from the residual stream hℓt . We split trajectories,
+ ϕ
+ 5
+Table 1: Dataset statistics per model and benchmark. #Traj. counts all agent runs; ≥50 counts
+trajectories reaching that step threshold (the length filter used in the lookahead experiments).
+Med. steps is the median number of steps per trajectory. #Edits is the total number of code
+edits across all trajectories. ≥2 edits counts trajectories with at least two edits. Med. edits is
+the median number of edits per trajectory. #ht is the total number of collected hidden-state
+vectors. The full trajectory dataset is publicly available: Data.
+ Model Benchmark #Traj. ≥50 steps Med. steps #Edits ≥2 edits Med. edits #ht
+ Verified 4,991 2,837 55 14,545 2,974 2 7.5M
+ Laguna
+ Pro 6,921 4,159 56 36,648 5,273 4 7.6M
+ Verified 4,998 2,001 39 9,730 2,161 1 3.8M
+ Qwen3.6
+ Pro 5,804 3,186 54 18,557 3,682 2 3.5M
+ Total 22,714 12,183 52 79,480 14,090 2 22.4M
+for training and testing, based on task identifier, ensuring no trajectories of the same task
+appear in more than one split. As a sanity check, to verify that the probes decode a signal
+already present in the hidden states rather than fit it themselves (Hewitt & Liang, 2019), we
+also retrain each probe on randomly permuted labels.
+The classifiers trained on one benchmark are further used to probe the hidden states of an-
+other to check if the signal they extract transfers across benchmarks. Probe hyperparameters
+are selected via random search sweeps based on mean validation AUC.
+3.5 Programming Horizon
+To study whether coding agents have a programming horizon, we study whether one can
+predict the outcome of a future edit before that particular edit appears in their output.
+Concretely, we train probes to predict program properties at varying lookahead horizons.
+For each property ϕ and horizon k ≥ 0 (in steps), we train a probe on the hidden state hℓt to
+ ϕ
+predict yσ(t)+k , the label of the program k steps later. We fit a separate probe at each k. We
+sweep k from 0 (equivalent to the current-state probe) to kmax = 50, excluding the final kmax
+steps of each trajectory to hold the token population constant across horizons. If the probe
+discriminative performance is higher than chance for a given k, it means that the coding
+agent has a programming horizon of length k.
+3.6 Dataset
+We consider two coding agents on two benchmarks. For agents, we run
+mini-swe-agent v2.2.8 (Yang et al., 2024) with two state-of-the-art medium-sized
+models, Qwen3.6-35B-A3B (Qwen Team, 2026) and Laguna-XS.2 (Abadji et al., 2026). Both
+models have a hidden-state dimension of d = 2048. Regarding benchmarks, we use
+SWE-Bench-Verified (Jimenez et al., 2024) (all 500 tasks) and SWE-Bench-Pro (Deng et al.,
+2025) (all 731 tasks).
+For each task, we attempt to generate up to n = 10 trajectories. Agent hyperparameters,
+including limits, are listed in Table 2. For each trajectory, we record the full program version
+after every tool call that modifies the codebase, and the results of evaluating the considered
+program properties.
+For each trajectory, we record the hidden states every 5 tokens, for the sake of space. Table 1
+summarises the resulting dataset; trajectory length distributions (a median of 36k tokens
+per trajectory) and label prevalence per probe are shown in the Appendix (Figure 7). Table 1
+clearly shows that our trajectories are multistep, with a median number of two and a mean
+of 3.5 edits per trajectory.
+ 6
+ 1.0
+ Laguna-XS.2 (Verified) Qwen3.6-35B-A3B (Pro)
+ Laguna-XS.2 (Pro) Random (0.5)
+ 0.9 Qwen3.6-35B-A3B (Verified)
+ Best-layer AUC
+ 0.8
+ 0.7
+ 0.6
+ 0.5
+ WELL-FORMEDNESS FULL PARTIAL REGRESSION
+ CORRECTNESS CORRECTNESS
+Figure 3: Best-layer AUC for each probe, model, and dataset. Each bar shows the peak AUC
+across layers. Probes trained on randomly shuffled labels collapse to 0.50, confirming that
+the signal is in the representation rather than an artefact of probe capacity. Full per-layer
+results are in Table 5 in the appendix.
+4 Results
+4.1 Coding agents encode the current program
+Figure 3 reports our first main finding. Every probe, on both models, is able to decode its
+corresponding program property well above chance. For example, considering ▲ W ELL -
+FORMEDNESS, the best-trained probe is for Laguna-XS.2, with an AUC of 0.78 well above the
+random baseline of 0.5. In other words, the hidden state of the model encodes the program
+properties of the program it is working on.
+Predicting semantic properties is generally stronger. The signal is strongest for • F ULL
+C ORRECTNESS (AUC up to 0.83) and ■ PARTIAL C ORRECTNESS (AUC up to 0.84) for
+Qwen3.6-35B-A3B. Similar results can be observed for Laguna-XS.2, where • F ULL C ORRECT-
+NESS is the strongest on SWE-Bench-Verified (AUC up to 0.73) and where ♦ R EGRESSION
+reaches an AUC up to 0.75 on SWE-Bench-Pro. This means that the model’s hidden states
+capture the semantic changes implied by every edit. This holds consistently across both
+benchmarks: the similar scores on SWE-Bench-Verified and SWE-Bench-Pro indicate the
+signal is not specific to a single task distribution.
+▲ W ELL - FORMEDNESS on SWE-Bench-Verified is a clear exception, with probes collaps-
+ing to near chance (AUC always below 0.60). This happens because trajectories in
+SWE-Bench-Verified contain mostly compilable Python programs (positive label rate above
+0.92) – the considered models excel in this language. In the case of SWE-Bench-Pro, which
+includes three additional programming languages in its tasks (e.g. C++, TypeScript), and a
+far richer mix of compilation failures (positive rate between 0.52 and 0.57) in our training
+datasets, we observe higher training data balance and higher signal (AUC up to 0.78).
+To sum up, as a coding agent edits a real codebase, its residual stream carries a linearly
+decodable representation of current program properties: whether it compiles, whether it
+passes its tests, and how its edits move the test suite relative to the initial repository. Those
+results have strong external validity, based on 22714 trajectories collected over 1231 different
+coding tasks.
+Layer localization of program properties. Figure 4 shows a consistent inverted-U across
+layer depth. Performance on program property prediction is lowest at the shallowest layer,
+rises to a peak at intermediate layers, and falls again slightly at the final layer. This pattern
+holds across all probes, models, and datasets, all indicating that the program signal is most
+concentrated in the middle layers.
+At layer 1, the probe is almost always the weakest of any depth, in some cases near or at
+the random baseline. This is consistent with previous work in mechanistic interpretability
+outside the coding domain (Jin et al., 2025). The mid-layer peaks match previous results on
+ 7
+ WELL-FORMEDNESS FULL CORRECTNESS
+ 1.0 n = 4.7M ht n = 4.7M ht
+ 1.0
+ 0.8 0.8
+ AUC
+ 0.6 0.6
+ 1 11 21 31 40 1 11 21 31 40
+ PARTIAL CORRECTNESS REGRESSION
+ 1.0 n = 4.7M ht n = 4.7M ht
+ 1.0
+ 0.8 0.8
+ AUC
+ 0.6 0.6
+ 1 11 21 31 40 1 11 21 31 40
+ Layer Layer
+ Laguna-XS.2 (Verified) Qwen3.6-35B-A3B (Verified) Laguna-XS.2 (Pro) Qwen3.6-35B-A3B (Pro) Random
+Figure 4: AUC-ROC by transformer layer for all four probes at k = 0: ▲ W ELL -
+FORMEDNESS (top left), • F ULL C ORRECTNESS (top right), ■ PARTIAL C ORRECTNESS (bot-
+tom left), ♦ R EGRESSION (bottom right). Each panel shows both models (Laguna-XS.2 and
+Qwen3.6-35B-A3B) across both datasets (SWE-Bench-Verified and SWE-Bench-Pro), with sep-
+arate lines per model–dataset combination. The inverted-U pattern, weakest at layer 1,
+peaking in the intermediate layers, slightly lower at the final layer, is consistent across all
+probes and both models except ▲ W ELL - FORMEDNESS.
+natural language tasks, showing that intermediate layers often encode richer representations
+(Skean et al., 2025). While better than the first layer, the final layer shows a slight drop in
+signal, suggesting that final layers trade abstract features for features closer to the next token
+prediction task. Full per-layer results are in Table 6 in the appendix.
+Model comparison. Per Figure 3, Qwen3.6-35B-A3B consistently encodes program proper-
+ties more strongly than Laguna-XS.2. The gap is roughly 0.10 AUC on • F ULL C ORRECTNESS
+and ■ PARTIAL C ORRECTNESS across both benchmarks (0.83 vs. 0.73 and 0.81/0.84 vs.
+0.71/0.72), and roughly 0.04–0.05 on ♦ R EGRESSION. Crucially, the layer finding holds, with
+both models exhibiting an inverted-U peaking in the middle layers, and the final layer
+slightly below the peak. The two models therefore differ in how linearly decodable the
+program representation is but not in where it is encoded. This suggests that mechanistic in-
+terpretability tasks might be more appropriate on Qwen3.6-35B-A3B than with Laguna-XS.2.
+Probes transfer across datasets. Figure 5 tests whether the probes trained on one bench-
+mark can, without retraining, retrieve program properties from trajectories on another
+dataset. For both models, all semantic probes transfer substantially. For example, • F ULL
+C ORRECTNESS and ■ PARTIAL C ORRECTNESS retain AUC of 0.63–0.78 at the best layer un-
+der cross-dataset evaluation, compared to 0.71–0.84 in-distribution, a drop of only 0.04–0.09
+units. These results confirm that our probes extract real signal related to program properties
+from hidden states, adding further evidence to the hypothesis that coding agents maintain
+latent program representations.
+4.2 Coding agents have a long-term programming horizon
+We have shown that the hidden state encodes the current properties of the program. Now,
+we demonstrate that it also encodes the properties of the future programs to come, that one
+can predict the outcome of future edits before those edits have materialized. We train each
+ ϕ
+probe to predict a program property k steps in the future, ŷσ(t)+k = probe(hℓt ), and sweep
+the horizon k from 0 (at the state to predict) out to 50 steps ahead. Figure 6 plots the two
+ 8
+ Laguna-XS.2
+ 1.0
+ In-dist (Verified) In-dist (Pro) Random (0.5)
+ Verified Pro Pro Verified
+ 0.9
+ Best-layer AUC
+ 0.8
+ 0.7
+ 0.6
+ 0.5
+ WELL-FORMEDNESS FULL PARTIAL REGRESSION
+ CORRECTNESS CORRECTNESS
+ Qwen3.6-35B-A3B
+ 1.0
+ In-dist (Verified) In-dist (Pro) Random (0.5)
+ Verified Pro Pro Verified
+ 0.9
+ Best-layer AUC
+ 0.8
+ 0.7
+ 0.6
+ 0.5
+ WELL-FORMEDNESS FULL PARTIAL REGRESSION
+ CORRECTNESS CORRECTNESS
+Figure 5: Cross-dataset transfer AUC at the best layer for each probe and model. Gray bars
+show in-distribution performance; colored bars show transfer performance when probe
+weights trained on one benchmark are applied to the other without retraining. • F ULL
+C ORRECTNESS and ■ PARTIAL C ORRECTNESS transfer with small drops for both models;
+▲ W ELL - FORMEDNESS collapses near chance in both directions due to the distributional mis-
+match in syntactic failure rates between SWE-Bench-Verified (near-constant compilability)
+and SWE-Bench-Pro (multi-language, richer failure modes).
+ FULL CORRECTNESS FULL CORRECTNESS
+ Laguna-XS.2 SWE-Bench-Verified Laguna-XS.2 SWE-Bench-Pro
+ L21 n = 1.1M ht L21 n = 145k ht
+ 0.75 0.80
+ L31
+ L31
+ L11 0.75
+ 0.70 L11
+ 0.70 L1
+ 0.65 L40
+AUC AUC 0.65
+ 0.60
+ 0.60
+ 0.55 L1 L40
+ 0.55
+ 0.50 random 0.50 random
+ 0 6 12 18 24 30 36 42 48 0 6 12 18 24 30 36 42 48
+ Horizon k (turns) Horizon k (turns)
+ PARTIAL CORRECTNESS PARTIAL CORRECTNESS
+ Laguna-XS.2 SWE-Bench-Verified Laguna-XS.2 SWE-Bench-Pro
+ L21 n = 1.1M ht 0.85 L21 n = 145k ht
+ L11
+ 0.75 0.80 L31
+ L40 L11
+ 0.70 0.75
+ L31 L40
+ 0.65 0.70
+AUC L1 AUC 0.65 L1
+ 0.60
+ 0.60
+ 0.55 0.55
+ 0.50 random 0.50 random
+ 0 6 12 18 24 30 36 42 48 0 6 12 18 24 30 36 42 48
+ Horizon k (turns) Horizon k (turns)
+Figure 6: Lookahead AUC for the two strongest properties on Laguna-XS.2, across
+both benchmarks: • F ULL C ORRECTNESS (top) and ■ PARTIAL C ORRECTNESS (bottom);
+SWE-Bench-Verified (left) and SWE-Bench-Pro (right). A probe at token position t predicts a
+program property k steps later; the horizon k runs from the edit itself (k = 0, left of each plot)
+out to 50 steps ahead (right). Each line is a layer; the dashed line is the 0.50 random baseline.
+AUC is highest at the edit, falls steeply over the first ∼25 steps, and plateaus above chance
+thereafter. The hockey-stick pattern is consistent across both benchmarks. Full per-probe
+results are in Figures 8 and 10 in the appendix.
+strongest properties (• F ULL C ORRECTNESS and ■ PARTIAL C ORRECTNESS) on Laguna-XS.2
+across both benchmarks; each curve is a layer.
+First, we see that the predictive signal decays smoothly with horizon (and drops most
+sharply after the initial edit which captures the present state of the program). At the edit (k =
+0) the best-layer probe recovers • F ULL C ORRECTNESS at AUC ∼0.77 on SWE-Bench-Verified
+ 9
+and ∼0.82 on SWE-Bench-Pro (a slightly different figure than in Section 4.1, because this is a
+different test set). For almost all layers, prediction remains above 0.5 for at least 25 steps.
+As the horizon lengthens this falls, reaching ∼0.55 and ∼0.65 respectively around k = 25,
+before flattening into a plateau that persists out to k = 50. The plateau actually sits above the
+0.50 control on both benchmarks (∼0.52 on Verified, ∼0.60 on Pro): even 50 steps ahead, an
+edit’s eventual outcome is weakly predictable. To our knowledge, this is the first evidence
+of long-term horizon by coding agents.
+5 Related Work
+Probing internal representations. Probing, the method of training supervised classifiers
+on frozen hidden states to test for a target property, is a standard interpretability tool (Alain
+& Bengio, 2017; Tenney et al., 2019; Belinkov, 2022). For example, Li et al. (2023) probe a
+GPT-style model trained on Othello game transcripts and find an internal representation of
+the game board, which Nanda et al. (2023) show is recoverable with a linear probe. Beyond
+game state, Shai et al. (2024) show that a transformer trained only on next-token prediction
+linearly encodes a belief-state geometry of the process that generated its training data. Park
+et al. (2024) give formal foundations to linear probing as a tool for interpreting internal
+representations. Elhage et al. (2022) explain, through the theory of superposition, why
+many features remain linearly accessible even in high-dimensional residual streams. The
+recommended best practice (Hewitt & Liang, 2019) is to use linear probes of limited capacity
+and compare every probe against a control to ensure the signal lies in the representation
+rather than the probe.
+Predicting future states. Existing work finds that a single hidden state carries information
+about tokens not yet generated (Pal et al., 2023; Belrose et al., 2023; Lindsey et al., 2025;
+Pfau et al., 2024). At a higher level of abstraction, Jenner et al. (2024) find that a chess-
+playing network represents future optimal moves, while Taufeeque et al. (2024) show that a
+recurrent Sokoban agent encodes its planned actions up to roughly 50 steps ahead. Closest
+to our correctness horizon, hidden states taken during chain-of-thought reasoning have
+been shown to encode the final answer and whether it will be correct. Zhang et al. (2025)
+and Afzal et al. (2025) decode answer correctness mid-reasoning, David (2025) track how
+this signal sharpens as reasoning proceeds, and Cencerrado et al. (2025) predict answer
+accuracy from a probe on the question alone, before any answer is generated. These are all
+demonstrations of learned horizon capabilities. We show the same for coding agents, where
+the decoded outcome is the result of an edit made many steps of tool use and test execution
+later.
+Code representations in LLMs. A line of work probes code models for the structure they
+encode. Jin & Rinard (2024) train a Transformer model on Karel-grid programs and show
+that linear probes on its hidden states recover both current and future program execution
+states. Wan et al. (2022) find that attention patterns of BERT-style code models highly align
+with the syntactic structure of the input, and that an unlabeled binary constituency tree can
+be constructed from the models’ hidden states in an unsupervised, training-free manner.
+Hernández López et al. (2022) further show that these models encode the full labeled abstract
+syntax tree of code input within a compact syntactic, orthogonally-extracted subspace of
+their token-level residual stream. Moving toward semantics, Karmakar & Robbes (2021;
+2023) assemble a battery of probing tasks and report that code models capture semantic
+properties like type validity more readily as syntactic properties than structural ones such
+as cyclomatic complexity. Troshin & Chirkova (2022) probe a range of syntactic, namespace,
+data-flow and semantic properties, finding that code models encode syntactic structure and
+identifiers well but capture little about deep semantics such as computational equivalence.
+Ma et al. Ma et al. (2024) separately measure how well models recover data-dependency,
+control-dependency and control-flow graphs across layers and additionally prove that
+decoder-only transformer, which is adopted by most LLMs today, possesses the same
+capability of extracting coding representation as BERT.
+ 10
+Correctness probing. Closer to our target, a recent line probes hidden states for the
+correctness of generated programs. Ribeiro et al. (2025), Bui et al. (2025), and Vu et al. (2025)
+aim at decoding whether a single generated function is correct, the last by selecting the
+most informative layer per input; Di Cicco (2026) finds correctness is linearly readable even
+before the code is generated. He et al. (2026) predict correctness from attribution graphs
+instead of a linear probe. Gros & Devanbu (2025) use model calibration data to focus future
+patching edits towards a minimal repair. Tahimic & Cheng (2025) use sparse autoencoders
+to find a correctness direction that is causally necessary for generating correct code, finding
+directions that predict errors but failing to do so for correctness. All of this work studies
+a synthetic domain-specific language, isolated snippets, or a single step of generation. We
+instead probe models working on real-world programs, as coding agents rewrite them over
+many steps. To our knowledge, we are the first to study the outcome of future edits down
+the programming horizon.
+Latent program spaces. A separate line of work explicitly constructs latent program
+spaces as part of the neural network modeling. Early neural program induction represents
+and executes programs through latent operation embeddings, as in Neural Programmer-
+Interpreter (Reed & De Freitas, 2015) and Neural Programmer (Neelakantan et al., 2015).
+Subsequent methods build continuous program spaces and search them, for program
+synthesis (Hong et al., 2021; Balog et al., 2020; Macfarlane & Bonnet, 2026; Macfarlane et al.,
+2026) and for program repair (Silva et al., 2025). We instead operate on off-the-shelf LLMs.
+We show, through linear probing, that language models trained to act as coding agents
+encode latent program representations. These representations have emerged as a byproduct
+of training, without any explicit latent space training objective.
+Coding agents. Coding agents combine a language model with a harness that lets it
+autonomously edit and execute code to solve software engineering tasks, such as SWE-
+agent (Yang et al., 2024), OpenHands (Wang et al., 2025), CodeAct (Wang et al., 2024), and
+AutoCodeRover (Zhang et al., 2024). Dedicated benchmarks evaluate them on real-world
+tasks, including SWE-bench (Jimenez et al., 2024), SWE-bench Pro (Deng et al., 2025), and
+Multi-SWE-bench (Zan et al., 2026). Analyses of agent trajectories (Bouzenia & Pradel, 2025)
+show that successful and failed runs are structurally distinguishable in the token space,
+with failed trajectories being consistently longer and more variable in step and token count.
+Like us, Sui et al. (2026) probe the residual stream of coding agents for early detection of
+failures. They do not study the properties of programs in the latent program space. To the
+best of our knowledge, we are the first to demonstrate that coding agents maintain a latent
+representation of the program throughout their past changes and future editing horizon.
+6 Limitations
+Decodability is not causality. Our probes establish that program properties are linearly
+decodable from hidden states; they do not establish that the agent uses this information when
+surfacing actions. Our claims are about what is represented, not about causal mechanisms.
+Demonstrating causality would require steering along a probe direction and measuring the
+effect on the resulting edit and we leave it to future work.
+Effect of label imbalance. • F ULL C ORRECTNESS and ■ PARTIAL C ORRECTNESS probes
+achieve the highest AUC across both models, while ▲ W ELL - FORMEDNESS consistently
+achieves the lowest. We attribute this to label imbalance. ▲ W ELL - FORMEDNESS is over-
+whelmingly positive in the collected trajectories because today’s models excel at producing
+syntactically valid programs. The same imbalance explains why the Brier score for ▲ W ELL -
+FORMEDNESS is low despite its low AUC, since a near-constant predictor scores well on
+Brier by matching the label base rate. Overall, it is most interesting to predict the hardest
+program properties, i.e., the ones that often flip and take the longest to achieve.
+Scope. We study two open-weight models under a single agent scaffold (mini-swe-agent)
+on two benchmarks. We believe that the same representation evidence and horizons appear
+ 11
+in frontier models, under different scaffolds, or on tasks beyond the ones present in these
+datasets, but this remains to be demonstrated empirically.
+7 Conclusion
+Coding agents encode properties of the program they are working on in their residual
+streams. We demonstrated that linear probes trained on hidden states decode whether
+the code compiles, passes its test suite, reduces failing tests, and introduces regressions,
+reaching AUC up to 0.83 for full correctness. This latent representation captures both the
+present program properties, but also can ground predictions on what the agent has not yet
+written: probes predicting the outcome of future edits succeed above chance up to 25 steps
+before the edit is made. These results have external validity, they hold across two models
+and two benchmarks and transfer across datasets without retraining. These findings open
+novel research directions towards monitoring and steering coding agents from within the
+latent space.
+Acknowledgments
+This work was partially supported by the Wallenberg AI, Autonomous Systems and Soft-
+ware Program (WASP) funded by the Knut and Alice Wallenberg Foundation. Compu-
+tational resources were provided on the Berzelius system funded by the Knut and Alice
+Wallenberg foundation and operated by NAISS. We acknowledge compute support from
+Modal.
+References
+Julien Abadji, Marah Abdin, Connor Adams, Eric Alcaide, Mustafa Altun, Michele Artoni,
+ Junze Bao, Uday Barar, Vassilis Bekiaris, Arkadii Bessonov, et al. Laguna m. 1/xs. 2
+ technical report. arXiv preprint arXiv:2605.27605, 2026.
+Anum Afzal, Florian Matthes, Gal Chechik, and Yftah Ziser. Knowing before saying: Llm
+ representations encode information about chain-of-thought success before completion. In
+ Findings of the Association for Computational Linguistics: ACL 2025, pp. 12791–12806, 2025.
+Guillaume Alain and Yoshua Bengio. Understanding intermediate layers using linear
+ classifier probes. In 5th International Conference on Learning Representations, ICLR 2017,
+ Workshop Track Proceedings, 2017. URL https://openreview.net/forum?id=HJ4-rAVtl.
+Matej Balog, Rishabh Singh, Petros Maniatis, and Charles Sutton. Neural program synthesis
+ with a differentiable fixer. arXiv preprint arXiv:2006.10924, 2020.
+Yonatan Belinkov. Probing classifiers: Promises, shortcomings, and advances. Computational
+ Linguistics, 48(1):207–219, 2022.
+Nora Belrose, Igor Ostrovsky, Lev McKinney, Zach Furman, Logan Smith, Danny Halawi,
+ Stella Biderman, and Jacob Steinhardt. Eliciting latent predictions from transformers with
+ the tuned lens. arXiv preprint arXiv:2303.08112, 2023.
+Islem Bouzenia and Michael Pradel. Understanding software engineering agents: A study
+ of thought-action-result trajectories. In 2025 40th IEEE/ACM International Conference on
+ Automated Software Engineering (ASE), pp. 2846–2857. IEEE, 2025.
+Tuan-Dung Bui, Thanh Trong Vu, Thu-Trang Nguyen, Son Nguyen, and Hieu Dinh Vo.
+ Correctness assessment of code generated by large language models using internal repre-
+ sentations. Journal of Systems and Software, pp. 112570, 2025.
+Iván Vicente Moreno Cencerrado, Arnau Padrés Masdemont, Anton Gonzalvez Hawthorne,
+ David Demitri Africa, and Lorenzo Pacchiardi. No answer needed: Predicting llm answer
+ accuracy from question-only linear probes. arXiv preprint arXiv:2509.10625, 2025.
+ 12
+Jade Copet, Quentin Carbonneaux, Gal Cohen, Jonas Gehring, Jacob Kahn, Jannik Kossen,
+ Felix Kreuk, Emily McMilin, Michel Meyer, Yuxiang Wei, et al. Cwm: An open-weights
+ llm for research on code generation with world models. arXiv preprint arXiv:2510.02387,
+ 2025.
+Joey David. Temporal predictors of outcome in reasoning language models. arXiv preprint
+ arXiv:2511.14773, 2025. URL https://arxiv.org/abs/2511.14773.
+Xiang Deng, Jeff Da, Edwin Pan, Yannis Yiming He, Charles Ide, Kanak Garg, Niklas Lauffer,
+ Andrew Park, Nitin Pasari, Chetan Rane, et al. Swe-bench pro: Can ai agents solve
+ long-horizon software engineering tasks? arXiv preprint arXiv:2509.16941, 2025.
+Carlo Di Cicco. Code correctness signals in llm hidden states: Pre-generation probing and
+ repair geometry. arXiv preprint arXiv:2606.14530, 2026.
+Nelson Elhage, Neel Nanda, Catherine Olsson, Tom Henighan, Nicholas Joseph, Ben Mann,
+ Amanda Askell, Yuntao Bai, Anna Chen, Tom Conerly, et al. A mathematical framework
+ for transformer circuits. Transformer Circuits Thread, 1(1):12, 2021.
+Nelson Elhage, Tristan Hume, Catherine Olsson, Nicholas Schiefer, Tom Henighan, Shauna
+ Kravec, Zac Hatfield-Dodds, Robert Lasenby, Dawn Drain, Carol Chen, et al. Toy models
+ of superposition. arXiv preprint arXiv:2209.10652, 2022.
+David Gros and Prem Devanbu. Localized calibrated uncertainty in code language models.
+ arXiv preprint arXiv:2512.24560, 2025.
+Yicheng He, Zheng Zhao, Zhou Kaiyu, Bryan Dai, Jie Fu, and Yonghui Yang. Codecircuit:
+ Toward inferring llm-generated code correctness via attribution graphs. arXiv preprint
+ arXiv:2602.07080, 2026.
+José Antonio Hernández López, Martin Weyssow, Jesús Sánchez Cuadrado, and Houari
+ Sahraoui. Ast-probe: Recovering abstract syntax trees from hidden representations of
+ pre-trained language models. In Proceedings of the 37th IEEE/ACM International Conference
+ on Automated Software Engineering, pp. 1–11, 2022.
+John Hewitt and Percy Liang. Designing and interpreting probes with control tasks. In
+ Proceedings of the 2019 conference on empirical methods in natural language processing and the
+ 9th international joint conference on natural language processing (emnlp-ijcnlp), pp. 2733–2743,
+ 2019.
+Joey Hong, David Dohan, Rishabh Singh, Charles Sutton, and Manzil Zaheer. Latent
+ programmer: Discrete latent codes for program synthesis. In International Conference on
+ Machine Learning, pp. 4308–4318. PMLR, 2021.
+Erik Jenner, Shreyas Kapur, Vasil Georgiev, Cameron Allen, Scott Emmons, and Stuart
+ Russell. Evidence of learned look-ahead in a chess-playing neural network. Advances in
+ Neural Information Processing Systems, 37:31410–31437, 2024.
+Carlos E Jimenez, John Yang, Alexander Wettig, Shunyu Yao, Kexin Pei, Ofir Press, and
+ Karthik Narasimhan. Swe-bench: Can language models resolve real-world github issues?
+ In International Conference on Learning Representations, volume 2024, pp. 54107–54157, 2024.
+Charles Jin and Martin Rinard. Emergent representations of program semantics in language
+ models trained on programs. In International Conference on Machine Learning, pp. 22160–
+ 22184. PMLR, 2024.
+Mingyu Jin, Qinkai Yu, Jingyuan Huang, Qingcheng Zeng, Zhenting Wang, Wenyue Hua,
+ Haiyan Zhao, Kai Mei, Yanda Meng, Kaize Ding, et al. Exploring concept depth: How
+ large language models acquire knowledge and concept at different layers? In Proceedings
+ of the 31st international conference on computational linguistics, pp. 558–573, 2025.
+Anjan Karmakar and Romain Robbes. What do pre-trained code models know about code?
+ In 2021 36th IEEE/ACM International Conference on Automated Software Engineering (ASE),
+ pp. 1332–1336. IEEE, 2021.
+ 13
+Anjan Karmakar and Romain Robbes. Inspect: Intrinsic and systematic probing evaluation
+ for code transformers. IEEE Transactions on Software Engineering, 50(2):220–238, 2023.
+Adam Karvonen. Emergent world models and latent variable estimation in chess-playing
+ language models. In First Conference on Language Modeling, 2024. URL https://openreview.
+ net/forum?id=PPTrmvEnpW.
+Kenneth Li, Aspen K Hopkins, David Bau, Fernanda Viégas, Hanspeter Pfister, and Martin
+ Wattenberg. Emergent world representations: Exploring a sequence model trained on a
+ synthetic task. ICLR, 2023.
+Jack Lindsey, Wes Gurnee, Emmanuel Ameisen, Brian Chen, Adam Pearce, Nicholas L.
+ Turner, Craig Citro, David Abrahams, Shan Carter, Basil Hosmer, Jonathan Marcus,
+ Michael Sklar, Adly Templeton, Trenton Bricken, Callum McDougall, Hoagy Cunning-
+ ham, Thomas Henighan, Adam Jermyn, Andy Jones, Andrew Persic, Zhenyi Qi, T. Ben
+ Thompson, Sam Zimmerman, Kelley Rivoire, Thomas Conerly, Chris Olah, and Joshua
+ Batson. On the biology of a large language model. Transformer Circuits Thread, 2025. URL
+ https://transformer-circuits.pub/2025/attribution-graphs/biology.html.
+Wei Ma, Shangqing Liu, Mengjie Zhao, Xiaofei Xie, Wenhang Wang, Qiang Hu, Jie Zhang,
+ and Yang Liu. Unveiling code pre-trained models: Investigating syntax and semantics
+ capacities. ACM Transactions on Software Engineering and Methodology, 33(7):1–29, 2024.
+Matthew Macfarlane and Clem Bonnet. Searching latent program spaces. Advances in Neural
+ Information Processing Systems, 38:103463–103520, 2026.
+Matthew Macfarlane, Clément Bonnet, Herke van Hoof, and Levi Lelis. Gradient-based
+ program synthesis with neurally interpreted languages. In The Fourteenth International
+ Conference on Learning Representations, 2026. URL https://openreview.net/forum?id=
+ NAORIWBaoO.
+Neel Nanda, Andrew Lee, and Martin Wattenberg. Emergent linear representations in
+ world models of self-supervised sequence models. In Proceedings of the 6th BlackboxNLP
+ Workshop: Analyzing and Interpreting Neural Networks for NLP, pp. 16–30, 2023.
+Arvind Neelakantan, Quoc V Le, and Ilya Sutskever. Neural programmer: Inducing latent
+ programs with gradient descent. arXiv preprint arXiv:1511.04834, 2015.
+Koyena Pal, Jiuding Sun, Andrew Yuan, Byron C Wallace, and David Bau. Future lens:
+ Anticipating subsequent tokens from a single hidden state. In Proceedings of the 27th
+ Conference on Computational Natural Language Learning (CoNLL), pp. 548–560, 2023.
+Kiho Park, Yo Joong Choe, and Victor Veitch. The linear representation hypothesis and the
+ geometry of large language models. In Proceedings of the 41st International Conference on
+ Machine Learning, pp. 39643–39666, 2024.
+Jacob Pfau, William Merrill, and Samuel R. Bowman. Let’s think dot by dot: Hidden
+ computation in transformer language models. In First Conference on Language Modeling,
+ 2024. URL https://openreview.net/forum?id=NikbrdtYvG.
+Qwen Team. Qwen3.6-Plus: Towards real world agents, April 2026. URL https://qwen.ai/
+ blog?id=qwen3.6.
+Scott Reed and Nando De Freitas. Neural programmer-interpreters. arXiv preprint
+ arXiv:1511.06279, 2015.
+Francisco Ribeiro, Claudio Spiess, Prem Devanbu, and Sarah Nadi. On llms’ internal
+ representation of code correctness. arXiv preprint arXiv:2512.07404, 2025.
+Adam S Shai, Sarah E Marzen, Lucas Teixeira, Alexander G Oldenziel, and Paul M Riechers.
+ Transformers represent belief state geometry in their residual stream. Advances in Neural
+ Information Processing Systems, 37:75012–75034, 2024.
+ 14
+André Silva, Gustav Thorén, and Martin Monperrus. Gradient-based program repair: Fixing
+ bugs in continuous program spaces. arXiv preprint arXiv:2505.17703, 2025.
+Oscar Skean, Md Rifat Arefin, Dan Zhao, Niket Nikul Patel, Jalal Naghiyev, Yann Lecun,
+ and Ravid Shwartz-Ziv. Layer by layer: Uncovering hidden representations in language
+ models. In International Conference on Machine Learning, pp. 55854–55875. PMLR, 2025.
+Yuan Sui, Yulin Chen, Yibo Li, Xue Jiang, Yufei He, Yihong Dong, Xiaoxin He, Tianyu
+ Gao, and Bryan Hooi. Tact: Mitigating overthinking and overacting in coding agents via
+ activation steering. arXiv preprint arXiv:2605.05980, 2026.
+Kriz Tahimic and Charibeth Cheng. Mechanistic interpretability of code correctness in llms
+ via sparse autoencoders. arXiv preprint arXiv:2510.02917, 2025.
+Mohammad Taufeeque, Philip Quirke, Maximilian Li, Chris Cundy, Aaron David Tucker,
+ Adam Gleave, and Adrià Garriga-Alonso. Planning in a recurrent neural network that
+ plays sokoban. arXiv preprint arXiv:2407.15421, 2024.
+Ian Tenney, Dipanjan Das, and Ellie Pavlick. Bert rediscovers the classical nlp pipeline.
+ In Proceedings of the 57th annual meeting of the association for computational linguistics, pp.
+ 4593–4601, 2019.
+Sergey Troshin and Nadezhda Chirkova. Probing pretrained models of source codes. In
+ Proceedings of the Fifth BlackboxNLP Workshop on Analyzing and Interpreting Neural Networks
+ for NLP, pp. 371–383, 2022.
+Thanh Trong Vu, Tuan-Dung Bui, Thu-Trang Nguyen, Son Nguyen, and Hieu Dinh Vo.
+ Model-agnostic correctness assessment for llm-generated code via dynamic internal
+ representation selection. arXiv preprint arXiv:2510.02934, 2025.
+Yao Wan, Wei Zhao, Hongyu Zhang, Yulei Sui, Guandong Xu, and Hai Jin. What do
+ they capture? a structural analysis of pre-trained language models for source code. In
+ Proceedings of the 44th international conference on software engineering, pp. 2377–2388, 2022.
+Xingyao Wang, Yangyi Chen, Lifan Yuan, Yizhe Zhang, Yunzhu Li, Hao Peng, and Heng
+ Ji. Executable code actions elicit better llm agents. In Proceedings of the 41st International
+ Conference on Machine Learning, pp. 50208–50232, 2024.
+Xingyao Wang, Boxuan Li, Yufan Song, Frank F Xu, Xiangru Tang, Mingchen Zhuge, Jiayi
+ Pan, Yueqi Song, Bowen Li, Jaskirat Singh, et al. Openhands: An open platform for ai soft-
+ ware developers as generalist agents. In International Conference on Learning Representations,
+ volume 2025, pp. 65882–65919, 2025.
+Yuxiang Wei, Olivier Duchenne, Jade Copet, Quentin Carbonneaux, Lingming Zhang, Daniel
+ Fried, Gabriel Synnaeve, Rishabh Singh, and Sida Wang. Swe-rl: Advancing llm reasoning
+ via reinforcement learning on open software evolution. Advances in Neural Information
+ Processing Systems, 38:78500–78525, 2026.
+John Yang, Carlos E Jimenez, Alexander Wettig, Kilian Lieret, Shunyu Yao, Karthik R
+ Narasimhan, and Ofir Press. SWE-agent: Agent-computer interfaces enable automated
+ software engineering. In The Thirty-eighth Annual Conference on Neural Information Process-
+ ing Systems, 2024. URL https://openreview.net/forum?id=mXpq6ut8J3.
+He Ye, Matias Martinez, Xiapu Luo, Tao Zhang, and Martin Monperrus. Selfapr: Self-
+ supervised program repair with test execution diagnostics. In Proceedings of the 37th
+ IEEE/ACM International Conference on Automated Software Engineering, pp. 1–13, 2022.
+Daoguang Zan, Zhirong Huang, Wei Liu, Hanwu Chen, Shulin Xin, Linhao Zhang, Qi Liu,
+ Li Aoyan, Lu Chen, Xiaojian Zhong, et al. Multi-swe-bench: A multilingual benchmark
+ for issue resolving. Advances in Neural Information Processing Systems, 38, 2026.
+ 15
+Anqi Zhang, Yulin Chen, Jane Pan, Chen Zhao, Aurojit Panda, Jinyang Li, and He He.
+ Reasoning models know when they’re right: Probing hidden states for self-verification.
+ In Second Conference on Language Modeling, 2025. URL https://openreview.net/forum?id=
+ O6I0Av7683.
+Yuntong Zhang, Haifeng Ruan, Zhiyu Fan, and Abhik Roychoudhury. Autocoderover:
+ Autonomous program improvement. In Proceedings of the 33rd ACM SIGSOFT International
+ Symposium on Software Testing and Analysis, pp. 1592–1604, 2024.
+ 16
+A Appendix
+A.1 Dataset Statistics
+ 90
+ 75
+ 1.0
+ 60 REGRESSION 0.15 0.05 0.13 0.03
+ 2000 Median 36k 0.8
+Steps 45 1500 PARTIAL CORRECTNESS 0.50 0.16 0.54 0.15
+ Trajectories
+ 0.6
+ P(y = 1)
+ 30 1000 FULL CORRECTNESS 0.29 0.08 0.30 0.11 0.4
+ 15 500 WELL-FORMEDNESS 0.93 0.52 0.94 0.57
+ 0.2
+ 15 steps
+ 0 50 steps 0 .2
+ -XS )
+ .2
+ -XS )
+ B
+ -A3 )
+ B
+ -A3 )
+ 0.0
+ Laguna Laguna Qwen3.6 Qwen3.6
+ 1k 10k 100k una ified aguna (Pro .6-35Berified .6-35B (Pro
+ Lag (Ver L n3 (V n3
+ (Verified) (Pro) (Verified) (Pro) Tokens per trajectory Qwe Qwe
+Figure 7: Left: distribution of trajectory lengths (in agent steps) per (model, dataset) combi-
+nation. Dashed vertical lines mark the kmax = 15 and kmax = 50 lookahead thresholds; the
+former is nearly lossless (90–99% of trajectories), while the latter retains 40–60%. Middle:
+distribution of tokens per trajectory (median 36k). Right: positive label rate P(y = 1) per
+probe and (model, dataset) combination. ▲ W ELL - FORMEDNESS is nearly always positive,
+which suppresses its AUC despite a real signal being present (see Limitations); • F ULL C OR -
+RECTNESS and ■ PARTIAL C ORRECTNESS are more balanced, consistent with their higher
+AUC.
+Table 2: Agent hyperparameters used during trajectory generation, following the recom-
+mended settings provided by each model vendor. Temperature and top-p control sampling;
+context is the maximum sequence length; max steps is the step limit per trajectory; and step
+timeout is the wall-clock limit per tool call.
+ Model Temp. Top-p Context Max steps Step timeout
+ Laguna-XS.2 0.7 0.95 256k 100 180 s
+ Qwen3.6-35B-A3B 0.6 0.95 256k 100 180 s
+A.2 Probe Hyperparameters
+ Hyperparameter Distribution Values
+ Learning rate Log-uniform [10−4 , 10−1 ]
+ Weight decay Log-uniform [10−5 , 10−1 ]
+ Batch size Categorical {256, 512, 1024}
+ Patience Categorical {10, 25, 50}
+Table 3: Hyperparameter search space used in the random search sweeps with 20 trials each.
+The best configurations, maximising validation AUC per probe per layer per model per
+dataset are used for training the final probes.
+A.3 Full Probe Results
+ 17
+Table 4: Chosen hyperparameters for each model and benchmark, selected by 20-trial
+random search maximising mean validation AUC. Sweeps were run independently per
+probe and per layer; table shows the middle probed layer as representative.
+ Dataset Model Probe Learning rate Weight decay Batch size Patience
+ ▲ W ELL - FORMEDNESS 8.58 × 10−3 1.18 × 10−3 512 50
+ Laguna-XS.2 • F ULL C ORRECTNESS 5.19 × 10−4 3.81 × 10−3 512 10
+ ♦ R EGRESSION 2.95 × 10−2 5.19 × 10−5 256 50
+ V ERIFIED ■ PARTIAL C ORRECTNESS 2.66 × 10−2 2.13 × 10−3 1024 50
+ ▲ W ELL - FORMEDNESS 3.33 × 10−3 4.20 × 10−2 512 25
+ Qwen3.6-35B-A3B • F ULL C ORRECTNESS 1.17 × 10−2 4.10 × 10−4 1024 25
+ ♦ R EGRESSION 3.11 × 10−4 1.91 × 10−4 512 50
+ ■ PARTIAL C ORRECTNESS 3.39 × 10−3 1.75 × 10−4 1024 10
+ ▲ W ELL - FORMEDNESS 1.40 × 10−3 3.93 × 10−4 512 25
+ Laguna-XS.2 • F ULL C ORRECTNESS 2.09 × 10−4 6.05 × 10−4 256 25
+ ■ PARTIAL C ORRECTNESS 1.52 × 10−3 1.64 × 10−3 1024 50
+ P RO ♦ R EGRESSION 1.13 × 10−4 1.49 × 10−2 1024 10
+ ▲ W ELL - FORMEDNESS 2.30 × 10−4 1.46 × 10−5 512 10
+ Qwen3.6-35B-A3B • F ULL C ORRECTNESS 4.15 × 10−4 2.27 × 10−4 1024 10
+ ♦ R EGRESSION 2.74 × 10−3 2.00 × 10−4 512 50
+ ■ PARTIAL C ORRECTNESS 1.26 × 10−3 8.97 × 10−5 1024 50
+ 18
+Table 5: AUC per probe, model, and benchmark across transformer layers. Bold marks the
+best layer per row. Shuffled uses label-permuted data as a sanity baseline.
+ AUC ↑ Shuffled
+ Probe 1 11 21 31 40 (best layer)
+ SWE- BENCH V ERIFIED
+ Laguna-XS.2
+ ▲ W ELL - FORMEDNESS 0.502 0.560 0.566 0.571 0.548 0.500
+ • F ULL C ORRECTNESS 0.591 0.705 0.727 0.705 0.649 0.501
+ ■ PARTIAL C ORRECTNESS 0.615 0.682 0.708 0.680 0.641 0.500
+ ♦ R EGRESSION 0.548 0.645 0.678 0.661 0.603 0.500
+ Qwen3.6-35B-A3B
+ ▲ W ELL - FORMEDNESS 0.499 0.576 0.553 0.587 0.584 0.501
+ • F ULL C ORRECTNESS 0.648 0.806 0.820 0.828 0.751 0.501
+ ■ PARTIAL C ORRECTNESS 0.646 0.796 0.807 0.808 0.739 0.501
+ ♦ R EGRESSION 0.533 0.594 0.721 0.721 0.681 0.501
+ SWE- BENCH P RO
+ Laguna-XS.2
+ ▲ W ELL - FORMEDNESS 0.760 0.779 0.741 0.754 0.759 0.501
+ • F ULL C ORRECTNESS 0.587 0.692 0.732 0.712 0.673 0.500
+ ■ PARTIAL C ORRECTNESS 0.655 0.700 0.722 0.700 0.665 0.500
+ ♦ R EGRESSION 0.682 0.736 0.737 0.745 0.725 0.501
+ Qwen3.6-35B-A3B
+ ▲ W ELL - FORMEDNESS 0.727 0.719 0.715 0.722 0.737 0.502
+ • F ULL C ORRECTNESS 0.664 0.797 0.825 0.832 0.777 0.502
+ ■ PARTIAL C ORRECTNESS 0.740 0.832 0.841 0.831 0.792 0.502
+ ♦ R EGRESSION 0.713 0.778 0.792 0.778 0.732 0.507
+ 19
+Table 6: Cross-dataset transfer AUC. Gray rows show in-distribution reference performance.
+Transfer rows show AUC when probe weights trained on one dataset are evaluated on
+the other; the subscript shows the delta relative to the in-distribution baseline on the same
+evaluation set.
+ Layer 1 Layer 11 Layer 21 Layer 31 Layer 40
+ ▲ W ELL - FORMEDNESS
+ Laguna-XS.2
+ In-dist (Verified) 0.502 0.560 0.566 0.571 0.548
+ In-dist (Pro) 0.760 0.779 0.741 0.754 0.759
+ Verified → Pro 0.508 −0.251 0.527 −0.252 0.532 −0.210 0.523 −0.231 0.508 −0.251
+ Pro → Verified 0.484 −0.018 0.521 −0.040 0.553 −0.013 0.528 −0.043 0.498 −0.050
+ Qwen3.6-35B-A3B
+ In-dist (Verified) 0.499 0.576 0.553 0.587 0.584
+ In-dist (Pro) 0.727 0.719 0.715 0.722 0.737
+ Verified → Pro 0.564 −0.163 0.516 −0.202 0.516 −0.199 0.516 −0.206 0.480 −0.257
+ Pro → Verified 0.509 +0.010 0.527 −0.049 0.531 −0.021 0.503 −0.083 0.447 −0.137
+ • F ULL C ORRECTNESS
+ Laguna-XS.2
+ In-dist (Verified) 0.591 0.705 0.727 0.705 0.649
+ In-dist (Pro) 0.587 0.692 0.732 0.712 0.673
+ Verified → Pro 0.502 −0.085 0.630 −0.062 0.645 −0.086 0.643 −0.069 0.542 −0.132
+ Pro → Verified 0.531 −0.060 0.634 −0.071 0.669 −0.057 0.636 −0.069 0.594 −0.055
+ Qwen3.6-35B-A3B
+ In-dist (Verified) 0.648 0.806 0.820 0.828 0.751
+ In-dist (Pro) 0.664 0.797 0.825 0.832 0.777
+ Verified → Pro 0.615 −0.048 0.730 −0.068 0.748 −0.076 0.767 −0.064 0.702 −0.076
+ Pro → Verified 0.587 −0.061 0.764 −0.042 0.781 −0.039 0.778 −0.049 0.699 −0.052
+ ■ PARTIAL C ORRECTNESS
+ Laguna-XS.2
+ In-dist (Verified) 0.615 0.682 0.708 0.680 0.641
+ In-dist (Pro) 0.655 0.700 0.722 0.700 0.665
+ Verified → Pro 0.519 −0.136 0.622 −0.078 0.648 −0.074 0.625 −0.075 0.556 −0.109
+ Pro → Verified 0.517 −0.097 0.574 −0.109 0.615 −0.093 0.577 −0.104 0.551 −0.090
+ Qwen3.6-35B-A3B
+ In-dist (Verified) 0.646 0.796 0.807 0.808 0.739
+ In-dist (Pro) 0.740 0.832 0.841 0.831 0.792
+ Verified → Pro 0.623 −0.117 0.774 −0.058 0.773 −0.068 0.776 −0.055 0.720 −0.072
+ Pro → Verified 0.605 −0.041 0.754 −0.042 0.766 −0.041 0.771 −0.037 0.699 −0.040
+ ♦ R EGRESSION
+ Laguna-XS.2
+ In-dist (Verified) 0.548 0.645 0.678 0.661 0.603
+ In-dist (Pro) 0.682 0.736 0.737 0.745 0.725
+ Verified → Pro 0.459 −0.223 0.500 −0.237 0.626 −0.110 0.618 −0.127 0.540 −0.185
+ Pro → Verified 0.560 +0.012 0.612 −0.033 0.620 −0.058 0.601 −0.059 0.560 −0.043
+ Qwen3.6-35B-A3B
+ In-dist (Verified) 0.533 0.594 0.721 0.721 0.681
+ In-dist (Pro) 0.713 0.778 0.792 0.778 0.732
+ Verified → Pro 0.575 −0.139 0.593 −0.185 0.750 −0.042 0.724 −0.053 0.641 −0.091
+ Pro → Verified 0.557 +0.024 0.664 +0.070 0.667 −0.054 0.661 −0.060 0.613 −0.067
+A.4 Lookahead Analysis
+The main lookahead experiment uses a maximum k of 50, which excludes tokens within
+50 steps of the end of a trajectory, including all trajectories shorter than 50 steps. Figure 9
+replicates the analysis at k ≤ 15, which imposes a smaller constraint. The monotonic rise in
+ 20
+AUC as k → 0 and the layer-ordering are consistent with the main results, confirming that
+the hockey-stick pattern is not an artifact of the reduced sample.
+ FULL CORRECTNESS WELL-FORMEDNESS
+ Laguna-XS.2 SWE-Bench-Verified Laguna-XS.2 SWE-Bench-Verified
+ L21 n = 1.1M ht
+ 0.650 L11 n = 1.1M ht
+ 0.75 L21
+ L31
+ L31
+ L11 0.625
+ 0.70
+ 0.600
+ 0.65 L40
+AUC AUC 0.575
+ 0.60 0.550 L40
+ 0.55 L1 0.525
+ 0.500 L1 random
+ 0.50 random
+ 0 6 12 18 24 30 36 42 48 0 6 12 18 24 30 36 42 48
+ Horizon k (turns) Horizon k (turns)
+ PARTIAL CORRECTNESS REGRESSION
+ Laguna-XS.2 SWE-Bench-Verified Laguna-XS.2 SWE-Bench-Verified
+ L21
+ L11
+ n = 1.1M ht L31 n = 1.1M ht
+ 0.75 0.675 L21
+ 0.650 L11
+ 0.70 L40
+ 0.625 L40
+ L31
+ 0.65 0.600
+AUC L1 AUC 0.575
+ 0.60
+ 0.550 L1
+ 0.55 0.525
+ 0.50 random
+ 0.500 random
+ 0 6 12 18 24 30 36 42 48 0 6 12 18 24 30 36 42 48
+ Horizon k (turns) Horizon k (turns)
+Figure 8: Lookahead AUC for all four probes on Laguna-XS.2 (SWE-Bench-Verified), k ≤ 50.
+Panels show • F ULL C ORRECTNESS (top left), ▲ W ELL - FORMEDNESS (top right), ■ PARTIAL
+C ORRECTNESS (bottom left), and ♦ R EGRESSION (bottom right). A probe at token position t
+predicts the program property k steps later; each line is a transformer layer; the dashed line
+marks the 0.50 random baseline. AUC rises as k → 0 across all probes.
+ FULL CORRECTNESS WELL-FORMEDNESS
+ Laguna-XS.2 SWE-Bench-Verified Laguna-XS.2 SWE-Bench-Verified
+ 0.75 L21 n = 3.5M ht 0.60 L31 n = 3.5M ht
+ L11
+ 0.70 L11 0.58 L21
+ L31
+ L40
+ 0.65 L40 0.56
+AUC 0.60
+ AUC 0.54
+ 0.52
+ 0.55 L1
+ 0.50 random
+ L1
+ 0.50 random
+ 0.48
+ 0 2 4 6 8 10 12 14 0 2 4 6 8 10 12 14
+ Horizon k (turns) Horizon k (turns)
+ PARTIAL CORRECTNESS REGRESSION
+ Laguna-XS.2 SWE-Bench-Verified Laguna-XS.2 SWE-Bench-Verified
+ L21 n = 3.5M ht L31 n = 3.5M ht
+ 0.70 L11 0.650
+ L11
+ L21
+ 0.65 L40 0.625
+ L31
+ 0.600 L40
+AUC 0.60 L1 AUC 0.575
+ 0.550 L1
+ 0.55
+ 0.525
+ 0.50 random 0.500 random
+ 0 2 4 6 8 10 12 14 0 2 4 6 8 10 12 14
+ Horizon k (turns) Horizon k (turns)
+Figure 9: Lookahead AUC for all four probes on Laguna-XS.2 (SWE-Bench-Verified), k ≤ 15,
+using the full trajectory sample without the length filter required for k ≤ 50. Panel layout
+matches Figure 8. The monotonic rise in AUC as k → 0 and the layer ordering replicate the
+k ≤ 50 results, confirming the hockey-stick pattern is not an artifact of the trajectory length
+filter.
+A.5 Example Latent Trajectories
+ 21
+ FULL CORRECTNESS WELL-FORMEDNESS
+ Laguna-XS.2 SWE-Bench-Pro Laguna-XS.2 SWE-Bench-Pro
+ L21 n = 145k ht 0.75 L40 n = 145k ht
+ 0.80 L31
+ L31 L11
+ L21
+ 0.75 0.70
+ L1
+ L11
+ 0.70 L1 0.65
+AUC 0.65 AUC 0.60
+ 0.60
+ L40 0.55
+ 0.55
+ 0.50 random 0.50 random
+ 0 6 12 18 24 30 36 42 48 0 6 12 18 24 30 36 42 48
+ Horizon k (turns) Horizon k (turns)
+ PARTIAL CORRECTNESS REGRESSION
+ Laguna-XS.2 SWE-Bench-Pro Laguna-XS.2 SWE-Bench-Pro
+ 0.85 L21 n = 145k ht
+ 0.80 L21 n = 145k ht
+ 0.80 L31 L31
+ L11 0.75 L11
+ 0.75 L40
+ L40 0.70
+ 0.70
+AUC 0.65 L1 AUC 0.65
+ 0.60 0.60 L1
+ 0.55 0.55
+ 0.50 random 0.50 random
+ 0 6 12 18 24 30 36 42 48 0 6 12 18 24 30 36 42 48
+ Horizon k (turns) Horizon k (turns)
+Figure 10: Lookahead AUC for all four probes on Laguna-XS.2 (SWE-Bench-Pro), k ≤ 50.
+Panel layout matches Figure 8. The hockey-stick pattern replicates across this harder, multi-
+language benchmark.
+ FULL CORRECTNESS WELL-FORMEDNESS
+ Laguna-XS.2 SWE-Bench-Pro Laguna-XS.2 SWE-Bench-Pro
+ 0.75 L21 n = 903k ht L11 n = 903k ht
+ L31
+ L11 L31
+ L1
+ 0.75 L21
+ L40
+ 0.70 L40
+ 0.70
+ 0.65
+ 0.65
+AUC 0.60 L1 AUC
+ 0.60
+ 0.55 0.55
+ 0.50 random 0.50 random
+ 0 2 4 6 8 10 12 14 0 2 4 6 8 10 12 14
+ Horizon k (turns) Horizon k (turns)
+ PARTIAL CORRECTNESS REGRESSION
+ Laguna-XS.2 SWE-Bench-Pro Laguna-XS.2 SWE-Bench-Pro
+ 0.75 L21 n = 903k ht 0.75 L11
+ L31
+ L21 n = 903k ht
+ L31 L40
+ L11
+ 0.70 0.70 L1
+ L40
+ 0.65 L1 0.65
+AUC AUC
+ 0.60 0.60
+ 0.55 0.55
+ 0.50 random 0.50 random
+ 0 2 4 6 8 10 12 14 0 2 4 6 8 10 12 14
+ Horizon k (turns) Horizon k (turns)
+Figure 11: Lookahead AUC for all four probes on Laguna-XS.2 (SWE-Bench-Pro), k ≤ 15,
+using the full trajectory sample without the length filter. Panel layout matches Figure 8.
+Results are consistent with the k ≤ 50 analysis on this benchmark.
+ FULL CORRECTNESS WELL-FORMEDNESS
+ Qwen3.6-35B-A3B SWE-Bench-Verified Qwen3.6-35B-A3B SWE-Bench-Verified
+ L31
+ L11
+ L21 n = 442k ht L31 n = 442k ht
+ 0.80 0.80 L21
+ 0.75 0.75
+ L40 L11
+ 0.70 0.70
+AUC 0.65 L1 AUC 0.65
+ L40
+ 0.60 0.60 L1
+ 0.55 0.55
+ 0.50 random 0.50 random
+ 0 6 12 18 24 30 36 42 48 0 6 12 18 24 30 36 42 48
+ Horizon k (turns) Horizon k (turns)
+ PARTIAL CORRECTNESS REGRESSION
+ Qwen3.6-35B-A3B SWE-Bench-Verified Qwen3.6-35B-A3B SWE-Bench-Verified
+ 0.85 L21
+ L31
+ L11 n = 442k ht 0.85 n = 442k ht
+ L21
+ 0.80 L31
+ 0.80
+ 0.75 L40 0.75 L40
+ L11
+ 0.70 0.70
+AUC L1 AUC 0.65
+ 0.65
+ 0.60 0.60
+ L1
+ 0.55 0.55
+ 0.50 random 0.50 random
+ 0 6 12 18 24 30 36 42 48 0 6 12 18 24 30 36 42 48
+ Horizon k (turns) Horizon k (turns)
+Figure 12: Lookahead AUC for all four probes on Qwen3.6-35B-A3B (SWE-Bench-Verified),
+k ≤ 50. Panel layout matches Figure 8. The hockey-stick pattern and layer ordering replicate
+at larger model scale.
+ 22
+ FULL CORRECTNESS WELL-FORMEDNESS
+ Qwen3.6-35B-A3B SWE-Bench-Verified Qwen3.6-35B-A3B SWE-Bench-Verified
+ L31 n = 1.4M ht n = 1.4M ht
+ L21
+ 0.80 L11 0.650 L21
+ L31
+ L11
+ 0.625
+ 0.75 L40
+ L40 0.600
+ 0.70
+AUC AUC 0.575
+ 0.65
+ L1 0.550
+ 0.60
+ 0.525
+ 0.55
+ 0.500 L1 random
+ 0.50 random
+ 0 2 4 6 8 10 12 14 0 2 4 6 8 10 12 14
+ Horizon k (turns) Horizon k (turns)
+ PARTIAL CORRECTNESS REGRESSION
+ Qwen3.6-35B-A3B SWE-Bench-Verified Qwen3.6-35B-A3B SWE-Bench-Verified
+ L31
+ L21 n = 1.4M ht L31 n = 1.4M ht
+ 0.80 L11 0.75 L21
+ L40
+ 0.75 L40 0.70
+ 0.70 0.65
+AUC 0.65 L1 AUC
+ 0.60 L11
+ 0.60
+ 0.55 0.55
+ L1
+ 0.50 random 0.50 random
+ 0 2 4 6 8 10 12 14 0 2 4 6 8 10 12 14
+ Horizon k (turns) Horizon k (turns)
+Figure 13: Lookahead AUC for all four probes on Qwen3.6-35B-A3B (SWE-Bench-Verified),
+k ≤ 15, using the full trajectory sample without the length filter. Panel layout matches
+Figure 8. Results are consistent with the k ≤ 50 analysis for this model.
+ FULL CORRECTNESS WELL-FORMEDNESS
+ Qwen3.6-35B-A3B SWE-Bench-Pro Qwen3.6-35B-A3B SWE-Bench-Pro
+ 0.85 L31 n = 183k ht L1 n = 183k ht
+ L11 0.75 L40
+ L21 L31
+ L21
+ 0.80 L40 L11
+ 0.70
+ 0.75
+ 0.70 0.65
+AUC L1 AUC
+ 0.65 0.60
+ 0.60
+ 0.55
+ 0.55
+ 0.50 random 0.50 random
+ 0 6 12 18 24 30 36 42 48 0 6 12 18 24 30 36 42 48
+ Horizon k (turns) Horizon k (turns)
+ PARTIAL CORRECTNESS REGRESSION
+ Qwen3.6-35B-A3B SWE-Bench-Pro Qwen3.6-35B-A3B SWE-Bench-Pro
+ L11 n = 183k ht 1.0 L31 n = 183k ht
+ L21
+ L31 L40
+ L11
+ L21
+ L40
+ L1
+ 0.9 0.9
+ 0.8 0.8
+AUC 0.7
+ AUC
+ 0.7 L1
+ 0.6 0.6
+ 0.5 random 0.5 random
+ 0 6 12 18 24 30 36 42 48 0 6 12 18 24 30 36 42 48
+ Horizon k (turns) Horizon k (turns)
+Figure 14: Lookahead AUC for all four probes on Qwen3.6-35B-A3B (SWE-Bench-Pro), k ≤ 50.
+Panel layout matches Figure 8. The hockey-stick pattern and layer ordering replicate at
+larger model scale on this harder, multi-language benchmark.
+ 23
+ FULL CORRECTNESS WELL-FORMEDNESS
+ Qwen3.6-35B-A3B SWE-Bench-Pro Qwen3.6-35B-A3B SWE-Bench-Pro
+ 0.80 L31
+ L40 n = 198k ht 0.70 L21
+ L31
+ L40 n = 198k ht
+ L21
+ L11 L1
+ 0.75 L11
+ 0.65
+ 0.70
+AUC 0.65 AUC 0.60
+ 0.60
+ 0.55
+ 0.55
+ L1 0.50
+ 0.50 random random
+ 0 2 4 6 8 10 12 14 0 2 4 6 8 10 12 14
+ Horizon k (turns) Horizon k (turns)
+ PARTIAL CORRECTNESS REGRESSION
+ Qwen3.6-35B-A3B SWE-Bench-Pro Qwen3.6-35B-A3B SWE-Bench-Pro
+ 0.85 L11
+ L21 n = 198k ht L40 n = 198k ht
+ L31 0.80 L31
+ 0.80 L40 L11
+ L21
+ 0.75 0.75
+ 0.70 0.70 L1
+AUC 0.65 L1 AUC 0.65
+ 0.60 0.60
+ 0.55 0.55
+ 0.50 random 0.50 random
+ 0 2 4 6 8 10 12 14 0 2 4 6 8 10 12 14
+ Horizon k (turns) Horizon k (turns)
+Figure 15: Lookahead AUC for all four probes on Qwen3.6-35B-A3B (SWE-Bench-Pro), k ≤ 15,
+using the full trajectory sample without the length filter. Panel layout matches Figure 8.
+Results are consistent with the k ≤ 50 analysis on this benchmark.
+ Latent Program Trajectory Latent Program Trajectory
+ sphinx-doc__sphinx-9602 Laguna-XS.2 resolved sympy__sympy-14531 Qwen3.6-35B-A3B resolved
+ start start
+ resolved resolved
+UMAP dim. 2 UMAP dim. 2
+ earlier later earlier later
+ UMAP dim. 1 UMAP dim. 1
+Figure 16: Two example resolved trajectories, hand-selected from a small set of long
+(many-edit), resolved rollouts for legibility, shown at layer 20 (best or near-best by probe
+validation AUC for both models). Left: Laguna-XS.2 on sphinx-doc/sphinx-9602. Right:
+Qwen3.6-35B-A3B on sympy/sympy-14531. Each trajectory is reduced from its dense, stride-5
+token-level activations to one point per code edit plus a start and an end marker, obtained
+by mean-pooling all captured hidden states within each corresponding span (before the
+first edit, between consecutive edits, and after the last edit). Color encodes step order (light
+= earlier, dark = later) in each model’s palette color; the white circle marks the start and
+the star marks the final, resolved state. These examples are illustrative only and are not
+intended as quantitative evidence.
+ 24

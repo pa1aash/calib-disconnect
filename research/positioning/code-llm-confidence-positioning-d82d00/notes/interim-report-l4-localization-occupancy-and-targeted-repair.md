@@ -1,0 +1,72 @@
+---
+title: Interim report — l4-localization-occupancy-and-targeted-repair
+id: interim-report-l4-localization-occupancy-and-targeted-repair
+tags:
+- code-llm-confidence-positioning-d82d00
+- locus-l4-localization-occupancy-and-targeted-repair
+created: '2026-11-10T08:40:59.317393Z'
+status: draft
+type: interim
+deprecated: false
+summary: 'L4: line/token localization OCCUPIED by Gros and Devanbu 2512.24560; per-test-group
+  unit and confidence-guided repair vs matched-budget regeneration NARROW; test adequacy
+  CLEAN (provisional)'
+---
+
+# Interim report: l4-localization-occupancy-and-targeted-repair
+
+**Locus question:** Does line-level localization already occupy L4, and is per-test-group confidence with targeted repair versus regeneration tested?
+**Flavor:** technical
+
+## What the corpus already said
+
+Vault holds full texts for all load-bearing items, so no new fetch was needed (0 of 2 budget used). [[251224560-localized-calibrated-uncertainty-in-code-language-models-full-text]] (Gros and Devanbu, arXiv 2512.24560, preprint, first posted 2025-12-31, v1) is the line/token occupant. [[flare-fine-grained-diagnostic-feedback-for-llm-code-refinement-2]] (2606.03852) is the localization-to-repair occupant. [[is-self-repair-a-silver-bullet-for-code-generation]] and [[falsification-not-exposure-placebo-controlled-decomposition-of-self-repair-feedb]] supply matched-budget repair-vs-resampling evidence. [[260705188-latent-programming-horizons-in-coding-agents-full-text]] (2607.05188) is the step-level probe work. [[261032548-beyond-coverage-and-mutation-a-blind-spot-analysis-of-llm-generated-un]] bears on self-written test adequacy.
+
+## What the new sources say (all full-text reads; no new fetches)
+
+**Gros and Devanbu 2512.24560.** Label unit: "Minimal Intent Aligning Patches"; "we assume that 'intent' is fully defined by hidden test cases" (Sec. 4). The patch diff yields token, line, and problem labels (Fig. 1). Models under test: GPT-4o and Qwen2.5-Coder-7B-Instruct (Tables 1, 2); data HumanEval+/MBPP+, LiveCodeBench, RepoCod (Sec. 4). Methods: raw token probability, probes (0.5B and 7B supervisors), multisampling, line-verbalized (Secs. 5-8). Table 4 (Qwen, line level): Token Prob BSS -1.18 / ECE 0.54 / AUC 0.55; Multisampling 0.01 / 0.17 / 0.72; Line Verbalized -0.72 / 0.43 / 0.71; Probe-7B 0.29 / 0.08 / 0.83 (Platt-scaled BSS 0.33). Table 3 (GPT-4o, line): Probe-7B 0.16 BSS vs Line Verbalized -0.18. Leave-one-out per dataset (Table 7) degrades sharply (Qwen Probe-7B LiveCodeBench BSS -0.01); the authors' Sec. 10.2 admits "the lack of a clean heldout test set". Their related-work paragraph (Sec. 3, "Localizing") states the setting "does not assume access to test cases" and contrasts with spectrum-based fault localization that "depend on failing test cases". No test-group or requirement unit, no repair-vs-regeneration experiment, no reasoning model, no base/instruct pair, no release-date split (searched Secs. 4-10, Tables 1-10). Occupies L4 question 4 (A11) for probes and for verbal, sampled, and token-probability readouts at line/token granularity.
+
+**FLARE 2606.03852.** Line-level suspiciousness encoder (6 layers, 8 heads) using generator token probabilities as one input; baselines are Self-Debugging, Self-Refine, NL-Debugging and the original model (Comparison Baselines). Reports "absolute improvement from 1.72% to 7.42%" over NL-Debugging at k=1 and +8.50% with 10 candidates; 67% Top-1 localization (Table 4, vs LLMAO). No matched-budget resampling arm, no calibration metric. So localized repair beats other iterative repair, but not regeneration at equal sample budget.
+
+**Olausson et al. 2306.09896 (ICLR 2024).** "whether self-repair is a winning strategy or not ultimately boils down to whether you would, at an equivalent compute budget, have had a greater chance of success if you had simply drawn more code samples i.i.d." (Intro); "pass rates are higher or equally high with i.i.d. sampling (without repair), especially when the budget is small" (Sec. 4, Fig. 3-4). Feedback quality is the bottleneck. **Iscan 2606.31511** (preregistered, 0.5B-1.5B models): blind resampling beat bare-code retry by +18 net unlocks (discordant 25/7, p=0.0021) and code-plus-facts tied resampling at 26 each. Neither uses confidence to choose the repair unit.
+
+**TokenRepair 2511.18001** claims "fine-grained and targeted refinement rather than coarse-grained patch regeneration" using token-uncertainty fluctuation (Intro, contributions) on five 7-8B instruct models, Java/Python APR; baselines are feedback-loop regeneration, not budget-matched resampling (Tables 1-6, only skimmed for baselines; treat comparison as unverified at table level). **2607.05188** (Silva, Tu, Monperrus) probes agent trajectories with four labels including "Partial correctness: the number of failing tests is strictly less than at the beginning" and "Regression" (Sec. 3.3); the unit is a program version, not a test group, and no routing or repair-choice test. **Code-MUE 2607.12273** is a scalar problem-level execution-consensus score (note's own flag "token-vs-problem granularity mismatch"). **BlindSpotEval 2610.32548** (Java, 14,320 LLM tests): 19.7% fail to execute, 15.6% of failures are wrong-oracle; no confidence. Vasconcelos et al. 2302.07248: token highlighting by generation probability gave no benefit, edit-model highlighting did.
+
+**Instrument record.** S2 forward citations of 2512.24560 (retrieved 2026-11-10, HTTP 429 then 200 after 12 s backoff) return only 2611.07876, 2608.08266, 2607.12273, 2607.05188 (index coverage partial; none per-test-group on title/vault inspection). export.arxiv.org metadata search for per-test/per-requirement confidence: first three queries returned 0-2 irrelevant hits, then HTTP 429; all of those are INSTRUMENT GAPS, not zeros. Full-text negatives are unavailable on arXiv.
+
+## Evidence synthesis
+
+Localization of where generated code goes wrong is occupied at line and token granularity: 2512.24560 compares four readout families with execution-derived labels and proper scores (BSS, ECE, AUC), and FLARE shows localization feeds repair gains. The probe-beats-verbal ordering reproduces at sub-solution granularity (Qwen line BSS 0.29 vs -0.72). This is also Gros and Devanbu's explicit design goal, so any L4 claim of "localizing the failure" is a re-run unless the unit is different.
+
+What is not found in fetched records: (a) confidence over a test group or requirement as the unit, evaluated as localization of the failing requirement (the one-sentence residual: requirement-aligned units are specification-level, available without a patch oracle, and map to the user's intent, whereas line/edit labels depend on a model-built minimal patch); (b) confidence-guided targeted repair compared against regeneration at matched sample budget; (c) a link between model-written test adequacy and the model's own confidence. For (b), the only matched-budget evidence says repair is not a free win (Olausson, Iscan), and the targeted-repair papers (FLARE, TokenRepair) omit the matched resampling arm. That is a gap an L4 study could fill, but it is a repair-method comparison, not a calibration claim, and the Iscan and Olausson designs already supply the protocol.
+
+Weakness of the residual: A21 requires a concrete reason the code result could differ from the nearest result. For test-group unit this reason exists (tests cluster by requirement, and 15.6% wrong-oracle tests in 2610.32548 suggest label noise at test level), but v4_dprc per-test confidence is a pre-registered design never run beyond a 5-problem stub (docs/CONTEXT.md lines 18, 63), and its L1 level is per individual test, whose labels are hidden-test outcomes (grouping.py). Without runs, there is no evidence it is separable from line-level skill, and Gros and Devanbu's leave-one-out collapse (Table 7) warns that fine-grained probes may not transfer.
+
+## Committed position
+
+L4 is NARROW, not CLEAN, and it should not be the paper's spine. Line/token localization with calibrated readouts is OCCUPIED by Gros and Devanbu (preprint, Dec 2025) with FLARE as the repair-use occupant; the surviving residual is per-test-group (requirement) confidence evaluated as failing-requirement localization, plus confidence-guided targeted repair against matched-budget regeneration. The load-bearing reason: a TMLR submission needs evidence in hand, and L4 would require a new, unrun v4 pipeline with a label unit (hidden-test groups) that is both noisier and less independent than the line-level patch labels already published, while the repair-vs-regeneration comparison belongs to the Olausson/Iscan literature and adds no calibration claim.
+
+- **Position:** L4 localization at line/token granularity is OCCUPIED; the per-test-group unit is NARROW (residual: failing-requirement localization by test group, no patch oracle); targeted repair vs regeneration is NARROW (closest: FLARE 2606.03852 and TokenRepair on the targeted side, Olausson 2306.09896 and Iscan 2606.31511 on the matched-budget side); self-written test adequacy tied to own confidence is CLEAN (provisional).
+- **Per-component provisional verdicts:** (R1 L4 q1, per-test confidence as localization of failing requirement) NARROW, closest sides: Gros and Devanbu (line/edit) vs 2607.05188 (program-version partial-correctness label). (L4 q2) NARROW as above. (L4 q3, test adequacy vs model confidence) CLEAN (provisional): 2610.32548 measures adequacy without confidence; gaps are arXiv full-text search failure, S2 keyword 429, OpenAlex budget exhausted, only 4 forward citers screened. (L4 q4, A11 line/edit/step localization) OCCUPIED (2512.24560 Tables 3-4, 7-9; 2606.03852 Table 4; 2607.05188 Sec. 3.3).
+- **Confidence:** medium (about 70%) for the NARROW/OCCUPIED split; low (40%) for CLEAN (provisional) on test adequacy because body-text search is unavailable.
+- **Boundary conditions:** applies to Python/Java function-level generation with hidden-test labels; says nothing about repository agents where test groups map to issues. Outside code-LLM scope the claim is untested.
+- **What would change this position:** a fetched work eliciting or probing per-test or per-requirement confidence and scoring failing-requirement localization (would make L4 q1 OCCUPIED); a matched-budget run showing confidence-guided targeted repair beats resampling by a margin outside Iscan-style discordant-pair CIs (would make the residual more valuable, still outside calibration); the operator running a v4 pilot with held-out line vs test-group skill gap.
+- **Evidence weight:** 1 close full-text occupant (line level), 2 localization-to-repair papers (one without matched-budget arm), 2 matched-budget repair papers (no confidence), 1 step-level probe paper, 2 adjacent (Code-MUE, BlindSpotEval). 0 new fetches; citation screen covers 4 citers via S2 only.
+- **Prescriptive recommendation:** keep v4_dprc out of the TMLR paper as unrun future work; if a sentence of L4 content is wanted, cite 2512.24560 as the line-level occupant and state the test-group unit as untested, rather than claim novelty.
+
+## Open questions
+
+- Does any 2026 work score per-test confidence against failing-test identity? Needs working arXiv full-text or OpenAlex (both gapped).
+- TokenRepair Tables 1-6 baselines were not read at table level.
+- Only 4 forward citers of 2512.24560 were screened; S2 index is partial.
+
+## Sources
+
+1. [[251224560-localized-calibrated-uncertainty-in-code-language-models-full-text]]
+2. [[flare-fine-grained-diagnostic-feedback-for-llm-code-refinement-2]]
+3. [[is-self-repair-a-silver-bullet-for-code-generation]]
+4. [[falsification-not-exposure-placebo-controlled-decomposition-of-self-repair-feedb]]
+5. [[260705188-latent-programming-horizons-in-coding-agents-full-text]]
+6. [[enhancing-automated-program-repair-via-faulty-token-localization-and-quality-awa]]
+7. [[261032548-beyond-coverage-and-mutation-a-blind-spot-analysis-of-llm-generated-un]]
+8. [[230207248-generation-probabilities-are-not-enough-uncertainty-highlighting-in-ai]]

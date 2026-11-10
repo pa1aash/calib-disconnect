@@ -1,0 +1,39 @@
+[
+ {
+  "claim": "In Qwen2-VL-2B verbalized confidence is near-constant (0.87-0.90) with error-detection AUROC 0.39-0.75 (typically about 0.50) while internal token probability gives AUROC 0.92-0.99.",
+  "stance": "supports",
+  "stance_target": "stated vs internal confidence gap (non-code, vision-language, token-probability not probes)",
+  "evidence_type": "empirical",
+  "scope_conditions": "2 small VLMs, image degradation; not code",
+  "quoted_support": "Verbalized confidence in Qwen2-VL is almost constant (mean 0.87-0.90 across all conditions) and detects its own errors at chance level (AUROC 0.39-0.75, typically about 0.50), while internal token probability from the same model separates correct from incorrect answers with AUROC 0.92-0.99.",
+  "numbers": [
+   "0.87-0.90",
+   "AUROC 0.39-0.75",
+   "AUROC 0.92-0.99",
+   "3,800 predictions"
+  ],
+  "entities": [
+   "Qwen2-VL-2B",
+   "SmolVLM"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "260722034-small-vlms-know-when-wrong-but-cannot-say-so-full-text",
+  "breadth": {
+   "confidence_families": "verbalized integer confidence vs mean token probability (abstract; Sec 3); not hidden-state probes",
+   "model_families_and_sizes": "Qwen2-VL-2B-Instruct, SmolVLM-Instruct (abstract)",
+   "base_vs_instruct": "not present: instruct only",
+   "post_training_stages": "not present (searched: full text)",
+   "reasoning_models": "not present (searched: full text)",
+   "elicitation_formats": "three prompt templates; only 1 of 5 pilot attempts parseable for SmolVLM (abstract)",
+   "benchmarks": "3,800 predictions under six image degradations at three severities (abstract)",
+   "label_source": "not present (searched: full text)",
+   "label_independence": "not present (searched: full text)",
+   "contamination_split": "not present (searched: full text)",
+   "calibration_metrics": "ECE 10 bins, Brier, error-detection AUROC with bootstrap CI (Sec 3)",
+   "granularity": "per answer",
+   "causal_intervention": "not present"
+  }
+ }
+]

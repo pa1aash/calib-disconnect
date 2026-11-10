@@ -1,0 +1,43 @@
+[
+ {
+  "claim": "ExecuCritic trains a pass/fail critic on execution rollouts and reports ECE, Brier and AUC on code validation rollouts, but the critic is a separate model verdict, not the coder's stated confidence, and no probe is compared.",
+  "stance": "neutral",
+  "stance_target": "Row 11 / pivot 3 premise (trained estimator on execution labels with discrimination reported)",
+  "evidence_type": "empirical",
+  "scope_conditions": "Qwen3-8B and DeepSeek-Coder-V2-Lite-Instruct backbones; Qwen3-4B scaling; critic reads prompt plus candidate",
+  "quoted_support": "Table 5: Reliability of critic variants on validation rollouts. ECE and Brier measure calibration (lower is better), AUC and Spearman measure pass/fail discrimination.",
+  "numbers": [
+   "Frozen prompt critic ECE 0.213, Brier 0.246, AUC 60.4",
+   "Trained critic reranker ECE 0.124, Brier 0.184, AUC 67.5",
+   "Reward model with scalar score ECE 0.108, Brier 0.171, AUC 68.9",
+   "ExecuCritic critic ECE 0.061, Brier 0.137, AUC 72.8, Spearman 0.71"
+  ],
+  "entities": [
+   "ExecuCritic",
+   "GRPO",
+   "HumanEval+",
+   "LiveCodeBench",
+   "APPS",
+   "SWE-bench Lite"
+  ],
+  "time_period": "arXiv 2609.16604 (Sep 2026)",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "execucritic-calibrated-critic-shaping-forcode-generation-with-verifiable-rewards",
+  "breadth": {
+   "confidence_families": "trained critic verdict-token probability (Sec 3.2); frozen prompted critic; reranker; scalar reward model (Table 5); probe not present (searched: probe, hidden: only 'hidden unit tests')",
+   "model_families_and_sizes": "Qwen3-8B, DeepSeek-Coder-V2-Lite-Instruct, Qwen3-4B in scaling ablations (Sec 4.1)",
+   "base_vs_instruct": "not present (searched: base model)",
+   "post_training_stages": "RLVR (GRPO) joint coder-critic training",
+   "reasoning_models": "not stated as a factor",
+   "elicitation_formats": "critique then <verdict> token probability (Sec 3.2)",
+   "benchmarks": "eight code benchmarks incl. HumanEval+, LiveCodeBench, APPS, SWE-bench Lite (Table 5 text)",
+   "label_source": "sandbox execution pass/fail",
+   "label_independence": "executor labels on the same rollouts that train the critic; validation rollouts separate",
+   "contamination_split": "not present (searched: contaminat, release date)",
+   "calibration_metrics": "ECE, Brier, AUC, Spearman, Type-F1 (Table 5)",
+   "granularity": "whole candidate; failure-type diagnosis only on failed candidates",
+   "causal_intervention": "not present (searched: steer, patching)"
+  }
+ }
+]

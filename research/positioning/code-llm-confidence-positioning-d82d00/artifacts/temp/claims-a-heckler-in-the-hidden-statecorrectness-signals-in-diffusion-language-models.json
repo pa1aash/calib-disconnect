@@ -1,0 +1,182 @@
+[
+ {
+  "claim": "Linear difference-of-means probes on residual-stream activations of six diffusion code models read pass/fail within-problem above chance, with depth-curve peaks about 0.68 (Stable-DiffCoder) to 0.82 (LLaDA-flash).",
+  "stance": "supports",
+  "stance_target": "L2: hidden-state probes carry code-correctness signal, extended to non-autoregressive models",
+  "evidence_type": "empirical",
+  "scope_conditions": "MBPP+ , within-problem grouped 5-fold AUC, Sec 4.1, Fig 2",
+  "quoted_support": "Every diffusion model in the family comparison has a peak AUC above 0.5. The depth curves peak at approximately 0.68 for Stable-DiffCoder and 0.82 for LLaDA-flash, the endpoints of the range.",
+  "numbers": [
+   "0.68",
+   "0.82",
+   "19 mixed problems / 95 attempts (32-step)",
+   "56 problems / 448 attempts (Qwen2.5-Coder)"
+  ],
+  "entities": [
+   "DiffuCoder-7B",
+   "LLaDA-flash",
+   "Stable-DiffCoder-8B"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "a-heckler-in-the-hidden-statecorrectness-signals-in-diffusion-language-models",
+  "breadth": {
+   "confidence_families": "hidden-state difference-of-means probe; token entropy, completion log probability, masked-forward score (Sec 3.2)",
+   "model_families_and_sizes": "DiffuCoder-7B, Dream-Coder-7B, Stable-DiffCoder-8B, UltraLLaDA-8B, LLaDA2.0-mini (1.4B active), LLaDA-flash (102B); autoregressive Qwen2.5-Coder, Qwen3-Coder, GLM-4.5-Air (Sec 3.1, 5.2)",
+   "base_vs_instruct": "not present (searched: base, instruct, pair)",
+   "post_training_stages": "not present (searched: RL, SFT comparison); Sec 5.2 says architecture cannot be separated from training",
+   "reasoning_models": "not present (searched: reasoning, thinking)",
+   "elicitation_formats": "no verbal elicitation; only logit-derived confidence and probe",
+   "benchmarks": "MBPP+ (main), HumanEval+ (mutation controls) via EvalPlus (Sec 3.1)",
+   "label_source": "unit tests passing (EvalPlus) (Sec 3.1)",
+   "label_independence": "labels independent of model readouts; mixed problems only (>=1 pass and >=1 fail)",
+   "contamination_split": "not present (searched: contamination, release date); problem-grouped 5-fold CV, activations centered per problem (Sec 3.2)",
+   "calibration_metrics": "within-problem AUC; no ECE/Brier (Sec 3.2)",
+   "granularity": "whole-attempt pooled response tokens",
+   "causal_intervention": "activation steering with probe, random and learned directions, masked-position-restricted (Sec 4.4, App D)"
+  }
+ },
+ {
+  "claim": "Probe has no consistent advantage over the model's own confidence: DiffuCoder probe AUC 0.842 vs 0.838 negative token entropy and 0.798 masked-forward; Qwen2.5-Coder probe 0.677 vs 0.703 log-probability.",
+  "stance": "refutes",
+  "stance_target": "L2: probe-beats-readout claim (contrary evidence to Ribeiro et al.)",
+  "evidence_type": "empirical",
+  "scope_conditions": "Table 1, mixed problems only; DiffuCoder comparison uses only 19 problems",
+  "quoted_support": "Model confidence is thus a competitive baseline for the correctness readout.",
+  "numbers": [
+   "0.842 vs 0.838",
+   "0.842 vs 0.798",
+   "0.677 vs 0.703"
+  ],
+  "entities": [
+   "DiffuCoder-7B",
+   "Qwen2.5-Coder"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "a-heckler-in-the-hidden-statecorrectness-signals-in-diffusion-language-models",
+  "breadth": {
+   "confidence_families": "hidden-state difference-of-means probe; token entropy, completion log probability, masked-forward score (Sec 3.2)",
+   "model_families_and_sizes": "DiffuCoder-7B, Dream-Coder-7B, Stable-DiffCoder-8B, UltraLLaDA-8B, LLaDA2.0-mini (1.4B active), LLaDA-flash (102B); autoregressive Qwen2.5-Coder, Qwen3-Coder, GLM-4.5-Air (Sec 3.1, 5.2)",
+   "base_vs_instruct": "not present (searched: base, instruct, pair)",
+   "post_training_stages": "not present (searched: RL, SFT comparison); Sec 5.2 says architecture cannot be separated from training",
+   "reasoning_models": "not present (searched: reasoning, thinking)",
+   "elicitation_formats": "no verbal elicitation; only logit-derived confidence and probe",
+   "benchmarks": "MBPP+ (main), HumanEval+ (mutation controls) via EvalPlus (Sec 3.1)",
+   "label_source": "unit tests passing (EvalPlus) (Sec 3.1)",
+   "label_independence": "labels independent of model readouts; mixed problems only (>=1 pass and >=1 fail)",
+   "contamination_split": "not present (searched: contamination, release date); problem-grouped 5-fold CV, activations centered per problem (Sec 3.2)",
+   "calibration_metrics": "within-problem AUC; no ECE/Brier (Sec 3.2)",
+   "granularity": "whole-attempt pooled response tokens",
+   "causal_intervention": "activation steering with probe, random and learned directions, masked-position-restricted (Sec 4.4, App D)"
+  }
+ },
+ {
+  "claim": "Steering along the probe direction does not improve code: pass@1 0.433 baseline, 0.429 random directions, 0.388 toward pass, 0.298 toward fail; follow-up 15/30 baseline vs 14/30 positive and 5/30 negative.",
+  "stance": "refutes",
+  "stance_target": "L2: causal/steering use of correctness probe",
+  "evidence_type": "empirical",
+  "scope_conditions": "DiffuCoder-7B, 30 evaluation tasks, Sec 4.4, Fig 4, App D",
+  "quoted_support": "Pass@1 is 0.433 without intervention, 0.429 averaged over random directions, 0.388 when pushed toward the passing direction, and 0.298 when pushed toward the failing direction (Fig. 4).",
+  "numbers": [
+   "0.433",
+   "0.429",
+   "0.388",
+   "0.298",
+   "15 of 30",
+   "14",
+   "5"
+  ],
+  "entities": [
+   "DiffuCoder-7B"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "a-heckler-in-the-hidden-statecorrectness-signals-in-diffusion-language-models",
+  "breadth": {
+   "confidence_families": "hidden-state difference-of-means probe; token entropy, completion log probability, masked-forward score (Sec 3.2)",
+   "model_families_and_sizes": "DiffuCoder-7B, Dream-Coder-7B, Stable-DiffCoder-8B, UltraLLaDA-8B, LLaDA2.0-mini (1.4B active), LLaDA-flash (102B); autoregressive Qwen2.5-Coder, Qwen3-Coder, GLM-4.5-Air (Sec 3.1, 5.2)",
+   "base_vs_instruct": "not present (searched: base, instruct, pair)",
+   "post_training_stages": "not present (searched: RL, SFT comparison); Sec 5.2 says architecture cannot be separated from training",
+   "reasoning_models": "not present (searched: reasoning, thinking)",
+   "elicitation_formats": "no verbal elicitation; only logit-derived confidence and probe",
+   "benchmarks": "MBPP+ (main), HumanEval+ (mutation controls) via EvalPlus (Sec 3.1)",
+   "label_source": "unit tests passing (EvalPlus) (Sec 3.1)",
+   "label_independence": "labels independent of model readouts; mixed problems only (>=1 pass and >=1 fail)",
+   "contamination_split": "not present (searched: contamination, release date); problem-grouped 5-fold CV, activations centered per problem (Sec 3.2)",
+   "calibration_metrics": "within-problem AUC; no ECE/Brier (Sec 3.2)",
+   "granularity": "whole-attempt pooled response tokens",
+   "causal_intervention": "activation steering with probe, random and learned directions, masked-position-restricted (Sec 4.4, App D)"
+  }
+ },
+ {
+  "claim": "Small semantic mutations (e.g. < to <=) keep the probe AUC at 0.670 (392 MBPP+ mutants) and 0.692 (334 HumanEval+ mutants), supporting a link to correctness rather than surface style.",
+  "stance": "supports",
+  "stance_target": "L2: probe validity control",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec 4.1",
+  "quoted_support": "DiffuCoder distinguishes the resulting pass/fail pairs with AUCs of 0.670 on 392 MBPP+ mutants and 0.692 on 334 HumanEval+ mutants.",
+  "numbers": [
+   "0.670",
+   "392",
+   "0.692",
+   "334"
+  ],
+  "entities": [
+   "EvalPlus"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "a-heckler-in-the-hidden-statecorrectness-signals-in-diffusion-language-models",
+  "breadth": {
+   "confidence_families": "hidden-state difference-of-means probe; token entropy, completion log probability, masked-forward score (Sec 3.2)",
+   "model_families_and_sizes": "DiffuCoder-7B, Dream-Coder-7B, Stable-DiffCoder-8B, UltraLLaDA-8B, LLaDA2.0-mini (1.4B active), LLaDA-flash (102B); autoregressive Qwen2.5-Coder, Qwen3-Coder, GLM-4.5-Air (Sec 3.1, 5.2)",
+   "base_vs_instruct": "not present (searched: base, instruct, pair)",
+   "post_training_stages": "not present (searched: RL, SFT comparison); Sec 5.2 says architecture cannot be separated from training",
+   "reasoning_models": "not present (searched: reasoning, thinking)",
+   "elicitation_formats": "no verbal elicitation; only logit-derived confidence and probe",
+   "benchmarks": "MBPP+ (main), HumanEval+ (mutation controls) via EvalPlus (Sec 3.1)",
+   "label_source": "unit tests passing (EvalPlus) (Sec 3.1)",
+   "label_independence": "labels independent of model readouts; mixed problems only (>=1 pass and >=1 fail)",
+   "contamination_split": "not present (searched: contamination, release date); problem-grouped 5-fold CV, activations centered per problem (Sec 3.2)",
+   "calibration_metrics": "within-problem AUC; no ECE/Brier (Sec 3.2)",
+   "granularity": "whole-attempt pooled response tokens",
+   "causal_intervention": "activation steering with probe, random and learned directions, masked-position-restricted (Sec 4.4, App D)"
+  }
+ },
+ {
+  "claim": "Authors disclose statistical limits: layer chosen by max out-of-fold AUC without holdout, bootstrap merges repeated problem ids, so only point estimates are compared.",
+  "stance": "neutral",
+  "stance_target": "evidence strength",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec 5.3, App B",
+  "quoted_support": "We therefore compare point estimates rather than make significance or equivalence claims from those uncertainty estimates.",
+  "numbers": [
+   "200 within-problem label permutations"
+  ],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "a-heckler-in-the-hidden-statecorrectness-signals-in-diffusion-language-models",
+  "breadth": {
+   "confidence_families": "hidden-state difference-of-means probe; token entropy, completion log probability, masked-forward score (Sec 3.2)",
+   "model_families_and_sizes": "DiffuCoder-7B, Dream-Coder-7B, Stable-DiffCoder-8B, UltraLLaDA-8B, LLaDA2.0-mini (1.4B active), LLaDA-flash (102B); autoregressive Qwen2.5-Coder, Qwen3-Coder, GLM-4.5-Air (Sec 3.1, 5.2)",
+   "base_vs_instruct": "not present (searched: base, instruct, pair)",
+   "post_training_stages": "not present (searched: RL, SFT comparison); Sec 5.2 says architecture cannot be separated from training",
+   "reasoning_models": "not present (searched: reasoning, thinking)",
+   "elicitation_formats": "no verbal elicitation; only logit-derived confidence and probe",
+   "benchmarks": "MBPP+ (main), HumanEval+ (mutation controls) via EvalPlus (Sec 3.1)",
+   "label_source": "unit tests passing (EvalPlus) (Sec 3.1)",
+   "label_independence": "labels independent of model readouts; mixed problems only (>=1 pass and >=1 fail)",
+   "contamination_split": "not present (searched: contamination, release date); problem-grouped 5-fold CV, activations centered per problem (Sec 3.2)",
+   "calibration_metrics": "within-problem AUC; no ECE/Brier (Sec 3.2)",
+   "granularity": "whole-attempt pooled response tokens",
+   "causal_intervention": "activation steering with probe, random and learned directions, masked-position-restricted (Sec 4.4, App D)"
+  }
+ }
+]

@@ -1,0 +1,179 @@
+[
+ {
+  "claim": "Under strict scoring all 18 model-strategy cells have negative NCE (overconfidence) on a shared post-cutoff LiveCodeBench window.",
+  "stance": "supports",
+  "stance_target": "verbal confidence on code is overconfident",
+  "evidence_type": "empirical",
+  "scope_conditions": "6 instruct coder models, LCB v6 365 problems, self-assessment",
+  "quoted_support": "All eighteen strict-scoring NCE point estimates are negative, and seventeen of the corresponding 95% percentile bootstrap intervals remain below zero.",
+  "numbers": [
+   "18 of 18 negative",
+   "17 of 18 CIs below zero",
+   "NCE -0.012 (CL-7B Linguistic) to -0.862 (CL-7B Direct)"
+  ],
+  "entities": [
+   "Qwen2.5-Coder",
+   "CodeLlama",
+   "DeepSeek-Coder",
+   "LiveCodeBench"
+  ],
+  "time_period": "2024-09-19 to 2025-04-30",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "verbalized-uncertainty-in-coding-llms-contamination-aware-calibration-uncertainl",
+  "breadth": {
+   "confidence_families": "verbalized only: Direct numeric, CoT-then-score, Linguistic labels (Sec 3.3); logprob/probe not run (Sec 2 says intrinsic not studied)",
+   "model_families_and_sizes": "Qwen2.5-Coder 7B/32B, CodeLlama 7B/34B, DeepSeek-Coder 6.7B/33B (Sec 3.2, Table 3)",
+   "base_vs_instruct": "not present: instruction-tuned only (Sec 3.2); no base counterparts",
+   "post_training_stages": "not present (searched: SFT/RLHF/DPO, base)",
+   "reasoning_models": "not present (searched: reasoning; CoT prompting only, Sec 3.3; no reasoning-mode models)",
+   "elicitation_formats": "Direct 0-100 integer; CoT then FINAL_CONFIDENCE; 5 ordered linguistic labels mapped to 10/30/50/70/90 (Sec 3.3, App B); repair call for malformed outputs",
+   "benchmarks": "LiveCodeBench release_v6, 365 problems, window 2024-09-19 to 2025-04-30 (Sec 3.1)",
+   "label_source": "hidden test execution, strict all-tests-pass (Sec 3.1); lenient 10% tolerance secondary",
+   "label_independence": "code frozen before elicitation, same model self-assesses (Sec 3.3); labels independent of confidence pass",
+   "contamination_split": "shared post-cutoff window; Qwen cutoff proxied by tech-report date 2024-09-18; not per-model release-date splits (Sec 3.1)",
+   "calibration_metrics": "ECE 10 equal-width bins, NCE, AUROC, AUACC, PRR with tie averaging, Platt scaling diagnostic, 1,000 bootstrap (Sec 3.5)",
+   "granularity": "whole-solution (pass@1) only",
+   "causal_intervention": "not present (searched: intervention, ablation of internals)"
+  }
+ },
+ {
+  "claim": "ECE and AUROC decouple across cells: lowest ECE 0.013 coincides with AUROC 0.491, highest AUROC 0.841 has ECE 0.216.",
+  "stance": "supports",
+  "stance_target": "calibration and discrimination of verbal confidence must be reported separately",
+  "evidence_type": "empirical",
+  "scope_conditions": "Table 1",
+  "quoted_support": "The lowest ECE in the table is 0.013 for CodeLlama-7B Linguistic, whose AUROC is 0.491, while the highest AUROC is 0.841 for Qwen2.5-Coder-32B Linguistic, whose ECE is 0.216.",
+  "numbers": [
+   "ECE 0.013 / AUROC 0.491",
+   "AUROC 0.841 / ECE 0.216",
+   "Qwen-32B Direct ECE 0.327 AUROC 0.834 NCE -0.294",
+   "DS-6.7B Direct ECE 0.849 AUROC 0.518"
+  ],
+  "entities": [
+   "Table 1"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "verbalized-uncertainty-in-coding-llms-contamination-aware-calibration-uncertainl",
+  "breadth": {
+   "confidence_families": "verbalized only: Direct numeric, CoT-then-score, Linguistic labels (Sec 3.3); logprob/probe not run (Sec 2 says intrinsic not studied)",
+   "model_families_and_sizes": "Qwen2.5-Coder 7B/32B, CodeLlama 7B/34B, DeepSeek-Coder 6.7B/33B (Sec 3.2, Table 3)",
+   "base_vs_instruct": "not present: instruction-tuned only (Sec 3.2); no base counterparts",
+   "post_training_stages": "not present (searched: SFT/RLHF/DPO, base)",
+   "reasoning_models": "not present (searched: reasoning; CoT prompting only, Sec 3.3; no reasoning-mode models)",
+   "elicitation_formats": "Direct 0-100 integer; CoT then FINAL_CONFIDENCE; 5 ordered linguistic labels mapped to 10/30/50/70/90 (Sec 3.3, App B); repair call for malformed outputs",
+   "benchmarks": "LiveCodeBench release_v6, 365 problems, window 2024-09-19 to 2025-04-30 (Sec 3.1)",
+   "label_source": "hidden test execution, strict all-tests-pass (Sec 3.1); lenient 10% tolerance secondary",
+   "label_independence": "code frozen before elicitation, same model self-assesses (Sec 3.3); labels independent of confidence pass",
+   "contamination_split": "shared post-cutoff window; Qwen cutoff proxied by tech-report date 2024-09-18; not per-model release-date splits (Sec 3.1)",
+   "calibration_metrics": "ECE 10 equal-width bins, NCE, AUROC, AUACC, PRR with tie averaging, Platt scaling diagnostic, 1,000 bootstrap (Sec 3.5)",
+   "granularity": "whole-solution (pass@1) only",
+   "causal_intervention": "not present (searched: intervention, ablation of internals)"
+  }
+ },
+ {
+  "claim": "8 of 18 verbalized-confidence cells have collapsed distributions (>=50% of mass in one of 20 histogram bins) and 5 are unstable across 5 repeated elicitations.",
+  "stance": "supports",
+  "stance_target": "favorable ECE can be an artifact of collapse",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec 3.4-3.5, abstract",
+  "quoted_support": "Eight of the 18 combinations are collapsed and five are unstable across repeated runs, including three Chain-of-Thought combinations.",
+  "numbers": [
+   "8 of 18 collapsed",
+   "5 unstable",
+   "stable <5, marginal 5-10, unstable >=10 on 0-100 scale",
+   "5 elicitations at temperature 0.3"
+  ],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "verbalized-uncertainty-in-coding-llms-contamination-aware-calibration-uncertainl",
+  "breadth": {
+   "confidence_families": "verbalized only: Direct numeric, CoT-then-score, Linguistic labels (Sec 3.3); logprob/probe not run (Sec 2 says intrinsic not studied)",
+   "model_families_and_sizes": "Qwen2.5-Coder 7B/32B, CodeLlama 7B/34B, DeepSeek-Coder 6.7B/33B (Sec 3.2, Table 3)",
+   "base_vs_instruct": "not present: instruction-tuned only (Sec 3.2); no base counterparts",
+   "post_training_stages": "not present (searched: SFT/RLHF/DPO, base)",
+   "reasoning_models": "not present (searched: reasoning; CoT prompting only, Sec 3.3; no reasoning-mode models)",
+   "elicitation_formats": "Direct 0-100 integer; CoT then FINAL_CONFIDENCE; 5 ordered linguistic labels mapped to 10/30/50/70/90 (Sec 3.3, App B); repair call for malformed outputs",
+   "benchmarks": "LiveCodeBench release_v6, 365 problems, window 2024-09-19 to 2025-04-30 (Sec 3.1)",
+   "label_source": "hidden test execution, strict all-tests-pass (Sec 3.1); lenient 10% tolerance secondary",
+   "label_independence": "code frozen before elicitation, same model self-assesses (Sec 3.3); labels independent of confidence pass",
+   "contamination_split": "shared post-cutoff window; Qwen cutoff proxied by tech-report date 2024-09-18; not per-model release-date splits (Sec 3.1)",
+   "calibration_metrics": "ECE 10 equal-width bins, NCE, AUROC, AUACC, PRR with tie averaging, Platt scaling diagnostic, 1,000 bootstrap (Sec 3.5)",
+   "granularity": "whole-solution (pass@1) only",
+   "causal_intervention": "not present (searched: intervention, ablation of internals)"
+  }
+ },
+ {
+  "claim": "Confidence-ranked review (least confident first) beats random in all cells only for the best model; tie-averaged PRR ranges from -0.029 to 0.705 across cells.",
+  "stance": "supports",
+  "stance_target": "verbal confidence has weak ranking utility for most small coder models",
+  "evidence_type": "empirical",
+  "scope_conditions": "Table 2; whole-solution; review-ordering only, not execution-budget routing",
+  "quoted_support": "Direct elicitation gives the largest improvement over random selection in four of six models.",
+  "numbers": [
+   "PRR Qwen-32B Ling 0.705, Direct 0.633, CoT 0.525",
+   "DS-6.7B Direct 0.016, Ling -0.003",
+   "CL-7B Ling -0.029"
+  ],
+  "entities": [
+   "PRR",
+   "AUACC"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "verbalized-uncertainty-in-coding-llms-contamination-aware-calibration-uncertainl",
+  "breadth": {
+   "confidence_families": "verbalized only: Direct numeric, CoT-then-score, Linguistic labels (Sec 3.3); logprob/probe not run (Sec 2 says intrinsic not studied)",
+   "model_families_and_sizes": "Qwen2.5-Coder 7B/32B, CodeLlama 7B/34B, DeepSeek-Coder 6.7B/33B (Sec 3.2, Table 3)",
+   "base_vs_instruct": "not present: instruction-tuned only (Sec 3.2); no base counterparts",
+   "post_training_stages": "not present (searched: SFT/RLHF/DPO, base)",
+   "reasoning_models": "not present (searched: reasoning; CoT prompting only, Sec 3.3; no reasoning-mode models)",
+   "elicitation_formats": "Direct 0-100 integer; CoT then FINAL_CONFIDENCE; 5 ordered linguistic labels mapped to 10/30/50/70/90 (Sec 3.3, App B); repair call for malformed outputs",
+   "benchmarks": "LiveCodeBench release_v6, 365 problems, window 2024-09-19 to 2025-04-30 (Sec 3.1)",
+   "label_source": "hidden test execution, strict all-tests-pass (Sec 3.1); lenient 10% tolerance secondary",
+   "label_independence": "code frozen before elicitation, same model self-assesses (Sec 3.3); labels independent of confidence pass",
+   "contamination_split": "shared post-cutoff window; Qwen cutoff proxied by tech-report date 2024-09-18; not per-model release-date splits (Sec 3.1)",
+   "calibration_metrics": "ECE 10 equal-width bins, NCE, AUROC, AUACC, PRR with tie averaging, Platt scaling diagnostic, 1,000 bootstrap (Sec 3.5)",
+   "granularity": "whole-solution (pass@1) only",
+   "causal_intervention": "not present (searched: intervention, ablation of internals)"
+  }
+ },
+ {
+  "claim": "The paper states no existing work compares black-box verbalized elicitation strategies across several coding LLMs on a shared temporally filtered window, and does not run probes or hidden-state readouts.",
+  "stance": "neutral",
+  "stance_target": "occupancy of L1 (release-date contamination control) and L2 (probe vs verbal)",
+  "evidence_type": "expert-opinion",
+  "scope_conditions": "Related Work, Sec 2",
+  "quoted_support": "In contrast, no existing work compares black-box verbalized elicitation strategies across multiple coding-specialized LLMs on a shared temporally filtered window.",
+  "numbers": [],
+  "entities": [
+   "Spiess et al. 2025",
+   "Xiong et al. 2024",
+   "LiveCodeBench"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "verbalized-uncertainty-in-coding-llms-contamination-aware-calibration-uncertainl",
+  "breadth": {
+   "confidence_families": "verbalized only: Direct numeric, CoT-then-score, Linguistic labels (Sec 3.3); logprob/probe not run (Sec 2 says intrinsic not studied)",
+   "model_families_and_sizes": "Qwen2.5-Coder 7B/32B, CodeLlama 7B/34B, DeepSeek-Coder 6.7B/33B (Sec 3.2, Table 3)",
+   "base_vs_instruct": "not present: instruction-tuned only (Sec 3.2); no base counterparts",
+   "post_training_stages": "not present (searched: SFT/RLHF/DPO, base)",
+   "reasoning_models": "not present (searched: reasoning; CoT prompting only, Sec 3.3; no reasoning-mode models)",
+   "elicitation_formats": "Direct 0-100 integer; CoT then FINAL_CONFIDENCE; 5 ordered linguistic labels mapped to 10/30/50/70/90 (Sec 3.3, App B); repair call for malformed outputs",
+   "benchmarks": "LiveCodeBench release_v6, 365 problems, window 2024-09-19 to 2025-04-30 (Sec 3.1)",
+   "label_source": "hidden test execution, strict all-tests-pass (Sec 3.1); lenient 10% tolerance secondary",
+   "label_independence": "code frozen before elicitation, same model self-assesses (Sec 3.3); labels independent of confidence pass",
+   "contamination_split": "shared post-cutoff window; Qwen cutoff proxied by tech-report date 2024-09-18; not per-model release-date splits (Sec 3.1)",
+   "calibration_metrics": "ECE 10 equal-width bins, NCE, AUROC, AUACC, PRR with tie averaging, Platt scaling diagnostic, 1,000 bootstrap (Sec 3.5)",
+   "granularity": "whole-solution (pass@1) only",
+   "causal_intervention": "not present (searched: intervention, ablation of internals)"
+  }
+ }
+]

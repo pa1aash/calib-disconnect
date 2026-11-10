@@ -1,0 +1,92 @@
+{
+ "source_note_id": "1introduction-3",
+ "claims": [
+  {
+   "claim": "Staged verification (lightweight filters then ORM ranking) shifts the accuracy-throughput Pareto frontier outward, giving 11.64x higher throughput at 8.26% accuracy loss versus full test-suite verification.",
+   "stance": "supports",
+   "stance_target": "verification-budget routing to cheaper signals",
+   "evidence_type": "empirical",
+   "scope_conditions": "Qwen 2.5 Coder Instruct generators, four Python benchmarks, best-of-64",
+   "quoted_support": "We find that ORMs with staged verification shift the Pareto frontier outward, achieving 11.64x higher throughput at a cost of 8.26% accuracy relative to full test-suite verification.",
+   "numbers": [
+    "11.64x",
+    "8.26%",
+    "best-of-64"
+   ],
+   "entities": [
+    "ORM",
+    "Qwen 2.5 Coder"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "1introduction-3"
+  },
+  {
+   "claim": "Results are averaged over six seeds with 95% CIs; median CI width 1.48 percentage points.",
+   "stance": "neutral",
+   "stance_target": "statistical reporting",
+   "evidence_type": "empirical",
+   "scope_conditions": "Table 1-2",
+   "quoted_support": "Results are averaged over six random seeds with 95% confidence intervals; median CI width is 1.48 percentage points.",
+   "numbers": [
+    "1.48 pp",
+    "6 seeds"
+   ],
+   "entities": [],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "1introduction-3"
+  },
+  {
+   "claim": "Both generators and ORM backbones are from the Qwen family, which may favor the ORM through distribution matching.",
+   "stance": "neutral",
+   "stance_target": "limitation",
+   "evidence_type": "expert-opinion",
+   "scope_conditions": "Section on training setup",
+   "quoted_support": "While this ensures compatibility, it may favor the ORM through distribution matching; we partially address this via distribution-shift evaluation on HumanEval and MBPP.",
+   "numbers": [],
+   "entities": [
+    "Qwen"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "1introduction-3"
+  },
+  {
+   "claim": "Test-based filtering catches bugs the ORM misses: filtered candidates sat 31 ranks too high on average.",
+   "stance": "supports",
+   "stance_target": "learned scorers vs execution",
+   "evidence_type": "empirical",
+   "scope_conditions": "Section on filtering analysis",
+   "quoted_support": "Test-based filtering catches bugs the ORM misses, particularly single-character errors that preserve surface form but fail at runtime. Filtered candidates sat 31 ranks too high on average; removing them shifts the frontier.",
+   "numbers": [
+    "31 ranks"
+   ],
+   "entities": [
+    "ORM"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "1introduction-3"
+  }
+ ],
+ "breadth": {
+  "confidence_families": "Outcome reward models (learned Bradley-Terry-style scorer), majority voting, syntax/lint/N-test filters as verification signals (Section 3-4, Table 1). No verbal or hidden-state confidence of the generator.",
+  "model_families_and_sizes": "Qwen 2.5 Coder Instruct generators (7B training candidates; sizes 1.5B-14B in analyses) and Qwen-family ORM backbones (training section).",
+  "base_vs_instruct": "not present as a pair (Instruct generators only); searched: base.",
+  "post_training_stages": "ORM trained 2 epochs with margin objective on pairs (4.7K CodeContests and 7.3K GSM8K problems); no RLHF of generators.",
+  "reasoning_models": "not present (searched: reasoning model, thinking)",
+  "elicitation_formats": "Best-of-64 sampling at temperatures with ORM ranking and staged filtering (Section 3-4).",
+  "benchmarks": "Four Python benchmarks per Abstract; those named in text: CodeContests (training pairs 4.7K plus evaluation, LiveCodeBench-style STDIN format noted at Section on datasets), GSM8K (training pairs 7.3K), HumanEval and MBPP via EvalPlus (distribution-shift evaluation). The fourth benchmark is not identified in the text I read.",
+  "label_source": "Test-suite execution (full suite as strong verifier).",
+  "label_independence": "Distribution-shift evaluation on HumanEval and MBPP separate from CodeContests/GSM8K training problems (training section); six seeds.",
+  "contamination_split": "not present (searched: contamination, release date; only distribution-shift split described)",
+  "calibration_metrics": "not present (searched: ECE, Brier, calibration error; evaluation is accuracy (best-of-64) and throughput PPS)",
+  "granularity": "Per-candidate program scoring; per-test pruning (N Test filters with first N tests).",
+  "causal_intervention": "Filter ablations (syntax, lint, N tests) and temperature ablations (Tables 6-10); no model-internal intervention."
+ }
+}

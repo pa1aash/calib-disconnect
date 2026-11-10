@@ -1,0 +1,68 @@
+[
+ {
+  "claim": "Pooled AUROC decomposes as lambda*AUROC_within + (1-lambda)*AUROC_between; any question-only predictor has within-problem AUROC exactly 0.5, and with one attempt per problem lambda=0, so the whole pooled AUROC is between-problem.",
+  "stance": "supports",
+  "stance_target": "pooled probe AUROC on code is difficulty-confounded unless multiple attempts per problem are scored within-problem",
+  "evidence_type": "theoretical",
+  "scope_conditions": "any binary-outcome predictor; demonstrated on MATH",
+  "quoted_support": "every question-only predictor has AUROC_within = 1/2 exactly (its score is constant within a cell, so all within-cell pairs are ties) ... in the standard design with one attempt per problem (k_c = 1), lambda = 0",
+  "numbers": [
+   "Eq. 1 (Sec 4.4 / appendix)"
+  ],
+  "entities": [
+   "Bulut"
+  ],
+  "confidence": "high",
+  "source_note_id": "its-the-problem-not-the-pathbudget-and-difficulty-confounds-in-llm-reasoning-tra",
+  "breadth": {
+   "confidence_families": "hidden-state probe (last-four-token, early window), trace-blind difficulty proxy (leave-one-out pass rate) (Abstract; Sec 4.4)",
+   "model_families_and_sizes": "two small open models on 89 MATH problems; R1-Distill-Qwen-7B (4-bit teacher-forced) on 128 MATH problems x 256 samples (Sec 4.4)",
+   "base_vs_instruct": "not present (searched: base, instruct)",
+   "post_training_stages": "not present",
+   "reasoning_models": "R1-Distill-Qwen-7B reasoning traces; public DeepSeek-R1 corpus of 192K generations (Abstract)",
+   "elicitation_formats": "not present (no verbal confidence)",
+   "benchmarks": "MATH only; no code (searched: code, HumanEval, LiveCodeBench)",
+   "label_source": "answer correctness",
+   "label_independence": "not present",
+   "contamination_split": "not present",
+   "calibration_metrics": "AUROC pooled and within-problem (Eq. 1)",
+   "granularity": "per-generation, early-window prefix",
+   "causal_intervention": "restart-controlled truncation probe (not a representation intervention)"
+  }
+ },
+ {
+  "claim": "A trace-blind difficulty proxy reaches AUROC 0.873 on 192K DeepSeek-R1 generations; a reconstruction of a published early-window probe recovers pooled 0.849 but within-problem 0.496 (t=4), statistically indistinguishable from chance.",
+  "stance": "supports",
+  "stance_target": "pooled probe AUROC reflects difficulty; within-problem signal absent in reasoning-model regime (math)",
+  "evidence_type": "empirical",
+  "scope_conditions": "MATH, R1-Distill-Qwen-7B, early window; not code",
+  "quoted_support": "a closely matched reconstruction of the closest published early-window positive recovers a comparable pooled result (0.849) while within problem it is statistically indistinguishable from chance at all ten anchors (0.496 at t = 4)",
+  "numbers": [
+   "0.873",
+   "0.849 [0.735, 0.919]",
+   "0.496"
+  ],
+  "entities": [
+   "Bulut",
+   "Singhi",
+   "David"
+  ],
+  "confidence": "high",
+  "source_note_id": "its-the-problem-not-the-pathbudget-and-difficulty-confounds-in-llm-reasoning-tra",
+  "breadth": {
+   "confidence_families": "hidden-state probe (last-four-token, early window), trace-blind difficulty proxy (leave-one-out pass rate) (Abstract; Sec 4.4)",
+   "model_families_and_sizes": "two small open models on 89 MATH problems; R1-Distill-Qwen-7B (4-bit teacher-forced) on 128 MATH problems x 256 samples (Sec 4.4)",
+   "base_vs_instruct": "not present (searched: base, instruct)",
+   "post_training_stages": "not present",
+   "reasoning_models": "R1-Distill-Qwen-7B reasoning traces; public DeepSeek-R1 corpus of 192K generations (Abstract)",
+   "elicitation_formats": "not present (no verbal confidence)",
+   "benchmarks": "MATH only; no code (searched: code, HumanEval, LiveCodeBench)",
+   "label_source": "answer correctness",
+   "label_independence": "not present",
+   "contamination_split": "not present",
+   "calibration_metrics": "AUROC pooled and within-problem (Eq. 1)",
+   "granularity": "per-generation, early-window prefix",
+   "causal_intervention": "restart-controlled truncation probe (not a representation intervention)"
+  }
+ }
+]

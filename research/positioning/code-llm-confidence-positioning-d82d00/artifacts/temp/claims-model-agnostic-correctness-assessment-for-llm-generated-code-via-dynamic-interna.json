@@ -1,0 +1,68 @@
+[
+ {
+  "claim": "AutoProbe (Vu et al.) learns attention-based importance scores over hidden states to predict compilability, functionality, and security of generated code, outperforming fixed layer/token probes.",
+  "stance": "supports",
+  "stance_target": "L2: probe-for-code-correctness prior art (occupied)",
+  "quoted_support": "AutoProbe employs an attention-based mechanism to learn importance scores for hidden states, enabling it to focus on the most relevant features.",
+  "numbers": [
+   "security: +18% over state-of-the-art white-box approach",
+   "compilability up to 19%",
+   "functionality up to 111%"
+  ],
+  "entities": [
+   "AutoProbe",
+   "Openia",
+   "Vu"
+  ],
+  "time_period": "Oct 2025",
+  "confidence": "high",
+  "evidence_type": "empirical",
+  "scope_conditions": "",
+  "region": "",
+  "source_note_id": "model-agnostic-correctness-assessment-for-llm-generated-code-via-dynamic-interna",
+  "breadth": {
+   "confidence_families": "attention-weighted hidden-state probe plus Openia and LLM-as-judge baselines (Section on baselines)",
+   "model_families_and_sizes": "DeepSeek-Coder-1.3B/6.7B, CodeLlama-7B/13B, Magicoder-7B, CodeGemma-7B (per vault summary; body Section 4)",
+   "base_vs_instruct": "not verified",
+   "post_training_stages": "not verified in this pass (batch 13 read abstract and targeted passages only)",
+   "reasoning_models": "o4-mini used as external judge only",
+   "elicitation_formats": "external LLM-as-judge (o4-mini) verifier",
+   "benchmarks": "HumanEval, MBPP, DevEval; SecurityEval, CWEval, CODEGUARD+, SALLM",
+   "label_source": "execution tests / compilation / security checks over 10 samples per task",
+   "label_independence": "not verified in this pass (batch 13 read abstract and targeted passages only)",
+   "contamination_split": "not verified in this pass (batch 13 read abstract and targeted passages only)",
+   "calibration_metrics": "not verified in this pass (batch 13 read abstract and targeted passages only)",
+   "granularity": "whole generated solution",
+   "causal_intervention": "not verified (probing only)"
+  }
+ },
+ {
+  "claim": "In the paper's comparison an external verbalized LLM judge (o4-mini) is a baseline verifier against which probes are evaluated, so a probe-vs-verbal comparison exists in this prior work (external judge, not self-report).",
+  "stance": "neutral",
+  "stance_target": "L2: whether probe-vs-verbal is clean; external-judge vs self-report distinction",
+  "quoted_support": ", o4-mini) serves as a verifier.",
+  "confidence": "medium",
+  "scope_conditions": "quote fragment from body; accuracy figures taken from existing vault summary and not re-verified against tables in this pass",
+  "evidence_type": "empirical",
+  "numbers": [],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "source_note_id": "model-agnostic-correctness-assessment-for-llm-generated-code-via-dynamic-interna",
+  "breadth": {
+   "confidence_families": "attention-weighted hidden-state probe plus Openia and LLM-as-judge baselines (Section on baselines)",
+   "model_families_and_sizes": "DeepSeek-Coder-1.3B/6.7B, CodeLlama-7B/13B, Magicoder-7B, CodeGemma-7B (per vault summary; body Section 4)",
+   "base_vs_instruct": "not verified",
+   "post_training_stages": "not verified in this pass (batch 13 read abstract and targeted passages only)",
+   "reasoning_models": "o4-mini used as external judge only",
+   "elicitation_formats": "external LLM-as-judge (o4-mini) verifier",
+   "benchmarks": "HumanEval, MBPP, DevEval; SecurityEval, CWEval, CODEGUARD+, SALLM",
+   "label_source": "execution tests / compilation / security checks over 10 samples per task",
+   "label_independence": "not verified in this pass (batch 13 read abstract and targeted passages only)",
+   "contamination_split": "not verified in this pass (batch 13 read abstract and targeted passages only)",
+   "calibration_metrics": "not verified in this pass (batch 13 read abstract and targeted passages only)",
+   "granularity": "whole generated solution",
+   "causal_intervention": "not verified (probing only)"
+  }
+ }
+]

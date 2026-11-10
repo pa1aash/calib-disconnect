@@ -1,0 +1,112 @@
+[
+ {
+  "claim": "SAE-derived code-correctness directions in base Gemma-2-2b detect incorrect code with F1=0.821 but correct-predicting features reach only F1=0.504.",
+  "stance": "supports",
+  "stance_target": "hidden states carry asymmetric code correctness signal (L2)",
+  "evidence_type": "empirical",
+  "quoted_support": "detection directions predict errors reliably (F1: 0.821) but fail as confidence indicators for correct code (F1: 0.504), revealing asymmetry in how models represent code correctness.",
+  "numbers": [
+   "F1 0.821",
+   "F1 0.504"
+  ],
+  "entities": [
+   "Gemma-2-2b",
+   "GemmaScope",
+   "MBPP"
+  ],
+  "scope_conditions": "see summary",
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "mechanistic-interpretability-of-code-correctness-in-llms-via-sparse-autoencoders",
+  "breadth": {
+   "confidence_families": "SAE feature activations as predictors (t-statistic selected); no verbal or sampled confidence",
+   "model_families_and_sizes": "Gemma-2-2b base and chat (Sec 4, Sec 5.5)",
+   "base_vs_instruct": "yes: base directions tested on instruction-tuned model (Sec 5.5)",
+   "post_training_stages": "base vs instruction-tuned only",
+   "reasoning_models": "not present (searched: reasoning)",
+   "elicitation_formats": "single standardized MBPP prompt with code initiator (Figure 1)",
+   "benchmarks": "MBPP (1,000 problems) only",
+   "label_source": "pass@1 on 3 MBPP test cases at temperature 0 (Sec 4)",
+   "label_independence": "data split 50% direction selection, 10% threshold and coefficient calibration, 40% mechanistic analysis (Sec 4)",
+   "contamination_split": "not present (searched: contamination, cutoff)",
+   "calibration_metrics": "F1 and AUROC (Sec 5.1); no ECE or Brier",
+   "granularity": "whole-solution (activation at final prompt token before generation)",
+   "causal_intervention": "yes: steering, attention analysis, weight orthogonalization (Sec 5.2-5.4)"
+  }
+ },
+ {
+  "claim": "Steering with correctness directions fixes 4.04% of errors but corrupts 14.66% of correct code; orthogonalizing correct directions causes 83.62% corruption vs 18.97% for control.",
+  "stance": "supports",
+  "stance_target": "causal intervention on code-correctness directions is occupied",
+  "evidence_type": "empirical",
+  "quoted_support": "fixing 4.04% of errors but corrupting 14.66% of correct code, necessitating selective rather than universal application.",
+  "numbers": [
+   "4.04%",
+   "14.66%",
+   "83.62%",
+   "18.97%"
+  ],
+  "entities": [
+   "steering",
+   "weight orthogonalization"
+  ],
+  "scope_conditions": "see summary",
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "mechanistic-interpretability-of-code-correctness-in-llms-via-sparse-autoencoders",
+  "breadth": {
+   "confidence_families": "SAE feature activations as predictors (t-statistic selected); no verbal or sampled confidence",
+   "model_families_and_sizes": "Gemma-2-2b base and chat (Sec 4, Sec 5.5)",
+   "base_vs_instruct": "yes: base directions tested on instruction-tuned model (Sec 5.5)",
+   "post_training_stages": "base vs instruction-tuned only",
+   "reasoning_models": "not present (searched: reasoning)",
+   "elicitation_formats": "single standardized MBPP prompt with code initiator (Figure 1)",
+   "benchmarks": "MBPP (1,000 problems) only",
+   "label_source": "pass@1 on 3 MBPP test cases at temperature 0 (Sec 4)",
+   "label_independence": "data split 50% direction selection, 10% threshold and coefficient calibration, 40% mechanistic analysis (Sec 4)",
+   "contamination_split": "not present (searched: contamination, cutoff)",
+   "calibration_metrics": "F1 and AUROC (Sec 5.1); no ECE or Brier",
+   "granularity": "whole-solution (activation at final prompt token before generation)",
+   "causal_intervention": "yes: steering, attention analysis, weight orthogonalization (Sec 5.2-5.4)"
+  }
+ },
+ {
+  "claim": "Directions from the base model retain effectiveness after instruction tuning: F1=0.821 base vs F1=0.772 instruct, with MBPP pass rate rising from 29.9% to 38.4%.",
+  "stance": "supports",
+  "stance_target": "base-to-instruct persistence of code-correctness signal (L2 base/instruct pairs)",
+  "evidence_type": "empirical",
+  "quoted_support": "The incorrect-preferring feature (L19-5441) achieves F1=0.821 in the base model and F1=0.772 after instruction-tuning.",
+  "numbers": [
+   "F1 0.821",
+   "F1 0.772",
+   "29.9%",
+   "38.4%"
+  ],
+  "entities": [
+   "Gemma-2-2b",
+   "Gemma-2-2b-it"
+  ],
+  "scope_conditions": "see summary",
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "mechanistic-interpretability-of-code-correctness-in-llms-via-sparse-autoencoders",
+  "breadth": {
+   "confidence_families": "SAE feature activations as predictors (t-statistic selected); no verbal or sampled confidence",
+   "model_families_and_sizes": "Gemma-2-2b base and chat (Sec 4, Sec 5.5)",
+   "base_vs_instruct": "yes: base directions tested on instruction-tuned model (Sec 5.5)",
+   "post_training_stages": "base vs instruction-tuned only",
+   "reasoning_models": "not present (searched: reasoning)",
+   "elicitation_formats": "single standardized MBPP prompt with code initiator (Figure 1)",
+   "benchmarks": "MBPP (1,000 problems) only",
+   "label_source": "pass@1 on 3 MBPP test cases at temperature 0 (Sec 4)",
+   "label_independence": "data split 50% direction selection, 10% threshold and coefficient calibration, 40% mechanistic analysis (Sec 4)",
+   "contamination_split": "not present (searched: contamination, cutoff)",
+   "calibration_metrics": "F1 and AUROC (Sec 5.1); no ECE or Brier",
+   "granularity": "whole-solution (activation at final prompt token before generation)",
+   "causal_intervention": "yes: steering, attention analysis, weight orthogonalization (Sec 5.2-5.4)"
+  }
+ }
+]

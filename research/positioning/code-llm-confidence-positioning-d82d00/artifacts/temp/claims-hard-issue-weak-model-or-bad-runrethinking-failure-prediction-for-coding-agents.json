@@ -1,0 +1,85 @@
+{
+ "source_note_id": "hard-issue-weak-model-or-bad-runrethinking-failure-prediction-for-coding-agents",
+ "arxiv": "2611.08285",
+ "full_text": true,
+ "claims": [
+  {
+   "claim": "Pooled AUROC of failure predictors is dominated by issue difficulty, so routing evidence needs within-issue controls.",
+   "stance": "neutral",
+   "stance_target": "R1 candidate L3; component verdict: NARROW-context",
+   "evidence_type": "empirical",
+   "scope_conditions": "see breadth",
+   "quoted_support": "A score that only knows whether an issue is hard reaches 0.90 pooled AUROC, yet it cannot rank two runs of the same issue (0.50).",
+   "numbers": [
+    "0.90",
+    "0.50"
+   ],
+   "entities": [
+    "2611.08285"
+   ],
+   "time_period": "2024-2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "hard-issue-weak-model-or-bad-runrethinking-failure-prediction-for-coding-agents",
+   "candidate": "L3",
+   "verdict": "NARROW-context",
+   "makes_core_claim_on_code_with_execution_labels": false
+  },
+  {
+   "claim": "On SWE-bench Verified trajectories a run-blind difficulty reference reaches 0.92 AUROC while trajectory predictors reach about 0.62.",
+   "stance": "neutral",
+   "stance_target": "R1 candidate L3; component verdict: NARROW-context",
+   "evidence_type": "empirical",
+   "scope_conditions": "see breadth",
+   "quoted_support": "a reference score that never looks at the run, only at how hard the issue is for other models, reaches 0.92 AUROC, whereas trajectory predictors reach about 0.62.",
+   "numbers": [
+    "0.92",
+    "0.62"
+   ],
+   "entities": [
+    "2611.08285"
+   ],
+   "time_period": "2024-2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "hard-issue-weak-model-or-bad-runrethinking-failure-prediction-for-coding-agents",
+   "candidate": "L3",
+   "verdict": "NARROW-context",
+   "makes_core_claim_on_code_with_execution_labels": false
+  },
+  {
+   "claim": "Per-issue model switching gains nothing on held-out runs and the oracle gap is no larger than random variation.",
+   "stance": "neutral",
+   "stance_target": "R1 candidate L3; component verdict: NARROW-context",
+   "evidence_type": "empirical",
+   "scope_conditions": "see breadth",
+   "quoted_support": "This gap is no larger than random variation alone produces. Per-issue switching gains nothing on held-out runs.",
+   "numbers": [],
+   "entities": [
+    "2611.08285"
+   ],
+   "time_period": "2024-2026",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "hard-issue-weak-model-or-bad-runrethinking-failure-prediction-for-coding-agents",
+   "candidate": "L3",
+   "verdict": "NARROW-context",
+   "makes_core_claim_on_code_with_execution_labels": false
+  }
+ ],
+ "breadth": {
+  "confidence_families": "trajectory-text predictors only; no hidden-state probe, no verbal confidence",
+  "model_families_and_sizes": "7 closed/open agent models (Claude Haiku 4.5, Opus 4.5 and 4.6, Gemini 3 Flash, GLM-5, GPT-5-mini, MiniMax-M2.5), 3,492 runs, 994 fail; 23-model outcomes (Sec. III data)",
+  "base_vs_instruct": "not present (searched: base/instruct pairs)",
+  "post_training_stages": "not present (searched: pre vs post-training comparison)",
+  "reasoning_models": "not present (searched: reasoning on/off)",
+  "elicitation_formats": "not present (searched: verbal elicitation format variants)",
+  "benchmarks": "SWE-bench Verified trajectories (Sec. III)",
+  "label_source": "released resolved labels from SWE-bench tests (Sec. III)",
+  "label_independence": "execution-based test resolution",
+  "contamination_split": "not present (searched: release-date split, contamination)",
+  "calibration_metrics": "AUROC pair decomposition, TOST equivalence +/-0.02 (Sec. III-IV); no ECE/Brier",
+  "granularity": "whole-run (agent trajectory) outcome",
+  "causal_intervention": "not present (searched: steering, patching, ablation)"
+ }
+}

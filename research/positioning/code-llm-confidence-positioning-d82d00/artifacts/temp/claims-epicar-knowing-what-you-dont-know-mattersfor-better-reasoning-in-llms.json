@@ -1,0 +1,41 @@
+[
+ {
+  "claim": "EpiCaR's trained verbalized confidence yields only AUROC about 0.54 on out-of-domain MBPP at 8B and no probe is compared.",
+  "stance": "neutral",
+  "stance_target": "Row 11 / pivot 3 premise (trained stated confidence on code, discrimination reported)",
+  "evidence_type": "empirical",
+  "scope_conditions": "Llama-3-8B and Qwen-3-8B; 3-shot MBPP; OOD after math training",
+  "quoted_support": "Specifically, in Llama-3-8B, STaR incurs a significant calibration cost, dropping AUROC from 0.551 to 0.523, whereas our method mitigates this degradation, recovering it to 0.538.",
+  "numbers": [
+   "Llama-3-8B MBPP AUROC base 0.551, STaR 0.523, EpiCaR 0.538",
+   "Brier 0.246 vs 0.387 (Llama-3-8B)",
+   "lowest ECE (+TS) 0.113 (Llama-3-8B), 0.059 (Qwen-3-8B)"
+  ],
+  "entities": [
+   "EpiCaR",
+   "STaR",
+   "MBPP",
+   "Llama-3",
+   "Qwen-3"
+  ],
+  "time_period": "arXiv 2601.06786 (Jan 2026)",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "epicar-knowing-what-you-dont-know-mattersfor-better-reasoning-in-llms",
+  "breadth": {
+   "confidence_families": "verbalized confidence after iterative SFT; temperature-scaling variant (+TS); probe not present (searched: probe: only related-work mentions of hidden states)",
+   "model_families_and_sizes": "Llama-3 and Qwen-3, 1B-8B; MBPP at 8B (Sec 6.3)",
+   "base_vs_instruct": "Base Model, STaR, EpiCaR stages (Table 4); not a base-vs-instruct pair",
+   "post_training_stages": "iterative SFT (STaR vs EpiCaR)",
+   "reasoning_models": "not present as a factor",
+   "elicitation_formats": "one verbalized format",
+   "benchmarks": "MATH, GSM8K, MBPP (Sec 5, 6.3)",
+   "label_source": "sandboxed execution of MBPP tests (Sec 5)",
+   "label_independence": "benchmark tests",
+   "contamination_split": "not present (searched: contaminat)",
+   "calibration_metrics": "Accuracy, AUROC, ECE, Brier (Sec 5)",
+   "granularity": "whole solution",
+   "causal_intervention": "not present (searched: steer, ablat)"
+  }
+ }
+]

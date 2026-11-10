@@ -1,0 +1,98 @@
+[
+ {
+  "claim": "Calibration metrics such as ECE conflate sensitivity and bias; SDT decomposition separates models that ECE ranks identically-adequate.",
+  "stance": "supports",
+  "stance_target": "F: measurement-instrument framing of calibration is occupied for factual QA",
+  "evidence_type": "theoretical",
+  "scope_conditions": "abstract; three 7-8B models; factual QA only",
+  "quoted_support": "Signal Detection Theory (SDT) decomposes these components.",
+  "numbers": [
+   "168,000 trials",
+   "z-ROC slopes 0.52-0.84"
+  ],
+  "entities": [
+   "Green and Swets 1966",
+   "Maniscalco and Lau"
+  ],
+  "time_period": "2026 (arXiv 16 Mar 2026)",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "llms-as-signal-detectors-sensitivity-bias-and-the-temperature-criterion-analogy",
+  "breadth": {
+   "confidence_families": "signal-detection decomposition of answer correctness vs forced-choice evidence strength (da, criterion c, z-ROC slopes); force-decoded log-probabilities (Analysis A)",
+   "model_families_and_sizes": "Llama-3-8B-Instruct, Mistral-7B-Instruct-v0.3, Llama-3-8B-Base (Sec 3.1)",
+   "base_vs_instruct": "yes: Llama-3-8B-Base as instruction-tuning contrast (Sec 3.1); z-ROC slopes instruct 0.52-0.63 vs base 0.77-0.87 (abstract)",
+   "post_training_stages": "base vs instruct only",
+   "reasoning_models": "not present",
+   "elicitation_formats": "temperature sweep T in 0.1..2.0; force-decode; no verbal comparison",
+   "benchmarks": "TriviaQA (5,000 questions) and Natural Questions/NQ-Open (3,000); no code",
+   "label_source": "alias-matched gold answers (missed-match rate 30.1% noted)",
+   "label_independence": "gold aliases",
+   "contamination_split": "not present",
+   "calibration_metrics": "AUC, da, criterion c, z-ROC slope, ECE comparison (Llama-3-Instruct ECE = 0.089; Mistral ECE = 0.112)",
+   "granularity": "per trial; 168,000 trials",
+   "causal_intervention": "temperature manipulation as criterion-shift test"
+  }
+ },
+ {
+  "claim": "Temperature is not a pure criterion shift: it raises sensitivity and shifts criterion simultaneously.",
+  "stance": "supports",
+  "stance_target": "SDT analogies break for generated answers",
+  "evidence_type": "empirical",
+  "scope_conditions": "three models, TriviaQA and NQ-Open",
+  "quoted_support": "temperature simultaneously increasing sensitivity (AUC) and shifting criterion",
+  "numbers": [],
+  "entities": [],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "llms-as-signal-detectors-sensitivity-bias-and-the-temperature-criterion-analogy",
+  "breadth": {
+   "confidence_families": "signal-detection decomposition of answer correctness vs forced-choice evidence strength (da, criterion c, z-ROC slopes); force-decoded log-probabilities (Analysis A)",
+   "model_families_and_sizes": "Llama-3-8B-Instruct, Mistral-7B-Instruct-v0.3, Llama-3-8B-Base (Sec 3.1)",
+   "base_vs_instruct": "yes: Llama-3-8B-Base as instruction-tuning contrast (Sec 3.1); z-ROC slopes instruct 0.52-0.63 vs base 0.77-0.87 (abstract)",
+   "post_training_stages": "base vs instruct only",
+   "reasoning_models": "not present",
+   "elicitation_formats": "temperature sweep T in 0.1..2.0; force-decode; no verbal comparison",
+   "benchmarks": "TriviaQA (5,000 questions) and Natural Questions/NQ-Open (3,000); no code",
+   "label_source": "alias-matched gold answers (missed-match rate 30.1% noted)",
+   "label_independence": "gold aliases",
+   "contamination_split": "not present",
+   "calibration_metrics": "AUC, da, criterion c, z-ROC slope, ECE comparison (Llama-3-Instruct ECE = 0.089; Mistral ECE = 0.112)",
+   "granularity": "per trial; 168,000 trials",
+   "causal_intervention": "temperature manipulation as criterion-shift test"
+  }
+ },
+ {
+  "claim": "Models at distinct positions in sensitivity-bias space cannot be distinguished by calibration metrics alone.",
+  "stance": "supports",
+  "stance_target": "additive diagnostic value of decomposition",
+  "evidence_type": "empirical",
+  "scope_conditions": "TriviaQA at T=1.0",
+  "quoted_support": "models occupying distinct positions in sensitivity–bias space could not be distinguished by calibration metrics alone",
+  "numbers": [
+   "Llama-3-Instruct da = 1.39, c = -2.40, ECE = 0.089",
+   "Mistral da = 1.97, c = -2.69, ECE = 0.112"
+  ],
+  "entities": [],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "medium",
+  "source_note_id": "llms-as-signal-detectors-sensitivity-bias-and-the-temperature-criterion-analogy",
+  "breadth": {
+   "confidence_families": "signal-detection decomposition of answer correctness vs forced-choice evidence strength (da, criterion c, z-ROC slopes); force-decoded log-probabilities (Analysis A)",
+   "model_families_and_sizes": "Llama-3-8B-Instruct, Mistral-7B-Instruct-v0.3, Llama-3-8B-Base (Sec 3.1)",
+   "base_vs_instruct": "yes: Llama-3-8B-Base as instruction-tuning contrast (Sec 3.1); z-ROC slopes instruct 0.52-0.63 vs base 0.77-0.87 (abstract)",
+   "post_training_stages": "base vs instruct only",
+   "reasoning_models": "not present",
+   "elicitation_formats": "temperature sweep T in 0.1..2.0; force-decode; no verbal comparison",
+   "benchmarks": "TriviaQA (5,000 questions) and Natural Questions/NQ-Open (3,000); no code",
+   "label_source": "alias-matched gold answers (missed-match rate 30.1% noted)",
+   "label_independence": "gold aliases",
+   "contamination_split": "not present",
+   "calibration_metrics": "AUC, da, criterion c, z-ROC slope, ECE comparison (Llama-3-Instruct ECE = 0.089; Mistral ECE = 0.112)",
+   "granularity": "per trial; 168,000 trials",
+   "causal_intervention": "temperature manipulation as criterion-shift test"
+  }
+ }
+]

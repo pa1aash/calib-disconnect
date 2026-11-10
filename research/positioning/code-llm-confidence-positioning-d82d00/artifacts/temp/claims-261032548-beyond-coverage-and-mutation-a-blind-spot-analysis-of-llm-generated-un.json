@@ -1,0 +1,78 @@
+[
+ {
+  "claim": "19.7% of LLM-generated tests fail to execute; 15.6% of test failures involve incorrect assertions (wrong-oracle).",
+  "stance": "neutral",
+  "stance_target": "L4 occupancy: adequacy of LLM-written tests",
+  "evidence_type": "empirical",
+  "scope_conditions": "Abstract; RQ1; Java",
+  "quoted_support": "Before adequacy scoring, 19.7% of tests fail to execute successfully, with failures ranging from compilation errors to runtime exceptions. Among test failures, 15.6% involve incorrect assertions, termed wrong-oracle failures.",
+  "numbers": [
+   "19.7%",
+   "15.6%",
+   "14,320 tests"
+  ],
+  "entities": [
+   "BlindSpotEval",
+   "ObligBench"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "261032548-beyond-coverage-and-mutation-a-blind-spot-analysis-of-llm-generated-un",
+  "breadth": {
+   "confidence_families": "not present (no confidence estimation)",
+   "model_families_and_sizes": "GPT-5.4, Gemma-4-31B, Gemini-3.6-flash, Qwen3-Coder-30B (Sec. 1)",
+   "base_vs_instruct": "not present",
+   "post_training_stages": "not present (searched: full text via local PDF extraction)",
+   "reasoning_models": "not stated",
+   "elicitation_formats": "four prompting strategies: zero-shot, intention-planning, mutation-feedback, Panta (Sec. 1)",
+   "benchmarks": "ObligBench Java 895 complex + 700 low-complexity",
+   "label_source": "source-side obligation annotations plus execution",
+   "label_independence": "obligations derived statically from implementation, not from model",
+   "contamination_split": "not present",
+   "calibration_metrics": "not present",
+   "granularity": "test-obligation level (boundary, control-flow, oracle)",
+   "causal_intervention": "not present"
+  }
+ },
+ {
+  "claim": "Coverage of null, negative, and empty arguments reaches only 34.8%, 23.8%, and 38.8%; CFA scores 0.100 for catch blocks and 0.312 for default groups.",
+  "stance": "neutral",
+  "stance_target": "L4: self-written test blind spots",
+  "evidence_type": "empirical",
+  "scope_conditions": "Abstract; RQ2-RQ4; Java",
+  "quoted_support": "Coverage of null, negative, and empty arguments reaches only 34.8%, 23.8%, and 38.8%, compared with average coverage above 93% for booleans.",
+  "numbers": [
+   "34.8%",
+   "23.8%",
+   "38.8%",
+   "CFA 0.100",
+   "CFA 0.312"
+  ],
+  "entities": [
+   "GPT-5.4",
+   "Qwen3-Coder-30B",
+   "Gemma-4-31B",
+   "Gemini-3.6-flash"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "261032548-beyond-coverage-and-mutation-a-blind-spot-analysis-of-llm-generated-un",
+  "breadth": {
+   "confidence_families": "not present (no confidence estimation)",
+   "model_families_and_sizes": "GPT-5.4, Gemma-4-31B, Gemini-3.6-flash, Qwen3-Coder-30B (Sec. 1)",
+   "base_vs_instruct": "not present",
+   "post_training_stages": "not present (searched: full text via local PDF extraction)",
+   "reasoning_models": "not stated",
+   "elicitation_formats": "four prompting strategies: zero-shot, intention-planning, mutation-feedback, Panta (Sec. 1)",
+   "benchmarks": "ObligBench Java 895 complex + 700 low-complexity",
+   "label_source": "source-side obligation annotations plus execution",
+   "label_independence": "obligations derived statically from implementation, not from model",
+   "contamination_split": "not present",
+   "calibration_metrics": "not present",
+   "granularity": "test-obligation level (boundary, control-flow, oracle)",
+   "causal_intervention": "not present"
+  }
+ }
+]

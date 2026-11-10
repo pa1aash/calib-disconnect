@@ -1,0 +1,95 @@
+{
+ "source_note_id": "verification-trap-understanding-test-time-selection-failures-under-false-premise",
+ "claims": [
+  {
+   "claim": "Under misleading task premises, verifier-written tests inherit the generator's blind spot, so 64-sample test-time selection can choose a hidden-test-wrong candidate although a correct one exists in the pool.",
+   "stance": "supports",
+   "stance_target": "LLM-written test verification is not independent of the generator",
+   "evidence_type": "empirical",
+   "scope_conditions": "three benchmarks, five code models, 64-sample selection",
+   "quoted_support": "The selector may choose a hidden-test-wrong candidate even when a hidden-test-correct program exists in the pool.",
+   "numbers": [
+    "64 samples",
+    "3 benchmarks",
+    "5 models"
+   ],
+   "entities": [
+    "Verification Trap",
+    "HumanEval+",
+    "MBPP",
+    "LiveCodeBench"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "verification-trap-understanding-test-time-selection-failures-under-false-premise"
+  },
+  {
+   "claim": "A gold-free predictor from verifier-visible features reaches 0.846 AUROC for predicting recoverable mis-selection (13 features, LR); contamination features alone give 0.539.",
+   "stance": "supports",
+   "stance_target": "confidence-like risk signal from verifier-visible features",
+   "evidence_type": "empirical",
+   "scope_conditions": "Table 2",
+   "quoted_support": "a lightweight gold-free predictor using verifier-visible features reaches 0.846 AUROC.",
+   "numbers": [
+    "0.846 AUROC LR",
+    "0.833 RF",
+    "0.539 contamination",
+    "0.754 score distribution",
+    "0.773 signature structure"
+   ],
+   "entities": [
+    "Verification Trap"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "verification-trap-understanding-test-time-selection-failures-under-false-premise"
+  },
+  {
+   "claim": "Decoupled, premise-agnostic robustness auditors recover substantial oracle headroom whereas coupled scaling gives limited recovery.",
+   "stance": "supports",
+   "stance_target": "independent evidence is needed for verification utility",
+   "evidence_type": "empirical",
+   "scope_conditions": "Qwen-7B / HumanEval+ main cell, Section on mitigation, Table 3",
+   "quoted_support": "coupled scaling provides limited recovery, whereas premise-agnostic robustness auditors recover substantial oracle headroom.",
+   "numbers": [],
+   "entities": [
+    "Qwen2.5-Coder-7B-Instruct"
+   ],
+   "time_period": "",
+   "region": "",
+   "confidence": "high",
+   "source_note_id": "verification-trap-understanding-test-time-selection-failures-under-false-premise"
+  },
+  {
+   "claim": "The paper flags that calibration, threshold stability and transfer remain unstudied.",
+   "stance": "neutral",
+   "stance_target": "scope limitation",
+   "evidence_type": "expert-opinion",
+   "scope_conditions": "Limitations",
+   "quoted_support": "larger-scale validation is needed to study calibration, threshold stability, and how pre",
+   "numbers": [],
+   "entities": [],
+   "time_period": "",
+   "region": "",
+   "confidence": "medium",
+   "source_note_id": "verification-trap-understanding-test-time-selection-failures-under-false-premise"
+  }
+ ],
+ "breadth": {
+  "confidence_families": "Verifier score from LLM-generated tests and score-distribution/signature features used as gold-free predictor (Section 4.4, Table 2). No verbal or hidden-state confidence (searched: verbal, probe, logit).",
+  "model_families_and_sizes": "DeepSeek-Coder-6.7B-Instruct, Qwen2.5-Coder-7B/14B/32B-Instruct, GPT-4o-mini (Section 3 model list); Qwen2.5-Coder 0.5B-32B scale sweep on MBPP (Appendix Table S4-area).",
+  "base_vs_instruct": "not present as a pair comparison (all Instruct models); searched: base vs instruct.",
+  "post_training_stages": "not present (searched: SFT, RLHF, DPO)",
+  "reasoning_models": "not present (searched: reasoning model, thinking mode, o1, R1); reasoning not enabled; code instruct models only.",
+  "elicitation_formats": "Sampled candidates (64) with verifier-written tests; matched prompt conditions: baseline, irrelevant-control, false-premise (Section 3 Prompt Conditions). No verbal confidence.",
+  "benchmarks": "HumanEval+, MBPP, LiveCodeBench (Section 3).",
+  "label_source": "Hidden-test execution correctness (gold) versus verifier-visible tests written by an LLM (Section 4).",
+  "label_independence": "Verifier and generator are coupled by a shared false premise; paper's central claim is that independence fails (Abstract); transfer evaluated across held-out models and datasets (Limitations).",
+  "contamination_split": "LiveCodeBench used for 'temporally newer programming problems' (Section 3); 'contamination' in Table 2 refers to verifier-test contamination, not training-data contamination.",
+  "calibration_metrics": "AUROC for trap-risk prediction (Table 2); no ECE/Brier; Limitations states calibration not studied.",
+  "granularity": "Per-task selection outcome (selected candidate vs hidden tests); no per-test confidence.",
+  "causal_intervention": "Prompt-level intervention inserting a false premise vs irrelevant control (Section 3 Prompt Conditions); decoupled-evidence mitigation comparison (Section 5, Table 3). Not a model-internal intervention."
+ }
+}

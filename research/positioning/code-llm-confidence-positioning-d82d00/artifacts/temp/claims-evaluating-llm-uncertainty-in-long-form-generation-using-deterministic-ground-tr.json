@@ -1,0 +1,98 @@
+[
+ {
+  "claim": "SALT provides six procedurally generated long-form tasks (logic, math, code, translation, Multi-Needle) with deterministic ground truth, allowing unit-level correctness, calibration and ranking evaluation without judges across 50+ LLMs.",
+  "stance": "supports",
+  "stance_target": "L1/L4: zero-noise ground truth and fine-grained units",
+  "evidence_type": "empirical",
+  "scope_conditions": "50+ LLMs; code task is Python output prediction of LeetCode functions",
+  "quoted_support": "SALT comprises six procedurally generated tasks spanning logic, mathematics, code, translation, and multiple-needles-in-a-haystack (Multi-Needle).",
+  "numbers": [
+   "50+ LLMs",
+   "6 tasks"
+  ],
+  "entities": [
+   "SALT"
+  ],
+  "time_period": "Jul 2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "evaluating-llm-uncertainty-in-long-form-generation-using-deterministic-ground-tr",
+  "breadth": {
+   "confidence_families": "confidence functions over tokens/units (Fig 1, abstract); not hidden-state probes",
+   "model_families_and_sizes": "50+ LLMs (Abstract)",
+   "base_vs_instruct": "not present (searched: full text, keyword scan)",
+   "post_training_stages": "not present (searched: full text, keyword scan)",
+   "reasoning_models": "CoT prompting and internalized reasoning compared (Abstract)",
+   "elicitation_formats": "not present (searched: full text, keyword scan)",
+   "benchmarks": "SALT: six procedural tasks incl. code output prediction",
+   "label_source": "deterministic procedural ground truth; code via execution of source function",
+   "label_independence": "no judges",
+   "contamination_split": "procedurally generated, claimed contamination-free",
+   "calibration_metrics": "ECE, AUROC at token/atom/line/response resolution (Fig 1)",
+   "granularity": "token to entire generation; atom and line units",
+   "causal_intervention": "atom-level prefix corruption interventions on inputs, not hidden states"
+  }
+ },
+ {
+  "claim": "Confidence ranking largely breaks at atomic resolution though separability appears at line-level units; reasoning improves accuracy but degrades confidence ranking.",
+  "stance": "supports",
+  "stance_target": "L4: granularity matters; reasoning trade-off",
+  "evidence_type": "empirical",
+  "scope_conditions": "Abstract",
+  "quoted_support": "show that confidence ranking largely breaks at atomic resolution, even when clearer separability emerges at coarser line-level units.",
+  "numbers": [],
+  "entities": [
+   "SALT"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "evaluating-llm-uncertainty-in-long-form-generation-using-deterministic-ground-tr",
+  "breadth": {
+   "confidence_families": "confidence functions over tokens/units (Fig 1, abstract); not hidden-state probes",
+   "model_families_and_sizes": "50+ LLMs (Abstract)",
+   "base_vs_instruct": "not present (searched: full text, keyword scan)",
+   "post_training_stages": "not present (searched: full text, keyword scan)",
+   "reasoning_models": "CoT prompting and internalized reasoning compared (Abstract)",
+   "elicitation_formats": "not present (searched: full text, keyword scan)",
+   "benchmarks": "SALT: six procedural tasks incl. code output prediction",
+   "label_source": "deterministic procedural ground truth; code via execution of source function",
+   "label_independence": "no judges",
+   "contamination_split": "procedurally generated, claimed contamination-free",
+   "calibration_metrics": "ECE, AUROC at token/atom/line/response resolution (Fig 1)",
+   "granularity": "token to entire generation; atom and line units",
+   "causal_intervention": "atom-level prefix corruption interventions on inputs, not hidden states"
+  }
+ },
+ {
+  "claim": "The code task asks models to predict the output of a Python function on a given input, graded by executing the source function; it does not grade generated programs.",
+  "stance": "supports",
+  "stance_target": "SALT does not occupy execution-graded code generation",
+  "evidence_type": "empirical",
+  "scope_conditions": "Task definitions",
+  "quoted_support": "The Code task requires models to predict the output of a Python function for a given input.",
+  "numbers": [],
+  "entities": [
+   "LeetCode"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "medium",
+  "source_note_id": "evaluating-llm-uncertainty-in-long-form-generation-using-deterministic-ground-tr",
+  "breadth": {
+   "confidence_families": "confidence functions over tokens/units (Fig 1, abstract); not hidden-state probes",
+   "model_families_and_sizes": "50+ LLMs (Abstract)",
+   "base_vs_instruct": "not present (searched: full text, keyword scan)",
+   "post_training_stages": "not present (searched: full text, keyword scan)",
+   "reasoning_models": "CoT prompting and internalized reasoning compared (Abstract)",
+   "elicitation_formats": "not present (searched: full text, keyword scan)",
+   "benchmarks": "SALT: six procedural tasks incl. code output prediction",
+   "label_source": "deterministic procedural ground truth; code via execution of source function",
+   "label_independence": "no judges",
+   "contamination_split": "procedurally generated, claimed contamination-free",
+   "calibration_metrics": "ECE, AUROC at token/atom/line/response resolution (Fig 1)",
+   "granularity": "token to entire generation; atom and line units",
+   "causal_intervention": "atom-level prefix corruption interventions on inputs, not hidden states"
+  }
+ }
+]

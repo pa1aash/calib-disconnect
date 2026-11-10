@@ -1,0 +1,146 @@
+[
+ {
+  "claim": "On HumanEval with three ~1-3B instruct code models, single-forward-pass estimators (mean token entropy, verbalized confidence, entropy ensemble, semantic entropy probe) correlate only weakly with correctness while multi-sample verifier-based P(True) correlates strongly.",
+  "stance": "supports",
+  "stance_target": "L2: hidden-state probes do not beat sampled readouts on small code models (counter-evidence to probe-beats-verbal)",
+  "evidence_type": "empirical",
+  "scope_conditions": "HumanEval, Llama-3.2-3B-Instruct / Qwen2.5-Coder-3B-Instruct / Deepseek-Coder-1.3B-Instruct, Pearson correlation, Table 1",
+  "quoted_support": "Multi-sample P(True) achieves the strongest correlation with correctness, while all the other methods, including semantic entropy probes, yield only weak correlation.",
+  "numbers": [
+   "P(True) 0.842/0.782/0.303",
+   "SEP -0.196/-0.475/-0.416",
+   "Verbalized -0.327/-0.090/-0.114",
+   "MTE -0.416/-0.234/-0.216"
+  ],
+  "entities": [
+   "Rakasi",
+   "Semantic Entropy Probes",
+   "HumanEval",
+   "BigCodeBench"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "1introduction",
+  "breadth": {
+   "confidence_families": "token entropy, verbalized confidence, P(True) (verifier-based), entropy ensemble over prompts, semantic entropy probes SLT/TBG (Sec 3.2)",
+   "model_families_and_sizes": "Llama-3.2-3B-Instruct, Qwen2.5-Coder-3B-Instruct, Deepseek-Coder-1.3B-Instruct (Table 1); Sec 3.4 says LLaMA 3, Qwen2.5-Coder, DeepSeek-R1 ~3B instruct variants",
+   "base_vs_instruct": "instruct only; no base counterparts (Table 1)",
+   "post_training_stages": "not present (searched: base/SFT/RL comparison)",
+   "reasoning_models": "Sec 3.4 mentions DeepSeek-R1 but Table 1 uses Deepseek-Coder-1.3B-Instruct; reasoning mode not stated",
+   "elicitation_formats": "verbalized 'Confidence: c' in [0,1] parsed by pattern (Sec 3.2.2); probe at second-to-last token (SLT) or token-before-generation (TBG)",
+   "benchmarks": "HumanEval, BigCodeBench (Sec 3.4)",
+   "label_source": "unit-test pass/fail via verifiers library (Sec 3.1-3.2)",
+   "label_independence": "SEP label is semantic entropy from symbolic-execution clustering of samples, not test outcome (Sec 3.2.5)",
+   "contamination_split": "not present (searched: release-date, contamination); thresholds tuned on a HumanEval validation split, evaluated on n=31 held-out",
+   "calibration_metrics": "Pearson correlation with pass/fail and calibration plots (Sec 3.4); no ECE/Brier/AUROC reported",
+   "granularity": "whole-solution (function) level",
+   "causal_intervention": "self-correction policies gated on uncertainty (Sec 3.3, Table 2); no activation-level intervention"
+  }
+ },
+ {
+  "claim": "Verifier-based P(True) here is defined as the fraction of K sampled solutions that pass tests, i.e. it uses execution as the confidence signal, so its high correlation is partly label-leakage-like rather than a self-assessed confidence.",
+  "stance": "neutral",
+  "stance_target": "L3/L1: definition of the strongest readout",
+  "evidence_type": "theoretical",
+  "scope_conditions": "Section 3.2.3",
+  "quoted_support": "We define verifier-based P(True) as the empirical success probability: P(True|x) = 1/K sum V(c_k).",
+  "numbers": [
+   "K samples"
+  ],
+  "entities": [
+   "P(True)"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "medium",
+  "source_note_id": "1introduction",
+  "breadth": {
+   "confidence_families": "token entropy, verbalized confidence, P(True) (verifier-based), entropy ensemble over prompts, semantic entropy probes SLT/TBG (Sec 3.2)",
+   "model_families_and_sizes": "Llama-3.2-3B-Instruct, Qwen2.5-Coder-3B-Instruct, Deepseek-Coder-1.3B-Instruct (Table 1); Sec 3.4 says LLaMA 3, Qwen2.5-Coder, DeepSeek-R1 ~3B instruct variants",
+   "base_vs_instruct": "instruct only; no base counterparts (Table 1)",
+   "post_training_stages": "not present (searched: base/SFT/RL comparison)",
+   "reasoning_models": "Sec 3.4 mentions DeepSeek-R1 but Table 1 uses Deepseek-Coder-1.3B-Instruct; reasoning mode not stated",
+   "elicitation_formats": "verbalized 'Confidence: c' in [0,1] parsed by pattern (Sec 3.2.2); probe at second-to-last token (SLT) or token-before-generation (TBG)",
+   "benchmarks": "HumanEval, BigCodeBench (Sec 3.4)",
+   "label_source": "unit-test pass/fail via verifiers library (Sec 3.1-3.2)",
+   "label_independence": "SEP label is semantic entropy from symbolic-execution clustering of samples, not test outcome (Sec 3.2.5)",
+   "contamination_split": "not present (searched: release-date, contamination); thresholds tuned on a HumanEval validation split, evaluated on n=31 held-out",
+   "calibration_metrics": "Pearson correlation with pass/fail and calibration plots (Sec 3.4); no ECE/Brier/AUROC reported",
+   "granularity": "whole-solution (function) level",
+   "causal_intervention": "self-correction policies gated on uncertainty (Sec 3.3, Table 2); no activation-level intervention"
+  }
+ },
+ {
+  "claim": "Uncertainty-triggered regeneration degrades Pass@1 in 5 of 6 configurations (-3 pp to -10 pp) while verification-based regeneration improves Pass@1 (+6 to +26 pp HumanEval, +8 to +20 pp BigCodeBench); authors conclude uncertainty is best a gate for costlier execution loops.",
+  "stance": "supports",
+  "stance_target": "L3: uncertainty-gated execution budgets; closest occupant on routing-to-execution, but gate is weak SEP and policy is regeneration not budget allocation",
+  "evidence_type": "empirical",
+  "scope_conditions": "HumanEval held-out n=31, Table 2; abstract",
+  "quoted_support": "cheap uncertainty estimators are insufficient on their own to improve code correctness, and that their practical value lies in serving as gating signals for costlier execution-based correction loops rather than as standalone substitutes for verification.",
+  "numbers": [
+   "-9.68pp Llama uncertainty SC",
+   "+25.81pp DeepSeek-Coder-1.3B verification SC (0.61 to 0.87, 2.4x latency)",
+   "n = 31 held-out problems",
+   "adaptive decoding degrades 4 of 6"
+  ],
+  "entities": [
+   "Llama-3.2-3B",
+   "Qwen2.5-Coder-3B",
+   "DeepSeek-Coder-1.3B"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "1introduction",
+  "breadth": {
+   "confidence_families": "token entropy, verbalized confidence, P(True) (verifier-based), entropy ensemble over prompts, semantic entropy probes SLT/TBG (Sec 3.2)",
+   "model_families_and_sizes": "Llama-3.2-3B-Instruct, Qwen2.5-Coder-3B-Instruct, Deepseek-Coder-1.3B-Instruct (Table 1); Sec 3.4 says LLaMA 3, Qwen2.5-Coder, DeepSeek-R1 ~3B instruct variants",
+   "base_vs_instruct": "instruct only; no base counterparts (Table 1)",
+   "post_training_stages": "not present (searched: base/SFT/RL comparison)",
+   "reasoning_models": "Sec 3.4 mentions DeepSeek-R1 but Table 1 uses Deepseek-Coder-1.3B-Instruct; reasoning mode not stated",
+   "elicitation_formats": "verbalized 'Confidence: c' in [0,1] parsed by pattern (Sec 3.2.2); probe at second-to-last token (SLT) or token-before-generation (TBG)",
+   "benchmarks": "HumanEval, BigCodeBench (Sec 3.4)",
+   "label_source": "unit-test pass/fail via verifiers library (Sec 3.1-3.2)",
+   "label_independence": "SEP label is semantic entropy from symbolic-execution clustering of samples, not test outcome (Sec 3.2.5)",
+   "contamination_split": "not present (searched: release-date, contamination); thresholds tuned on a HumanEval validation split, evaluated on n=31 held-out",
+   "calibration_metrics": "Pearson correlation with pass/fail and calibration plots (Sec 3.4); no ECE/Brier/AUROC reported",
+   "granularity": "whole-solution (function) level",
+   "causal_intervention": "self-correction policies gated on uncertainty (Sec 3.3, Table 2); no activation-level intervention"
+  }
+ },
+ {
+  "claim": "Evaluation is small: held-out set for self-correction is 31 HumanEval problems, thresholds tuned by grid search on a HumanEval validation split optimizing F1; text names DeepSeek-R1 in Section 3.4 while Table 1 lists Deepseek-Coder-1.3B-Instruct.",
+  "stance": "neutral",
+  "stance_target": "evidence strength of the occupant",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sections 3.3.1, 3.4, Table 2 caption",
+  "quoted_support": "Self-correction results on HumanEval (n = 31 held-out evaluation problems.",
+  "numbers": [
+   "n=31",
+   "N=5 attempts cap"
+  ],
+  "entities": [
+   "HumanEval"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "medium",
+  "source_note_id": "1introduction",
+  "breadth": {
+   "confidence_families": "token entropy, verbalized confidence, P(True) (verifier-based), entropy ensemble over prompts, semantic entropy probes SLT/TBG (Sec 3.2)",
+   "model_families_and_sizes": "Llama-3.2-3B-Instruct, Qwen2.5-Coder-3B-Instruct, Deepseek-Coder-1.3B-Instruct (Table 1); Sec 3.4 says LLaMA 3, Qwen2.5-Coder, DeepSeek-R1 ~3B instruct variants",
+   "base_vs_instruct": "instruct only; no base counterparts (Table 1)",
+   "post_training_stages": "not present (searched: base/SFT/RL comparison)",
+   "reasoning_models": "Sec 3.4 mentions DeepSeek-R1 but Table 1 uses Deepseek-Coder-1.3B-Instruct; reasoning mode not stated",
+   "elicitation_formats": "verbalized 'Confidence: c' in [0,1] parsed by pattern (Sec 3.2.2); probe at second-to-last token (SLT) or token-before-generation (TBG)",
+   "benchmarks": "HumanEval, BigCodeBench (Sec 3.4)",
+   "label_source": "unit-test pass/fail via verifiers library (Sec 3.1-3.2)",
+   "label_independence": "SEP label is semantic entropy from symbolic-execution clustering of samples, not test outcome (Sec 3.2.5)",
+   "contamination_split": "not present (searched: release-date, contamination); thresholds tuned on a HumanEval validation split, evaluated on n=31 held-out",
+   "calibration_metrics": "Pearson correlation with pass/fail and calibration plots (Sec 3.4); no ECE/Brier/AUROC reported",
+   "granularity": "whole-solution (function) level",
+   "causal_intervention": "self-correction policies gated on uncertainty (Sec 3.3, Table 2); no activation-level intervention"
+  }
+ }
+]

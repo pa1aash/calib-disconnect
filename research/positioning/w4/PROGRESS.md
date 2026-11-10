@@ -35,3 +35,6 @@ completes. Times are local (IST).
 | 14:58 | HR step 13 | 3 gap notes from saved raw records (2604.26671 and TRIAGE 2605.13414 full text; 2609.00854 ABSTRACT-ONLY); 56 tracked research/temp claims files found deleted in the working tree and restored from HEAD | research/temp/post-critic-fetch-log.md |
 | 14:59 | HR step 14 | patcher running | research/patch-log.json |
 | 15:08 | HR step 14 | patcher: 37 of 40 findings applied, 3 skipped, 1 escalated (breadth matrix, added by orchestrator as 7.4); LADDER read in full, adjacent | research/patch-log.json, research/orchestrator-restructure-log.md |
+| 15:05 | HR step 15 | polish: 20 edits, about -850 characters; length escalation (about 13,600 words against a 10,000 ceiling) handed to step 16 | research/polish-log.json |
+| 15:16 | HR step 16 | readability: 24 of 25 recommendations applied (rec-6 skipped to keep two figures); report 13,336 words; integrity gate passed (no em-dashes, all wikilinks resolve, no pipeline leaks) | research/readability-decisions.json |
+| 15:20 | sync + commits | vault synced to research/positioning/code-llm-confidence-positioning-d82d00/ (631 files, 276 notes, SHA-256 verified; no raw_file PDFs exist in this vault); gitleaks false positives (5 bibkey and model-name lines) added to .gitleaksignore | MANIFEST.json |

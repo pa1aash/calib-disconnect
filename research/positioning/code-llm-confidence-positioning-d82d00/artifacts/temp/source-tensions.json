@@ -1,0 +1,175 @@
+{
+  "vault_tag": "code-llm-confidence-positioning-d82d00",
+  "step": 7,
+  "tensions": [
+    {
+      "name": "Probe beats own readout on code: unexpressed knowledge or confounded design",
+      "side_a": {
+        "position": "On code with execution labels, a hidden-state probe carries correctness information the model does not express, so it beats verbal and likelihood readouts by a wide margin.",
+        "evidence": "Ribeiro et al. (251207404-on-llms-internal-representation-of-code-correctness; ICSE 2026, full text from the wave 4 raw extract) Sec 4.2.1: probe gains of +13.3 to +29.0 pp on BigCodeBench and +8.7 to +26.2 pp on HumanEval over intrinsic and reflective readouts, in a within-task four-candidate design, so between-problem difficulty cannot explain it. Gros and Devanbu (251224560-localized-calibrated-uncertainty-in-code-language-models-full-text) Tables 3-4: after Platt scaling on every readout, Qwen2.5-Coder-7B-Instruct line-level Probe-7B AUC 0.83, scaled BSS 0.33 vs Line Verbalized AUC 0.71, scaled BSS 0.10. Diffusion code models (probing-functional-correctness-in-diffusion-language-models-full-text, Tables 10-12): probe beats supervised LR-on-entropy on MBPP, e.g., Dream 0.879 vs 0.776.",
+        "proponents": [
+          "251207404-on-llms-internal-representation-of-code-correctness",
+          "251224560-localized-calibrated-uncertainty-in-code-language-models-full-text",
+          "probing-functional-correctness-in-diffusion-language-models-full-text"
+        ]
+      },
+      "side_b": {
+        "position": "The margin is mostly difficulty, supervision asymmetry, and candidate provenance; matched against the model's own confidence within problem, the probe ties or loses.",
+        "evidence": "Campos, Klassert, Ulges (which-signals-of-code-correctness-survive-distribution-shift-hidden-state-and-ca) Sec VI-C: under language shift within-problem AUROC is 0.58-0.64 for all methods against pooled 0.67-0.81, and for Qwen3-Coder confidence is best within problem (0.629); Table V: a probe at the last prompt token (problem only) has pooled 0.891 but within 0.514. Miglani et al. (a-heckler-in-the-hidden-statecorrectness-signals-in-diffusion-language-models) Sec 4.2, Table 1, within-problem folds: Qwen2.5-Coder probe 0.677 vs completion log-probability 0.703; DiffuCoder 0.842 vs 0.838. Bulut (its-the-problem-not-the-pathbudget-and-difficulty-confounds-in-llm-reasoning-tra) Eq. 1 decomposes pooled AUROC into within and between terms. Liu et al. (cognitive-dissonance-why-do-language-model-outputs-disagree-with-internal-repres) Sec 3: with a fine-tuned query, queries beat probes by 6.9% and 4.0% on SciQ and CREAK. Ribeiro Sec 4.1.1 pairs a human reference with other models' failures and Sec 4.1.2 fits the probe while verbal readouts stay zero-shot; intrinsic likelihood picks the reference only 5-6% of the time on BigCodeBench against 25% chance.",
+        "proponents": [
+          "which-signals-of-code-correctness-survive-distribution-shift-hidden-state-and-ca",
+          "a-heckler-in-the-hidden-statecorrectness-signals-in-diffusion-language-models",
+          "its-the-problem-not-the-pathbudget-and-difficulty-confounds-in-llm-reasoning-tra",
+          "cognitive-dissonance-why-do-language-model-outputs-disagree-with-internal-repres",
+          "on-the-robustness-of-llms-internal-representation-of-code-correctness"
+        ]
+      },
+      "resolution": "Side B has the better case against the headline, and Side A remains right about a narrower descriptive fact. A fitted, within-task probe does outrank zero-shot readouts (Ribeiro), but every code comparison that matches the readout's chance to use the label or scores within problem on self-generated samples finds a tie or a margin near 0.03 (Campos 0.620 vs 0.629; Miglani 0.677 vs 0.703). The load-bearing reason is that no fetched code study puts the probe, a supervision-matched own readout, and input-only baselines on the same self-generated samples scored within problem, and the three confounds each have a documented mechanism. The paper should therefore lead with the controlled test, treat a null as the finding, and make any decomposition conditional on a measurable controlled gap (comparisons Tension 1). Ribeiro occupies the uncontrolled claim; the controlled claim is NARROW and unrun.",
+      "origin": "comparisons",
+      "decision_relevance": "high"
+    },
+    {
+      "name": "Trained stated confidence closes the gap, or estimator overfitting hid a lasting gap",
+      "side_a": {
+        "position": "Training the verbal channel with scoring-rule rewards or distillation from internal confidence closes most of the discrimination gap to a probe.",
+        "evidence": "Probe-SD (calibration-not-answer-selection-distilling-internal-confidence-in-reasoning-mod) Table 2, Qwen3-14B TriviaQA: verbal AUROC 0.825 rises to 0.928 in domain (0.715 to 0.783 out of domain) against a probe at .948 in Table 1, while Verbal-Iso and Verbal-TS+bias leave AUROC at .825. RLCR (beyond-binary-rewards-training-lms-to-reason-about-their-uncertainty-2) Table 1: HotpotQA RLCR verbal AUROC 0.69 vs RLVR+Probe 0.55; Big-Math 0.67 vs 0.65. ConfTuner (conftuner-training-large-language-models-to-express-their-confidence-verbally): up to 14.4% AUROC gains from HotpotQA training.",
+        "proponents": [
+          "calibration-not-answer-selection-distilling-internal-confidence-in-reasoning-mod",
+          "beyond-binary-rewards-training-lms-to-reason-about-their-uncertainty-2",
+          "conftuner-training-large-language-models-to-express-their-confidence-verbally"
+        ]
+      },
+      "side_b": {
+        "position": "A hidden-state estimator with overfitting control still beats RL-trained verbal confidence, and confidence SFT can move the confidence distribution without improving discrimination.",
+        "evidence": "When Words Fall Short (when-words-fall-short-iterative-synergy-between-verbalized-reasoning-and-hidden) Sec 2.2: estimator overfitting can bias comparisons toward verbal confidence (out-of-domain Brier rises from 0.184 to 0.258 with extended training); with validation-based checkpoint selection the estimator improves AUROC by 0.161 in domain and 0.078 out of domain over RL-trained verbal confidence, and RLVR + Estimator beats RLCR in AUROC, Brier, and ECE in all four in-domain settings (Sec 4.2 main results). Cacioli (distilling-self-consistency-into-verbal-confidence-a-pre-registered-negative-res) abstract: the pre-registered SFT protocol lowered verbal AUROC2 from 0.554 to 0.509 and cost 7.6 accuracy points; the post-hoc rescue reached 0.774 against 0.999 for 10-sample self-consistency. Cacioli (quantisation-reshapes-the-metacognitivegeometry-of-language-models): confidence SFT doubled a confidence gap in Science (0.076 to 0.152) but all four confirmatory hypotheses on meta-d' were null.",
+        "proponents": [
+          "when-words-fall-short-iterative-synergy-between-verbalized-reasoning-and-hidden",
+          "distilling-self-consistency-into-verbal-confidence-a-pre-registered-negative-res",
+          "quantisation-reshapes-the-metacognitivegeometry-of-language-models"
+        ]
+      },
+      "resolution": "This is a real factual conflict between RLCR and When Words Fall Short over the same comparison (RLVR plus a hidden-state reader versus RLCR verbal confidence on HotpotQA and Big-Math), and the mechanism named by When Words Fall Short (probe overfitting at a single training endpoint) explains why RLCR's probe arm trails. Side B therefore weakens Side A's strongest probe comparison, but it does not undo Probe-SD, where the probe is the teacher and distilled verbal confidence gets within about 0.02 AUROC of it. The committed reading is that training narrows the gap substantially and recalibration does not, but whether it closes is unsettled even in NLP and is unmeasured on code (no fetched code study reports AUROC after training stated confidence on execution labels; RLCM's LiveCodeBench column is ECE only). Pivot criterion A14 stays open. The L2 design must include a trained-verbal or logit-feature arm fitted on the same execution labels, an isotonic-verbal control, and validation-based checkpoint selection for every fitted reader, or a reviewer can cite either side against the result.",
+      "origin": "comparisons",
+      "decision_relevance": "high"
+    },
+    {
+      "name": "Verbal confidence on code: useful discriminator or near chance",
+      "side_a": {
+        "position": "Stated confidence on code is informative in many cells, reaching AUROC above 0.8 for capable models, and few-shot reflection gives real skill.",
+        "evidence": "Tuerlings and Valdenegro-Toro (verbalized-uncertainty-in-coding-llms-contamination-aware-calibration-uncertainl) Table 1, 365 LiveCodeBench v6 problems: Qwen2.5-Coder-32B AUROC 0.834 / 0.810 / 0.841 (Direct / CoT / Linguistic). Functional Entropy (functional-entropy-predicting-functional-correctness-in-llm-generated-code-with) LiveCodeBench results: P(True) reaches 0.83 on Gemini-2.5-Flash-Lite and verbalized confidence 0.60-0.80. Spiess et al. (calibration-and-correctness-of-language-models-for-code) Sec IV-D, Table V: retrieval-augmented few-shot reflection on GPT-3.5 code completion reaches a skill score of 0.15, against a 0.05 threshold the paper cites as a minimum for a good forecast.",
+        "proponents": [
+          "verbalized-uncertainty-in-coding-llms-contamination-aware-calibration-uncertainl",
+          "functional-entropy-predicting-functional-correctness-in-llm-generated-code-with",
+          "calibration-and-correctness-of-language-models-for-code"
+        ]
+      },
+      "side_b": {
+        "position": "Stated confidence on code is erratic and often at or below chance at ranking candidates, so it should not be used as a correctness proxy.",
+        "evidence": "Ribeiro et al. (251207404-on-llms-internal-representation-of-code-correctness) Sec 4.2.1: reflective variants fall to about 7% (Qwen, HumanEval) or 15.3% (Mistral, True/False) at picking the correct one of four candidates against 25% chance. Tuerlings Table 1 itself: CodeLlama-7B Linguistic AUROC 0.491 with ECE 0.013, and Sec 4.6 reports 8 of 18 cells collapsed. Spiess et al. findings list: reflective methods are rather inconsistent. Code Is More Than Text (code-is-more-than-text-uncertainty-estimation-for-code-generation) token-scope analysis advises practitioners to avoid relying on verbalized confidence as a proxy for code correctness. Functional Entropy Java results: verbalized confidence is consistently weaker (0.55-0.62).",
+        "proponents": [
+          "251207404-on-llms-internal-representation-of-code-correctness",
+          "code-is-more-than-text-uncertainty-estimation-for-code-generation",
+          "calibration-and-correctness-of-language-models-for-code"
+        ]
+      },
+      "resolution": "The two sides measure different components of discrimination, which the orphan cluster did not separate. Side A's high numbers are pooled over one frozen generation per problem (Tuerlings: each model generates a single solution per problem, greedy; Functional Entropy: one greedy original response per prompt), so by Bulut's Eq. 1 every discordant pair is between problems and the AUROC measures whether the model knows which problems it fails, at pass rates of 8.22% to 29.86% strict in Tuerlings. Side B's near-chance result is a within-task selection among candidates (Ribeiro). Both are right: verbal confidence on code tracks problem difficulty for capable models and does not rank candidates of the same problem, with a strong scale effect (Qwen-32B 0.84 vs CodeLlama-7B 0.49). The load-bearing consequence for L2 is that the disconnect is a within-problem claim, so verbal confidence must be scored pooled and within problem on the same samples; no fetched code study reports within-problem verbal AUROC, which makes that cell a concrete residual.",
+      "origin": "contradiction-graph",
+      "decision_relevance": "high"
+    },
+    {
+      "name": "Sampling agreement versus single-pass readouts as the strongest code signal",
+      "side_a": {
+        "position": "Agreement across sampled programs, clustered by functional equivalence, is the strongest black-box correctness signal on code.",
+        "evidence": "Functional Entropy (functional-entropy-predicting-functional-correctness-in-llm-generated-code-with) abstract and discussion: functional equivalence methods take top AUROC in 11 of 15 model-benchmark combinations, best calibration in Python and SQL (calibration appendix), with gains over NLI clustering exceeding 0.30 AUROC for most models on Python and SQL; NLI semantic entropy sits at 0.47-0.58 on SQL and 0.50-0.53 on Python. Code Is More Than Text (code-is-more-than-text-uncertainty-estimation-for-code-generation) main results: the Generated Tests functional axis reaches 0.822 on HumanEval and 0.730 on MBPP, and dropping it lowers ensemble AUROC by 13.1 points.",
+        "proponents": [
+          "functional-entropy-predicting-functional-correctness-in-llm-generated-code-with",
+          "code-is-more-than-text-uncertainty-estimation-for-code-generation"
+        ]
+      },
+      "side_b": {
+        "position": "Sample agreement gives no consistent advantage over one pass at matched cost, and a single-pass entropy matches multi-pass baselines.",
+        "evidence": "Campos et al. (which-signals-of-code-correctness-survive-distribution-shift-hidden-state-and-ca) Table VI and RQ4 answer, at equal sampling cost: EigenScore is at chance on LCB (0.504) and the language sets (0.528) for Qwen3-Coder while single-candidate methods reach 0.77-0.91, and confidence is never significantly below it; Sec IV-B notes EigenScore scores a problem, not a candidate. Code Is More Than Text: single-pass Top-K entropy matches the strongest multi-pass NL baseline (Consistency-vr, 0.728 average) at over 3x lower cost, 0.813 on APPS-Intro for Qwen3-14B. Functional Entropy recommendations: minimum token negentropy is the strongest single-generation method, highest within-family AUROC in 12 of 15 combinations.",
+        "proponents": [
+          "which-signals-of-code-correctness-survive-distribution-shift-hidden-state-and-ca",
+          "code-is-more-than-text-uncertainty-estimation-for-code-generation"
+        ]
+      },
+      "resolution": "Synthesis: the equivalence relation, not sampling itself, decides the outcome. Agreement measured in hidden-state space (EigenScore) or NLI space collapses on code (over 80% of prompts produce exactly one NLI cluster on Python and SQL, Functional Entropy cluster-count appendix), while functional equivalence (LLM-judged or test-executed) carries real signal. Two caveats keep Side A from winning outright, and both are design requirements for L1. First, every Side A number is pooled over one scored response per problem, so it does not show that agreement ranks candidates within a problem; a problem-level agreement score has within-problem AUROC of 0.5 by construction. Second, when clusters are built from executed tests, the score can look better under any label oracle that shares those tests (Liu et al., certified-against-which-oracleexecution-labels-set-the-reported-riskof-conformal, 16 of 16 combinations in SQL); Code Is More Than Text keeps self-generated tests separate from the hidden-test label for this reason. The L1 comparison should include a functional-equivalence sampling family at matched cost, built from tests disjoint from the label suite, and report its per-candidate within-problem AUROC.",
+      "origin": "contradiction-graph",
+      "decision_relevance": "high"
+    },
+    {
+      "name": "Post-hoc recalibration on code: genuine skill or cosmetic Brier gain",
+      "side_a": {
+        "position": "Rescaling code-model confidence with known execution labels, especially group-aware multicalibration, yields substantial Brier skill.",
+        "evidence": "Multicalibration (multicalibration-for-llm-based-code-generation) Table 1, LiveCodeBench BSS: uncalibrated token likelihood -0.543 (Qwen3) and -0.075 (gpt-oss), Platt 0.377 and 0.187, IGLB 0.480 and 0.764; abstract reports +1.03 skill over uncalibrated and +0.37 over group-agnostic baselines. Spiess et al. (calibration-and-correctness-of-language-models-for-code) conclusion: Platt scaling generally gives somewhat better calibrated confidence, and few-shot reflection reaches skill 0.15.",
+        "proponents": [
+          "multicalibration-for-llm-based-code-generation",
+          "calibration-and-correctness-of-language-models-for-code"
+        ]
+      },
+      "side_b": {
+        "position": "Recalibration lowers Brier and ECE but adds little or no skill beyond the base rate and cannot improve ranking.",
+        "evidence": "Rathnasuriya and Yang (characterizing-overconfident-failure-in-llm-based-code-generation-full-text) Sec 6.1, Table 5, five-fold cross-validated Platt and isotonic on MBPP+: CodeLlama average token confidence BS 0.459 to 0.248 with BSS about 0.001; DeepSeekCoder 0.300 to 0.224, BSS about 0.001. Spiess et al. Sec IV: for program repair, rescaling does not improve skill score for any measure. Probe-SD (calibration-not-answer-selection-distilling-internal-confidence-in-reasoning-mod) Table 2: Verbal-Iso cuts in-domain ECE from .178 to .013 while AUROC stays .825.",
+        "proponents": [
+          "characterizing-overconfident-failure-in-llm-based-code-generation-full-text",
+          "calibration-not-answer-selection-distilling-internal-confidence-in-reasoning-mod"
+        ]
+      },
+      "resolution": "Both sides report correct numbers; they disagree because they credit different information to the readout. A monotone recalibrator cannot change AUROC, so its BSS after fitting is bounded by the raw score's existing resolution: near zero for 7-8B models whose best token or sampling AUC is 0.598-0.696 (Rathnasuriya Table 3), positive for Qwen3 Coder and gpt-oss on LiveCodeBench. The extra gain from multicalibration comes from group features (complexity, code length, prompt length, programming language), and its McEval ablation finds language gives the largest single-category gain. These are problem-level covariates outside the model's readout, so part of the reported skill is difficulty and language information, not confidence. The committed reading is that recalibration fixes calibration, never discrimination, and group recalibration imports problem-level information. For L1 this sets two required controls: report AUROC beside BSS for every recalibrated readout, and include a covariate-only predictor (the same groups with no model score) so a recalibration gain is not attributed to the readout.",
+      "origin": "contradiction-graph",
+      "decision_relevance": "high"
+    },
+    {
+      "name": "Execution test labels: adequate ground truth or oracle-dependent instrument",
+      "side_a": {
+        "position": "Benchmark test-suite labels are not a stable ground truth: thin suites pass wrong programs, rankings move when the oracle is strengthened, and scores built from the same oracle look better under it.",
+        "evidence": "EvalPlus (is-your-code-generated-by-chatgpt-really-correct-rigorous-evaluation-of-large-la): 80x tests cut pass@k by 19.3-28.9% on 26 LLMs and change rankings. SWE-ABS (swe-abs-adversarial-benchmark-strengthening-exposes-inflated-success-rates-on-te): strengthening rejects 19.78% of previously passing patches and moves the top agent from 78.80% to 62.20% (rank 1 to 5). Liu et al. (certified-against-which-oracleexecution-labels-set-the-reported-riskof-conformal) abstract and Sec 1, text-to-SQL: an oracle swap raises held-out conformal risk 2.73 to 10.23 points, and every execution-consistency score looks better under the oracle that built its clusters in 16 of 16 score-by-checkpoint combinations. BlindSpotEval (261032548-beyond-coverage-and-mutation-a-blind-spot-analysis-of-llm-generated-un): 15.6% of LLM-written test failures are wrong-oracle.",
+        "proponents": [
+          "is-your-code-generated-by-chatgpt-really-correct-rigorous-evaluation-of-large-la",
+          "swe-abs-adversarial-benchmark-strengthening-exposes-inflated-success-rates-on-te",
+          "certified-against-which-oracleexecution-labels-set-the-reported-riskof-conformal",
+          "261032548-beyond-coverage-and-mutation-a-blind-spot-analysis-of-llm-generated-un"
+        ]
+      },
+      "side_b": {
+        "position": "Hidden-suite pass labels, used with frozen generations and signal tests kept separate from label tests, are adequate and are the field's standard ground truth for confidence studies.",
+        "evidence": "Code Is More Than Text (code-is-more-than-text-uncertainty-estimation-for-code-generation) metrics section: labels are official hidden-test pass@1, kept separate from self-generated tests, since otherwise the functional signal would be trivially perfect by construction. Multicalibration (multicalibration-for-llm-based-code-generation) Sec 5: executable test suites are adopted as the most reliable measure of code correctness. Tuerlings (verbalized-uncertainty-in-coding-llms-contamination-aware-calibration-uncertainl) Sec 3.3: code outputs are frozen before elicitation so labels are independent of confidence estimation. Functional Entropy calibration appendix: calibration results are broadly consistent with the AUROC findings.",
+        "proponents": [
+          "code-is-more-than-text-uncertainty-estimation-for-code-generation",
+          "multicalibration-for-llm-based-code-generation",
+          "verbalized-uncertainty-in-coding-llms-contamination-aware-calibration-uncertainl",
+          "functional-entropy-predicting-functional-correctness-in-llm-generated-code-with"
+        ]
+      },
+      "resolution": "Side B describes a practice, not a test of it: no fetched code study recomputes a confidence-method ranking under base versus strengthened labels, so adequacy is assumed. Side A's fragility evidence is strong but each piece sits outside the L1 design space (accuracy rankings in EvalPlus and SWE-ABS, SQL and conformal risk in Liu, test generation in BlindSpotEval). The committed reading follows the L1 interim and comparisons Tension 3: labels are adequate for accuracy when independence is enforced but are an untested source of variance for confidence rankings, with a concrete code mechanism (false passes on plausible-but-wrong programs inflate the families that track test-style agreement, as Liu's 16 of 16 result predicts). The base-test versus augmented-test relabeling (HumanEval/MBPP vs HumanEval+/MBPP+) belongs in the measurement layer that the L2 and L3 numbers stand on, because label flips would move them too; whether it changes rankings is CLEAN (provisional) under the stated instrument gaps.",
+      "origin": "comparisons",
+      "decision_relevance": "high"
+    },
+    {
+      "name": "Confidence-gated execution budgets: beat random, or bounded by difficulty",
+      "side_a": {
+        "position": "Gating costly verification or sampling by a cheap confidence signal beats random or uniform allocation on code at matched budget.",
+        "evidence": "Heteroskedastic signals (heteroskedastic-signals-in-budgeted-llm-verificationstructural-heterogeneity-lim) Table 1, MBPP replay at beta=10% (Qwen3-8B): Random .551, Threshold .636, CST .671, Oracle 1.00, with the CST-minus-Threshold gain CI [-0.2, +7.0] and 10% injected Bernoulli label noise. SWE-Verifier (261030284-swe-verifier-selective-verification-for-coding-agents-full-text) Table 1: MiniMax-M2.7 75.47 +/- 1.40 to 77.20 +/- 0.87 at 1.09x cost versus 75.27 for all-step self-verification at 3.35x. SWE-Router (swe-router-routing-in-multi-turn-agentic-software-engineering-tasks) Table 2: Route-AUC 0.780 with a curve above the random-assignment band. Capability self-assessment (capability-self-assessment-in-large-language-models) Table 7: about 8.2 points over random routing at matched cloud-call budget, on math.",
+        "proponents": [
+          "heteroskedastic-signals-in-budgeted-llm-verificationstructural-heterogeneity-lim",
+          "261030284-swe-verifier-selective-verification-for-coding-agents-full-text",
+          "swe-router-routing-in-multi-turn-agentic-software-engineering-tasks",
+          "capability-self-assessment-in-large-language-models"
+        ]
+      },
+      "side_b": {
+        "position": "On hard code workloads routing by a prior or confidence signal gains little or nothing over round-robin, and uncertainty-triggered regeneration hurts.",
+        "evidence": "Give Up to Get More (give-up-to-get-more-priors-not-policies-govern-test-time-compute-allocation) abstract and contributions list (Sec 1): the best difficulty-proportional rule captures at most 13% of oracle gain on hard workloads even with true pass rates; the gain vanishes between prior rank correlations of about 0.3 and 0.55, which cheap text-based priors barely reach, and without such a prior no tested policy beats round-robin. Hard Issue (hard-issue-weak-model-or-bad-runrethinking-failure-prediction-for-coding-agents) RQ2: trajectory failure predictors reach about 0.62 AUROC against 0.92 for an issue-difficulty reference, with gain beyond difficulty and ability statistically equivalent to zero. 1introduction (2608.14659) Table 1: uncertainty-triggered regeneration lowers Pass@1 in 5 of 6 configurations.",
+        "proponents": [
+          "give-up-to-get-more-priors-not-policies-govern-test-time-compute-allocation",
+          "hard-issue-weak-model-or-bad-runrethinking-failure-prediction-for-coding-agents",
+          "1introduction"
+        ]
+      },
+      "resolution": "The two camps use different gate classes and budget units, so the dispute is partly definitional; the real part favors a conditional Side A. Every positive code result uses a trained or proxy gate (logit-margin proxy with injected noise, a trained verifier, a trained value head) and none reports a matched random arm together with an attainable label-sorted oracle under unmodified execution labels; every negative uses pass-rate priors, regeneration triggers, or model switching. Give Up supplies the deciding quantity: a gate helps only when its within-pool rank correlation with outcome clears roughly 0.3 to 0.55 and the workload is not mostly hopeless. Given the within-problem AUROC of 0.6 to 0.7 that Tension 1 predicts for the best code readouts, the committed reading is that elicited verbal or probe gating can beat random only in the mid-pass-rate stratum. L3 should be an offline replay on the L1/L2 generations with random and label-sorted oracle arms at several budgets, stratified by pass rate, where an honest negative in the hard stratum is an expected and publishable result (comparisons Tension 5).",
+      "origin": "comparisons",
+      "decision_relevance": "medium"
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+- Added H3 7.4 breadth matrix (10 occupants plus the Rank 1 design) from dossier breadth records, resolving the escalated instruction-critic finding.
+- Updated LADDER mentions in 4.3, the section 8 table, 9.3, and 10: read in full, adjacent, not an occupant.

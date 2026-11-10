@@ -1,0 +1,43 @@
+{
+ "source_note_id": "semguard-real-time-semantic-evaluator-for-correcting-llm-generated-code",
+ "claims": [
+  {
+   "claim": "SemGuard trains a line-level semantic evaluator on SemDiff and embeds it in decoding to flag deviations, roll back to the faulty line, and regenerate, without executing code.",
+   "stance": "supports",
+   "stance_target": "L4: localization plus targeted regeneration via a learned evaluator is OCCUPIED at line granularity",
+   "evidence_type": "empirical",
+   "scope_conditions": "DeepSeekCoder-6.7B, QwenCoder-7B, CodeLlama-7B, StarCoder2-7B; SemDiff, MBPP, LiveCodeBench, SemDiff-Java",
+   "quoted_support": "Abstract: flags deviations on partial code, rolls back to the faulty line, and guides regeneration - without executing the program or requiring test cases.",
+   "numbers": [
+    "Pass@1 +48.92% on LiveCodeBench with CodeLlama-7B",
+    "semantic error rate -19.86% vs ROCODE on SemDiff",
+    "SemGuard-Penalty Pass@1 38.06 / 38.34 vs ROCODE 35.83 / 37.50 (Table II)"
+   ],
+   "entities": [
+    "SemGuard",
+    "SemDiff",
+    "ROCODE"
+   ],
+   "time_period": "2025",
+   "region": "global",
+   "confidence": "high",
+   "source_note_id": "semguard-real-time-semantic-evaluator-for-correcting-llm-generated-code"
+  }
+ ],
+ "breadth": {
+  "confidence_families": "trained line-level semantic evaluator (not a calibrated probability)",
+  "model_families_and_sizes": "DeepSeekCoder-6.7B, QwenCoder-7B, CodeLlama-7B, StarCoder2-7B",
+  "base_vs_instruct": "not present (searched: full text)",
+  "post_training_stages": "not present (searched: full text)",
+  "reasoning_models": "not present (searched: full text)",
+  "elicitation_formats": "not present (searched: full text)",
+  "benchmarks": "SemDiff, MBPP 500 test, LiveCodeBench tasks 1 July 2024 to 1 April 2025, SemDiff-Java",
+  "label_source": "line divergence between correct and incorrect implementations (SemDiff)",
+  "label_independence": "not present (searched: full text)",
+  "contamination_split": "LiveCodeBench restricted to 1 July 2024 - 1 April 2025 (dataset section)",
+  "calibration_metrics": "not present (searched: ECE, Brier); Pass@k",
+  "granularity": "line-level",
+  "causal_intervention": "rollback and regenerate at flagged line"
+ },
+ "note": "RELATED"
+}

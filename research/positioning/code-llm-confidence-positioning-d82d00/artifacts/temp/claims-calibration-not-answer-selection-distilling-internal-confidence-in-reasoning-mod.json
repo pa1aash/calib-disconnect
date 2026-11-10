@@ -1,0 +1,71 @@
+[
+ {
+  "claim": "On factual QA, a linear probe on the hidden state between chain of thought and answer has ECE 5-38x lower than verbalized confidence across four benchmarks and two model families.",
+  "stance": "supports",
+  "stance_target": "L2: probe versus verbal readout in reasoning models (non-code)",
+  "evidence_type": "empirical",
+  "scope_conditions": "TriviaQA, EntityQuestions, NQ-open, SimpleQA-Verified; Qwen3-14B and Ministral-3-8B-Reasoning-2512; 1,000 questions and 10 traces each",
+  "quoted_support": "a linear probe on the hidden state between the chain of thought and the answer is substantially better calibrated: its expected calibration error is 5\u201338 \u00d7 lower than that of the verbalized score across four benchmarks and two model families.",
+  "numbers": [
+   "5-38x lower ECE",
+   "Qwen3-14B ECE 0.178 -> 0.024 in-domain",
+   "0.542 -> 0.113 out-of-domain"
+  ],
+  "entities": [
+   "Probe-SD",
+   "Qwen3-14B",
+   "Ministral-3-8B-Reasoning"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "calibration-not-answer-selection-distilling-internal-confidence-in-reasoning-mod",
+  "breadth": {
+   "confidence_families": "verbalized score, post-CoT linear probe, self-consistency, Probe-SD distilled (Abstract, Sec 2-3)",
+   "model_families_and_sizes": "Qwen3-14B, Ministral-3-8B-Reasoning-2512",
+   "base_vs_instruct": "Probe-SD finetunes the base checkpoint of the same family (Intro)",
+   "post_training_stages": "RLVR-trained reasoning models; SFT distillation (Intro)",
+   "reasoning_models": "yes, reasoning models with chain of thought",
+   "elicitation_formats": "verbalized confidence after CoT, probe at last pre-answer token, T=0.6 (Setup)",
+   "benchmarks": "TriviaQA, EntityQuestions, NQ-open, SimpleQA-Verified; no code",
+   "label_source": "answer correctness on factual QA",
+   "label_independence": "not present (searched: full text, keyword scan)",
+   "contamination_split": "not present (searched: full text, keyword scan)",
+   "calibration_metrics": "ECE, selection accuracy vs majority vote and oracle",
+   "granularity": "per-trace",
+   "causal_intervention": "not present (searched: intervention, patching)"
+  }
+ },
+ {
+  "claim": "Used to pick among N sampled answers, the probe nearly ties majority voting and falls far short of the oracle: internal states answer how certain am I well and which answer is right poorly.",
+  "stance": "supports",
+  "stance_target": "L3: probe confidence not a good selector",
+  "evidence_type": "empirical",
+  "scope_conditions": "Factual QA only",
+  "quoted_support": "Internal states answer \u201chow certain am I\u201d well and \u201cwhich answer is right\u201d poorly, so the signal should be reported as a confidence rather than used to select answers.",
+  "numbers": [],
+  "entities": [
+   "majority voting",
+   "oracle"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "calibration-not-answer-selection-distilling-internal-confidence-in-reasoning-mod",
+  "breadth": {
+   "confidence_families": "verbalized score, post-CoT linear probe, self-consistency, Probe-SD distilled (Abstract, Sec 2-3)",
+   "model_families_and_sizes": "Qwen3-14B, Ministral-3-8B-Reasoning-2512",
+   "base_vs_instruct": "Probe-SD finetunes the base checkpoint of the same family (Intro)",
+   "post_training_stages": "RLVR-trained reasoning models; SFT distillation (Intro)",
+   "reasoning_models": "yes, reasoning models with chain of thought",
+   "elicitation_formats": "verbalized confidence after CoT, probe at last pre-answer token, T=0.6 (Setup)",
+   "benchmarks": "TriviaQA, EntityQuestions, NQ-open, SimpleQA-Verified; no code",
+   "label_source": "answer correctness on factual QA",
+   "label_independence": "not present (searched: full text, keyword scan)",
+   "contamination_split": "not present (searched: full text, keyword scan)",
+   "calibration_metrics": "ECE, selection accuracy vs majority vote and oracle",
+   "granularity": "per-trace",
+   "causal_intervention": "not present (searched: intervention, patching)"
+  }
+ }
+]

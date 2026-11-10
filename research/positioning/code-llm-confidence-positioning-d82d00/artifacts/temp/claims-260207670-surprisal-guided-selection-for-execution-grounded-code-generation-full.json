@@ -1,0 +1,40 @@
+[
+ {
+  "claim": "On KernelBench, selecting the highest-surprisal correct sample gives 80% success versus 50% for most-confident selection; surprisal-guided-top3 matches oracle at 100%.",
+  "stance": "supports",
+  "stance_target": "likelihood-confidence can anti-correlate with quality in execution-grounded selection",
+  "evidence_type": "empirical",
+  "scope_conditions": "GPU kernel generation, not general code correctness",
+  "quoted_support": "selecting the highest-surprisal (lowest-confidence) correct sample yields 80% success vs. 50% for most-confident selection, a 30% improvement.",
+  "numbers": [
+   "80% vs 50%",
+   "top3 100%",
+   "Best-of-N 90% (18/20) at K=64",
+   "TTT best checkpoint 30.6%",
+   "random 59% at K=64"
+  ],
+  "entities": [
+   "KernelBench",
+   "GPT-OSS-120B"
+  ],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "260207670-surprisal-guided-selection-for-execution-grounded-code-generation-full",
+  "breadth": {
+   "confidence_families": "sample surprisal (negative log-likelihood) used as a selection signal; 'confidence' = lowest surprisal (abstract)",
+   "model_families_and_sizes": "GPT-OSS-120B with LoRA (abstract)",
+   "base_vs_instruct": "not present (searched: full text)",
+   "post_training_stages": "not present (searched: full text)",
+   "reasoning_models": "not present",
+   "elicitation_formats": "not present (searched: full text)",
+   "benchmarks": "KernelBench L1 (GPU kernel optimization), 20 tasks eval (abstract)",
+   "label_source": "deterministic evaluator: correctness and runtime speedup",
+   "label_independence": "not present (searched: full text)",
+   "contamination_split": "not present (searched: full text)",
+   "calibration_metrics": "not present (searched: ECE, calibration); success rate only",
+   "granularity": "per sampled candidate",
+   "causal_intervention": "not present (searched: full text)"
+  }
+ }
+]

@@ -1,0 +1,101 @@
+[
+ {
+  "claim": "SWE-Router conditions routing on a partial agent trajectory read by a learned value head and proves this never harms routing relative to prompt-only routing.",
+  "stance": "supports",
+  "stance_target": "L3 routing-by-confidence has a close agentic occupant",
+  "evidence_type": "theoretical",
+  "quoted_support": "We provide a Bayes-optimality theorem showing that conditioning on the partial trajectory never harms routing and is strictly better whenever exploration is informative.",
+  "numbers": [],
+  "entities": [
+   "SWE-Router",
+   "mini-SWE-agent",
+   "SWE-Bench Verified"
+  ],
+  "scope_conditions": "see summary",
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "swe-router-routing-in-multi-turn-agentic-software-engineering-tasks",
+  "breadth": {
+   "confidence_families": "learned value head P(eventual success) on partial trajectory (Sec 3, 5.2); no verbal, probe, or sampling-consistency confidence",
+   "model_families_and_sizes": "gpt-5-mini, deepseek-v3.2 (weak); gemini-3-pro-preview (strong); Qwen2.5-Coder-7B-Instruct value head (Sec 5.2)",
+   "base_vs_instruct": "not present (searched: base, instruct comparison)",
+   "post_training_stages": "not present (searched: SFT, RL stage)",
+   "reasoning_models": "not present (searched: reasoning on/off)",
+   "elicitation_formats": "not present (searched: verbal confidence prompt)",
+   "benchmarks": "SWE-Smith (train/val/test) and SWE-Bench Verified (test) (Sec 5.2)",
+   "label_source": "issue resolution via benchmark hidden tests",
+   "label_independence": "train on SWE-Smith and SWE-Bench splits; validation SWE-Smith only (Sec 5.2)",
+   "contamination_split": "not present (searched: contamination, release date)",
+   "calibration_metrics": "Route-AUC, AUROC of value function (Sec 5.3); no ECE",
+   "granularity": "whole-task trajectory-level",
+   "causal_intervention": "not present (searched: steering, ablation of probe)"
+  }
+ },
+ {
+  "claim": "Router curves are compared with a random-assignment cost-proportional reference band and prompt-only routers, with route-AUC as the summary metric.",
+  "stance": "supports",
+  "stance_target": "random-routing baseline already used in code routing",
+  "evidence_type": "empirical",
+  "quoted_support": "SWE-Router (green) sits above the random-assignment band in both pairs and traces a Pareto frontier that strictly dominates the embeddin",
+  "numbers": [
+   "route-AUC"
+  ],
+  "entities": [
+   "gpt-5-mini",
+   "deepseek-v3.2",
+   "gemini-3-pro-preview"
+  ],
+  "scope_conditions": "see summary",
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "swe-router-routing-in-multi-turn-agentic-software-engineering-tasks",
+  "breadth": {
+   "confidence_families": "learned value head P(eventual success) on partial trajectory (Sec 3, 5.2); no verbal, probe, or sampling-consistency confidence",
+   "model_families_and_sizes": "gpt-5-mini, deepseek-v3.2 (weak); gemini-3-pro-preview (strong); Qwen2.5-Coder-7B-Instruct value head (Sec 5.2)",
+   "base_vs_instruct": "not present (searched: base, instruct comparison)",
+   "post_training_stages": "not present (searched: SFT, RL stage)",
+   "reasoning_models": "not present (searched: reasoning on/off)",
+   "elicitation_formats": "not present (searched: verbal confidence prompt)",
+   "benchmarks": "SWE-Smith (train/val/test) and SWE-Bench Verified (test) (Sec 5.2)",
+   "label_source": "issue resolution via benchmark hidden tests",
+   "label_independence": "train on SWE-Smith and SWE-Bench splits; validation SWE-Smith only (Sec 5.2)",
+   "contamination_split": "not present (searched: contamination, release date)",
+   "calibration_metrics": "Route-AUC, AUROC of value function (Sec 5.3); no ECE",
+   "granularity": "whole-task trajectory-level",
+   "causal_intervention": "not present (searched: steering, ablation of probe)"
+  }
+ },
+ {
+  "claim": "Value-head AUROC is not strongly correlated with actual routing performance on SWE-Bench Verified.",
+  "stance": "neutral",
+  "stance_target": "discrimination metrics versus decision utility",
+  "evidence_type": "empirical",
+  "quoted_support": "AUROC evaluations in the test split of SWE-Bench Verified show that the accuracy of value functions are not strongly correlated to actual routing performances",
+  "numbers": [],
+  "entities": [
+   "SWE-Bench Verified"
+  ],
+  "scope_conditions": "see summary",
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "swe-router-routing-in-multi-turn-agentic-software-engineering-tasks",
+  "breadth": {
+   "confidence_families": "learned value head P(eventual success) on partial trajectory (Sec 3, 5.2); no verbal, probe, or sampling-consistency confidence",
+   "model_families_and_sizes": "gpt-5-mini, deepseek-v3.2 (weak); gemini-3-pro-preview (strong); Qwen2.5-Coder-7B-Instruct value head (Sec 5.2)",
+   "base_vs_instruct": "not present (searched: base, instruct comparison)",
+   "post_training_stages": "not present (searched: SFT, RL stage)",
+   "reasoning_models": "not present (searched: reasoning on/off)",
+   "elicitation_formats": "not present (searched: verbal confidence prompt)",
+   "benchmarks": "SWE-Smith (train/val/test) and SWE-Bench Verified (test) (Sec 5.2)",
+   "label_source": "issue resolution via benchmark hidden tests",
+   "label_independence": "train on SWE-Smith and SWE-Bench splits; validation SWE-Smith only (Sec 5.2)",
+   "contamination_split": "not present (searched: contamination, release date)",
+   "calibration_metrics": "Route-AUC, AUROC of value function (Sec 5.3); no ECE",
+   "granularity": "whole-task trajectory-level",
+   "causal_intervention": "not present (searched: steering, ablation of probe)"
+  }
+ }
+]

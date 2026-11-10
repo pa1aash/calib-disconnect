@@ -1,0 +1,39 @@
+[
+ {
+  "claim": "A placebo-controlled matched-budget comparison on MBPP+ at 1.5B, 3B, 7B finds blind resampling beats or ties self-repair with execution feedback, and measures repair success only, not any model confidence after the failure.",
+  "stance": "neutral",
+  "stance_target": "Update-after-failing-test is CLEAN (provisional)",
+  "evidence_type": "empirical",
+  "scope_conditions": "Small frozen code models, MBPP+",
+  "quoted_support": "Blind resampling is the strongest condition below 7B, and remains statistically tied with the best condition at 7B, while consuming 2.5-5.5x fewer tokens; conditioning on the model's own failed attempt costs 6.1 points at 1.5B (p=0.006)",
+  "numbers": [
+   "1.5B",
+   "3B",
+   "7B",
+   "2.5-5.5x fewer tokens",
+   "6.1 points at 1.5B (p=0.006)"
+  ],
+  "entities": [
+   "MBPP+"
+  ],
+  "time_period": "2026",
+  "region": "",
+  "confidence": "high",
+  "source_note_id": "try-again-dont-look-backblind-resampling-outperforms-self-repair-in-small-code-m",
+  "breadth": {
+   "confidence_families": "not present (searched: confiden, calibrat, self-assess, certain; only verbal self-reflection as a repair prompt)",
+   "model_families_and_sizes": "1.5B, 3B, 7B code models on MBPP+ (abstract; Section: setup)",
+   "base_vs_instruct": "not present (searched: base, instruct)",
+   "post_training_stages": "not present (searched: RLHF, SFT)",
+   "reasoning_models": "not present (searched: reasoning, thinking)",
+   "elicitation_formats": "not present as confidence; verbal self-reflection condition only",
+   "benchmarks": "MBPP+",
+   "label_source": "test execution",
+   "label_independence": "not assessed",
+   "contamination_split": "not present (searched: contamination, release date)",
+   "calibration_metrics": "not present (searched: ECE, AUROC, Brier)",
+   "granularity": "",
+   "causal_intervention": "placebo and content-free failure-notice arms for repair success (not for confidence)"
+  }
+ }
+]

@@ -1,0 +1,47 @@
+# Draft A — must_read_note_ids (n=44)
+Angle: Strongest-thesis. Argue the position best supported by the evidence: the uncontrolled L2 headline is OCCUPIED, so the strongest TMLR contribution is one execution-graded measurement paper whose headline is the controlled, within-problem, supervision-matched probe-versus-own-readout test on code, built on an L1 sensitivity protocol (estimator set, augmented-test oracle swap, per-model release split) with an L3 offline routing replay as secondary analysis. Make every verdict concrete and argue it forcefully against the closest occupants.
+
+- interim-report-l2-residual-post-training-reasoning-format-on-code
+- interim-report-probe-advantage-real-or-difficulty-confound-on-code
+- interim-report-l3-confidence-routed-execution-and-update-after-failure
+- interim-report-l1-estimator-and-label-oracle-sensitivity-with-contamination-cont
+- interim-report-f-metrology-residual-quantity
+- interim-report-l4-localization-occupancy-and-targeted-repair
+- on-llms-internal-representation-of-code-correctness
+- which-signals-of-code-correctness-survive-distribution-shift-hidden-state-and-ca
+- on-the-robustness-of-llms-internal-representation-of-code-correctness
+- neurosym-cal-bridging-the-reasoning-execution-gap-in-code-generation-via-hierarc
+- verbalized-uncertainty-in-coding-llms-contamination-aware-calibration-uncertainl
+- characterizing-overconfident-failure-in-llm-based-code-generation-full-text
+- mechanistic-interpretability-of-code-correctness-in-llms-via-sparse-autoencoders
+- closing-the-confidence-faithfulness-gap-in-large-language-models
+- localized-calibrated-uncertainty-in-code-language-models
+- 260517029-task-abstention-for-large-language-models-in-code-generation-full-text
+- heteroskedastic-signals-in-budgeted-llm-verificationstructural-heterogeneity-lim
+- give-up-to-get-more-priors-not-policies-govern-test-time-compute-allocation
+- 261030284-swe-verifier-selective-verification-for-coding-agents-full-text
+- correctness-assessment-of-code-generated-by-large-language-models-using-internal
+- model-agnostic-correctness-assessment-for-llm-generated-code-via-dynamic-interna
+- code-correctness-is-linearly-decodable-from-llm-hidden-states-before-generation
+- llms-encode-their-failures-predicting-success-from-pre-generation-activations
+- abstract
+- a-heckler-in-the-hidden-statecorrectness-signals-in-diffusion-language-models
+- code-mue-measuring-code-llms-uncertainty-through-execution-based-semantic-intera
+- functional-entropy-predicting-functional-correctness-in-llm-generated-code-with
+- assessing-correctness-in-llm-based-code-generation-via-uncertainty-estimation
+- multicalibration-for-llm-based-code-generation
+- certified-against-which-oracleexecution-labels-set-the-reported-riskof-conformal
+- swe-router-routing-in-multi-turn-agentic-software-engineering-tasks
+- do-large-language-models-know-what-they-are-capable-of
+- open-the-oyster-empirical-evaluation-and-improvement-of-code-reasoning-confidenc
+- reasoning-models-better-express-their-confidence
+- how-llms-detect-and-correct-their-own-errors-the-role-of-internal-confidence-sig
+- when-words-fall-short-iterative-synergy-between-verbalized-reasoning-and-hidden
+- what-llm-forecasters-know-but-dont-say-probing-internal-representations-for-cali
+- calibration-not-answer-selection-distilling-internal-confidence-in-reasoning-mod
+- beyond-binary-rewards-training-lms-to-reason-about-their-uncertainty-2
+- cognitive-dissonance-why-do-language-model-outputs-disagree-with-internal-repres
+- its-the-problem-not-the-pathbudget-and-difficulty-confounds-in-llm-reasoning-tra
+- process-supervision-of-confidence-margin-for-calibrated-llm-reasoning
+- conftuner-training-large-language-models-to-express-their-confidence-verbally
+- is-your-code-generated-by-chatgpt-really-correct-rigorous-evaluation-of-large-la

@@ -1,0 +1,131 @@
+[
+ {
+  "claim": "Existing benchmark test suites are thin: HumanEval averages 7.7 tests/problem and MBPP 3, and EvalPlus's 80x more tests dropped pass rate by 15%, so measured pass rates (the execution ground truth) are inflated.",
+  "stance": "supports",
+  "stance_target": "L1/L4: execution ground truth quality and self-written test adequacy",
+  "evidence_type": "empirical",
+  "scope_conditions": "Sec 1",
+  "quoted_support": "Initial analyses of benchmarks like HumanEval [ 6 ] (avg. 7.7 tests/problem), MBPP [ 3 ] (3 tests/problem), and EvalPlus [ 27 , 28 ] (which saw a 15% pass rate drop with 80× more tests) indicate the fragility of current evaluation setups due to sparse test coverage.",
+  "numbers": [
+   "7.7 tests/problem HumanEval",
+   "3 tests/problem MBPP",
+   "15% pass-rate drop with 80x more tests"
+  ],
+  "entities": [
+   "HumanEval",
+   "MBPP",
+   "EvalPlus"
+  ],
+  "time_period": "2025-07",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "not present (searched: confidence 0 hits; paper is about test-suite quality)",
+   "model_families_and_sizes": "Test-case generators and code LLMs evaluated on TCGBench (1,840 competitive-programming problems)",
+   "base_vs_instruct": "not present (searched: not studied)",
+   "post_training_stages": "not present (searched: not studied)",
+   "reasoning_models": "not present (searched: not examined as confidence axis)",
+   "elicitation_formats": "not present (searched: verbal/probe: not applicable)",
+   "benchmarks": "TCGBench (1,840 problems), HumanEval, MBPP, EvalPlus, LiveCodeBench-v6 comparison",
+   "label_source": "Test cases from SAGA human-LLM collaboration; verifier accuracy",
+   "label_independence": "LLM-generated tests vs LLM-generated code self-pass rates studied",
+   "contamination_split": "not present (searched: contaminat 1 hit only)",
+   "calibration_metrics": "Detection rate 90.62%, Verifier Acc 32.58% on TCGBench; +10.78% over LiveCodeBench-v6",
+   "granularity": "Whole problem test suite",
+   "causal_intervention": "not present (searched: none)"
+  },
+  "source_note_id": "rethinking-verification-for-llm-code-generation-from-generation-to-testing"
+ },
+ {
+  "claim": "SAGA reaches a detection rate of 90.62% and verifier accuracy 32.58% on TCGBench, with Verifier Acc of the SAGA-synthesized benchmark 10.78% higher than LiveCodeBench-v6.",
+  "stance": "supports",
+  "stance_target": "L4 test adequacy measured at whole-suite level",
+  "evidence_type": "empirical",
+  "scope_conditions": "TCGBench 1,840 problems",
+  "quoted_support": "Experiments show that SAGA achieves a detection rate of 90.62% and a verifier accuracy of 32.58% on TCGBench. The Verifier Accuracy (Verifier Acc) of the code generation evaluation benchmark synthesized by SAGA is 10.78% higher than that of LiveCodeBench-v6.",
+  "numbers": [
+   "90.62%",
+   "32.58%",
+   "10.78%",
+   "1,840"
+  ],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "not present (searched: confidence 0 hits; paper is about test-suite quality)",
+   "model_families_and_sizes": "Test-case generators and code LLMs evaluated on TCGBench (1,840 competitive-programming problems)",
+   "base_vs_instruct": "not present (searched: not studied)",
+   "post_training_stages": "not present (searched: not studied)",
+   "reasoning_models": "not present (searched: not examined as confidence axis)",
+   "elicitation_formats": "not present (searched: verbal/probe: not applicable)",
+   "benchmarks": "TCGBench (1,840 problems), HumanEval, MBPP, EvalPlus, LiveCodeBench-v6 comparison",
+   "label_source": "Test cases from SAGA human-LLM collaboration; verifier accuracy",
+   "label_independence": "LLM-generated tests vs LLM-generated code self-pass rates studied",
+   "contamination_split": "not present (searched: contaminat 1 hit only)",
+   "calibration_metrics": "Detection rate 90.62%, Verifier Acc 32.58% on TCGBench; +10.78% over LiveCodeBench-v6",
+   "granularity": "Whole problem test suite",
+   "causal_intervention": "not present (searched: none)"
+  },
+  "source_note_id": "rethinking-verification-for-llm-code-generation-from-generation-to-testing"
+ },
+ {
+  "claim": "Evaluation suites with limited homogeneous test cases let subtle faults go undetected, inflating measured performance and corrupting RLVR reward estimates.",
+  "stance": "supports",
+  "stance_target": "execution labels are noisy proxies; false-pass rate must be treated as label noise in calibration studies",
+  "evidence_type": "empirical",
+  "scope_conditions": "Abstract",
+  "quoted_support": "these evaluation suites often comprise only a limited number of homogeneous test cases, resulting in subtle faults going undetected.",
+  "numbers": [],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "high",
+  "breadth": {
+   "confidence_families": "not present (searched: confidence 0 hits; paper is about test-suite quality)",
+   "model_families_and_sizes": "Test-case generators and code LLMs evaluated on TCGBench (1,840 competitive-programming problems)",
+   "base_vs_instruct": "not present (searched: not studied)",
+   "post_training_stages": "not present (searched: not studied)",
+   "reasoning_models": "not present (searched: not examined as confidence axis)",
+   "elicitation_formats": "not present (searched: verbal/probe: not applicable)",
+   "benchmarks": "TCGBench (1,840 problems), HumanEval, MBPP, EvalPlus, LiveCodeBench-v6 comparison",
+   "label_source": "Test cases from SAGA human-LLM collaboration; verifier accuracy",
+   "label_independence": "LLM-generated tests vs LLM-generated code self-pass rates studied",
+   "contamination_split": "not present (searched: contaminat 1 hit only)",
+   "calibration_metrics": "Detection rate 90.62%, Verifier Acc 32.58% on TCGBench; +10.78% over LiveCodeBench-v6",
+   "granularity": "Whole problem test suite",
+   "causal_intervention": "not present (searched: none)"
+  },
+  "source_note_id": "rethinking-verification-for-llm-code-generation-from-generation-to-testing"
+ },
+ {
+  "claim": "The paper has no confidence, calibration, per-requirement label decomposition, or probe component; it supplies test-adequacy metrics only at whole-problem granularity.",
+  "stance": "neutral",
+  "stance_target": "L4 self-written test adequacy: partly occupied (whole-suite), per-requirement open",
+  "evidence_type": "expert-opinion",
+  "scope_conditions": "Full-text grep: confidence 0, calibrat 0",
+  "quoted_support": "a human-LLM collaborative method (SAGA), leveraging human programming expertise with LLM reasoning capability, aimed at significantly enhancing both the coverage and the quality of generated test cases.",
+  "numbers": [],
+  "entities": [],
+  "time_period": "",
+  "region": "",
+  "confidence": "medium",
+  "breadth": {
+   "confidence_families": "not present (searched: confidence 0 hits; paper is about test-suite quality)",
+   "model_families_and_sizes": "Test-case generators and code LLMs evaluated on TCGBench (1,840 competitive-programming problems)",
+   "base_vs_instruct": "not present (searched: not studied)",
+   "post_training_stages": "not present (searched: not studied)",
+   "reasoning_models": "not present (searched: not examined as confidence axis)",
+   "elicitation_formats": "not present (searched: verbal/probe: not applicable)",
+   "benchmarks": "TCGBench (1,840 problems), HumanEval, MBPP, EvalPlus, LiveCodeBench-v6 comparison",
+   "label_source": "Test cases from SAGA human-LLM collaboration; verifier accuracy",
+   "label_independence": "LLM-generated tests vs LLM-generated code self-pass rates studied",
+   "contamination_split": "not present (searched: contaminat 1 hit only)",
+   "calibration_metrics": "Detection rate 90.62%, Verifier Acc 32.58% on TCGBench; +10.78% over LiveCodeBench-v6",
+   "granularity": "Whole problem test suite",
+   "causal_intervention": "not present (searched: none)"
+  },
+  "source_note_id": "rethinking-verification-for-llm-code-generation-from-generation-to-testing"
+ }
+]
