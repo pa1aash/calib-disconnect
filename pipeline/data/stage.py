@@ -188,9 +188,10 @@ def run(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool 
         metrics[f"{b}_suites"] = n_suites
 
     # -- near duplicates and folds
-    with _AtomicText(layout.near_duplicates) as f:
-        f.write(json.dumps(report.to_dict(), sort_keys=True, indent=1) + "\n")
-    written.append(layout.near_duplicates)
+    if lv_wanted:      # an lcb-only data job must not overwrite the label-validity report (re-check S1)
+        with _AtomicText(layout.near_duplicates) as f:
+            f.write(json.dumps(report.to_dict(), sort_keys=True, indent=1) + "\n")
+        written.append(layout.near_duplicates)
     metrics["near_duplicate_groups"] = len(report.groups)
     for pop in sorted({POPULATION_OF[b] for b in cfg.benchmarks}):
         pop_ids = [i for b in cfg.benchmarks if POPULATION_OF[b] == pop for i in selected[b]]
@@ -213,6 +214,11 @@ def run(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_run: bool 
         rows = [loader._rows[i] for i in sorted(loader._rows) if i.startswith("Mbpp/")]
         prov["mbpp_plus_patched_rows_sha256"] = hashing.config_hash(rows)
         prov["mbpp_plus_patched_ids"] = [p.problem_id for p in loader.problems("mbpp_plus") if p.patched]
+    if stats_path(layout).exists():   # merge per benchmark: data jobs run once per population (re-check S1)
+        old = json.loads(stats_path(layout).read_text())
+        agree_stats = {**{b: v for b, v in old.get("per_benchmark", {}).items() if b not in agree_stats}, **agree_stats}
+        prov = {**old.get("provenance", {}), **prov,
+                "pins": {**old.get("provenance", {}).get("pins", {}), **prov["pins"]}}
     stats_doc = {"format": "calib-disconnect/agreement_stats/v1", "agreement_seed": loader.agreement_seed,
                  "n_generate": agr.N_GENERATE, "cap": constants.AGREEMENT_INPUT_CAP,
                  "max_attempts": agr.MAX_ATTEMPTS, "per_benchmark": agree_stats, "provenance": prov}

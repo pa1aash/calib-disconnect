@@ -348,3 +348,160 @@ Design-requirement rows (sections 1, 4 to 9, 13): 152.
 | MINOR | 11 | G12 to G22 |
 
 Of the already-known items: review B1, B2, M2, M3, and M4 are fixed. M1 is partly fixed (G12), and the M2 fix caused G2. M5, m1, m2, and m14 are still open (G16). Open contract requests map to G8, G9, G10, G11, G16, G21, and G22.
+
+## Re-check (wave 8)
+
+Scope: every finding G1 to G22 re-checked against the code in the working tree and against docs/DEVIATIONS.md (DEV-001 to DEV-014), by reading the code, not the commit messages. Git history was not inspected in this session (no shell), so "at HEAD" is taken from the coordinator; the files read are the working-tree files. Tests were NOT RUN (no shell); the tests named below were located by reading and are not confirmed to pass. Line numbers are current.
+
+### Status of G1 to G22
+
+| ID | Status | Evidence (implementation; test or DEVIATIONS entry) | Remaining issue |
+|---|---|---|---|
+| G1 | FIXED (logic) | pipeline/readouts/files.py:214-239 (`valid_label_validity_problems`, `apply_reference_exclusions`); readouts/stage.py:485-487. Tests: tests/readouts/test_readouts_conformance.py::test_problem_excluded_under_one_suite_is_absent_from_every_suite; ::test_fit_sample_counts_use_the_both_suite_population; ::test_no_reference_file_means_no_restriction | The rule is right, but its input file is overwritten per benchmark under the ops runner (N1), so under the pilot plan the fix would drop every HumanEval+ problem |
+| G2 | FIXED, also LOGGED (DEV-012) | ops/plans/pilot.json:83-87. Test: tests/ops/test_ops_plans.py::test_pilot_t1_readouts_selects_own_recipe | None |
+| G3 | FIXED | readouts/stage.py:87-89 (`_st_primary`), :303-306, :324. Test: tests/readouts/test_readouts_conformance.py::test_pilot_model_gets_seed_refits_and_inner_adapters; ::test_non_primary_model_keeps_seed_zero_only | Dry-run listing still uses `_is_primary` (N7, MINOR) |
+| G4 | STILL OPEN | Readouts side done: probe persisted (readouts/stage.py:204-209), `run_fresh` (:416-451), pipeline/readouts/fresh.py, own-suffix scoring (rtuning.py:80-88, :123-153); full plan has fresh jobs (ops/plans/full.json:170-232 and later). Tests: tests/readouts/test_readouts_conformance.py::test_reading_a_on_a_fake_fresh_set_with_the_mock_backend; ::test_reading_a_with_a_tiny_real_model; ::test_own_suffix_context_and_scoring; tests/ops/test_ops_plans.py::test_full_plan_fresh_jobs | The plan's adapter paths do not match where the adapters are saved (N2), and each fresh readouts job retrains all of the model's frozen readouts (N3) |
+| G5 | FIXED | analysis/strata.py:50-63, :102-135; analysis/stage.py:442-462, :733-736, :755-769. Tests: tests/analysis/test_sensitivity_strata.py::test_contamination_partition_labels; ::test_stage_lcb_outputs | None |
+| G6 | FIXED | analysis/sensitivity.py (all); analysis/stage.py:369-439. Tests: tests/analysis/test_sensitivity_strata.py::test_identity_sensitivities_are_zero; ::test_capacity_rule_boolean; ::test_no_tiebreak_and_subset_inputs; ::test_stage_lcb_outputs | The 7.11 capacity rule uses the 95 percent paired interval (sensitivity.py:37, :84-91). The design says only "paired interval"; 95 percent matches line 861 for per-model terms. This is a reading, not logged (MINOR, see N8). The substitutions are against R^(0), not R_bar (stated in the docstring at sensitivity.py:4-6) |
+| G7 | FIXED | pipeline/execute/stage.py:206-225 (`rep.ok = False` and return before extraction unless `config/k1_accepted.json` lists exactly the excluded pairs); ops/runner.py:222-229. Tests: tests/execute/test_execute_gates.py::test_k1_stops_before_extraction_and_labeling; ::test_k1_accepted_with_exactly_the_excluded_pairs; ::test_k1_acceptance_must_list_exactly_the_excluded_pairs; tests/ops/test_ops_runner.py::test_k1_failure_names_acceptance_file_and_blocks_model | Per-benchmark jobs judge K1 per benchmark, which matches "a HumanEval or MBPP suite" (design 1128) |
+| G8 | LOGGED (DEV-009) | NameError counts per model, benchmark, and suite: execute/labels.py:121-136; execute/stage.py:279-284 writes execute/name_errors.json. Test: tests/execute/test_execute_gates.py::test_name_error_counts_per_model_benchmark_and_suite | The DEV-009 reason misquotes design row 5.6 (N5, MAJOR) |
+| G9 | FIXED | pipeline/readouts/unsupervised.py:52-76 (NaN and `missing` for TL), :108-133 (NaN for AGREE without a signature); readouts/stage.py:162-164 reports missing counts. Test: tests/readouts/test_readouts_conformance.py::test_missing_counts_are_reported_and_nan | None |
+| G10 | STILL OPEN | Fixed for the S1 thinking probe: generate/stage.py:223-224, :380-408 writes only the "timing" set; normal capture skips it (:282-284); ops/plans.py:165-167 exempts timing jobs from the generation-only skip. Tests: tests/generate/test_timing_cards.py::test_timing_generate_writes_only_the_timing_set; ::test_timing_capture_ignores_generation_only_and_stores_nothing; ::test_normal_capture_never_picks_up_timing_shards; tests/ops/test_ops_plans.py::test_pilot_timing_jobs_exempt_from_generation_only | (a) The P4 and P6 forward-pass probe ("forward50", pilot.json:107-128) is a capture-only job. `_run_capture_timing` reads only `generations/<model>/<bench>/timing` (generate/stage.py:420-424), and the pilot has no timing generate job for P4 or P6 (only S1, pilot.json:152-173), so the job records "no timing generations to capture" and times nothing. The unit test creates the timing set by hand first. (b) The readouts stage never reads `timing_only` or `gen_set` (no "timing" match in pipeline/readouts/; readouts/stage.py:469-513). The "lora200" job therefore loads P4's frozen capture, which does not exist, logs "no capture index; skipped", and returns ok. The pilot still does not measure the P4 and P6 forward-pass and LoRA throughput that K7 needs (design 1118). Verified by reading |
+| G11 | FIXED (pod not executed), also LOGGED (DEV-001) | sandbox.py:131-139 (`--unshare-user --uid 65534 --gid 65534`), :209-226 (cgroup pids.max when writable), :727-734 (preflight fork probe; failing it fails the preflight); pilot.json:29 uses "bwrap"; container image via `--container-image` (ops/plans.py:103-108). Tests: tests/execute/test_execute_gates.py::test_bwrap_runs_as_a_non_root_uid_in_its_own_user_namespace; ::test_fork_probe_logic; ::test_fork_probe_job_runs_through_the_harness; ::test_cgroup_helpers_on_a_fake_hierarchy; tests/ops/test_ops_plans.py::test_pilot_sandbox_bwrap_and_container_image_switch | Whether RLIMIT_NPROC is enforced inside the user namespace when the pod's real uid is 0 depends on the kernel and was not executed. The preflight fork probe makes a failure loud, not silent |
+| G12 | FIXED, also LOGGED (DEV-013) | gate.py:35-49 (`slice_layer_indices`: first layer of every `layer_types` value), :52-82, :114-116 (indices and types in the report). Tests: tests/readouts/test_readouts_review_fixes.py::test_slice_keeps_every_layer_type_in_order; ::test_slice_of_interleaved_model_copies_the_chosen_layers_and_reports_indices; ::test_gate_runs_on_a_float32_slice_of_a_bf16_model | DEV-013's wording differs slightly from the code (N6, MINOR) |
+| G13 | FIXED | analysis/stage.py:714-715, :770-775 (`k3_degenerate_v2` with `fires`). Test: tests/analysis/test_stage.py::test_stage_unsealed (asserts the non-firing case only) | No test exercises the firing case |
+| G14 | FIXED | analysis/stage.py:465-480, :753-754. Test: tests/analysis/test_sensitivity_strata.py::test_stage_lcb_outputs | None |
+| G15 | LOGGED (DEV-011), code added | analysis/budget.py:32-41, :85-91; analysis/stage.py:725, :795-797. Test: tests/analysis/test_sensitivity_strata.py::test_three_player_cells_and_efficiency | The pooled three-player terms that DEV-011 makes primary carry only 95 percent intervals, and the outputs do not mark them as primary (N4, MAJOR) |
+| G16 | LOGGED (DEV-004, DEV-005, DEV-006, DEV-007, DEV-010) | The texts match the code: lora_train.py:56, :108, :125; probe.py:38, :271-287; unsupervised.py:8-9, :71; DEV-006 covers M5 and ladder reuse | None |
+| G17 | LOGGED (DEV-008) | tokens.py:164 | None |
+| G18 | FIXED | readouts/stage.py:92-106 (`st_allowed`, `sr_allowed`, `ladder_allowed`), :308-316. Tests: tests/readouts/test_readouts_conformance.py::test_role_tables; ::test_stage_skips_readouts_outside_a_models_role | None |
+| G19 | FIXED | execute/labels.py:88-136 (retries; no label row after a persistent infrastructure failure, never y = 0); execute/stage.py:285-289 (stage fails if any remain). Tests: tests/execute/test_execute_gates.py::test_infrastructure_failure_is_retried_twice_then_succeeds; ::test_persistent_infrastructure_failure_leaves_no_label_never_zero; ::test_infrastructure_failures_are_not_cached; ::test_agreement_signature_is_missing_after_persistent_infrastructure_failure | None |
+| G20 | LOGGED (DEV-007) | probe.py:271-287 matches the entry's trigger and grid | None |
+| G21 | FIXED | extract.py:29-36 (`("<|channel>thought", "<channel|>", False)`); the cached template exists under .hf-cache/meta/google_gemma-4-12B-it/. Tests: tests/generate/test_timing_cards.py::test_gemma_template_renders_empty_thought_block_in_the_prompt; ::test_thought_end_handles_gemma_channel_markers | pipeline/execute/CONTRACT_REQUESTS.md:11 still says the markers are not verified (stale, N9) |
+| G22 | STILL OPEN (pod check only) | Card recommendations recorded: generate/stage.py:254-256. Tests: tests/generate/test_timing_cards.py::test_card_recommendations_written_to_prompts_json; ::test_tracked_card_recommendations; ::test_base_stop_strings_are_shared_with_execute | vLLM `top_k=-1` is still marked unverified on the pinned engine (backends.py:27; generate CONTRACT_REQUESTS item 6). This needs a pod check before the pilot |
+
+### New findings
+
+**N1. BLOCKING, stop condition (changes the label-validity population, the input to the k rule, and the primary estimand's population). Per-benchmark ops jobs overwrite run-level files.** Verified by reading; not executed. Under the pilot plan, the data, generate, and execute jobs run once per benchmark (pilot.json:50-58, :59-72, :89-106). `job_config` sets `benchmarks = (scope,)` for those jobs (ops/plans.py:161-162). Two stages then write a run-level file from one benchmark only:
+- The data stage builds `data/folds_label_validity_seed<s>.json` from `cfg.benchmarks` only (pipeline/data/stage.py:195-202). The mbpp_plus job then overwrites the humaneval_plus job's plan with a plan that has no HumanEval+ problem.
+- The execute stage writes `data/reference_checks.parquet` and `execute/agreement_label_proxy.json` from the job's benchmarks only (pipeline/execute/stage.py:209-215). Each later execute job overwrites them; the last function-benchmark job wins (MBPP+ in the pilot order).
+
+Consequences:
+- Readouts give every problem missing from the fold plan fold -1, which drops it silently (pipeline/readouts/common.py:113, :118).
+- With the G1 fix, every HumanEval+ sample also gets label -1 (files.py:226-228, :236-238).
+- The analysis builds the label-validity population from the same reference-check file (analysis/stage.py:138-145, :666-668). The population, every Gamma cell, and the k rule's m_bar (analysis/stage.py:776-781) would therefore be computed on MBPP+ only.
+- On resume, the runner's changed-output check (tests/ops/test_ops_runner.py::test_marker_rerun_when_output_changed_or_missing) would rerun the earlier job and flip the files back and forth.
+
+This predates the wave 8 fixes, and the first audit missed it. The G1 fix extends it to the readouts. No test covers it: the integration test uses one benchmark (tests/integration/test_pipeline_mock.py:34), and no runner test runs two benchmark scopes through the data or execute stage.
+
+Fix: make these files benchmark-keyed or read-merge-write. Options are per-benchmark reference-check files merged by the readers, the data stage always building fold plans over every benchmark of the population (as it already does for near-duplicate groups at data/stage.py:130-134), or one population-scoped data job and one population-scoped execute job. Then add a runner-level mock test that runs the pilot plan's data and execute jobs over both benchmarks and asserts that both appear in the fold plan, the reference checks, and the analysis population.
+
+**N2. MAJOR. The full plan's fresh-generation adapter paths do not match where S^R adapters are saved.** Verified by reading. ops/plans/full.json:187 and every later fresh entry use `"adapter_path": "adapters/P1/SR_O_seed0_fold0"`, which is relative and capitalized. The readouts stage saves to `layout.adapters(m) / "sr_<population>_<suite>_seed<s>_fold<f>"` under the run root (pipeline/readouts/fresh.py:62-64; readouts/stage.py:405-406). The generate stage passes the plan's string to the backend unchanged (generate/stage.py:249; backends.py:247-250). Reading A generation would therefore fail to load the adapter. That failure should be loud, but reading A cannot be produced as planned. tests/ops/test_ops_plans.py::test_full_plan_fresh_jobs does not check `adapter_path`. Fix: derive `adapter_path` from `fresh.sr_adapter_path` (resolved against the run root) when the plan is expanded or in the generate stage, and add a test that ties the two.
+
+**N3. MAJOR. A fresh-set readouts job retrains all of the model's frozen readouts.** Verified by reading. `readouts.run` ignores `cfg.extra["gen_set"]` (readouts/stage.py:469-501). For each of the 10 P1 fresh readouts jobs in full.json, it reruns probes, S^T at three seeds, the ladder, and S^R, and only then `run_fresh`. Each pass overwrites P1's primary score files, the persisted probes, and the saved S^R adapters, after those adapters have already generated the fresh sets. GPU training is not guaranteed to be bitwise deterministic (suspected, not verified here). Reading A may therefore score a different adapter and probe from the ones behind the samples, and the manifest hashes of a primary model's scores change after the fact. It also roughly multiplies P1's readout compute by 11. Fix: when `gen_set` starts with "fresh:", run only `run_fresh` and refuse to write frozen paths; add a test.
+
+**N4. MAJOR. The LiveCodeBench three-player pooled terms that DEV-011 calls primary lack the simultaneous intervals of section 9.** Verified by reading. `pooled["budget_three_player"]` comes from `ST.term_intervals(..., "three")` (analysis/stage.py:795-797), and that function computes only the 95 percent level (analysis/strata.py:94-99). Design 861 requires model-pooled Shapley terms to carry simultaneous Bonferroni intervals with the 95 percent interval beside them. The four-player pooled budget does carry both levels (budget.py:43, :50-52). Also, no output key marks the three-player table as primary. The key named `budget_primary_chain` holds the four-player game (analysis/stage.py:794), and per model `discrimination` is the four-player game with `discrimination_three_player` beside it (budget.py:85-88). So the code does not show what DEV-011 states. This does not touch a decision rule, because Shapley terms are descriptive (H3). Fix: compute the pooled three-player terms with both levels (Bonferroni over three terms, 1 - 0.05/3, or the existing 98.75 percent stated as conservative; this choice is to be logged), and label the three-player tables primary in the output.
+
+**N5. MAJOR. DEV-009's reason does not match the design text it cites.** Verified against the design. DEV-009 says "Design rows 5.6 and 5.7 specify the first fenced block as the program". Row 5.6 (design line 976) is "Program assembly | The EvalPlus or LiveCodeBench evaluator's own assembly"; only row 5.7 (line 977) concerns extraction. Executing the block without EvalPlus's sanitize step may itself depart from row 5.6, and the entry should say so rather than cite row 5.6 as support. Labels feed every number, so the orchestrator should decide whether this is a change to the label definition. The entry is logged and its impact column already says "Labels". Fix: correct the reason text in a new entry (the file says entries are never edited retroactively), stating the departure from row 5.6.
+
+**N6. MINOR. DEV-013's wording differs from the code.** DEV-013 says "a two-decoder-layer slice ... chosen to cover every attention layer type". `slice_layer_indices` keeps the first layer of every distinct type and pads to at least two (gate.py:35-49), so a model with three or more types gets more than two layers. Fix: reword as "at least two decoder layers, including the first layer of every attention type".
+
+**N7. MINOR. The readouts dry-run listing omits T1's seed 1 and 2 LoRA outputs.** `_planned` uses `_is_primary`, not `_st_primary` (readouts/stage.py:462). Planning output only.
+
+**N8. MINOR. Unlogged readings in the new analysis code.** These are:
+- the 95 percent level of the 7.11 capacity rule (sensitivity.py:37, :84-91);
+- the rank-0 rung computed as W(P) - W(P3) (sensitivity.py:76-80);
+- the extraction-failure sensitivity excluding truncated samples as well (analysis/stage.py:412-420; "truncated" is one of the extraction-failure codes, extract.py:45-46, so this is consistent);
+- the LiveCodeBench "no sample passes" listing pooled over all models (analysis/stage.py:465-471).
+
+Fix: log the first two in DEVIATIONS.md or in the methods text.
+
+**N9. MINOR. Stale records.**
+- pipeline/execute/CONTRACT_REQUESTS.md:11 still calls the Gemma 4 markers unverified.
+- pipeline/generate/stage.py:360 says timing output has no manifest entry. That is true for `logs/timing_<model>.json`, but the timing generation shards are registered in the manifest by `_run_sets` (generate/stage.py:212).
+- Reading A silently falls back to reading B's context when a fresh sample contains no "I am" (rtuning.py:80-88). No count of fallbacks is recorded. Fix: count the fallbacks and report them beside the reading A results.
+
+### DEVIATIONS entries checked against the code
+
+| Entry | Matches the code? |
+|---|---|
+| DEV-001 | Yes (sandbox.py:131-139, :727-734; harness.py:375-383; ops/plans.py:103-108) |
+| DEV-002 | Yes (harness.py:26-28, :138) |
+| DEV-003 | Consistent with bootstrap.py:74-82 (not re-read in this pass) |
+| DEV-004 | Yes (data/folds.py, as in the first audit) |
+| DEV-005 | Partly verified: list and tuple order kept (inputs.py:84-87); "caps attempts" not verified |
+| DEV-006 | Yes (lora_train.py:56, :108, :125; readouts/stage.py:379-397; recipe.py M5 reuse) |
+| DEV-007 | Yes (probe.py:38, :271-287) |
+| DEV-008 | Yes (tokens.py:164) |
+| DEV-009 | Mechanism yes (extract.py; labels.py:121-136); reason text no (N5) |
+| DEV-010 | Yes (unsupervised.py:8-9, :71) |
+| DEV-011 | Partly: the three-player game is computed, but the outputs do not mark it primary and its pooled intervals lack the section 9 level (N4) |
+| DEV-012 | Yes (pilot.json:83-87; readouts/stage.py:248-273) |
+| DEV-013 | Mostly; wording differs (N6) |
+| DEV-014 | Files present (pipeline/prompts/, PROMPTS.sha256.json); hashes not recomputed |
+
+### Stop conditions
+
+- **N1 is a stop condition.** Under the pilot and full plans it would change the label-validity population, and with it every Gamma cell of the primary estimand and the k rule's m_bar. It was not introduced by a wave 8 fix: the data and execute overwrites predate wave 8. The G1 fix does extend it to the readouts.
+- **No wave 8 fix introduced a new departure from a decision rule, the margin delta, the model set, or the k rule.** Checked:
+  - The decision code (decisions.py), the constants (DELTA, T10, T20, PRIMARY_MODELS), and the k-rule code (krule.py; analysis/stage.py:776-781) are unchanged in substance.
+  - `sr_allowed` and `st_allowed` follow the roles in design 3.2 (lines 520-530).
+  - Adding T1 to `_st_primary` affects only the pilot.
+
+### Updated counts (after the re-check)
+
+| Finding status | Count | IDs |
+|---|---|---|
+| FIXED | 14 | G1, G2, G3, G5, G6, G7, G9, G11, G12, G13, G14, G18, G19, G21 (G2, G11, and G12 are also logged) |
+| LOGGED | 5 | G8, G15, G16, G17, G20 |
+| STILL OPEN | 3 | G4, G10, G22 |
+
+| Severity of open items | Count | IDs |
+|---|---|---|
+| BLOCKING | 1 | N1 (stop condition) |
+| MAJOR | 6 | G4 (via N2, N3), G10, N2, N3, N4, N5 |
+| MINOR | 5 | G22, N6, N7, N8, N9 |
+
+G4 and G10 stay MAJOR. Before the pilot, N1 must be fixed (BLOCKING), and G10 (the P4 and P6 throughput probes, which K7 needs) and N5 (the DEV-009 wording, which concerns labels) are pilot-relevant. N2, N3, and N4 matter for the full run.
+
+## Second re-check (wave 8)
+
+Scope: N1 to N5, G4, G10, and G22, re-read in the working tree; DEV-016 and DEV-017 checked against the code and, for DEV-016, against the installed evalplus 0.3.1 source. The coordinator names commits 91751d8 and 6f130c8; git was not inspected (no shell). Tests were NOT RUN; the tests named below were located by reading.
+
+| Item | Status | Evidence (implementation; test) | Remaining issue |
+|---|---|---|---|
+| N1 | FIXED | Every plan has one data job per population: pilot.json:50-57 (scope "label_validity"); job_config maps "label_validity" and "lcb" to the population's benchmarks (ops/plans.py:187-190). The execute stage merges reference checks across jobs and refuses a changed row (execute/stage.py:124-150, :235-238), and it merges the proxy JSON by benchmark key (:239-246). The readouts stage has a coverage guard that runs before exclusions and raises, never drops (readouts/stage.py:478-505, :571). Tests: tests/ops/test_ops_plans.py::test_data_jobs_one_per_population_never_split; tests/execute/test_execute_stage.py::test_sequential_jobs_merge_reference_checks_and_proxies; tests/readouts/test_readouts_guards.py::test_labeled_problem_missing_from_the_fold_plan_raises; ::test_labeled_problem_missing_from_the_reference_checks_raises; ::test_complete_coverage_and_unlabeled_problems_pass | See S1 (MINOR, full plan only). The merge raises if a reference's pass or exclusion changes between jobs (execute/stage.py:139-142). A reference that times out nondeterministically would therefore stop the run loudly; that is acceptable |
+| N2 | STILL OPEN (partly fixed) | The name now matches: `resolve_fresh` sets `adapter_path = sr_adapter_rel(...)`, which is relative to the run root (ops/plans.py:153-173, :194-195). Test: tests/ops/test_ops_plans.py::test_fresh_adapter_path_matches_readouts_stage_rule, which asserts `lay.root / adapter_path == sr_adapter_path(...)` and that the path is relative | The generate stage passes `f["adapter_path"]` to the backend without joining it to `layout.root` (generate/stage.py:248-249; backends.py:135-140, :247-250). Nothing in ops changes the working directory (no `chdir` or `cwd=` in ops/). The relative path therefore resolves against the process working directory, not the run root, and the adapter load should fail loudly. The test checks the join that the stage never performs. Verified by reading. Fix: `str(layout.root / f["adapter_path"])` when the path is relative, plus a generate-stage test with a relative path. MAJOR, full run only (full.json is not launchable) |
+| N3 | FIXED | readouts/stage.py:543-566: a `fresh:` gen_set runs only `run_fresh(only=gen_set)` with empty frozen data. The mask gate requires the existing report and never retrains (:304-305). Tests: tests/readouts/test_readouts_guards.py::test_fresh_job_leaves_frozen_files_byte_identical; ::test_fresh_job_dry_run_plans_only_fresh_paths | None |
+| N4 | FIXED, LOGGED (DEV-017) | analysis/budget.py:46-58 (`simultaneous_level`, `pooled_levels`: 95 percent, 1 - 0.05/3, and 98.75 percent beside), :188-210; primary flags at budget.py:103-104 and analysis/stage.py:435-436, :764-765, :797-799. Test: tests/analysis/test_sensitivity_strata.py::test_pooled_three_player_levels_and_linearity | DEV-017 matches the code |
+| N5 | FIXED, LOGGED (DEV-016) | DEV-016's claim matches the installed evalplus 0.3.1 (.venv/lib/python3.12/site-packages/evalplus-0.3.1.dist-info): evaluate.py:207-210 uses `sample["solution"]` when present, else `prompt + completion`. `load_solutions` was not inspected | None |
+| G4 | STILL OPEN | Through N3, which is fixed, and N2, which is partly fixed | Only the N2 path resolution remains |
+| G10 | FIXED | pilot.json:106-127 adds a P4/P6 timing generate job ("gen50"), ordered before "forward50" capture. The readouts stage branches on `timing_only` into `_run_timing` (readouts/stage.py:508-541), which writes no score, adapter, or probe and builds layouts from the timing generations. Tests: tests/ops/test_ops_plans.py::test_pilot_timing_generate_precedes_timing_capture; tests/readouts/test_readouts_guards.py::test_time_lora_steps_on_a_tiny_model; ::test_timing_only_stage_writes_no_scores_and_ignores_generation_only; ::test_timing_only_with_the_mock_backend_times_nothing; tests/generate/test_timing_cards.py (as before) | None found by reading |
+| G22 | OPERATOR ITEM (pod only) | Card recommendations are recorded (generate/stage.py:254-256). vLLM `top_k=-1` is still unverified on the pinned engine (backends.py:27) | Only the pod-side check remains |
+
+New in this pass:
+
+- **S1. MINOR (full plan only; not launchable now). The LiveCodeBench data job overwrites two label-validity records.** Verified by reading. The data stage writes `data/near_duplicates.json` and the agreement stats file on every run (pipeline/data/stage.py:130-134, :191-193, :216-220). When `cfg.benchmarks` holds no EvalPlus benchmark, `full_lv` is empty, so the "lcb" data job in full.json:57-62 replaces the label-validity near-duplicate report with an empty one and the stats with LiveCodeBench-only stats. Fold plans are unaffected, because they are written per population (:195-202), and no downstream code reads either file (searched analysis/, pipeline/, ops/). The record that design 4 (575, 583) asks to keep in the manifest would still be lost. Fix: skip both writes when the job has no label-validity benchmark, or key them by population.
+- **S2. MINOR. DEVIATIONS numbering.** No DEV-015 exists (DEV-014 is followed by DEV-016). Record why, or say the number was not used.
+- N6 to N9 were not claimed as fixed. Spot checks show N7 still open (`_planned` uses `_is_primary`, readouts/stage.py:471) and DEV-013's wording unchanged (N6).
+
+No fix in this pass changes a decision rule, the margin delta, the model set, or the k rule. The data job now covers both label-validity benchmarks, so the population and m_bar are built from both.
+
+### Final counts (after the second re-check)
+
+| Finding status | Count | IDs |
+|---|---|---|
+| FIXED | 15 | G1, G2, G3, G5, G6, G7, G9, G10, G11, G12, G13, G14, G18, G19, G21 |
+| LOGGED | 5 | G8, G15, G16, G17, G20 |
+| STILL OPEN | 1 | G4 (N2 path resolution only) |
+| OPERATOR ITEM (pod only) | 1 | G22 (vLLM `top_k=-1`) |
+| Re-check findings FIXED | 4 | N1, N3, N4 (DEV-017), N5 (DEV-016) |
+| Re-check findings open | 7 | N2 (MAJOR); N6, N7, N8, N9, S1, S2 (MINOR) |
+
+| Severity of open items | Count | IDs |
+|---|---|---|
+| BLOCKING | 0 | none |
+| MAJOR | 1 | N2 (and G4 through it; full run only) |
+| MINOR | 6 | N6, N7, N8, N9, S1, S2 |
+
+Nothing open blocks the pilot. N2 must be fixed before the full plan is made launchable.

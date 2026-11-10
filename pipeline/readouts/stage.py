@@ -453,6 +453,10 @@ class _Ctx:
                     tr.mlm.load_adapter(ap)
                     lays = load_layouts_provider(self.cfg)(self.cfg, self.layout, m, self.benches, data.sample_uids,
                                                            self._real.tok, self._real.model, gen_set=fs.gen_set)
+                    am = list(self._real.rtuning_tokens.am_ids)
+                    n_fb = sum(not any(list(l.completion_ids)[i:i + len(am)] == am
+                                       for i in range(len(l.completion_ids) - len(am) + 1)) for l in lays)
+                    self.report.metrics[f"reading_a_fallbacks/{m}/{fs.gen_set}"] = int(n_fb)   # no "I am": reading B context
                     sc = score_rtuning(self._real.model, tr.mlm, [(l.prompt_ids, l.completion_ids) for l in lays],
                                        self._real.rtuning_tokens, batch_size=tr.eval_batch, pad_id=self._real.pad_id,
                                        own_suffix=True)
@@ -468,7 +472,7 @@ def _planned(cfg: RunConfig, layout: RunLayout, model_key: str, population: str)
     for n in names:
         sup = n in ("P", "P2", "P3", "Pmulti", "P2_single_split", "MLP", "PROMPT", "CODETEXT", "LAT") or n in LORA_FAMILY
         if sup:
-            sd = seeds if (n not in LORA_FAMILY or (_is_primary(model_key) and population == "label_validity")) else seeds[:1]
+            sd = seeds if (n not in LORA_FAMILY or (_st_primary(model_key) and population == "label_validity")) else seeds[:1]
             out += [str(layout.scores(model_key, population, n, s, sd_).relative_to(layout.root)) for s in suites for sd_ in sd]
         else:
             out.append(str(layout.scores(model_key, population, n, None, None).relative_to(layout.root)))

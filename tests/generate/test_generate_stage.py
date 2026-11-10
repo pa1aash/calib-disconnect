@@ -244,3 +244,15 @@ def test_transformers_backend_through_the_stage(tmp_path, monkeypatch, model, to
     assert len(idx) == 4 and all(c.p3 == c.elicitation_span[1] - 1 for c in idx)
     arr = ST.load_capture_shard(sorted((layout.root / "capture/SMOKE/humaneval_plus/frozen").glob("shard-*.safetensors"))[0])
     assert arr["hs_p3"].shape[1:] == (7, 64) and np.isfinite(arr["hs_p3"]).all()
+
+
+def test_fresh_adapter_path_relative_to_run_root_is_joined(tmp_path, monkeypatch):
+    # Conformance re-check N2: plans give adapter_path relative to the run root; the stage must join it.
+    layout, probs, manifest = _setup(tmp_path)
+    seen = []
+    real = S._run_sets
+    monkeypatch.setattr(S, "_run_sets", lambda *a: (seen.append(a[-2]), real(*a))[1])
+    extra = {"fresh": [{"model_key": "MOCK", "benchmark": "humaneval_plus", "adapter_id": "f0s1",
+                        "adapter_path": "adapters/MOCK/sr_label_validity_O_seed0_fold0", "k_g": 2}]}
+    S.run_generate(_cfg(extra=extra), layout, manifest)
+    assert str(layout.root / "adapters/MOCK/sr_label_validity_O_seed0_fold0") in seen

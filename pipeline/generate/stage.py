@@ -245,8 +245,10 @@ def run_generate(cfg: RunConfig, layout: RunLayout, manifest: Manifest, *, dry_r
                     keep = set(f["problem_ids"])
                     sub = [p for p in problems if p.problem_id in keep]
                 freqs = build_fresh_requests(key, sub, int(f.get("k_g", cfg.k)), f["adapter_id"], prompts=prompts)
+                ap = Path(f["adapter_path"])                      # plans give it relative to the run root (N2)
+                ap = ap if ap.is_absolute() else layout.root / ap
                 _run_sets(cfg, layout, manifest, rep, prompts, spec, bench, sub, freqs, f"fresh:{f['adapter_id']}", backend,
-                          f["adapter_path"], dry_run)
+                          str(ap), dry_run)
         if not dry_run and backend is not None:
             _record_prompts(layout, manifest, prompts, spec, backend)
     if not dry_run:
@@ -357,7 +359,8 @@ def _make_capture(cfg: RunConfig, layout: RunLayout, manifest: Manifest | None, 
 # Timing-only jobs (design 13, throughput probes; G10)
 # ---------------------------------------------------------------------------------------------------
 def _write_timing(layout: RunLayout, key: str, part: str, value: dict[str, Any]) -> None:
-    """logs/timing_<model>.json (not a run product: no manifest entry, no analyzable content)."""
+    """logs/timing_<model>.json: no manifest entry and no analyzable content. The timing generation shards
+    themselves are registered in the manifest by _run_sets."""
     path = layout.logs / f"timing_{key}.json"
     data = json.loads(path.read_text()) if path.exists() else {"model_key": key}
     data[part] = value
